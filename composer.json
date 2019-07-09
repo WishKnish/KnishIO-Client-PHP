@@ -1,0 +1,55 @@
+{
+  "name": "wishknish/knishio-client-php",
+  "description": "Knish.IO PHP API Client.",
+  "keywords": ["wishknish", "blockchain", "ledger", "decentralized", "cryptocurrency"],
+  "license": "GPLV3",
+  "authors": [
+    {
+      "name": "Eugene Teplitsky",
+      "email": "eugene@wishknish.com",
+      "homepage": "https://eugeneteplitsky.com",
+      "role": "developer"
+    },
+    {
+      "name": "Yuri Kizilov",
+      "email": "y.kizilov.sev@yandex.ru",
+      "homepage": "",
+      "role": "developer"
+    }
+  ],
+  "type": "library",
+  "homepage": "https://knish.io",
+  "support": {
+    "email": "support@wishknish.com",
+    "issues": "https://github.com/WishKnish/KnishIO/issues",
+    "wiki": "https://github.com/WishKnish/KnishIO/wiki",
+    "source": "https://github.com/WishKnish/KnishIO",
+    "docs": "https://docs.knish.io"
+  },
+  "require": {
+    "php": ">=5.6",
+    "ext-mbstring": "*",
+    "ext-json": "*",
+    "desktopd/php-sha3-streamable": "@dev",
+    "simplito/bigint-wrapper-php": "^1.0",
+    "symfony/polyfill-php70": "^1.11",
+    "symfony/serializer": "^3.4",
+    "symfony/property-access": "^3.4"
+  },
+  "require-dev": {
+    "symfony/var-dumper": "^3.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "WishKnish\\KnishIO\\Client\\": "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "github",
+      "url": "https://github.com/evias/PHP-SHA3-Streamable"
+    }
+  ],
+  "extra": {
+  }
+}
