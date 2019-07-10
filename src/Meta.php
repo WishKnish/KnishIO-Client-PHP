@@ -24,7 +24,7 @@ class Meta
     public $snapshotMolecule;
     public $created_at;
 
-    public function __construct ($modelType, $modelId, $meta, $snapshotMolecule = null)
+    public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null )
     {
         $this->modelType = $modelType;
         $this->modelId   = $modelId;

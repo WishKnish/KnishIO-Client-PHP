@@ -33,11 +33,11 @@ class Wallet
     {
         $this->position = $position ?: Str::randomString( $saltLength );
         $this->token = $token;
-        $this->key = static::generateWalletKey($secret, $token, $this->position);
-        $this->address = static::generateWalletAddress($this->key);
+        $this->key = static::generateWalletKey( $secret, $token, $this->position );
+        $this->address = static::generateWalletAddress( $this->key );
         $this->balance = 0;
         $this->molecules = [];
-        $this->bundle = static::generateBundleHash($secret);
+        $this->bundle = static::generateBundleHash( $secret );
     }
 
     /**

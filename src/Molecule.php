@@ -167,7 +167,7 @@ class Molecule
     }
 
     /**
-     * @param $string
+     * @param string $string
      * @return object
      */
     public static function jsonToObject( $string )
@@ -199,7 +199,7 @@ class Molecule
      */
     public static function verifyAtoms ( self $molecule )
     {
-        return 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom->value : 0; }, $molecule->atoms ) );
+        return 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value : 0; }, $molecule->atoms ) );
     }
 
     /**
@@ -308,28 +308,20 @@ class Molecule
     public static function normalize ( array $mapped_hash_array )
     {
         $total = array_sum( $mapped_hash_array );
+        $total_condition = $total < 0;
 
-        if ( $total > 0 ) {
-            while ( $total > 0 ) {
-                foreach ( $mapped_hash_array as $key => $value ) {
-                    if ( $value > -8 ) {
-                        --$mapped_hash_array[$key];
-                        --$total;
-                        if ( $total === 0 ) {
-                            break;
-                        }
-                    }
-                }
-            }
-        } else {
-            while ( $total < 0 ) {
-                foreach ( $mapped_hash_array as $key => $value ) {
-                    if ( $value < 8 ) {
-                        ++$mapped_hash_array[$key];
-                        ++$total;
-                        if ( $total === 0 ) {
-                            break;
-                        }
+        while ( $total < 0 || $total > 0 ) {
+
+            foreach ( $mapped_hash_array as $key => $value ) {
+
+                $condition = $total_condition ? $value < 8 : $value > -8;
+
+                if ( $condition ) {
+
+                    $total_condition ? [++$mapped_hash_array[$key], ++$total,] : [--$mapped_hash_array[$key], --$total,];
+
+                    if ( 0 === $total ) {
+                        break;
                     }
                 }
             }

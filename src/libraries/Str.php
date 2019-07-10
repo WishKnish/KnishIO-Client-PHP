@@ -39,23 +39,12 @@ class Str
     }
 
     /**
-     * @param string $str
-     * @param int $index
-     * @return int
-     */
-    public static function utf8CharCodeAt ( $str, $index )
-    {
-        $char = mb_substr( $str, $index, 1, 'UTF-8' );
-        return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0 ;
-    }
-
-    /**
      * @param string $src
      * @param integer $from_base
      * @param integer $to_base
      * @param string|null $src_symbol_table
      * @param string|null $dest_symbol_table
-     * @return bool|int|string
+     * @return string
      */
     public static function charsetBaseConvert ( $src, $from_base, $to_base, $src_symbol_table = null, $dest_symbol_table = null )
     {
@@ -102,5 +91,16 @@ class Str
         while ( ! $value->equals( $big_integer_zero ) );
 
         return $target;
+    }
+
+    /**
+     * @param string $str
+     * @param int $index
+     * @return int
+     */
+    private static function utf8CharCodeAt ( $str, $index )
+    {
+        $char = mb_substr( $str, $index, 1, 'UTF-8' );
+        return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0 ;
     }
 }
