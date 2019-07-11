@@ -50,7 +50,7 @@ class Atom
      * @param array $meta
      * @param null|string $otsFragment
      */
-    public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $metaType = null, $metaId = null, array $meta = [], $otsFragment = null )
+    public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null )
     {
         $this->position = $position;
         $this->walletAddress = $walletAddress;
@@ -60,7 +60,7 @@ class Atom
 
         $this->metaType = $metaType;
         $this->metaId = $metaId;
-        $this->meta = $meta;
+        $this->meta = $meta ?: [];
 
         $this->otsFragment = $otsFragment;
         $this->createdAt = time();

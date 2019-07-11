@@ -67,6 +67,7 @@ class Molecule
         $position = new BigInteger( $sourceWallet->position, 16 );
 
         $this->atoms = [
+
 			// Initializing a new Atom to remove tokens from source
             new Atom(
             	$position->toString( 16 ),
@@ -130,20 +131,6 @@ class Molecule
 				null
 			),
         ];
-
-		// Secondary atom delivers token supply to the destination wallet
-        if($amount) {
-      		$this->atoms[1] = new Atom(
-		  $recipientWallet->position,
-		  $recipientWallet->address,
-		  'V',
-		  $recipientWallet->token,
-		  $amount,
-		  null,
-		  null,
-		  null,
-		  null);
-		}
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
