@@ -1,4 +1,9 @@
 <?php
+// Copyright 2019 WishKnish Corp. All rights reserved.
+// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
+// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
+// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+
 namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
@@ -62,8 +67,31 @@ class Molecule
         $position = new BigInteger( $sourceWallet->position, 16 );
 
         $this->atoms = [
-            new Atom( $position->toString( 16 ), $sourceWallet->address, 'V', $sourceWallet->token, -$value, 'remainderWallet', $remainderWallet->address ),
-            new Atom( $position->add(1)->toString( 16 ), $recipientWallet->address, 'V', $sourceWallet->token, $value, 'walletBundle', $recipientWallet->bundle ),
+			// Initializing a new Atom to remove tokens from source
+            new Atom(
+            	$position->toString( 16 ),
+				$sourceWallet->address,
+				'V',
+				$sourceWallet->token,
+				-$value,
+				'remainderWallet',
+				$remainderWallet->address,
+				null,
+				null
+			),
+
+			// Initializing a new Atom to add tokens to recipient
+            new Atom(
+            	$position->add(1)->toString( 16 ),
+				$recipientWallet->address,
+				'V',
+				$sourceWallet->token,
+				$value,
+				'walletBundle',
+				$recipientWallet->bundle,
+				null,
+				null
+			),
         ];
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
@@ -74,10 +102,10 @@ class Molecule
     /**
      * Initialize a C-type molecule to issue a new type of token
      *
-     * @param Wallet $sourceWallet
-     * @param Wallet $recipientWallet
-     * @param integer|float $amount
-     * @param array $tokenMeta
+     * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
+     * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
+     * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
+     * @param array $tokenMeta - additional fields to configure the token
      * @return string
      * @throws \ReflectionException
      */
@@ -88,9 +116,34 @@ class Molecule
             $tokenMeta['walletAddress'] = $recipientWallet->address;
         }
 
+		// The primary atom tells the ledger that a certain amount of the new token is being issued.
         $this->atoms = [
-            new Atom( $sourceWallet->position, $sourceWallet->address, 'C', $sourceWallet->token, $amount, 'token', $recipientWallet->token, $tokenMeta ),
+            new Atom(
+            	$sourceWallet->position,
+				$sourceWallet->address,
+				'C',
+				$sourceWallet->token,
+				$amount,
+				'token',
+				$recipientWallet->token,
+				$tokenMeta,
+				null
+			),
         ];
+
+		// Secondary atom delivers token supply to the destination wallet
+        if($amount) {
+      		$this->atoms[1] = new Atom(
+		  $recipientWallet->position,
+		  $recipientWallet->address,
+		  'V',
+		  $recipientWallet->token,
+		  $amount,
+		  null,
+		  null,
+		  null,
+		  null);
+		}
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
@@ -110,7 +163,17 @@ class Molecule
     public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
     {
         $this->atoms = [
-            new Atom( $wallet->position, $wallet->address, 'M', $wallet->token, null, $metaType, $metaId, $meta ),
+            new Atom(
+            	$wallet->position,
+				$wallet->address,
+				'M',
+				$wallet->token,
+				null,
+				$metaType,
+				$metaId,
+				$meta,
+				null
+			),
         ];
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
@@ -119,6 +182,9 @@ class Molecule
     }
 
     /**
+	 * * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
+	 * molecule. Resulting 4096 byte (2048 character) string is the one-time signature.
+	 *
      * @param string $secret
      * @return string
      * @throws \Exception
@@ -141,11 +207,9 @@ class Molecule
 
         // Building a one-time-signature
         $signatureFragments = '';
-
         foreach ( $keyChunks as $idx => $keyChunk ) {
             // Iterate a number of times equal to 8-Hm[i]
             $workingChunk = $keyChunk;
-
             for ( $iterationCount = 0, $condition = 8 - $normalizedHash[$idx]; $iterationCount < $condition; $iterationCount++ ) {
                 $workingChunk = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $workingChunk )->squeeze( 64 ) );
             }
@@ -203,6 +267,8 @@ class Molecule
     }
 
     /**
+	 * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
+	 *
      * @param self $molecule
      * @return bool
      * @throws \ReflectionException
