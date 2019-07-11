@@ -254,7 +254,29 @@ class Molecule
      */
     public static function verify ( self $molecule )
     {
-        return static::verifyAtoms( $molecule ) && static::verifyMolecularHash( $molecule ) && static::verifyOts( $molecule );
+        return static::verifyAtoms( $molecule ) && static::verifyMolecularHash( $molecule ) && static::verifyOts( $molecule ) && static::verifyToken( $molecule );
+    }
+
+    /**
+     * @param self $molecule
+     * @return bool
+     */
+    public static function verifyToken ( self $molecule )
+    {
+        $v_atoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+
+        if ( !empty( $v_atoms ) ) {
+            $token = $v_atoms[0]->token;
+
+            foreach ( $v_atoms as $atom ) {
+
+                if ( $token !== $atom->token ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
