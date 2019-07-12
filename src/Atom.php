@@ -63,7 +63,7 @@ class Atom
         $this->meta = $meta ?: [];
 
         $this->otsFragment = $otsFragment;
-        $this->createdAt = time();
+        $this->createdAt = ( string ) time();
     }
 
     /**
@@ -102,11 +102,15 @@ class Atom
                     }
 
                     if ( 'meta' === $name ) {
+                        $list = array_map( static function ( $key, $val ) { return is_array( $val ) ? $val : ['key' => $key, 'value' => $val]; }, array_keys( $value ), array_values( $value ) );
 
-                        foreach ( $value as $key => $val ) {
-                            $molecularSponge->absorb( ( string ) $key );
-                            $molecularSponge->absorb( ( string ) ( $val ?: 'null' ) );
+                        foreach ( $list as $meta ) {
+                            $molecularSponge->absorb( ( string ) $meta['key']);
+                            $molecularSponge->absorb( ( string ) ( $meta['value'] ?: 'null' ) );
                         }
+
+                        $property->setValue( $atom, $list );
+
                         continue;
                     }
 
