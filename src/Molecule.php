@@ -250,20 +250,25 @@ class Molecule
      */
     public static function verifyToken ( self $molecule )
     {
-        $v_atoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+        if ( !empty( $molecule->atoms ) ) {
 
-        if ( !empty( $v_atoms ) ) {
-            $token = $v_atoms[0]->token;
+            $v_atoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
 
-            foreach ( $v_atoms as $atom ) {
+            if ( !empty( $v_atoms ) ) {
+                $token = $v_atoms[0]->token;
 
-                if ( $token !== $atom->token ) {
-                    return false;
+                foreach ( $v_atoms as $atom ) {
+
+                    if ( $token !== $atom->token ) {
+                        return false;
+                    }
                 }
             }
+
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -272,7 +277,7 @@ class Molecule
      */
     public static function verifyAtoms ( self $molecule )
     {
-        return 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value : 0; }, $molecule->atoms ) );
+        return !empty( $molecule->atoms ) && 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value : 0; }, $molecule->atoms ) );
     }
 
     /**
@@ -284,7 +289,7 @@ class Molecule
      */
     public static function verifyMolecularHash ( self $molecule )
     {
-        return $molecule->molecularHash === Atom::hashAtoms( $molecule->atoms );
+        return !empty( $molecule->atoms ) && $molecule->molecularHash === Atom::hashAtoms( $molecule->atoms );
     }
 
     /**
@@ -298,45 +303,50 @@ class Molecule
      */
     public static function verifyOts ( self $molecule )
     {
-        // Determine first atom
-        $first_atom = $molecule->atoms[0];
+        if ( !empty( $molecule->atoms ) ) {
 
-        // Convert Hm to numeric notation via EnumerateMolecule(Hm)
-        $enumerated_hash = static::enumerate( $molecule->molecularHash );
-        $normalized_hash = static::normalize( $enumerated_hash );
+            // Determine first atom
+            $first_atom = $molecule->atoms[0];
 
-        // Rebuilding OTS out of all the atoms
-        $ots = '';
+            // Convert Hm to numeric notation via EnumerateMolecule(Hm)
+            $enumerated_hash = static::enumerate( $molecule->molecularHash );
+            $normalized_hash = static::normalize( $enumerated_hash );
 
-        foreach ( $molecule->atoms as $atom ) {
-            $ots .= $atom->otsFragment;
-        }
+            // Rebuilding OTS out of all the atoms
+            $ots = '';
 
-        $wallet_address = $first_atom->walletAddress;
-
-        // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
-        $ots_chunks = str_split( $ots, 128 );
-
-        $key_fragments = '';
-
-        foreach ( $ots_chunks as $index => $ots_chunk ) {
-
-            // Iterate a number of times equal to 8+Hm[i]
-            $working_chunk = $ots_chunk;
-
-            for ( $iteration_count = 0, $condition = 8 + $normalized_hash[$index]; $iteration_count < $condition; $iteration_count++) {
-                $working_chunk = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $working_chunk )->squeeze(64) );
+            foreach ( $molecule->atoms as $atom ) {
+                $ots .= $atom->otsFragment;
             }
 
-            $key_fragments .= $working_chunk;
+            $wallet_address = $first_atom->walletAddress;
+
+            // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
+            $ots_chunks = str_split( $ots, 128 );
+
+            $key_fragments = '';
+
+            foreach ( $ots_chunks as $index => $ots_chunk ) {
+
+                // Iterate a number of times equal to 8+Hm[i]
+                $working_chunk = $ots_chunk;
+
+                for ( $iteration_count = 0, $condition = 8 + $normalized_hash[$index]; $iteration_count < $condition; $iteration_count++) {
+                    $working_chunk = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $working_chunk )->squeeze(64) );
+                }
+
+                $key_fragments .= $working_chunk;
+            }
+            // Absorb the hashed Kk into the sponge to receive the digest Dk
+            $digest = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $key_fragments )->squeeze(1024) );
+
+            // Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
+            $address = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $digest )->squeeze(32) );
+
+            return $address === $wallet_address;
         }
-        // Absorb the hashed Kk into the sponge to receive the digest Dk
-        $digest = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $key_fragments )->squeeze(1024) );
 
-        // Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
-        $address = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $digest )->squeeze(32) );
-
-        return $address === $wallet_address;
+        return false;
     }
 
     /**
