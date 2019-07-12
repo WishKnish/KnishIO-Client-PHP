@@ -40,7 +40,7 @@ class AfterInstallation
 
             foreach ( $files as $file ) {
 
-                if ( is_file( $file ) ) {
+                if ( is_file( $file ) && is_writable( $file ) ) {
                     $file = fopen( $file, 'wb' );
 
                     if ( $file ) {
