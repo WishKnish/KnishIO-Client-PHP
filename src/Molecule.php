@@ -47,7 +47,7 @@ class Molecule
         $this->cellSlug = $cellSlug;
         $this->bundle = $bundle;
         $this->status = null;
-        $this->createdAt = time();
+        $this->createdAt = ( string ) time();
         $this->atoms = [];
     }
 
@@ -277,7 +277,7 @@ class Molecule
      */
     public static function verifyAtoms ( self $molecule )
     {
-        return !empty( $molecule->atoms ) && 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value : 0; }, $molecule->atoms ) );
+        return !empty( $molecule->atoms ) && 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value * 1 : 0; }, $molecule->atoms ) );
     }
 
     /**
