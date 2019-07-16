@@ -112,7 +112,9 @@ class Molecule
      */
     public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
     {
-        if ( !array_key_exists( 'walletAddress', $tokenMeta ) ) {
+        $hasWalletAddress = array_filter( $tokenMeta, static function ( $token ) { return is_array( $token ) && array_key_exists('key', $token ) && 'walletAddress' === $token['key']; } );
+
+        if ( empty( $hasWalletAddress ) && !array_key_exists( 'walletAddress', $tokenMeta ) ) {
 
             $tokenMeta['walletAddress'] = $recipientWallet->address;
         }
