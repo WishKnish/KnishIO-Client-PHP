@@ -155,6 +155,8 @@ class Atom
      */
     public static function normalizeMeta ( array $meta )
     {
-        return array_map( static function ( $key, $val ) { return is_array( $val ) ? $val : ['key' => $key, 'value' => $val]; }, array_keys( $meta ), array_values( $meta ) );
+        $deep = array_filter ( $meta, static function ( $val, $key ) { return is_array( $val ); }, ARRAY_FILTER_USE_BOTH );
+        $plane = array_filter ( $meta, static function ( $val, $key ) { return !is_array( $val ); }, ARRAY_FILTER_USE_BOTH );
+        return array_replace( $deep,  array_map( static function ( $key, $val ) { return ['key' => $key, 'value' => $val]; }, array_keys( $plane ), array_values( $plane ) ) );
     }
 }
