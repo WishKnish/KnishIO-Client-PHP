@@ -60,7 +60,7 @@ class Atom
 
         $this->metaType = $metaType;
         $this->metaId = $metaId;
-        $this->meta = $meta ?: [];
+        $this->meta = $meta ? static::normalizeMeta( $meta ) : [];
 
         $this->otsFragment = $otsFragment;
         $this->createdAt = ( string ) time();
@@ -102,7 +102,7 @@ class Atom
                     }
 
                     if ( 'meta' === $name ) {
-                        $list = array_map( static function ( $key, $val ) { return is_array( $val ) ? $val : ['key' => $key, 'value' => $val]; }, array_keys( $value ), array_values( $value ) );
+                        $list = static::normalizeMeta( $value );
 
                         foreach ( $list as $meta ) {
                             $molecularSponge->absorb( ( string ) $meta['key']);
@@ -147,5 +147,14 @@ class Atom
         }
 
         return $target;
+    }
+
+    /**
+     * @param array $meta
+     * @return array
+     */
+    public static function normalizeMeta ( array $meta )
+    {
+        return array_map( static function ( $key, $val ) { return is_array( $val ) ? $val : ['key' => $key, 'value' => $val]; }, array_keys( $meta ), array_values( $meta ) );
     }
 }
