@@ -47,7 +47,7 @@ class Molecule
         $this->cellSlug = $cellSlug;
         $this->bundle = $bundle;
         $this->status = null;
-        $this->createdAt = ( string ) time();
+        $this->createdAt = Str::currentTimeMillis();
         $this->atoms = [];
     }
 

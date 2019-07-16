@@ -93,6 +93,15 @@ class Str
         return $target;
     }
 
+
+    /**
+     * @return string
+     */
+    public static function currentTimeMillis ()
+    {
+        return ( string ) round(array_sum( explode( ' ' , microtime() ) ) * 1000);
+    }
+
     /**
      * @param string $str
      * @param int $index

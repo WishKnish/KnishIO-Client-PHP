@@ -14,7 +14,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $walletAddress
  * @property string $isotope
  * @property string|null $token
- * @property integer|float|null $value
+ * @property string|null $value
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
@@ -44,7 +44,7 @@ class Atom
      * @param string $walletAddress
      * @param string $isotope
      * @param null|string $token
-     * @param null|integer|float $value
+     * @param null|string $value
      * @param null|string $metaType
      * @param null|string $metaId
      * @param array $meta
@@ -56,14 +56,14 @@ class Atom
         $this->walletAddress = $walletAddress;
         $this->isotope = $isotope;
         $this->token = $token;
-        $this->value = $value;
+        $this->value = null !== $value ? ( string ) $value : null;
 
         $this->metaType = $metaType;
         $this->metaId = $metaId;
         $this->meta = $meta ? static::normalizeMeta( $meta ) : [];
 
         $this->otsFragment = $otsFragment;
-        $this->createdAt = ( string ) time();
+        $this->createdAt = Str::currentTimeMillis();
     }
 
     /**
@@ -155,8 +155,8 @@ class Atom
      */
     public static function normalizeMeta ( array $meta )
     {
-        $deep = array_filter ( $meta, static function ( $val, $key ) { return is_array( $val ); }, ARRAY_FILTER_USE_BOTH );
-        $plane = array_filter ( $meta, static function ( $val, $key ) { return !is_array( $val ); }, ARRAY_FILTER_USE_BOTH );
+        $deep = array_filter ( $meta, static function ( $val ) { return is_array( $val ); } );
+        $plane = array_filter ( $meta, static function ( $val ) { return !is_array( $val ); } );
         return array_replace( $deep,  array_map( static function ( $key, $val ) { return ['key' => $key, 'value' => $val]; }, array_keys( $plane ), array_values( $plane ) ) );
     }
 }
