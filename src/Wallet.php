@@ -68,7 +68,7 @@ class Wallet
      * @return string
      * @throws \Exception
      */
-    protected static function generateBundleHash ( $secret )
+    public static function generateBundleHash ( $secret )
     {
         return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $secret )->squeeze( 32 ) );
     }
