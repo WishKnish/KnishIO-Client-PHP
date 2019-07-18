@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WishKnish\KnishIO\Client\libraries\Str;
 use WishKnish\KnishIO\Client\Traits\Json;
+use WishKnish\KnishIO\Client\Exception\AtomsNotFoundException;
 
 /**
  * Class Molecule
@@ -39,16 +40,23 @@ class Molecule
     /**
      * Molecule constructor.
      * @param null|string $cellSlug
-     * @param null|string $bundle
      */
-    public function __construct ( $cellSlug = null, $bundle = null )
+    public function __construct ( $cellSlug = null )
     {
         $this->molecularHash = null;
         $this->cellSlug = $cellSlug;
-        $this->bundle = $bundle;
+        $this->bundle = null;
         $this->status = null;
-        $this->createdAt = ( string ) time();
+        $this->createdAt = Str::currentTimeMillis();
         $this->atoms = [];
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString ()
+    {
+        return ( string ) $this->toJson();
     }
 
     /**
@@ -59,7 +67,7 @@ class Molecule
      * @param Wallet $recipientWallet
      * @param Wallet $remainderWallet
      * @param integer|float $value
-     * @return string
+     * @return array
      * @throws \Exception
      */
     public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
@@ -95,9 +103,7 @@ class Molecule
 			),
         ];
 
-        $this->molecularHash = Atom::hashAtoms( $this->atoms );
-
-        return $this->molecularHash;
+        return $this->atoms;
     }
 
     /**
@@ -107,16 +113,19 @@ class Molecule
      * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
      * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
      * @param array $tokenMeta - additional fields to configure the token
-     * @return string
-     * @throws \ReflectionException
+     * @return array
      */
     public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
     {
-        $hasWalletAddress = array_filter( $tokenMeta, static function ( $token ) { return is_array( $token ) && array_key_exists('key', $token ) && 'walletAddress' === $token['key']; } );
 
-        if ( empty( $hasWalletAddress ) && !array_key_exists( 'walletAddress', $tokenMeta ) ) {
+        foreach ( ['walletAddress', 'walletPosition', ] as $walletKey ) {
 
-            $tokenMeta['walletAddress'] = $recipientWallet->address;
+            $has = array_filter( $tokenMeta, static function ( $token ) use ( $walletKey ) { return is_array( $token ) && array_key_exists('key', $token ) && $walletKey === $token['key']; } );
+
+            if ( empty( $has ) && !array_key_exists( $walletKey, $tokenMeta ) ) {
+
+                $tokenMeta[$walletKey] = $recipientWallet->{ strtolower ( substr ( $walletKey , 6 ) ) };
+            }
         }
 
 		// The primary atom tells the ledger that a certain amount of the new token is being issued.
@@ -134,9 +143,7 @@ class Molecule
 			),
         ];
 
-        $this->molecularHash = Atom::hashAtoms( $this->atoms );
-
-        return $this->molecularHash;
+        return $this->atoms;
     }
 
     /**
@@ -146,8 +153,7 @@ class Molecule
      * @param array $meta
      * @param string $metaType
      * @param string|integer $metaId
-     * @return string
-     * @throws \ReflectionException
+     * @return array
      */
     public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
     {
@@ -165,9 +171,7 @@ class Molecule
 			),
         ];
 
-        $this->molecularHash = Atom::hashAtoms( $this->atoms );
-
-        return $this->molecularHash;
+        return $this->atoms;
     }
 
     /**
@@ -175,11 +179,22 @@ class Molecule
 	 * molecule. Resulting 4096 byte (2048 character) string is the one-time signature.
 	 *
      * @param string $secret
+     * @param bool $anonymous
      * @return string
-     * @throws \Exception
+     * @throws \Exception|\ReflectionException|AtomsNotFoundException
      */
-    public function sign ( $secret )
+    public function sign ( $secret, $anonymous = false )
     {
+        if ( empty( $this->atoms ) ) {
+            throw new AtomsNotFoundException();
+        }
+
+        if ( !$anonymous ) {
+            $this->bundle = Wallet::generateBundleHash( $secret );
+        }
+
+        $this->molecularHash = Atom::hashAtoms( $this->atoms );
+
         // Determine first atom
         $firstAtom = $this->atoms[0];
 
