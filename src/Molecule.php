@@ -67,34 +67,12 @@ class Molecule
      * @param Wallet $recipientWallet
      * @param Wallet $remainderWallet
      * @param integer|float $value
-     * @param array $metas
      * @return array
      * @throws \Exception
      */
-    public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value, array $metas = [])
+    public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value)
     {
         $this->molecularHash = null;
-        $nameSpaceMeta = [ 'remainderMeta' => null, 'recipientMeta' => null];
-        $rules = [
-            'remainderMeta' => [
-                'key' => 'remainderPosition',
-                'wallet' => 'remainderWallet',
-                'value' => 'position'
-            ],
-        ];
-
-        foreach ( $rules as $spaceMeta => $rule ) {
-            $nameSpaceMeta[$spaceMeta] = array_filter( $metas, static function ( $meta ) use ( $rule ) { return is_array( $meta ) && array_key_exists('key', $meta ) && $rule['key'] === $meta['key']; } );
-
-            if ( array_key_exists( $rule['key'], $metas ) ) {
-                $nameSpaceMeta[$spaceMeta] = [ $rule['key'] => $metas[ $rule['key'] ] ];
-            }
-
-            if ( empty( $nameSpaceMeta[$spaceMeta] ) ) {
-                $nameSpaceMeta[$spaceMeta] = [ $rule['key'] => ${ $rule['wallet'] }->{ $rule['value'] } ];
-            }
-        }
-
         $position = new BigInteger( $sourceWallet->position, 16 );
 
         // Initializing a new Atom to remove tokens from source
@@ -106,7 +84,7 @@ class Molecule
             -$value,
             'remainderWallet',
             $remainderWallet->address,
-            $nameSpaceMeta['remainderMeta'],
+            [ 'remainderPosition' => $remainderWallet->position ],
             null
         );
 
@@ -119,7 +97,7 @@ class Molecule
             $value,
             'walletBundle',
             $recipientWallet->bundle,
-            $nameSpaceMeta['recipientMeta'],
+            null,
             null
         );
 
