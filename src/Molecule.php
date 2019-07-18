@@ -79,6 +79,7 @@ class Molecule
             'remainderMeta' => [
                 'key' => 'remainderPosition',
                 'wallet' => 'remainderWallet',
+                'value' => 'position'
             ],
         ];
 
@@ -90,7 +91,7 @@ class Molecule
             }
 
             if ( empty( $nameSpaceMeta[$spaceMeta] ) ) {
-                $nameSpaceMeta[$spaceMeta] = [ $rule['key'] => ${ $rule['wallet'] }->position ];
+                $nameSpaceMeta[$spaceMeta] = [ $rule['key'] => ${ $rule['wallet'] }->{ $rule['value'] } ];
             }
         }
 
