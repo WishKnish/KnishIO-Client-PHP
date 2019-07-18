@@ -24,7 +24,7 @@ use WishKnish\KnishIO\Client\Exception\AtomsNotFoundException;
  * @property string|null $bundle
  * @property string|null $status
  * @property integer $createdAt
- * @property array $atoms
+ * @property-read array $atoms
  */
 class Molecule
 {
@@ -72,36 +72,34 @@ class Molecule
      */
     public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
     {
+        $this->molecularHash = null;
         $position = new BigInteger( $sourceWallet->position, 16 );
 
-        $this->atoms = [
+        // Initializing a new Atom to remove tokens from source
+        $this->atoms[] = new Atom(
+            $position->toString( 16 ),
+            $sourceWallet->address,
+            'V',
+            $sourceWallet->token,
+            -$value,
+            'remainderWallet',
+            $remainderWallet->address,
+            null,
+            null
+        );
 
-			// Initializing a new Atom to remove tokens from source
-            new Atom(
-            	$position->toString( 16 ),
-				$sourceWallet->address,
-				'V',
-				$sourceWallet->token,
-				-$value,
-				'remainderWallet',
-				$remainderWallet->address,
-				null,
-				null
-			),
-
-			// Initializing a new Atom to add tokens to recipient
-            new Atom(
-            	$position->add(1)->toString( 16 ),
-				$recipientWallet->address,
-				'V',
-				$sourceWallet->token,
-				$value,
-				'walletBundle',
-				$recipientWallet->bundle,
-				null,
-				null
-			),
-        ];
+        // Initializing a new Atom to add tokens to recipient
+        $this->atoms[] = new Atom(
+            $position->add( 1 )->toString( 16 ),
+            $recipientWallet->address,
+            'V',
+            $sourceWallet->token,
+            $value,
+            'walletBundle',
+            $recipientWallet->bundle,
+            null,
+            null
+        );
 
         return $this->atoms;
     }
@@ -117,6 +115,7 @@ class Molecule
      */
     public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
     {
+        $this->molecularHash = null;
 
         foreach ( ['walletAddress', 'walletPosition', ] as $walletKey ) {
 
@@ -129,19 +128,17 @@ class Molecule
         }
 
 		// The primary atom tells the ledger that a certain amount of the new token is being issued.
-        $this->atoms = [
-            new Atom(
-            	$sourceWallet->position,
-				$sourceWallet->address,
-				'C',
-				$sourceWallet->token,
-				$amount,
-				'token',
-				$recipientWallet->token,
-				$tokenMeta,
-				null
-			),
-        ];
+        $this->atoms[] = new Atom(
+            $sourceWallet->position,
+            $sourceWallet->address,
+            'C',
+            $sourceWallet->token,
+            $amount,
+            'token',
+            $recipientWallet->token,
+            $tokenMeta,
+            null
+        );
 
         return $this->atoms;
     }
@@ -157,25 +154,36 @@ class Molecule
      */
     public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
     {
-        $this->atoms = [
-            new Atom(
-            	$wallet->position,
-				$wallet->address,
-				'M',
-				$wallet->token,
-				null,
-				$metaType,
-				$metaId,
-				$meta,
-				null
-			),
-        ];
+        $this->molecularHash = null;
+
+        $this->atoms[] = new Atom(
+            $wallet->position,
+            $wallet->address,
+            'M',
+            $wallet->token,
+            null,
+            $metaType,
+            $metaId,
+            $meta,
+            null
+        );
 
         return $this->atoms;
     }
 
     /**
-	 * * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
+     * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
+     *
+     * @return self
+     */
+    public function clear ()
+    {
+        $this->__construct( $this->cellSlug );
+        return $this;
+    }
+
+    /**
+	 * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
 	 * molecule. Resulting 4096 byte (2048 character) string is the one-time signature.
 	 *
      * @param string $secret
@@ -185,7 +193,8 @@ class Molecule
      */
     public function sign ( $secret, $anonymous = false )
     {
-        if ( empty( $this->atoms ) ) {
+        if ( empty( $this->atoms ) ||
+            !empty( array_filter( $this->atoms, static function ( $atom ) { return !( $atom instanceof Atom ); } ) ) ) {
             throw new AtomsNotFoundException();
         }
 
@@ -258,27 +267,26 @@ class Molecule
      */
     public static function verify ( self $molecule )
     {
-        return static::verifyAtoms( $molecule ) && static::verifyMolecularHash( $molecule ) && static::verifyOts( $molecule ) && static::verifyToken( $molecule );
+        return static::verifyMolecularHash( $molecule ) && static::verifyOts( $molecule ) && static::verifyTokenIsotopeV( $molecule );
     }
 
     /**
      * @param self $molecule
      * @return bool
      */
-    public static function verifyToken ( self $molecule )
+    public static function verifyTokenIsotopeV ( self $molecule )
     {
-        if ( !empty( $molecule->atoms ) ) {
+        if ( null !== $molecule->molecularHash && !empty( $molecule->atoms ) ) {
 
-            $v_atoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+            $vAtoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+            $tokens = array_unique( array_map( static function ( Atom $atom ) { return  $atom->token; }, $vAtoms ) );
 
-            if ( !empty( $v_atoms ) ) {
-                $token = $v_atoms[0]->token;
+            foreach ( $tokens as $token ) {
+                $atomsToken = array_filter( $vAtoms, static function ( Atom $atom ) use ( $token ) { return  ( $token === $atom->token ) ? $atom : false; } );
+                $total = array_sum ( array_map( static function ( Atom $atom ) { return  ( null !== $atom->value ) ? $atom->value * 1 : 0; }, $atomsToken ) );
 
-                foreach ( $v_atoms as $atom ) {
-
-                    if ( $token !== $atom->token ) {
-                        return false;
-                    }
+                if ( 0 !== $total ) {
+                    return false;
                 }
             }
 
@@ -286,15 +294,6 @@ class Molecule
         }
 
         return false;
-    }
-
-    /**
-     * @param self $molecule
-     * @return bool
-     */
-    public static function verifyAtoms ( self $molecule )
-    {
-        return !empty( $molecule->atoms ) && 0 === array_sum( array_map( static function ( Atom $atom ) { return  ( 'V' === $atom->isotope && null !== $atom->value ) ? $atom->value * 1 : 0; }, $molecule->atoms ) );
     }
 
     /**
@@ -306,7 +305,7 @@ class Molecule
      */
     public static function verifyMolecularHash ( self $molecule )
     {
-        return !empty( $molecule->atoms ) && $molecule->molecularHash === Atom::hashAtoms( $molecule->atoms );
+        return null !== $molecule->molecularHash && !empty( $molecule->atoms ) && $molecule->molecularHash === Atom::hashAtoms( $molecule->atoms );
     }
 
     /**
@@ -320,7 +319,7 @@ class Molecule
      */
     public static function verifyOts ( self $molecule )
     {
-        if ( !empty( $molecule->atoms ) ) {
+        if ( null !== $molecule->molecularHash && !empty( $molecule->atoms ) ) {
 
             // Determine first atom
             $first_atom = $molecule->atoms[0];
@@ -377,7 +376,7 @@ class Molecule
      * @param string $hash
      * @return array
      */
-    public static function enumerate ( $hash )
+    protected static function enumerate ( $hash )
     {
         $target = [];
         $mapped = [
@@ -407,7 +406,7 @@ class Molecule
      * @param array $mapped_hash_array
      * @return array
      */
-    public static function normalize ( array $mapped_hash_array )
+    protected static function normalize ( array $mapped_hash_array )
     {
         $total = array_sum( $mapped_hash_array );
         $total_condition = $total < 0;
