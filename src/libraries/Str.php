@@ -99,7 +99,7 @@ class Str
      */
     public static function currentTimeMillis ()
     {
-        return ( string ) round(array_sum( explode( ' ' , microtime() ) ) * 1000);
+        return ( string ) round(array_sum( explode( ' ' , microtime() ) ) * 1000 );
     }
 
     /**
