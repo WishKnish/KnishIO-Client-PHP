@@ -37,6 +37,6 @@ abstract class BaseException extends \LogicException implements IException
      */
     public function __toString ()
     {
-        return get_class( $this ) . " '" . $this->message ."' in " . $this->file . ' (' .$this->line . ')'. PHP_EOL . $this->getTraceAsString();
+        return static::class . " '" . $this->message ."' in " . $this->file . ' (' .$this->line . ')'. PHP_EOL . $this->getTraceAsString();
     }
 }
