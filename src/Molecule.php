@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
 use Symfony\Component\Serializer\Serializer;
@@ -204,8 +205,19 @@ class Molecule
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
+        $atoms = ( new ArrayObject( $this->atoms ) )->getArrayCopy();
+
+        usort($atoms, static function ( Atom $first, Atom $second ) {
+
+            if ( $first->position === $second->position ) {
+                return 0;
+            }
+
+            return $first->position < $second->position ? -1 : 1;
+        });
+
         // Determine first atom
-        $firstAtom = $this->atoms[0];
+        $firstAtom = $atoms[0];
 
         // Generate the private signing key for this molecule
         $key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
