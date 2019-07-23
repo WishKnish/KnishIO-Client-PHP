@@ -338,7 +338,7 @@ class Molecule
             // Rebuilding OTS out of all the atoms
             $ots = '';
 
-            foreach ( $molecule->atoms as $atom ) {
+            foreach ( $atoms as $atom ) {
                 $ots .= $atom->otsFragment;
             }
 
