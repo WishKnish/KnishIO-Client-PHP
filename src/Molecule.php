@@ -205,19 +205,8 @@ class Molecule
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
-        $atoms = ( new ArrayObject( $this->atoms ) )->getArrayCopy();
-
-        usort($atoms, static function ( Atom $first, Atom $second ) {
-
-            if ( $first->position === $second->position ) {
-                return 0;
-            }
-
-            return $first->position < $second->position ? -1 : 1;
-        });
-
         // Determine first atom
-        $firstAtom = $atoms[0];
+        $firstAtom = $this->atoms[0];
 
         // Generate the private signing key for this molecule
         $key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
@@ -333,9 +322,15 @@ class Molecule
     {
         if ( null !== $molecule->molecularHash && !empty( $molecule->atoms ) ) {
 
+            $atoms = ( new ArrayObject( $molecule->atoms ) )->getArrayCopy();
+            usort($atoms, static function ( Atom $first, Atom $second ) {
+                if ( $first->position === $second->position ) {
+                    return 0;
+                }
+                return $first->position < $second->position ? -1 : 1;
+            });
             // Determine first atom
-            $first_atom = $molecule->atoms[0];
-
+            $first_atom = $atoms[0];
             // Convert Hm to numeric notation via EnumerateMolecule(Hm)
             $enumerated_hash = static::enumerate( $molecule->molecularHash );
             $normalized_hash = static::normalize( $enumerated_hash );
