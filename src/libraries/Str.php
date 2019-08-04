@@ -2,6 +2,7 @@
 namespace WishKnish\KnishIO\Client\libraries;
 
 use BI\BigInteger;
+use LZCompressor\LZString;
 
 /**
  * Class Str
@@ -112,4 +113,26 @@ class Str
         $char = mb_substr( $str, $index, 1, 'UTF-8' );
         return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0 ;
     }
+
+
+	/**
+	 * Compresses a given string for web sharing
+	 *
+	 * @param string
+	 * @returns {*}
+	 */
+	public static function compress ( $str ) {
+		return LZString::compressToBase64( $str );
+	}
+
+	/**
+	 * Decompresses a compressed string
+	 *
+	 * @param string
+	 * @returns {*}
+	 */
+	public static function decompress ( $str ) {
+		return LZString::decompressFromBase64( $str );
+	}
+
 }
