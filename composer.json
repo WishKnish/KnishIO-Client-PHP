@@ -13,7 +13,7 @@
 		{
 			"name": "Eugene Teplitsky",
 			"email": "eugene@wishknish.com",
-			"homepage": "https://eugeneteplitsky.com",
+			"homepage": "https://wishknish.com",
 			"role": "developer"
 		},
 		{
@@ -58,6 +58,8 @@
 	],
 	"extra": {
 	},
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"config": {
 		"optimize-autoloader": true
 	},
