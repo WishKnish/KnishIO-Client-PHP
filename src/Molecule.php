@@ -185,7 +185,7 @@ class Molecule
 
     /**
 	 * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
-	 * molecule. Resulting 4096 byte (2048 character) string is the one-time signature.
+	 * molecule. Resulting 4096 byte (2048 character) string is the one-time signature, which is then compressed.
 	 *
      * @param string $secret
      * @param bool $anonymous
@@ -231,8 +231,11 @@ class Molecule
             $signatureFragments .= $workingChunk;
         }
 
+        // Compressing the OTS
+		$signatureFragments = Str::compress($signatureFragments);
+
         // Chunking the signature across multiple atoms
-        $chunkedSignature = Str::chunkSubstr( $signatureFragments, round(2048 / count( $this->atoms ) ) );
+        $chunkedSignature = Str::chunkSubstr( $signatureFragments, round(strlen($signatureFragments) / count( $this->atoms ) ) );
         $lastPosition = null;
 
         for( $chunkCount = 0, $condition = count( $chunkedSignature ); $chunkCount < $condition; $chunkCount++ ) {
@@ -342,22 +345,32 @@ class Molecule
                 $ots .= $atom->otsFragment;
             }
 
+            // Wrong size? Maybe it's compressed
+            if(strlen($ots) != 2048)
+			{
+				// Attempt decompression
+				$ots = Str::decompress($ots);
+
+				// Still wrong? That's a failure
+				if(strlen($ots) != 2048) {
+					return false;
+				}
+			}
+
+            // First atom's wallet is what the molecule must be signed with
             $wallet_address = $first_atom->walletAddress;
 
             // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
             $ots_chunks = str_split( $ots, 128 );
 
             $key_fragments = '';
-
             foreach ( $ots_chunks as $index => $ots_chunk ) {
 
                 // Iterate a number of times equal to 8+Hm[i]
                 $working_chunk = $ots_chunk;
-
                 for ( $iteration_count = 0, $condition = 8 + $normalized_hash[$index]; $iteration_count < $condition; $iteration_count++) {
                     $working_chunk = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $working_chunk )->squeeze(64) );
                 }
-
                 $key_fragments .= $working_chunk;
             }
             // Absorb the hashed Kk into the sponge to receive the digest Dk
