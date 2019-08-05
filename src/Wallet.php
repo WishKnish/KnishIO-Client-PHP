@@ -98,4 +98,14 @@ class Wallet
         // Hashing the intermediate key to produce the private key
         return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb(  bin2hex( $intermediateKeySponge->squeeze(1024) ) )->squeeze(1024) );
     }
+
+    /**
+     * @param $string
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateSecret ( $string )
+    {
+        return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $string )->squeeze( 1024 ) );
+    }
 }
