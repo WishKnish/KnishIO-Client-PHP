@@ -205,8 +205,14 @@ class Molecule
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
+        $atoms = ( new ArrayObject( $this->atoms ) )->getArrayCopy();
+        usort($atoms, static function ( Atom $first, Atom $second ) {
+            if ( $first->position === $second->position ) { return 0; }
+            return $first->position < $second->position ? -1 : 1;
+        });
+
         // Determine first atom
-        $firstAtom = $this->atoms[0];
+        $firstAtom = $atoms[ 0 ];
 
         // Generate the private signing key for this molecule
         $key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
@@ -227,20 +233,18 @@ class Molecule
             for ( $iterationCount = 0, $condition = 8 - $normalizedHash[$idx]; $iterationCount < $condition; $iterationCount++ ) {
                 $workingChunk = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $workingChunk )->squeeze( 64 ) );
             }
-
             $signatureFragments .= $workingChunk;
         }
 
         // Compressing the OTS
-		$signatureFragments = Str::compress($signatureFragments);
+		$signatureFragments = Str::compress( $signatureFragments );
 
         // Chunking the signature across multiple atoms
-        $chunkedSignature = Str::chunkSubstr( $signatureFragments, round(strlen($signatureFragments) / count( $this->atoms ) ) );
+        $chunkedSignature = Str::chunkSubstr( $signatureFragments, round(strlen( $signatureFragments ) / count( $this->atoms ) ) );
         $lastPosition = null;
 
-        for( $chunkCount = 0, $condition = count( $chunkedSignature ); $chunkCount < $condition; $chunkCount++ ) {
-
-            $this->atoms[$chunkCount]->otsFragment = $chunkedSignature[$chunkCount];
+        foreach ( $chunkedSignature as $chunkCount => $chunk ) {
+            $this->atoms[$chunkCount]->otsFragment = $chunk;
             $lastPosition = $this->atoms[$chunkCount]->position;
         }
 
@@ -327,32 +331,30 @@ class Molecule
 
             $atoms = ( new ArrayObject( $molecule->atoms ) )->getArrayCopy();
             usort($atoms, static function ( Atom $first, Atom $second ) {
-                if ( $first->position === $second->position ) {
-                    return 0;
-                }
+                if ( $first->position === $second->position ) { return 0; }
                 return $first->position < $second->position ? -1 : 1;
             });
+
             // Determine first atom
-            $first_atom = $atoms[0];
+            $first_atom = $atoms[ 0 ];
+
             // Convert Hm to numeric notation via EnumerateMolecule(Hm)
             $enumerated_hash = static::enumerate( $molecule->molecularHash );
             $normalized_hash = static::normalize( $enumerated_hash );
 
             // Rebuilding OTS out of all the atoms
             $ots = '';
-
-            foreach ( $atoms as $atom ) {
+            foreach ( $molecule->atoms as $atom ) {
                 $ots .= $atom->otsFragment;
             }
 
             // Wrong size? Maybe it's compressed
-            if(strlen($ots) != 2048)
-			{
+            if ( strlen( $ots ) !== 2048 ) {
 				// Attempt decompression
-				$ots = Str::decompress($ots);
+				$ots = Str::decompress( $ots );
 
 				// Still wrong? That's a failure
-				if(strlen($ots) != 2048) {
+				if ( strlen( $ots ) !== 2048 ) {
 					return false;
 				}
 			}
@@ -365,7 +367,6 @@ class Molecule
 
             $key_fragments = '';
             foreach ( $ots_chunks as $index => $ots_chunk ) {
-
                 // Iterate a number of times equal to 8+Hm[i]
                 $working_chunk = $ots_chunk;
                 for ( $iteration_count = 0, $condition = 8 + $normalized_hash[$index]; $iteration_count < $condition; $iteration_count++) {
@@ -373,6 +374,7 @@ class Molecule
                 }
                 $key_fragments .= $working_chunk;
             }
+
             // Absorb the hashed Kk into the sponge to receive the digest Dk
             $digest = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $key_fragments )->squeeze(1024) );
 
