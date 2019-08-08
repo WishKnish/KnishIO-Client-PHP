@@ -40,7 +40,8 @@
 		"symfony/property-access": "^3.4|^4.0",
 		"symfony/polyfill-mbstring": "^1.11",
 		"symfony/polyfill-php70": "^1.11",
-		"nullpunkt/lz-string-php": "^1.2"
+		"nullpunkt/lz-string-php": "^1.2",
+		"guzzlehttp/guzzle": "^6.3"
 	},
 	"require-dev": {
 		"symfony/var-dumper": "^3.4|^4.0"

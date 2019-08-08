@@ -77,11 +77,7 @@ class Atom
         $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 
         usort($atomList, static function ( self $first, self $second ) {
-
-            if ( $first->position === $second->position ) {
-                return 0;
-            }
-
+            if ( $first->position === $second->position ) { return 0; }
             return $first->position < $second->position ? -1 : 1;
         });
 

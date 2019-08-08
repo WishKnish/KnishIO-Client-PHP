@@ -51,12 +51,9 @@ class Wallet
 
         foreach ( Str::chunkSubstr( $key, 128 ) as $idx => $fragment ) {
             $workingFragment = $fragment;
-
-            foreach ( range(1, 16) as $i ) {
-
+            foreach ( range(1, 16) as $_ ) {
                 $workingFragment =  bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $workingFragment )->squeeze(64) );
             }
-
             $digestSponge->absorb( $workingFragment );
         }
 
