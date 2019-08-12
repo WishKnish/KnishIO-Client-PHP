@@ -118,8 +118,8 @@ class Str
 	/**
 	 * Compresses a given string for web sharing
 	 *
-	 * @param string
-	 * @returns {*}
+	 * @param string $str
+	 * @return string
 	 */
 	public static function compress ( $str ) {
 		return LZString::compressToBase64( $str );
@@ -128,8 +128,8 @@ class Str
 	/**
 	 * Decompresses a compressed string
 	 *
-	 * @param string
-	 * @returns {*}
+	 * @param string $str
+	 * @return string
 	 */
 	public static function decompress ( $str ) {
 		return LZString::decompressFromBase64( $str );
