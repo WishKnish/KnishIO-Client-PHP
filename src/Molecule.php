@@ -8,7 +8,6 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
-use BI\BigInteger;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -74,11 +73,11 @@ class Molecule
     public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value)
     {
         $this->molecularHash = null;
-        $position = new BigInteger( $sourceWallet->position, 16 );
+        $idx = count( $this->atoms );
 
         // Initializing a new Atom to remove tokens from source
-        $this->atoms[] = new Atom(
-            $position->toString( 16 ),
+        $this->atoms[$idx] = new Atom(
+            $sourceWallet->position,
             $sourceWallet->address,
             'V',
             $sourceWallet->token,
@@ -89,9 +88,10 @@ class Molecule
             null
         );
 
+        $idx++;
         // Initializing a new Atom to add tokens to recipient
-        $this->atoms[] = new Atom(
-            $position->add( 1 )->toString( 16 ),
+        $this->atoms[$idx] = new Atom(
+            $recipientWallet->position,
             $recipientWallet->address,
             'V',
             $sourceWallet->token,
@@ -128,8 +128,9 @@ class Molecule
             }
         }
 
+        $idx = count( $this->atoms );
 		// The primary atom tells the ledger that a certain amount of the new token is being issued.
-        $this->atoms[] = new Atom(
+        $this->atoms[$idx] = new Atom(
             $sourceWallet->position,
             $sourceWallet->address,
             'C',
@@ -156,8 +157,9 @@ class Molecule
     public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
     {
         $this->molecularHash = null;
+        $idx = count( $this->atoms );
 
-        $this->atoms[] = new Atom(
+        $this->atoms[$idx] = new Atom(
             $wallet->position,
             $wallet->address,
             'M',
@@ -206,10 +208,7 @@ class Molecule
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
         $atoms = ( new ArrayObject( $this->atoms ) )->getArrayCopy();
-        usort($atoms, static function ( Atom $first, Atom $second ) {
-            if ( $first->position === $second->position ) { return 0; }
-            return $first->position < $second->position ? -1 : 1;
-        });
+        ksort( $atoms, SORT_NUMERIC );
 
         // Determine first atom
         $firstAtom = $atoms[ 0 ];
@@ -330,10 +329,7 @@ class Molecule
         if ( null !== $molecule->molecularHash && !empty( $molecule->atoms ) ) {
 
             $atoms = ( new ArrayObject( $molecule->atoms ) )->getArrayCopy();
-            usort($atoms, static function ( Atom $first, Atom $second ) {
-                if ( $first->position === $second->position ) { return 0; }
-                return $first->position < $second->position ? -1 : 1;
-            });
+            ksort( $atoms, SORT_NUMERIC );
 
             // Determine first atom
             $first_atom = $atoms[ 0 ];

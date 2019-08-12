@@ -76,10 +76,7 @@ class Atom
     {
         $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 
-        usort($atomList, static function ( self $first, self $second ) {
-            if ( $first->position === $second->position ) { return 0; }
-            return $first->position < $second->position ? -1 : 1;
-        });
+        ksort( $atoms, SORT_NUMERIC );
 
         $molecularSponge = SHA3::init( SHA3::SHAKE256 );
         $numberOfAtoms = count( $atomList );
