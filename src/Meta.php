@@ -38,7 +38,7 @@ class Meta
 	 * @param array $meta
 	 * @return array
 	 */
-	public static function normalizeMeta ( array $meta ): array
+	public static function normalizeMeta ( array $meta )
 	{
 		$deep = array_filter( $meta, static function ( $val ) { return is_array( $val ); } );
 		$plane = array_filter( $meta, static function ( $val ) { return !is_array( $val ); } );
@@ -55,7 +55,7 @@ class Meta
 	 * @param array $meta
 	 * @return array
 	 */
-	public static function aggregateMeta( array $meta ): array
+	public static function aggregateMeta( array $meta )
 	{
 		$aggregate = [];
 		if ( count($meta) ) {

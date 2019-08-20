@@ -121,7 +121,8 @@ class Str
 	 * @param string $str
 	 * @return string
 	 */
-	public static function compress ( $str ) {
+	public static function compress ( $str )
+    {
 		return LZString::compressToBase64( $str );
 	}
 
@@ -131,7 +132,8 @@ class Str
 	 * @param string $str
 	 * @return string
 	 */
-	public static function decompress ( $str ) {
+	public static function decompress ( $str )
+    {
 		return LZString::decompressFromBase64( $str );
 	}
 

@@ -256,7 +256,7 @@ class Molecule
      */
     public static function jsonToObject( $string )
     {
-        $serializer =  new Serializer( [new ObjectNormalizer(),], [new JsonEncoder(),] );
+        $serializer =  new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
         $object = $serializer->deserialize( $string, static::class, 'json' );
 
         foreach ( $object->atoms as $idx => $atom ) {
