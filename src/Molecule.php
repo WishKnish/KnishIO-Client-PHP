@@ -11,7 +11,7 @@ use desktopd\SHA3\Sponge as SHA3;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use WishKnish\KnishIO\Client\libraries\Str;
+use WishKnish\KnishIO\Client\libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 use WishKnish\KnishIO\Client\Exception\AtomsNotFoundException;
 
@@ -47,7 +47,7 @@ class Molecule
         $this->cellSlug = $cellSlug;
         $this->bundle = null;
         $this->status = null;
-        $this->createdAt = Str::currentTimeMillis();
+        $this->createdAt = Strings::currentTimeMillis();
         $this->atoms = [];
     }
 
@@ -217,7 +217,7 @@ class Molecule
         $key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
 
         // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
-        $keyChunks = Str::chunkSubstr( $key, 128 );
+        $keyChunks = Strings::chunkSubstr( $key, 128 );
 
         // Convert Hm to numeric notation via EnumerateMolecule(Hm)
         $enumeratedHash = static::enumerate( $this->molecularHash );
@@ -236,10 +236,10 @@ class Molecule
         }
 
         // Compressing the OTS
-		$signatureFragments = Str::compress( $signatureFragments );
+		$signatureFragments = Strings::compress( $signatureFragments );
 
         // Chunking the signature across multiple atoms
-        $chunkedSignature = Str::chunkSubstr( $signatureFragments, round(strlen( $signatureFragments ) / count( $this->atoms ) ) );
+        $chunkedSignature = Strings::chunkSubstr( $signatureFragments, round(strlen( $signatureFragments ) / count( $this->atoms ) ) );
         $lastPosition = null;
 
         foreach ( $chunkedSignature as $chunkCount => $chunk ) {
@@ -347,7 +347,7 @@ class Molecule
             // Wrong size? Maybe it's compressed
             if ( strlen( $ots ) !== 2048 ) {
 				// Attempt decompression
-				$ots = Str::decompress( $ots );
+				$ots = Strings::decompress( $ots );
 
 				// Still wrong? That's a failure
 				if ( strlen( $ots ) !== 2048 ) {

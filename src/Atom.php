@@ -1,10 +1,14 @@
 <?php
+// Copyright 2019 WishKnish Corp. All rights reserved.
+// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
+// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
+// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
 namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
-use WishKnish\KnishIO\Client\libraries\Str;
+use WishKnish\KnishIO\Client\libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
 /**
@@ -64,7 +68,7 @@ class Atom
 		$this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
 
 		$this->otsFragment = $otsFragment;
-		$this->createdAt = Str::currentTimeMillis();
+		$this->createdAt = Strings::currentTimeMillis();
 	}
 
 	/**
@@ -114,7 +118,7 @@ class Atom
 						continue;
 					}
 
-					if ( null !== $value ) {
+					if ( $value !== null ) {
 
 						$molecularSponge->absorb( ( string ) $value );
 					}
@@ -135,7 +139,7 @@ class Atom
 			}
 			case 'base17':
 			{
-				$target = str_pad( Str::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+				$target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
 				break;
 			}
 			default:
