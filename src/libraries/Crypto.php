@@ -21,16 +21,15 @@ class Crypto
 	 * @param null $seed
 	 * @param int $length
 	 * @return string
+     * @throws \Exception
 	 */
 	public static function generateSecret ( $seed = null, $length = 2048 )
 	{
-		if ( $seed ) {
-			return bin2hex( SHA3::init( SHA3::SHAKE256 )
-				->absorb( $seed )
-				->squeeze( $length / 4 ) );
-		} else {
-			return Strings::randomString( $length );
-		}
+	    return in_array( $seed, [ null, '' ], true ) ?
+            Strings::randomString( $length ) :
+            bin2hex( SHA3::init( SHA3::SHAKE256 )
+                ->absorb( $seed )
+                ->squeeze( $length / 4 ) );
 	}
 
 	/**

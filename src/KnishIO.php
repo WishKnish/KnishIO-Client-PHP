@@ -8,6 +8,7 @@ namespace WishKnish\KnishIO\Client;
 
 use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\libraries\Crypto;
 
 /**
  * Class KnishIO
@@ -50,7 +51,7 @@ class KnishIO
 		$wallet = null;
 		$response = static::request(
 			static::$query[ 'balance' ],
-			[ 'bundleHash' => Wallet::generateBundleHash( $secret ), 'token' => $token ]
+			[ 'bundleHash' => Crypto::generateBundleHash( $secret ), 'token' => $token ]
 		);
 
 		if ( isset( $response[ 'data' ][ 'Balance' ] ) ) {

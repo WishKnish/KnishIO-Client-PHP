@@ -11,6 +11,7 @@ use desktopd\SHA3\Sponge as SHA3;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use WishKnish\KnishIO\Client\libraries\Crypto;
 use WishKnish\KnishIO\Client\libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 use WishKnish\KnishIO\Client\Exception\AtomsNotFoundException;
@@ -67,7 +68,7 @@ class Molecule
      * @param Wallet $recipientWallet
      * @param Wallet $remainderWallet
      * @param integer|float $value
-     * @return array
+     * @return self
      * @throws \Exception
      */
     public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value)
@@ -82,15 +83,14 @@ class Molecule
             'V',
             $sourceWallet->token,
             -$value,
-            'remainderWallet',
-            $remainderWallet->address,
-            [ 'remainderPosition' => $remainderWallet->position ],
+            'sourceWallet',
+            null,
+            null,
             null
         );
 
-        $idx++;
         // Initializing a new Atom to add tokens to recipient
-        $this->atoms[$idx] = new Atom(
+        $this->atoms[++$idx] = new Atom(
             $recipientWallet->position,
             $recipientWallet->address,
             'V',
@@ -102,7 +102,19 @@ class Molecule
             null
         );
 
-        return $this->atoms;
+        $this->atoms[++$idx] = new Atom(
+            $remainderWallet->position,
+            $remainderWallet->address,
+            'V',
+            $sourceWallet->token,
+            $remainderWallet->balance + ( $sourceWallet->balance - $value ),
+            'remainderWallet',
+            null,
+            null,
+            null
+        );
+
+        return $this;
     }
 
     /**
@@ -112,7 +124,7 @@ class Molecule
      * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
      * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
      * @param array $tokenMeta - additional fields to configure the token
-     * @return array
+     * @return self
      */
     public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
     {
@@ -142,7 +154,7 @@ class Molecule
             null
         );
 
-        return $this->atoms;
+        return $this;
     }
 
     /**
@@ -152,7 +164,7 @@ class Molecule
      * @param array $meta
      * @param string $metaType
      * @param string|integer $metaId
-     * @return array
+     * @return self
      */
     public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
     {
@@ -171,7 +183,7 @@ class Molecule
             null
         );
 
-        return $this->atoms;
+        return $this;
     }
 
     /**
@@ -202,7 +214,7 @@ class Molecule
         }
 
         if ( !$anonymous ) {
-            $this->bundle = Wallet::generateBundleHash( $secret );
+            $this->bundle = Crypto::generateBundleHash( $secret );
         }
 
         $this->molecularHash = Atom::hashAtoms( $this->atoms );
@@ -285,15 +297,40 @@ class Molecule
     {
         if ( null !== $molecule->molecularHash && !empty( $molecule->atoms ) ) {
 
+            $value_conversion = static function ( Atom $atom ) {
+                return  ( null !== $atom->value ) ? $atom->value * 1 : 0;
+            };
+
+            // Select all atoms V
             $vAtoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+            // Get the names of tokens used for transactions
             $tokens = array_unique( array_map( static function ( Atom $atom ) { return  $atom->token; }, $vAtoms ) );
 
             foreach ( $tokens as $token ) {
-                $atomsToken = array_filter( $vAtoms, static function ( Atom $atom ) use ( $token ) { return  ( $token === $atom->token ) ? $atom : false; } );
-                $total = array_sum ( array_map( static function ( Atom $atom ) { return  ( null !== $atom->value ) ? $atom->value * 1 : 0; }, $atomsToken ) );
 
-                if ( 0 !== $total ) {
-                    return false;
+                // We get all the V atoms for this token
+                $atomsToken = array_filter( $vAtoms, static function ( Atom $atom ) use ( $token ) { return  ( $token === $atom->token ) ? $atom : false; } );
+
+                // Each token transaction consists of 3 atoms
+                // Break atoms into transactions
+                foreach ( array_chunk( $atomsToken, 3 ) as $atoms ) {
+
+                    // If less than 3 atoms are involved in the transaction, these are integrity violations
+                    if ( count( $atoms ) < 3 ) {
+                        return false;
+                    }
+
+                    // If the sum of the first two atoms is not equal to zero,
+                    // this violates the integrity of the transaction
+                    if ( 0 !== array_sum( array_map( $value_conversion, array_slice( $atoms, 0, 2 ) ) ) ) {
+                        return false;
+                    }
+
+                    // If after the transaction the poisoner wallet has a negative balance,
+                    // this is a violation of the integrity of the transaction
+                    if ( array_sum( array_map( $value_conversion, $atoms ) ) < 0 ) {
+                        return false;
+                    }
                 }
             }
 
