@@ -1,4 +1,8 @@
 <?php
+// Copyright 2019 WishKnish Corp. All rights reserved.
+// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
+// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
+// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
 namespace WishKnish\KnishIO\Client;
 
@@ -38,14 +42,14 @@ class Meta
 	 * @param array $meta
 	 * @return array
 	 */
-	public static function normalizeMeta ( array $meta )
+	public static function normalizeMeta ( array $meta ): array
 	{
 		$deep = array_filter( $meta, static function ( $val ) { return is_array( $val ); } );
 		$plane = array_filter( $meta, static function ( $val ) { return !is_array( $val ); } );
 		return array_replace( $deep,
 			array_map( static function ( $key, $val ) {
 				return [
-					'key' => $key,
+					'key'   => $key,
 					'value' => $val
 				];
 			}, array_keys( $plane ), array_values( $plane ) ) );
@@ -55,12 +59,12 @@ class Meta
 	 * @param array $meta
 	 * @return array
 	 */
-	public static function aggregateMeta( array $meta )
+	public static function aggregateMeta ( array $meta ): array
 	{
 		$aggregate = [];
-		if ( count($meta) ) {
+		if ( count( $meta ) ) {
 			foreach ( $meta as $meta_entry ) {
-				$aggregate[ $meta_entry['key'] ] = $meta_entry['value'];
+				$aggregate[ $meta_entry[ 'key' ] ] = $meta_entry[ 'value' ];
 			}
 		}
 		return $aggregate;
