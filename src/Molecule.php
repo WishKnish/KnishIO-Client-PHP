@@ -83,7 +83,7 @@ class Molecule
             'V',
             $sourceWallet->token,
             -$value,
-            'sourceWallet',
+            null,
             null,
             null,
             null
@@ -107,9 +107,9 @@ class Molecule
             $remainderWallet->address,
             'V',
             $sourceWallet->token,
-            $remainderWallet->balance + ( $sourceWallet->balance - $value ),
-            'remainderWallet',
-            null,
+            $sourceWallet->balance - $value,
+            'walletBundle',
+            $sourceWallet->bundle,
             null,
             null
         );
@@ -251,7 +251,7 @@ class Molecule
 		$signatureFragments = Strings::compress( $signatureFragments );
 
         // Chunking the signature across multiple atoms
-        $chunkedSignature = Strings::chunkSubstr( $signatureFragments, round(strlen( $signatureFragments ) / count( $this->atoms ) ) );
+        $chunkedSignature = Strings::chunkSubstr( $signatureFragments, ceil(mb_strlen( $signatureFragments ) / count( $this->atoms ) ) );
         $lastPosition = null;
 
         foreach ( $chunkedSignature as $chunkCount => $chunk ) {
@@ -357,7 +357,7 @@ class Molecule
      * of signature fragments Om and a molecular hash Hm into a single-use wallet address to be matched against
      * the sender’s address.
      *
-     * @param \WishKnish\KnishIO\Client\Molecule $molecule
+     * @param Molecule $molecule
      * @return bool
      * @throws \Exception
      */
@@ -382,12 +382,12 @@ class Molecule
             }
 
             // Wrong size? Maybe it's compressed
-            if ( strlen( $ots ) !== 2048 ) {
+            if ( mb_strlen( $ots ) !== 2048 ) {
 				// Attempt decompression
 				$ots = Strings::decompress( $ots );
 
 				// Still wrong? That's a failure
-				if ( strlen( $ots ) !== 2048 ) {
+				if ( mb_strlen( $ots ) !== 2048 ) {
 					return false;
 				}
 			}
@@ -484,5 +484,32 @@ class Molecule
         }
 
         return $mapped_hash_array;
+    }
+
+    /**
+     * Returns the array of atoms to which the incoming atom belongs.
+     *
+     * @param Molecule $molecule
+     * @param Atom $atom
+     * @return array|null
+     */
+    public static function getGroupAtomsV ( Molecule $molecule, Atom $atom )
+    {
+        // Select all atoms V
+        $vAtoms = array_filter( $molecule->atoms, static function ( Atom $a ) use ( $atom ) {
+            return  ( 'V' === $a->isotope && $a->token === $atom->token ) ? $a : false;
+        } );
+
+        foreach ( array_chunk( $vAtoms, 3 ) as $atoms ) {
+            $search = array_filter( $atoms, static function ( Atom $a ) use ( $atom ) {
+                return ( $a->position === $atom->position && $a->walletAddress === $atom->walletAddress ) ? $a : false;
+            } );
+
+            if ( !empty( $search ) ) {
+                return $atoms;
+            }
+        }
+
+        return null;
     }
 }
