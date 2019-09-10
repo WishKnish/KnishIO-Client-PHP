@@ -52,6 +52,7 @@ class KnishIO
         $response = static::request(
             static::$query[ 'balance' ],
             [
+                // If bundle hash came, we pass it, otherwise we consider it a secret
                 'bundleHash' => mb_strlen( ( string ) $code ) === 64 ? $code : Crypto::generateBundleHash( $code ),
                 'token' => $token,
             ]
@@ -97,13 +98,13 @@ class KnishIO
 
 	/**
 	 * @param string $fromSecret
-	 * @param string $toSecret
+	 * @param string|Wallet $to
 	 * @param string $token
 	 * @param int|float $amount
 	 * @return array
 	 * @throws \Exception|\ReflectionException|InvalidResponseException
 	 */
-	public static function transferToken ( $fromSecret, $toSecret, $token, $amount )
+	public static function transferToken ( $fromSecret, $to, $token, $amount )
 	{
 		$fromWallet = static::getBalance( $fromSecret, $token );
 
@@ -111,7 +112,15 @@ class KnishIO
 			return [ 'status' => 'rejected', 'reason' => 'The transfer amount cannot be greater than the sender\'s balance', ];
 		}
 
-		$toWallet = static::getBalance( $toSecret, $token ) ?: new Wallet( $toSecret, $token );
+		// If this wallet is assigned, if not, try to get a valid wallet
+        $toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
+
+		// If the wallet is not transferred in a variable and the user does not have a balance wallet,
+        // then create a new one for him
+		if ( null === $toWallet ) {
+            $toWallet = new Wallet( $to, $token );
+        }
+
 		$molecule = new Molecule();
 		$molecule->initValue( $fromWallet, $toWallet, new Wallet( $fromSecret, $token ), $amount );
 		$molecule->sign( $fromSecret );
