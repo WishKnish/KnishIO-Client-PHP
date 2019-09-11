@@ -86,26 +86,41 @@ class KnishIO
 		$molecule->sign( $secret );
 
         if ( ! Molecule::verifyTokenIsotopeV( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Incorrect "V" isotopes in a molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Incorrect "V" isotopes in a molecule',
+            ];
         }
 
         if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Wrong hash for the molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Wrong hash for the molecule',
+            ];
         }
 
         if ( ! Molecule::verifyOts( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Wrong OTS in the molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Wrong OTS in the molecule',
+            ];
         }
 
 		if ( Molecule::verify( $molecule ) ) {
 			$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 			return \array_intersect_key(
-				$response[ 'data' ][ 'ProposeMolecule' ] ?: [ 'status' => 'rejected', 'reason' => 'Invalid response from server', ],
+				$response[ 'data' ][ 'ProposeMolecule' ] ?: [
+				    'status' => 'rejected',
+                    'reason' => 'Invalid response from server',
+                ],
 				\array_flip( [ 'reason', 'status', ] )
 			);
 		}
 
-		return [ 'status' => 'rejected', 'reason' => 'The address of the molecule is not correctly generated', ];
+		return [
+		    'status' => 'rejected',
+            'reason' => 'The address of the molecule is not correctly generated',
+        ];
 	}
 
 	/**
@@ -121,7 +136,10 @@ class KnishIO
 		$fromWallet = static::getBalance( $fromSecret, $token );
 
 		if ( null === $fromWallet || $amount > $fromWallet->balance ) {
-			return [ 'status' => 'rejected', 'reason' => 'The transfer amount cannot be greater than the sender\'s balance', ];
+			return [
+			    'status' => 'rejected',
+                'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
+            ];
 		}
 
 		// If this wallet is assigned, if not, try to get a valid wallet
@@ -138,26 +156,44 @@ class KnishIO
 		$molecule->sign( $fromSecret );
 
 		if ( ! Molecule::verifyTokenIsotopeV( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Incorrect "V" isotopes in a molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Incorrect "V" isotopes in a molecule',
+            ];
         }
 
 		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Wrong hash for the molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Wrong hash for the molecule',
+            ];
         }
 
 		if ( ! Molecule::verifyOts( $molecule ) ) {
-            return [ 'status' => 'rejected', 'reason' => 'Wrong OTS in the molecule', ];
+            return [
+                'status' => 'rejected',
+                'reason' => 'Wrong OTS in the molecule',
+            ];
         }
 
 		if ( Molecule::verify( $molecule ) ) {
 			$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 			return \array_intersect_key(
-				$response[ 'data' ][ 'ProposeMolecule' ] ?: [ 'status' => 'rejected', 'reason' => 'Invalid response from server', ],
-				\array_flip( [ 'reason', 'status', ] )
+				$response[ 'data' ][ 'ProposeMolecule' ] ?: [
+				    'status' => 'rejected',
+                    'reason' => 'Invalid response from server',
+                ],
+				\array_flip( [
+				    'reason',
+                    'status',
+                ] )
 			);
 		}
 
-		return [ 'status' => 'rejected', 'reason' => 'The address of the molecule is not correctly generated', ];
+		return [
+		    'status' => 'rejected',
+            'reason' => 'The address of the molecule is not correctly generated',
+        ];
 	}
 
 	/**
@@ -170,7 +206,10 @@ class KnishIO
 				'base_uri'    => static::$url,
 				'verify'      => false,
 				'http_errors' => false,
-				'headers'     => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ]
+				'headers'     => [
+				    'User-Agent' => 'KnishIO/0.1',
+                    'Accept' => 'application/json',
+                ]
 			] );
 		}
 
@@ -185,7 +224,12 @@ class KnishIO
 	 */
 	private static function request ( $query, $variables )
 	{
-		$response = static::getClient()->post( null, [ 'json' => [ 'query' => $query, 'variables' => $variables, ] ] );
+		$response = static::getClient()->post( null, [
+		    'json' => [
+		        'query' => $query,
+                'variables' => $variables,
+            ]
+        ] );
 		$responseJson = \json_decode( $response->getBody()->getContents(), true );
 
 		if ( null === $responseJson ) {
