@@ -85,6 +85,18 @@ class KnishIO
 		$molecule->initTokenCreation( new Wallet( $secret ), new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
 
+        if ( ! Molecule::verifyTokenIsotopeV( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Incorrect "V" isotopes in a molecule', ];
+        }
+
+        if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Wrong hash for the molecule', ];
+        }
+
+        if ( ! Molecule::verifyOts( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Wrong OTS in the molecule', ];
+        }
+
 		if ( Molecule::verify( $molecule ) ) {
 			$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 			return \array_intersect_key(
@@ -124,6 +136,18 @@ class KnishIO
 		$molecule = new Molecule();
 		$molecule->initValue( $fromWallet, $toWallet, new Wallet( $fromSecret, $token ), $amount );
 		$molecule->sign( $fromSecret );
+
+		if ( ! Molecule::verifyTokenIsotopeV( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Incorrect "V" isotopes in a molecule', ];
+        }
+
+		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Wrong hash for the molecule', ];
+        }
+
+		if ( ! Molecule::verifyOts( $molecule ) ) {
+            return [ 'status' => 'rejected', 'reason' => 'Wrong OTS in the molecule', ];
+        }
 
 		if ( Molecule::verify( $molecule ) ) {
 			$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
