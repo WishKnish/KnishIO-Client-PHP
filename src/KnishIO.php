@@ -60,12 +60,15 @@ class KnishIO
 
         if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
             $balance = $response[ 'data' ][ 'Balance' ];
-            $wallet = new Wallet( $code, $balance[ 'tokenSlug' ] );
-            $wallet->address = $balance[ 'address' ];
-            $wallet->position = $balance[ 'position' ];
-            $wallet->balance = $balance[ 'amount' ];
-            $wallet->bundle = $balance[ 'bundleHash' ];
-            unset( $wallet->key );
+
+            if ( $balance[ 'tokenSlug' ] === $token ) {
+                $wallet = new Wallet( $code, $balance[ 'tokenSlug' ] );
+                $wallet->address = $balance[ 'address' ];
+                $wallet->position = $balance[ 'position' ];
+                $wallet->balance = $balance[ 'amount' ];
+                $wallet->bundle = $balance[ 'bundleHash' ];
+                unset( $wallet->key );
+            }
         }
 
         return $wallet;
