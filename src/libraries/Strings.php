@@ -62,7 +62,7 @@ class Strings
 	 * @param string|null $dest_symbol_table
 	 * @return string
 	 */
-	public static function charsetBaseConvert ( $src, $from_base, $to_base, $src_symbol_table = null, $dest_symbol_table = null ): string
+	public static function charsetBaseConvert ( $src, $from_base, $to_base, $src_symbol_table = null, $dest_symbol_table = null )
 	{
 		// The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
 		$base_symbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
