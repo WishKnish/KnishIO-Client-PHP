@@ -15,13 +15,15 @@ use WishKnish\KnishIO\Client\libraries\Strings;
  * Class Wallet
  * @package WishKnish\KnishIO\Client
  *
- * @property $position
- * @property $token
- * @property $key
- * @property $address
- * @property $balance
- * @property $molecules
- * @property $bundle
+ * @property string $position
+ * @property string $token
+ * @property string $key
+ * @property string $address
+ * @property int|float $balance
+ * @property array $molecules
+ * @property string $bundle
+ * @property string $privkey
+ * @property string $pubkey
  *
  */
 class Wallet
@@ -44,6 +46,8 @@ class Wallet
 		$this->balance = 0;
 		$this->molecules = [];
 		$this->bundle = Crypto::generateBundleHash( $secret );
+		$this->privkey = $this->getMyEncPrivateKey();
+		$this->pubkey = $this->getMyEncPublicKey();
 	}
 
 	/**
@@ -65,6 +69,52 @@ class Wallet
 
 		return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )->squeeze( 32 ) );
 	}
+
+    /**
+     * Derives a private key for encrypting data with this wallet's key
+     *
+     * @return string
+     * @throws \Exception
+     */
+	public function getMyEncPrivateKey ()
+    {
+        return Crypto::generateEncPrivateKey( $this->key );
+    }
+
+    /**
+     * Dervies a public key for encrypting data for this wallet's consumption
+     *
+     * @return string
+     * @throws \Exception
+     */
+    public function getMyEncPublicKey ()
+    {
+        return Crypto::generateEncPublicKey( $this->getMyEncPrivateKey() );
+    }
+
+    /**
+     * Creates a shared key by combining this wallet's private key and another wallet's public key
+     *
+     * @param $otherPublicKey
+     * @return string
+     * @throws \Exception
+     */
+    public function getMyEncSharedKey ( $otherPublicKey  )
+    {
+        return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $otherPublicKey );
+    }
+
+    /**
+     * Uses the current wallet's private key to decrypt the given message
+     *
+     * @param $message
+     * @return array|null
+     * @throws \Exception
+     */
+    public function decryptMyMessage ( $message )
+    {
+        return Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
+    }
 
 	/**
 	 * @param string $secret

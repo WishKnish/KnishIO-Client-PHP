@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client;
 
-use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
