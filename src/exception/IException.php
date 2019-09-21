@@ -1,4 +1,5 @@
 <?php
+
 namespace WishKnish\KnishIO\Client\Exception;
 
 /**
@@ -7,13 +8,19 @@ namespace WishKnish\KnishIO\Client\Exception;
  */
 interface IException
 {
-    public function getMessage ();
-    public function getCode ();
-    public function getFile ();
-    public function getLine ();
-    public function getTrace ();
-    public function getTraceAsString ();
+	public function getMessage ();
 
-    public function __toString ();
-    public function __construct( $message = null, $code = 0, \Throwable $previous = null );
+	public function getCode ();
+
+	public function getFile ();
+
+	public function getLine ();
+
+	public function getTrace ();
+
+	public function getTraceAsString ();
+
+	public function __toString ();
+
+	public function __construct ( $message = null, $code = 0, \Throwable $previous = null );
 }

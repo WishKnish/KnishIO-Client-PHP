@@ -21,7 +21,8 @@ trait Json
 	 */
 	public function toJson ()
 	{
-		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
+		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )
+			->serialize( $this, 'json' );
 	}
 
 	/**
@@ -30,6 +31,7 @@ trait Json
 	 */
 	public static function jsonToObject ( $string )
 	{
-		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );
+		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )
+			->deserialize( $string, static::class, 'json' );
 	}
 }

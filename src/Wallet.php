@@ -62,59 +62,67 @@ class Wallet
 		foreach ( Strings::chunkSubstr( $key, 128 ) as $idx => $fragment ) {
 			$workingFragment = $fragment;
 			foreach ( range( 1, 16 ) as $_ ) {
-				$workingFragment = bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( $workingFragment )->squeeze( 64 ) );
+				$workingFragment = bin2hex(
+					SHA3::init( SHA3::SHAKE256 )
+						->absorb( $workingFragment )
+						->squeeze( 64 )
+				);
 			}
 			$digestSponge->absorb( $workingFragment );
 		}
 
-		return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )->squeeze( 32 ) );
+		return bin2hex(
+			SHA3::init( SHA3::SHAKE256 )
+				->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )
+				->squeeze( 32 )
+		);
 	}
 
-    /**
-     * Derives a private key for encrypting data with this wallet's key
-     *
-     * @return string
-     * @throws \Exception
-     */
+	/**
+	 * Derives a private key for encrypting data with this wallet's key
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
 	public function getMyEncPrivateKey ()
-    {
-        return Crypto::generateEncPrivateKey( $this->key );
-    }
+	{
+		return Crypto::generateEncPrivateKey( $this->key );
+	}
 
-    /**
-     * Dervies a public key for encrypting data for this wallet's consumption
-     *
-     * @return string
-     * @throws \Exception
-     */
-    public function getMyEncPublicKey ()
-    {
-        return Crypto::generateEncPublicKey( $this->getMyEncPrivateKey() );
-    }
+	/**
+	 * Dervies a public key for encrypting data for this wallet's consumption
+	 *
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getMyEncPublicKey ()
+	{
+		return Crypto::generateEncPublicKey( $this->getMyEncPrivateKey() );
+	}
 
-    /**
-     * Creates a shared key by combining this wallet's private key and another wallet's public key
-     *
-     * @param $otherPublicKey
-     * @return string
-     * @throws \Exception
-     */
-    public function getMyEncSharedKey ( $otherPublicKey  )
-    {
-        return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $otherPublicKey );
-    }
+	/**
+	 * Creates a shared key by combining this wallet's private key and another wallet's public key
+	 *
+	 * @param $otherPublicKey
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function getMyEncSharedKey ( $otherPublicKey )
+	{
+		return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $otherPublicKey );
+	}
 
-    /**
-     * Uses the current wallet's private key to decrypt the given message
-     *
-     * @param $message
-     * @return array|null
-     * @throws \Exception
-     */
-    public function decryptMyMessage ( $message )
-    {
-        return Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
-    }
+	/**
+	 * Uses the current wallet's private key to decrypt the given message
+	 *
+	 * @param $message
+	 * @return array|null
+	 * @throws \Exception
+	 */
+	public function decryptMyMessage ( $message )
+	{
+		return Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
+	}
 
 	/**
 	 * @param string $secret
@@ -132,13 +140,21 @@ class Wallet
 		$indexedKey = $bigIntSecret->add( new BigInteger( $position, 16 ) );
 
 		// Hashing the indexed key to produce the intermediate key
-		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )->absorb( $indexedKey->toString( 16 ) );
+		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )
+			->absorb( $indexedKey->toString( 16 ) );
 
-		if ( '' !== $token ) {
-			$intermediateKeySponge->absorb( $token );
+		if ( $token !== '' ) {
+			$intermediateKeySponge
+				->absorb( $token );
 		}
 
 		// Hashing the intermediate key to produce the private key
-		return bin2hex( SHA3::init( SHA3::SHAKE256 )->absorb( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ) )->squeeze( 1024 ) );
+		return bin2hex(
+			SHA3::init( SHA3::SHAKE256 )
+				->absorb( bin2hex(
+					$intermediateKeySponge
+						->squeeze( 1024 )
+				) )->squeeze( 1024 )
+		);
 	}
 }

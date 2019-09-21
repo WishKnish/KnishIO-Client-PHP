@@ -1,4 +1,5 @@
 <?php
+
 namespace WishKnish\KnishIO\Client\Exception;
 
 /**
@@ -12,14 +13,14 @@ namespace WishKnish\KnishIO\Client\Exception;
  */
 class AtomsNotFoundException extends BaseException
 {
-    /**
-     * AtomsNotFoundException constructor.
-     * @param string $message
-     * @param int $code
-     * @param \Throwable|null $previous
-     */
-    public function __construct ( $message = 'The molecule does not contain atoms', $code = 1, \Throwable $previous = null )
-    {
-        parent::__construct( $message, $code, $previous );
-    }
+	/**
+	 * AtomsNotFoundException constructor.
+	 * @param string $message
+	 * @param int $code
+	 * @param \Throwable|null $previous
+	 */
+	public function __construct ( $message = 'The molecule does not contain atoms', $code = 1, \Throwable $previous = null )
+	{
+		parent::__construct( $message, $code, $previous );
+	}
 }
