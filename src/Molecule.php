@@ -342,6 +342,9 @@ class Molecule
 				continue;
 			}
 
+			// Making sure we're in integer land
+			$value = 1 * $vAtom->value;
+
 			// Making sure all V atoms of the same token
 			if ( $vAtom->token !== $firstAtom->token ) {
 				throw new TransferMismatchedException();
@@ -350,7 +353,7 @@ class Molecule
 			// Checking non-primary atoms
 			if ( $index > 0 ) {
 				// Negative V atom in a non-primary position?
-				if ( $vAtom->value < 0 ) {
+				if ( $value < 0 ) {
 					throw new TransferMalformedException();
 				}
 
@@ -361,11 +364,11 @@ class Molecule
 			}
 
 			// Adding this Atom's value to the total sum
-			$sum += $vAtom->value;
+			$sum += $value;
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-		if ( $sum !== $vAtom->value ) {
+		if ( $sum !== 1 * $value ) {
 			throw new TransferUnbalancedException();
 		}
 
