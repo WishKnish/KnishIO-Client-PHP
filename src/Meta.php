@@ -16,7 +16,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $modelId
  * @property array $meta
  * @property $snapshotMolecule
- * @property integer $created_at
+ * @property integer $createdAt
  *
  */
 class Meta
@@ -27,7 +27,7 @@ class Meta
 	public $modelId;
 	public $meta;
 	public $snapshotMolecule;
-	public $created_at;
+	public $createdAt;
 
 	public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null )
 	{
@@ -35,7 +35,7 @@ class Meta
 		$this->modelId = $modelId;
 		$this->meta = $meta;
 		$this->snapshotMolecule = $snapshotMolecule;
-		$this->created_at = time();
+		$this->createdAt = time();
 	}
 
 	/**
@@ -63,8 +63,8 @@ class Meta
 	{
 		$aggregate = [];
 		if ( count( $meta ) ) {
-			foreach ( $meta as $meta_entry ) {
-				$aggregate[ $meta_entry[ 'key' ] ] = $meta_entry[ 'value' ];
+			foreach ( $meta as $metaEntry ) {
+				$aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
 			}
 		}
 		return $aggregate;

@@ -56,43 +56,43 @@ class Strings
 	 * Convert charset between bases and alphabets
 	 *
 	 * @param string $src
-	 * @param integer $from_base
-	 * @param integer $to_base
-	 * @param string|null $src_symbol_table
-	 * @param string|null $dest_symbol_table
+	 * @param integer $fromBase
+	 * @param integer $toBase
+	 * @param string|null $srcSymbolTable
+	 * @param string|null $destSymbolTable
 	 * @return string
 	 */
-	public static function charsetBaseConvert ( $src, $from_base, $to_base, $src_symbol_table = null, $dest_symbol_table = null )
+	public static function charsetBaseConvert ( $src, $fromBase, $toBase, $srcSymbolTable = null, $destSymbolTable = null )
 	{
 		// The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
-		$base_symbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
+		$baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 
 		// Default the symbol table to a nice default table that supports up to base 96
-		$src_symbol_table = $src_symbol_table ?: $base_symbols;
+		$srcSymbolTable = $srcSymbolTable ?: $baseSymbols;
 
 		// Default the desttable equal to the srctable if it isn't defined
-		$dest_symbol_table = $dest_symbol_table ?: $src_symbol_table;
+		$destSymbolTable = $destSymbolTable ?: $srcSymbolTable;
 
 		// Make sure we are not trying to convert out of the symbol table range
-		if ( $from_base > mb_strlen( $src_symbol_table ) || $to_base > mb_strlen( $dest_symbol_table ) ) {
-			error_log( 'Can\'t convert ' . $src . ' to base ' . $to_base . ' greater than symbol table length. src-table: ' . mb_strlen( $src_symbol_table ) . ' dest-table: ' . mb_strlen( $dest_symbol_table ) );
+		if ( $fromBase > mb_strlen( $srcSymbolTable ) || $toBase > mb_strlen( $destSymbolTable ) ) {
+			error_log( 'Can\'t convert ' . $src . ' to base ' . $toBase . ' greater than symbol table length. src-table: ' . mb_strlen( $srcSymbolTable ) . ' dest-table: ' . mb_strlen( $destSymbolTable ) );
 			return false;
 		}
 
 		// First convert to base 10
 		$value = new BigInteger( 0 );
-		$big_integer_zero = new BigInteger( 0 );
-		$big_integer_to_base = new BigInteger( $to_base );
-		$big_integer_from_base = new BigInteger( $from_base );
-		$src_symbol_list = str_split( $src_symbol_table );
+		$bigIntegerZero = new BigInteger( 0 );
+		$bigIntegerToBase = new BigInteger( $toBase );
+		$bigIntegerFromBase = new BigInteger( $fromBase );
+		$srcSymbolList = str_split( $srcSymbolTable );
 
 		for ( $i = 0, $length = mb_strlen( $src ); $i < $length; $i++ ) {
 
-			$value = $value->mul( $big_integer_from_base )
-				->add( new BigInteger( array_search( $src[ $i ], $src_symbol_list, true ) ) );
+			$value = $value->mul( $bigIntegerFromBase )
+				->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
 		}
 
-		if ( $value->cmp( $big_integer_zero ) <= 0 ) {
+		if ( $value->cmp( $bigIntegerZero ) <= 0 ) {
 			return 0;
 		}
 
@@ -100,10 +100,10 @@ class Strings
 		$target = '';
 
 		do {
-			$idx = $value->mod( $big_integer_to_base );
-			$target = $dest_symbol_table[ $idx->toString() ] . $target;
-			$value = $value->div( $big_integer_to_base );
-		} while ( !$value->equals( $big_integer_zero ) );
+			$idx = $value->mod( $bigIntegerToBase );
+			$target = $destSymbolTable[ $idx->toString() ] . $target;
+			$value = $value->div( $bigIntegerToBase );
+		} while ( !$value->equals( $bigIntegerZero ) );
 
 		return $target;
 	}

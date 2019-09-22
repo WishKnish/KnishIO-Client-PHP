@@ -56,7 +56,7 @@ class Crypto
 	 */
 	public static function encryptMessage ( $message, $recipientPrivateKey )
 	{
-		$shared_pair = \sodium_crypto_box_keypair();
+		$sharedPair = \sodium_crypto_box_keypair();
 		$nonce = \random_bytes( SODIUM_CRYPTO_BOX_NONCEBYTES );
 
 		return \implode( "+", [
@@ -66,12 +66,12 @@ class Crypto
 					$nonce,
 					\sodium_crypto_box_keypair_from_secretkey_and_publickey(
 						\sodium_hex2bin( $recipientPrivateKey ),
-						\sodium_crypto_box_publickey( $shared_pair )
+						\sodium_crypto_box_publickey( $sharedPair )
 					)
 				)
 			),
 			\sodium_bin2hex(
-				\sodium_crypto_box_secretkey( $shared_pair )
+				\sodium_crypto_box_secretkey( $sharedPair )
 			),
 			\sodium_bin2hex( $nonce ),
 		] );
