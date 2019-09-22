@@ -330,26 +330,17 @@ class Molecule
 			throw new AtomsMissingException();
 		}
 
-		// Select all atoms V
-		$vAtoms = array_filter( $molecule->atoms,
-			static function ( Atom $atom ) {
-				return ( $atom->isotope === 'V' ) ? $atom : false;
-			}
-		);
-
-		// No V atoms, nothing to validate
-		if ( count( $vAtoms ) === 0 ) {
-			return true;
-		}
-
-		// Grabbing the first and last V-isotope atoms
-		$firstAtom = current( $vAtoms );
-		$lastAtom = end( $vAtoms );
-		reset( $vAtoms );
+		// Grabbing the first atom
+		$firstAtom = current( $molecule->atoms );
 
 		// Looping through each V-isotope atom
 		$sum = 0;
-		foreach ( $vAtoms as $index => $vAtom ) {
+		foreach ( $molecule->atoms as $index => $vAtom ) {
+			// Not V? Next...
+			if($vAtom->isotope !== 'V') {
+				continue;
+			}
+
 			// Making sure all V atoms of the same token
 			if ( $vAtom->token !== $firstAtom->token ) {
 				throw new TransferMismatchedException();
@@ -365,7 +356,7 @@ class Molecule
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-		if ( $sum !== $lastAtom->value ) {
+		if ( $sum !== $vAtom->value ) {
 			throw new TransferUnbalancedException();
 		}
 
