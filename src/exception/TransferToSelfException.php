@@ -3,7 +3,7 @@
 namespace WishKnish\KnishIO\Client\Exception;
 
 /**
- * Class AtomsNotFoundException
+ * Class TransferToSelfException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -11,15 +11,15 @@ namespace WishKnish\KnishIO\Client\Exception;
  * @property string $file
  * @property integer $line
  */
-class AtomsNotFoundException extends BaseException
+class TransferToSelfException extends BaseException
 {
 	/**
-	 * AtomsNotFoundException constructor.
+	 * TransferToSelfException constructor.
 	 * @param string $message
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'The molecule does not contain atoms', $code = 1, \Throwable $previous = null )
+	public function __construct ( $message = 'Sender and recipient(s) cannot be the same', $code = 1, \Throwable $previous = null )
 	{
 		parent::__construct( $message, $code, $previous );
 	}
