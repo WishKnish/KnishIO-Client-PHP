@@ -88,7 +88,7 @@ class KnishIO
 		$molecule->initTokenCreation( new Wallet( $secret ), new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
 
-		if ( !Molecule::verifyTokenIsotopeV( $molecule ) ) {
+		if ( !Molecule::verifyIsotopeV( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',
@@ -150,7 +150,7 @@ class KnishIO
 		$molecule->initValue( $fromWallet, $toWallet, new Wallet( $fromSecret, $token ), $amount );
 		$molecule->sign( $fromSecret );
 
-		if ( !Molecule::verifyTokenIsotopeV( $molecule ) ) {
+		if ( !Molecule::verifyIsotopeV( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',

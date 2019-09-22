@@ -17,6 +17,7 @@ use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
 use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
+use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\libraries\Crypto;
 use WishKnish\KnishIO\Client\libraries\Strings;
@@ -312,7 +313,7 @@ class Molecule
 	{
 		return static::verifyMolecularHash( $molecule )
 			&& static::verifyOts( $molecule )
-			&& static::verifyTokenIsotopeV( $molecule );
+			&& static::verifyIsotopeV( $molecule );
 	}
 
 	/**
@@ -323,7 +324,7 @@ class Molecule
 	 * @param self $molecule
 	 * @return bool
 	 */
-	public static function verifyTokenIsotopeV ( self $molecule )
+	public static function verifyIsotopeV ( self $molecule )
 	{
 		// Do we even have atoms?
 		if ( empty( $molecule->atoms ) ) {
@@ -346,9 +347,17 @@ class Molecule
 				throw new TransferMismatchedException();
 			}
 
-			// Negative V atom in a non-primary position?
-			if ( $vAtom->value < 0 && $index > 0 ) {
-				throw new TransferMalformedException();
+			// Checking non-primary atoms
+			if ( $index > 0 ) {
+				// Negative V atom in a non-primary position?
+				if ( $vAtom->value < 0 ) {
+					throw new TransferMalformedException();
+				}
+
+				// Cannot be sending and receiving from the same address
+				if ( $vAtom->walletAddress === $firstAtom->walletAddress ) {
+					throw new TransferToSelfException();
+				}
 			}
 
 			// Adding this Atom's value to the total sum
@@ -526,8 +535,7 @@ class Molecule
 
 		while ( $total < 0 || $total > 0 ) {
 			foreach ( $mappedHashArray as $key => $value ) {
-				$condition = $totalCondition ? $value < 8 : $value > -8;
-				if ( $condition ) {
+				if ( $totalCondition ? $value < 8 : $value > -8 ) {
 					$totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
 					if ( $total === 0 ) {
 						break;
@@ -550,15 +558,15 @@ class Molecule
 	{
 		// Select all atoms V
 		$vAtoms = array_filter( $molecule->atoms,
-			static function ( Atom $a ) use ( $atom ) {
-				return ( $a->isotope === 'V' && $a->token === $atom->token ) ? $a : false;
+			static function ( Atom $someAtom ) use ( $atom ) {
+				return ( $someAtom->isotope === 'V' && $someAtom->token === $atom->token ) ? $someAtom : false;
 			}
 		);
 
 		foreach ( array_chunk( $vAtoms, 3 ) as $atoms ) {
 			$search = array_filter( $atoms,
-				static function ( Atom $a ) use ( $atom ) {
-					return ( $a->position === $atom->position && $a->walletAddress === $atom->walletAddress ) ? $a : false;
+				static function ( Atom $someAtom ) use ( $atom ) {
+					return ( $someAtom->position === $atom->position && $someAtom->walletAddress === $atom->walletAddress ) ? $someAtom : false;
 				}
 			);
 
