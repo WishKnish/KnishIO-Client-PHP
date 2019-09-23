@@ -336,10 +336,12 @@ class Molecule
 		}
 
 		// Grabbing the first atom
+		reset( $molecule->atoms );
 		$firstAtom = current( $molecule->atoms );
 
 		// Looping through each V-isotope atom
 		$sum = 0;
+		$value = 0;
 		foreach ( $molecule->atoms as $index => $vAtom ) {
 			// Not V? Next...
 			if($vAtom->isotope !== 'V') {
