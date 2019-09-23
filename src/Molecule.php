@@ -13,10 +13,12 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\SignatureMalformedException;
 use WishKnish\KnishIO\Client\Exception\SignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
 use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
+use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\libraries\Crypto;
@@ -306,14 +308,15 @@ class Molecule
 
 	/**
 	 * @param self $molecule
+	 * @param Wallet $senderWallet
 	 * @return bool
 	 * @throws \ReflectionException|\Exception
 	 */
-	public static function verify ( self $molecule )
+	public static function verify ( self $molecule, Wallet $senderWallet = null )
 	{
 		return static::verifyMolecularHash( $molecule )
 			&& static::verifyOts( $molecule )
-			&& static::verifyIsotopeV( $molecule );
+			&& static::verifyIsotopeV( $molecule, $senderWallet );
 	}
 
 	/**
@@ -322,9 +325,10 @@ class Molecule
 	 * 2. we're only subtracting on the first atom
 	 *
 	 * @param self $molecule
+	 * @param Wallet $senderWallet
 	 * @return bool
 	 */
-	public static function verifyIsotopeV ( self $molecule )
+	public static function verifyIsotopeV ( self $molecule, Wallet $senderWallet = null )
 	{
 		// Do we even have atoms?
 		if ( empty( $molecule->atoms ) ) {
@@ -368,8 +372,26 @@ class Molecule
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-		if ( $sum !== 1 * $value ) {
+		if ( $sum !== $value ) {
 			throw new TransferUnbalancedException();
+		}
+
+		// If we're provided with a senderWallet argument, we can perform additional checks
+		if ( $senderWallet ) {
+			$remainder = $senderWallet->balance + $firstAtom->value;
+
+			// Is there enough balance to send?
+			if ( $remainder < 0 ) {
+				throw new TransferBalanceException();
+			}
+
+			// Does the remainder match what should be there in the source wallet, if provided?
+			if ( $remainder !== $sum ) {
+				throw new TransferRemainderException();
+			}
+		} // No senderWallet, but have a remainder?
+		else if ( $value !== 0 ) {
+			throw new TransferRemainderException();
 		}
 
 		// Looks like we passed all the tests!
@@ -548,36 +570,5 @@ class Molecule
 		}
 
 		return $mappedHashArray;
-	}
-
-	/**
-	 * Returns the array of atoms to which the incoming atom belongs.
-	 *
-	 * @param Molecule $molecule
-	 * @param Atom $atom
-	 * @return array|null
-	 */
-	public static function getGroupAtomsV ( Molecule $molecule, Atom $atom )
-	{
-		// Select all atoms V
-		$vAtoms = array_filter( $molecule->atoms,
-			static function ( Atom $someAtom ) use ( $atom ) {
-				return ( $someAtom->isotope === 'V' && $someAtom->token === $atom->token ) ? $someAtom : false;
-			}
-		);
-
-		foreach ( array_chunk( $vAtoms, 3 ) as $atoms ) {
-			$search = array_filter( $atoms,
-				static function ( Atom $someAtom ) use ( $atom ) {
-					return ( $someAtom->position === $atom->position && $someAtom->walletAddress === $atom->walletAddress ) ? $someAtom : false;
-				}
-			);
-
-			if ( !empty( $search ) ) {
-				return $atoms;
-			}
-		}
-
-		return null;
 	}
 }
