@@ -476,7 +476,7 @@ class Molecule
 		$walletAddress = $firstAtom->walletAddress;
 
 		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each
-		$otsChunks = str_split( $ots, 128 );
+		$otsChunks = Strings::chunkSubstr( $ots, 128 );
 
 		$keyFragments = '';
 		foreach ( $otsChunks as $index => $otsChunk ) {

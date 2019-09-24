@@ -81,7 +81,7 @@ class Atom
 	{
 		$atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 
-		ksort( $atoms, SORT_NUMERIC );
+		ksort( $atomList, SORT_NUMERIC );
 
 		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
 		$numberOfAtoms = count( $atomList );
