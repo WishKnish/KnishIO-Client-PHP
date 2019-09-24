@@ -14,6 +14,7 @@ use desktopd\SHA3\Sponge as SHA3;
  */
 class Crypto
 {
+    private static $sodium = false;
 
 	/**
 	 * Generates a secret based on an optional seed
@@ -52,28 +53,28 @@ class Crypto
 	 * @param array|object $message
 	 * @param string $recipientPrivateKey
 	 * @return string
-	 * @throws \Exception
+	 * @throws \Exception|\ReflectionException
 	 */
 	public static function encryptMessage ( $message, $recipientPrivateKey )
 	{
+        static::includedSodium();
+
 		$sharedPair = \sodium_crypto_box_keypair();
 		$nonce = \random_bytes( SODIUM_CRYPTO_BOX_NONCEBYTES );
 
 		return \implode( "+", [
-			\sodium_bin2hex(
+			\bin2hex(
 				\sodium_crypto_box(
 					\json_encode( $message ),
 					$nonce,
 					\sodium_crypto_box_keypair_from_secretkey_and_publickey(
-						\sodium_hex2bin( $recipientPrivateKey ),
+						\hex2bin( $recipientPrivateKey ),
 						\sodium_crypto_box_publickey( $sharedPair )
 					)
 				)
 			),
-			\sodium_bin2hex(
-				\sodium_crypto_box_secretkey( $sharedPair )
-			),
-			\sodium_bin2hex( $nonce ),
+			\bin2hex( \sodium_crypto_box_secretkey( $sharedPair ) ),
+			\bin2hex( $nonce ),
 		] );
 	}
 
@@ -83,20 +84,23 @@ class Crypto
 	 * @param string $ciphertext
 	 * @param string $recipientPublicKey
 	 * @return array|null
+     * @throws \ReflectionException
 	 */
 	public static function decryptMessage ( $ciphertext, $recipientPublicKey )
 	{
+        static::includedSodium();
+
 		list( $message, $shared, $nonce ) = \explode( '+', $ciphertext, 3 );
 
 		return ( \in_array( null, [ $message, $shared, $nonce ], true ) ) ?
 			null :
 			\json_decode(
 				\sodium_crypto_box_open(
-					\sodium_hex2bin( $message ),
-					\sodium_hex2bin( $nonce ),
+					\hex2bin( $message ),
+					\hex2bin( $nonce ),
 					\sodium_crypto_box_keypair_from_secretkey_and_publickey(
-						\sodium_hex2bin( $shared ),
-						\sodium_hex2bin( $recipientPublicKey )
+						\hex2bin( $shared ),
+						\hex2bin( $recipientPublicKey )
 					)
 				),
 				true
@@ -108,11 +112,13 @@ class Crypto
 	 *
 	 * @param string $key
 	 * @return string
-	 * @throws \Exception
+	 * @throws \Exception|\ReflectionException
 	 */
 	public static function generateEncPrivateKey ( $key )
 	{
-		return \sodium_bin2hex(
+        static::includedSodium();
+
+		return \bin2hex(
 			\sodium_crypto_box_secretkey(
 				SHA3::init( SHA3::SHAKE256 )
 					->absorb( $key )
@@ -126,12 +132,15 @@ class Crypto
 	 *
 	 * @param string $privateKey
 	 * @return string
+     * @throws \ReflectionException
 	 */
 	public static function generateEncPublicKey ( $privateKey )
 	{
-		return \sodium_bin2hex(
+        static::includedSodium();
+
+		return \bin2hex(
 			\sodium_crypto_box_publickey_from_secretkey(
-				\sodium_hex2bin( $privateKey )
+				\hex2bin( $privateKey )
 			)
 		);
 	}
@@ -142,14 +151,28 @@ class Crypto
 	 * @param string $privateKey
 	 * @param string $otherPublicKey
 	 * @return string
+     * @throws \ReflectionException
 	 */
 	public static function generateEncSharedKey ( $privateKey, $otherPublicKey )
 	{
-		return \sodium_bin2hex(
+	    static::includedSodium();
+
+		return \bin2hex(
 			\sodium_crypto_box_keypair_from_secretkey_and_publickey(
-				\sodium_hex2bin( $privateKey ),
-				\sodium_hex2bin( $otherPublicKey )
+				\hex2bin( $privateKey ),
+				\hex2bin( $otherPublicKey )
 			)
 		);
 	}
+
+    /**
+     * @throws \ReflectionException
+     */
+    private static function includedSodium ()
+    {
+        if ( ! static::$sodium ) {
+            Sodium::libsodium2sodium();
+            static::$sodium = true;
+        }
+    }
 }
