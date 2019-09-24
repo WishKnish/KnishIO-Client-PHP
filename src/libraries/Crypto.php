@@ -170,7 +170,7 @@ class Crypto
      */
     private static function includedSodium ()
     {
-        if ( ! static::$sodium ) {
+        if ( ! \extension_loaded( 'sodium' ) && ! static::$sodium ) {
             Sodium::libsodium2sodium();
             static::$sodium = true;
         }
