@@ -344,7 +344,7 @@ class Molecule
 		$value = 0;
 		foreach ( $molecule->atoms as $index => $vAtom ) {
 			// Not V? Next...
-			if($vAtom->isotope !== 'V') {
+			if ( $vAtom->isotope !== 'V' ) {
 				continue;
 			}
 

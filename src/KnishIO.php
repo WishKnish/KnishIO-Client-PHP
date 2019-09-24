@@ -85,24 +85,25 @@ class KnishIO
 	public static function createToken ( $secret, $token, $amount, array $metas = [] )
 	{
 		$molecule = new Molecule();
-		$molecule->initTokenCreation( new Wallet( $secret ), new Wallet( $secret, $token ), $amount, $metas );
+        $fromWallet = new Wallet( $secret );
+		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
 
-		if ( !Molecule::verifyIsotopeV( $molecule ) ) {
+		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',
 			];
 		}
 
-		if ( !Molecule::verifyMolecularHash( $molecule ) ) {
+		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong hash for the molecule',
 			];
 		}
 
-		if ( !Molecule::verifyOts( $molecule ) ) {
+		if ( ! Molecule::verifyOts( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong OTS in the molecule',
@@ -150,21 +151,21 @@ class KnishIO
 		$molecule->initValue( $fromWallet, $toWallet, new Wallet( $fromSecret, $token ), $amount );
 		$molecule->sign( $fromSecret );
 
-		if ( !Molecule::verifyIsotopeV( $molecule ) ) {
+		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',
 			];
 		}
 
-		if ( !Molecule::verifyMolecularHash( $molecule ) ) {
+		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong hash for the molecule',
 			];
 		}
 
-		if ( !Molecule::verifyOts( $molecule ) ) {
+		if ( ! Molecule::verifyOts( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong OTS in the molecule',
@@ -189,7 +190,7 @@ class KnishIO
 	 */
 	private static function getClient ()
 	{
-		if ( !( static::$client instanceof Client ) ) {
+		if ( ! ( static::$client instanceof Client ) ) {
 			static::$client = new Client( [
 				'base_uri'    => static::$url,
 				'verify'      => false,
