@@ -28,6 +28,7 @@ use WishKnish\KnishIO\Client\libraries\Strings;
  */
 class Wallet
 {
+
 	/**
 	 * Wallet constructor.
 	 *
@@ -39,6 +40,7 @@ class Wallet
 	 */
 	public function __construct ( $secret, $token = 'USER', $position = null, $saltLength = 64 )
 	{
+
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
 		$this->key = static::generateWalletKey( $secret, $token, $this->position );
@@ -48,6 +50,7 @@ class Wallet
 		$this->bundle = Crypto::generateBundleHash( $secret );
 		$this->privkey = $this->getMyEncPrivateKey();
 		$this->pubkey = $this->getMyEncPublicKey();
+
 	}
 
 	/**
@@ -57,25 +60,33 @@ class Wallet
 	 */
 	protected static function generateWalletAddress ( $key )
 	{
+
 		$digestSponge = SHA3::init( SHA3::SHAKE256 );
 
 		foreach ( Strings::chunkSubstr( $key, 128 ) as $idx => $fragment ) {
+
 			$workingFragment = $fragment;
-			foreach ( range( 1, 16 ) as $_ ) {
-				$workingFragment = bin2hex(
+
+			foreach ( \range( 1, 16 ) as $_ ) {
+
+				$workingFragment = \bin2hex(
 					SHA3::init( SHA3::SHAKE256 )
 						->absorb( $workingFragment )
 						->squeeze( 64 )
 				);
+
 			}
+
 			$digestSponge->absorb( $workingFragment );
+
 		}
 
-		return bin2hex(
+		return \bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )
+				->absorb( \bin2hex( $digestSponge->squeeze( 1024 ) ) )
 				->squeeze( 32 )
 		);
+
 	}
 
 	/**
@@ -86,7 +97,9 @@ class Wallet
 	 */
 	public function getMyEncPrivateKey ()
 	{
+
 		return Crypto::generateEncPrivateKey( $this->key );
+
 	}
 
 	/**
@@ -97,7 +110,9 @@ class Wallet
 	 */
 	public function getMyEncPublicKey ()
 	{
+
 		return Crypto::generateEncPublicKey( $this->getMyEncPrivateKey() );
+
 	}
 
 	/**
@@ -109,19 +124,26 @@ class Wallet
 	 */
 	public function getMyEncSharedKey ( $otherPublicKey )
 	{
+
 		return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $otherPublicKey );
+
 	}
 
 	/**
 	 * Uses the current wallet's private key to decrypt the given message
 	 *
-	 * @param $message
+	 * @param string $message
+     * @param string|null $otherPublicKey
 	 * @return array|null
 	 * @throws \Exception
 	 */
-	public function decryptMyMessage ( $message )
+	public function decryptMyMessage ( $message, $otherPublicKey = null )
 	{
-		return Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
+
+		return ( null === $otherPublicKey ) ?
+            Crypto::decryptMessage( $message, $this->getMyEncPublicKey() ) :
+            Crypto::decryptMessage( $message, Crypto::generateEncPublicKey( $this->getMyEncSharedKey( $otherPublicKey ) ) );
+
 	}
 
 	/**
@@ -133,6 +155,7 @@ class Wallet
 	 */
 	public static function generateWalletKey ( $secret, $token, $position )
 	{
+
 		// Converting secret to bigInt
 		$bigIntSecret = new BigInteger( $secret, 16 );
 
@@ -144,17 +167,22 @@ class Wallet
 			->absorb( $indexedKey->toString( 16 ) );
 
 		if ( $token !== '' ) {
+
 			$intermediateKeySponge
 				->absorb( $token );
+
 		}
 
 		// Hashing the intermediate key to produce the private key
-		return bin2hex(
+		return \bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex(
+				->absorb( \bin2hex(
 					$intermediateKeySponge
 						->squeeze( 1024 )
 				) )->squeeze( 1024 )
 		);
+
 	}
+
 }
+
