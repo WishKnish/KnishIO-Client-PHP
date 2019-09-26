@@ -38,19 +38,20 @@ class Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( $secret, $token = 'USER', $position = null, $saltLength = 64 )
+	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64 )
 	{
-
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
-		$this->key = static::generateWalletKey( $secret, $token, $this->position );
-		$this->address = static::generateWalletAddress( $this->key );
 		$this->balance = 0;
 		$this->molecules = [];
-		$this->bundle = Crypto::generateBundleHash( $secret );
-		$this->privkey = $this->getMyEncPrivateKey();
-		$this->pubkey = $this->getMyEncPublicKey();
 
+		if ( $secret ) {
+			$this->key = static::generateWalletKey( $secret, $token, $this->position );
+			$this->address = static::generateWalletAddress( $this->key );
+			$this->bundle = Crypto::generateBundleHash( $secret );
+			$this->privkey = $this->getMyEncPrivateKey();
+			$this->pubkey = $this->getMyEncPublicKey();
+		}
 	}
 
 	/**
