@@ -8,7 +8,7 @@ namespace WishKnish\KnishIO\Client;
 
 use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
 
 /**
  * Class KnishIO

@@ -8,7 +8,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
-use WishKnish\KnishIO\Client\libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
 /**

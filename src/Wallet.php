@@ -8,8 +8,8 @@ namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
-use WishKnish\KnishIO\Client\libraries\Crypto;
-use WishKnish\KnishIO\Client\libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
  * Class Wallet

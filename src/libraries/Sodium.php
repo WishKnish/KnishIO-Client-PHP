@@ -1,11 +1,11 @@
 <?php
-namespace WishKnish\KnishIO\Client\libraries;
+namespace WishKnish\KnishIO\Client\Libraries;
 
 use ReflectionFunction;
 
 /**
  * Class Sodium
- * @package WishKnish\KnishIO\Client\libraries
+ * @package WishKnish\KnishIO\Client\Libraries
  */
 class Sodium
 {

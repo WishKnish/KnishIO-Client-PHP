@@ -21,8 +21,8 @@ use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
 use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
-use WishKnish\KnishIO\Client\libraries\Crypto;
-use WishKnish\KnishIO\Client\libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
 

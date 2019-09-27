@@ -4,13 +4,13 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\libraries;
+namespace WishKnish\KnishIO\Client\Libraries;
 
 use desktopd\SHA3\Sponge as SHA3;
 
 /**
  * Class Crypto
- * @package WishKnish\KnishIO\Client\libraries
+ * @package WishKnish\KnishIO\Client\Libraries
  */
 class Crypto
 {

@@ -4,14 +4,14 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\libraries;
+namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
 use LZCompressor\LZString;
 
 /**
  * Class Str
- * @package WishKnish\KnishIO\Client\libraries
+ * @package WishKnish\KnishIO\Client\Libraries
  */
 class Strings
 {
