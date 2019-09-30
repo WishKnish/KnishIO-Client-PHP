@@ -335,6 +335,15 @@ class Molecule
 			throw new AtomsMissingException();
 		}
 
+        // Select all atoms V
+        $vAtoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+
+		if ( empty( $vAtoms ) ) {
+
+		    return true;
+
+        }
+
 		// Grabbing the first atom
 		reset( $molecule->atoms );
 		$firstAtom = current( $molecule->atoms );

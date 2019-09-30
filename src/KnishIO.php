@@ -20,6 +20,7 @@ class KnishIO
 	private static $client;
 	private static $query = [
 		'molecule' => 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }',
+        'wallet' => 'query($address: String, $walletBundle: String, $token: String) { Wallet(address: $address, bundleHash: $walletBundle, token: $token) { bundleHash, address, position, amount, tokenSlug, createdAt, } }',
 		'balance'  => 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, position, amount, createdAt } }',
 	];
 
@@ -62,12 +63,11 @@ class KnishIO
 			$balance = $response[ 'data' ][ 'Balance' ];
 
 			if ( $balance[ 'tokenSlug' ] === $token ) {
-				$wallet = new Wallet( $code, $balance[ 'tokenSlug' ] );
+				$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
 				$wallet->address = $balance[ 'address' ];
 				$wallet->position = $balance[ 'position' ];
 				$wallet->balance = $balance[ 'amount' ];
 				$wallet->bundle = $balance[ 'bundleHash' ];
-				unset( $wallet->key );
 			}
 		}
 
