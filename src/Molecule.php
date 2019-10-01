@@ -354,11 +354,7 @@ class Molecule
 
         $atom = \end( $atoms );
 
-        return ( false === $atom ) ?
-            Strings::randomString( 64 ) :
-            ( new BigInteger( $atom->index, 16 ) )
-            ->add( 1 )
-            ->toString( 16 );
+        return ( false === $atom ) ? 0 : $atom->index + 1;
 
     }
 

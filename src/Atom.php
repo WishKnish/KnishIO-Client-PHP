@@ -23,7 +23,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
- * @property string $index
+ * @property integer|null $index
  * @property string|null $otsFragment
  * @property integer $createdAt
  *
@@ -56,7 +56,7 @@ class Atom
 	 * @param null|string $metaId
 	 * @param array $meta
 	 * @param null|string $otsFragment
-     * @param null|string $index
+     * @param null|integer $index
 	 */
 	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null)
 	{
