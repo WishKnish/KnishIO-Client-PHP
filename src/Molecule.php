@@ -408,6 +408,13 @@ class Molecule
     public static function verifyIndex ( self $molecule )
     {
 
+        // No molecular hash?
+        if ( $molecule->molecularHash === null ) {
+
+            throw new MolecularHashMissingException();
+
+        }
+
         // Do we even have atoms?
         if ( empty( $molecule->atoms ) ) {
 
@@ -441,6 +448,12 @@ class Molecule
 	 */
 	public static function verifyIsotopeV ( self $molecule, Wallet $senderWallet = null )
 	{
+        // No molecular hash?
+        if ( $molecule->molecularHash === null ) {
+
+            throw new MolecularHashMissingException();
+
+        }
 
 		// Do we even have atoms?
 		if ( empty( $molecule->atoms ) ) {
