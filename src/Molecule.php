@@ -7,9 +7,11 @@
 namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
+use BI\BigInteger;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\SignatureMalformedException;
 use WishKnish\KnishIO\Client\Exception\SignatureMismatchException;
@@ -39,6 +41,7 @@ use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
  */
 class Molecule
 {
+
 	use Json;
 
 	public $molecularHash;
@@ -54,12 +57,14 @@ class Molecule
 	 */
 	public function __construct ( $cellSlug = null )
 	{
+
 		$this->molecularHash = null;
 		$this->cellSlug = $cellSlug;
 		$this->bundle = null;
 		$this->status = null;
 		$this->createdAt = Strings::currentTimeMillis();
 		$this->atoms = [];
+
 	}
 
 	/**
@@ -67,7 +72,10 @@ class Molecule
 	 */
 	public function __toString ()
 	{
+
 		return ( string ) $this->toJson();
+
+
 	}
 
 	/**
@@ -83,15 +91,17 @@ class Molecule
 	 */
 	public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
 	{
+
 		if ( $sourceWallet->balance - $value < 0 ) {
+
 			throw new BalanceInsufficientException();
+
 		}
 
 		$this->molecularHash = null;
-		$idx = count( $this->atoms );
 
 		// Initializing a new Atom to remove tokens from source
-		$this->atoms[ $idx ] = new Atom(
+		$this->atoms[] = new Atom(
 			$sourceWallet->position,
 			$sourceWallet->address,
 			'V',
@@ -100,11 +110,12 @@ class Molecule
 			null,
 			null,
 			null,
-			null
+			null,
+            $this->generateIndex()
 		);
 
 		// Initializing a new Atom to add tokens to recipient
-		$this->atoms[ ++$idx ] = new Atom(
+		$this->atoms[] = new Atom(
 			$recipientWallet->position,
 			$recipientWallet->address,
 			'V',
@@ -113,11 +124,12 @@ class Molecule
 			'walletBundle',
 			$recipientWallet->bundle,
 			null,
-			null
+			null,
+            $this->generateIndex()
 		);
 
 		// Initializing a new Atom to deposit remainder in a new wallet
-		$this->atoms[ ++$idx ] = new Atom(
+		$this->atoms[] = new Atom(
 			$remainderWallet->position,
 			$remainderWallet->address,
 			'V',
@@ -126,10 +138,14 @@ class Molecule
 			'walletBundle',
 			$sourceWallet->bundle,
 			null,
-			null
+			null,
+            $this->generateIndex()
 		);
 
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
 		return $this;
+
 	}
 
 	/**
@@ -143,28 +159,32 @@ class Molecule
 	 */
 	public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
 	{
+
 		$this->molecularHash = null;
 
 		foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
 
-			$has = array_filter( $tokenMeta,
+			$has = \array_filter( $tokenMeta,
 				static function ( $token ) use ( $walletKey ) {
-					return is_array( $token )
-						&& array_key_exists( 'key', $token )
+
+					return \is_array( $token )
+						&& \array_key_exists( 'key', $token )
 						&& $walletKey === $token[ 'key' ];
+
 				}
 			);
 
-			if ( empty( $has ) && !array_key_exists( $walletKey, $tokenMeta ) ) {
+			if ( empty( $has ) && ! \array_key_exists( $walletKey, $tokenMeta ) ) {
+
 				$tokenMeta[ $walletKey ] = $recipientWallet
-					->{strtolower( substr( $walletKey, 6 ) )};
+					->{ \strtolower( \substr( $walletKey, 6 ) ) };
+
 			}
+
 		}
 
-		$idx = count( $this->atoms );
-
 		// The primary atom tells the ledger that a certain amount of the new token is being issued.
-		$this->atoms[ $idx ] = new Atom(
+		$this->atoms[] = new Atom(
 			$sourceWallet->position,
 			$sourceWallet->address,
 			'C',
@@ -173,10 +193,14 @@ class Molecule
 			'token',
 			$recipientWallet->token,
 			$tokenMeta,
-			null
+			null,
+            $this->generateIndex()
 		);
 
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
 		return $this;
+
 	}
 
 	/**
@@ -190,10 +214,10 @@ class Molecule
 	 */
 	public function initMeta ( Wallet $wallet, array $meta, $metaType, $metaId )
 	{
-		$this->molecularHash = null;
-		$idx = count( $this->atoms );
 
-		$this->atoms[ $idx ] = new Atom(
+		$this->molecularHash = null;
+
+		$this->atoms[] = new Atom(
 			$wallet->position,
 			$wallet->address,
 			'M',
@@ -202,10 +226,14 @@ class Molecule
 			$metaType,
 			$metaId,
 			$meta,
-			null
+			null,
+            $this->generateIndex()
 		);
 
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
 		return $this;
+
 	}
 
 	/**
@@ -215,8 +243,11 @@ class Molecule
 	 */
 	public function clear ()
 	{
+
 		$this->__construct( $this->cellSlug );
+
 		return $this;
+
 	}
 
 	/**
@@ -231,23 +262,29 @@ class Molecule
 	public function sign ( $secret, $anonymous = false )
 	{
 		if ( empty( $this->atoms ) ||
-			!empty( array_filter( $this->atoms,
+			!empty( \array_filter( $this->atoms,
 				static function ( $atom ) {
+
 					return !( $atom instanceof Atom );
+
 				}
 			) )
 		) {
+
 			throw new AtomsMissingException();
+
 		}
 
 		if ( !$anonymous ) {
+
 			$this->bundle = Crypto::generateBundleHash( $secret );
+
 		}
 
 		$this->molecularHash = Atom::hashAtoms( $this->atoms );
 
 		// Determine first atom
-		$firstAtom = $this->atoms[ 0 ];
+        $firstAtom = \reset( $this->atoms );
 
 		// Generate the private signing key for this molecule
 		$key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
@@ -262,17 +299,23 @@ class Molecule
 
 		// Building a one-time-signature
 		$signatureFragments = '';
+
 		foreach ( $keyChunks as $idx => $keyChunk ) {
+
 			// Iterate a number of times equal to 8-Hm[i]
 			$workingChunk = $keyChunk;
+
 			for ( $iterationCount = 0, $condition = 8 - $normalizedHash[ $idx ]; $iterationCount < $condition; $iterationCount++ ) {
+
 				$workingChunk = bin2hex(
 					SHA3::init( SHA3::SHAKE256 )
 						->absorb( $workingChunk )
 						->squeeze( 64 )
 				);
 			}
+
 			$signatureFragments .= $workingChunk;
+
 		}
 
 		// Compressing the OTS
@@ -283,12 +326,41 @@ class Molecule
 		$lastPosition = null;
 
 		foreach ( $chunkedSignature as $chunkCount => $chunk ) {
+
 			$this->atoms[ $chunkCount ]->otsFragment = $chunk;
 			$lastPosition = $this->atoms[ $chunkCount ]->position;
+
 		}
 
 		return $lastPosition;
 	}
+
+    /**
+     * @return string
+     */
+	public function generateIndex()
+    {
+
+        return static::generateNextAtomIndex( $this->atoms );
+
+    }
+
+    /**
+     * @param array $atoms
+     * @return string
+     */
+	public static function generateNextAtomIndex ( array $atoms = [] )
+    {
+
+        $atom = \end( $atoms );
+
+        return ( false === $atom ) ?
+            Strings::randomString( 64 ) :
+            ( new BigInteger( $atom->index, 16 ) )
+            ->add( 1 )
+            ->toString( 16 );
+
+    }
 
 	/**
 	 * @param string $string
@@ -296,14 +368,20 @@ class Molecule
 	 */
 	public static function jsonToObject ( $string )
 	{
+
 		$serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
 		$object = $serializer->deserialize( $string, static::class, 'json' );
 
 		foreach ( $object->atoms as $idx => $atom ) {
+
 			$object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
+
 		}
 
+        $object->atoms = Atom::sortAtoms( $object->atoms );
+
 		return $object;
+
 	}
 
 	/**
@@ -314,10 +392,42 @@ class Molecule
 	 */
 	public static function verify ( self $molecule, Wallet $senderWallet = null )
 	{
+
 		return static::verifyMolecularHash( $molecule )
 			&& static::verifyOts( $molecule )
+            && static::verifyIndex( $molecule )
 			&& static::verifyIsotopeV( $molecule, $senderWallet );
+
 	}
+
+    /**
+     * @param Molecule $molecule
+     * @return bool
+     * @throws AtomsMissingException|AtomIndexException
+     */
+    public static function verifyIndex ( self $molecule )
+    {
+
+        // Do we even have atoms?
+        if ( empty( $molecule->atoms ) ) {
+
+            throw new AtomsMissingException();
+
+        }
+
+        foreach ( $molecule->atoms as $atom ) {
+
+            if ( null === $atom->index ) {
+
+                throw new AtomIndexException();
+
+            }
+
+        }
+
+        return true;
+
+    }
 
 	/**
 	 * Verification of V-isotope molecules checks to make sure that:
@@ -327,16 +437,20 @@ class Molecule
 	 * @param self $molecule
 	 * @param Wallet $senderWallet
 	 * @return bool
+     * @throws AtomsMissingException|TransferMismatchedException|TransferMalformedException|TransferToSelfException|TransferUnbalancedException|TransferBalanceException|TransferRemainderException
 	 */
 	public static function verifyIsotopeV ( self $molecule, Wallet $senderWallet = null )
 	{
+
 		// Do we even have atoms?
 		if ( empty( $molecule->atoms ) ) {
+
 			throw new AtomsMissingException();
+
 		}
 
         // Select all atoms V
-        $vAtoms = array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
+        $vAtoms = \array_filter( $molecule->atoms, static function ( Atom $atom ) { return  ( 'V' === $atom->isotope ) ? $atom : false; } );
 
 		if ( empty( $vAtoms ) ) {
 
@@ -345,16 +459,19 @@ class Molecule
         }
 
 		// Grabbing the first atom
-		reset( $molecule->atoms );
-		$firstAtom = current( $molecule->atoms );
+		$firstAtom = \reset( $molecule->atoms );
 
 		// Looping through each V-isotope atom
 		$sum = 0;
 		$value = 0;
+
 		foreach ( $molecule->atoms as $index => $vAtom ) {
+
 			// Not V? Next...
 			if ( $vAtom->isotope !== 'V' ) {
+
 				continue;
+
 			}
 
 			// Making sure we're in integer land
@@ -362,51 +479,71 @@ class Molecule
 
 			// Making sure all V atoms of the same token
 			if ( $vAtom->token !== $firstAtom->token ) {
+
 				throw new TransferMismatchedException();
+
 			}
 
 			// Checking non-primary atoms
 			if ( $index > 0 ) {
+
 				// Negative V atom in a non-primary position?
 				if ( $value < 0 ) {
+
 					throw new TransferMalformedException();
+
 				}
 
 				// Cannot be sending and receiving from the same address
 				if ( $vAtom->walletAddress === $firstAtom->walletAddress ) {
+
 					throw new TransferToSelfException();
+
 				}
+
 			}
 
 			// Adding this Atom's value to the total sum
 			$sum += $value;
+
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
 		if ( $sum !== $value ) {
+
 			throw new TransferUnbalancedException();
+
 		}
 
 		// If we're provided with a senderWallet argument, we can perform additional checks
 		if ( $senderWallet ) {
+
 			$remainder = $senderWallet->balance + $firstAtom->value;
 
 			// Is there enough balance to send?
 			if ( $remainder < 0 ) {
+
 				throw new TransferBalanceException();
+
 			}
 
 			// Does the remainder match what should be there in the source wallet, if provided?
 			if ( $remainder !== $sum ) {
+
 				throw new TransferRemainderException();
+
 			}
+
 		} // No senderWallet, but have a remainder?
 		else if ( $value !== 0 ) {
+
 			throw new TransferRemainderException();
+
 		}
 
 		// Looks like we passed all the tests!
 		return true;
+
 	}
 
 	/**
@@ -414,26 +551,34 @@ class Molecule
 	 *
 	 * @param self $molecule
 	 * @return bool
-	 * @throws \ReflectionException
+	 * @throws \ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
 	 */
 	public static function verifyMolecularHash ( self $molecule )
 	{
+
 		// No molecular hash?
 		if ( $molecule->molecularHash === null ) {
+
 			throw new MolecularHashMissingException();
+
 		}
 
 		// No atoms?
 		if ( empty( $molecule->atoms ) ) {
+
 			throw new AtomsMissingException();
+
 		}
 
 		if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {
+
 			throw new MolecularHashMismatchException();
+
 		}
 
 		// Looks like we passed all the tests!
 		return true;
+
 	}
 
 	/**
@@ -443,22 +588,27 @@ class Molecule
 	 *
 	 * @param Molecule $molecule
 	 * @return bool
-	 * @throws \Exception
+	 * @throws \Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
 	 */
 	public static function verifyOts ( self $molecule )
 	{
+
 		// No molecular hash?
 		if ( $molecule->molecularHash === null ) {
+
 			throw new MolecularHashMissingException();
+
 		}
 
 		// No atoms?
 		if ( empty( $molecule->atoms ) ) {
+
 			throw new AtomsMissingException();
+
 		}
 
 		// Determine first atom
-		$firstAtom = $molecule->atoms[ 0 ];
+        $firstAtom = \reset( $molecule->atoms );
 
 		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
 		$enumeratedHash = static::enumerate( $molecule->molecularHash );
@@ -466,19 +616,26 @@ class Molecule
 
 		// Rebuilding OTS out of all the atoms
 		$ots = '';
+
 		foreach ( $molecule->atoms as $atom ) {
+
 			$ots .= $atom->otsFragment;
+
 		}
 
 		// Wrong size? Maybe it's compressed
-		if ( mb_strlen( $ots ) !== 2048 ) {
+		if ( \mb_strlen( $ots ) !== 2048 ) {
+
 			// Attempt decompression
 			$ots = Strings::decompress( $ots );
 
 			// Still wrong? That's a failure
-			if ( mb_strlen( $ots ) !== 2048 ) {
+			if ( \mb_strlen( $ots ) !== 2048 ) {
+
 				throw new SignatureMalformedException();
+
 			}
+
 		}
 
 		// First atom's wallet is what the molecule must be signed with
@@ -488,39 +645,49 @@ class Molecule
 		$otsChunks = Strings::chunkSubstr( $ots, 128 );
 
 		$keyFragments = '';
+
 		foreach ( $otsChunks as $index => $otsChunk ) {
+
 			// Iterate a number of times equal to 8+Hm[i]
 			$workingChunk = $otsChunk;
+
 			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $index ]; $iterationCount < $condition; $iterationCount++ ) {
-				$workingChunk = bin2hex(
+
+				$workingChunk = \bin2hex(
 					SHA3::init( SHA3::SHAKE256 )
 						->absorb( $workingChunk )
 						->squeeze( 64 )
 				);
+
 			}
+
 			$keyFragments .= $workingChunk;
+
 		}
 
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
-		$digest = bin2hex(
+		$digest = \bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
 				->absorb( $keyFragments )
 				->squeeze( 1024 )
 		);
 
 		// Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
-		$address = bin2hex(
+		$address = \bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
 				->absorb( $digest )
 				->squeeze( 32 )
 		);
 
 		if ( $address !== $walletAddress ) {
+
 			throw new SignatureMismatchException();
+
 		}
 
 		// Looks like we passed all the tests!
 		return true;
+
 	}
 
 	/**
@@ -536,21 +703,27 @@ class Molecule
 	 */
 	protected static function enumerate ( $hash )
 	{
+
 		$target = [];
 		$mapped = [
 			'0' => -8, '1' => -7, '2' => -6, '3' => -5, '4' => -4, '5' => -3, '6' => -2, '7' => -1,
 			'8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8,
 		];
 
-		foreach ( str_split( $hash ) as $index => $symbol ) {
-			$lower = strtolower( ( string ) $symbol );
+		foreach ( \str_split( $hash ) as $index => $symbol ) {
 
-			if ( array_key_exists( $lower, $mapped ) ) {
+			$lower = \strtolower( ( string ) $symbol );
+
+			if ( \array_key_exists( $lower, $mapped ) ) {
+
 				$target[ $index ] = $mapped[ $lower ];
+
 			}
+
 		}
 
 		return $target;
+
 	}
 
 	/**
@@ -566,20 +739,33 @@ class Molecule
 	 */
 	protected static function normalize ( array $mappedHashArray )
 	{
-		$total = array_sum( $mappedHashArray );
+
+		$total = \array_sum( $mappedHashArray );
 		$totalCondition = $total < 0;
 
 		while ( $total < 0 || $total > 0 ) {
+
 			foreach ( $mappedHashArray as $key => $value ) {
+
 				if ( $totalCondition ? $value < 8 : $value > -8 ) {
+
 					$totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
+
 					if ( $total === 0 ) {
+
 						break;
+
 					}
+
 				}
+
 			}
+
 		}
 
 		return $mappedHashArray;
+
 	}
+
 }
+
