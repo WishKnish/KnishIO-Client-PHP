@@ -96,7 +96,7 @@ class Atom
 					$value = $property->getValue( $atom );
 					$name = $property->getName();
 
-					if ( $name === 'otsFragment' ) {
+					if ( \in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
 						continue;
 					}
 
