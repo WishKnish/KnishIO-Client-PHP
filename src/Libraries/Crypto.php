@@ -103,25 +103,24 @@ class Crypto
         $cipher = \hex2bin( $ciphertext );
         $target = null;
 
-        if ( ! empty( $cipher ) ) {
+        if ( ! empty( $cipher ) ||
+            ( SODIUM_CRYPTO_BOX_NONCEBYTES + SODIUM_CRYPTO_BOX_SECRETKEYBYTES ) < \mb_strlen( $cipher, '8bit' ) ) {
 
             $nonce = \mb_substr( $cipher, 0, SODIUM_CRYPTO_BOX_NONCEBYTES, '8bit' );
             $shared = \mb_substr( $cipher, SODIUM_CRYPTO_BOX_NONCEBYTES, SODIUM_CRYPTO_BOX_SECRETKEYBYTES, '8bit' );
             $message = \mb_substr( $cipher, SODIUM_CRYPTO_BOX_NONCEBYTES + SODIUM_CRYPTO_BOX_SECRETKEYBYTES, null, '8bit' );
 
-            $target = \in_array( '', [ \bin2hex( $nonce ), \bin2hex( $shared ), \bin2hex( $message ) ], true ) ?
-                null :
-                \json_decode(
-                    \sodium_crypto_box_open(
-                        $message,
-                        $nonce,
-                        \sodium_crypto_box_keypair_from_secretkey_and_publickey(
-                            $shared,
-                            \hex2bin( $recipientPublicKey )
-                        )
-                    ),
-                    true
-                );
+            $target = \json_decode(
+                \sodium_crypto_box_open(
+                    $message,
+                    $nonce,
+                    \sodium_crypto_box_keypair_from_secretkey_and_publickey(
+                        $shared,
+                        \hex2bin(  $recipientPublicKey )
+                    )
+                ),
+                true
+            );
 
             \sodium_memzero( $nonce );
             \sodium_memzero( $shared );
