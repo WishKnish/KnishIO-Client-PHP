@@ -7,7 +7,6 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
-use LZCompressor\LZString;
 
 /**
  * Class Str
@@ -137,7 +136,7 @@ class Strings
 	 */
 	public static function compress ( $str )
 	{
-		return LZString::compressToBase64( $str );
+		return \base64_encode( \hex2bin( $str ) );
 	}
 
 	/**
@@ -148,7 +147,7 @@ class Strings
 	 */
 	public static function decompress ( $str )
 	{
-		return LZString::decompressFromBase64( $str );
+		return \bin2hex( \base64_decode( $str ) );
 	}
 
 }
