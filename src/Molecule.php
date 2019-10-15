@@ -336,7 +336,7 @@ class Molecule
 	}
 
     /**
-     * @return string
+     * @return int
      */
 	public function generateIndex()
     {
@@ -347,7 +347,7 @@ class Molecule
 
     /**
      * @param array $atoms
-     * @return string
+     * @return int
      */
 	public static function generateNextAtomIndex ( array $atoms = [] )
     {
