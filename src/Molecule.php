@@ -256,10 +256,11 @@ class Molecule
 	 *
 	 * @param string $secret
 	 * @param bool $anonymous
+     * @param bool $compressed
 	 * @return string
 	 * @throws \Exception|\ReflectionException|AtomsMissingException
 	 */
-	public function sign ( $secret, $anonymous = false )
+	public function sign ( $secret, $anonymous = false, $compressed = true )
 	{
 		if ( empty( $this->atoms ) ||
 			!empty( \array_filter( $this->atoms,
@@ -319,7 +320,11 @@ class Molecule
 		}
 
 		// Compressing the OTS
-		$signatureFragments = Strings::compress( $signatureFragments );
+        if ( $compressed ) {
+
+            $signatureFragments = Strings::hexToBase64( $signatureFragments );
+
+        }
 
 		// Chunking the signature across multiple atoms
 		$chunkedSignature = Strings::chunkSubstr( $signatureFragments, ceil( mb_strlen( $signatureFragments ) / count( $this->atoms ) ) );
@@ -636,7 +641,7 @@ class Molecule
 		if ( \mb_strlen( $ots ) !== 2048 ) {
 
 			// Attempt decompression
-			$ots = Strings::decompress( $ots );
+			$ots = Strings::base64ToHex( $ots );
 
 			// Still wrong? That's a failure
 			if ( \mb_strlen( $ots ) !== 2048 ) {

@@ -134,7 +134,7 @@ class Strings
 	 * @param string $str
 	 * @return string
 	 */
-	public static function compress ( $str )
+	public static function hexToBase64 ( $str )
 	{
 		return \base64_encode( \hex2bin( $str ) );
 	}
@@ -145,7 +145,7 @@ class Strings
 	 * @param string $str
 	 * @return string
 	 */
-	public static function decompress ( $str )
+	public static function base64ToHex ( $str )
 	{
 		return \bin2hex( \base64_decode( $str ) );
 	}
