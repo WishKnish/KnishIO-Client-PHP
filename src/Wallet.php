@@ -141,9 +141,27 @@ class Wallet
 	public function decryptMyMessage ( $message, $otherPublicKey = null )
 	{
 
-		return ( null === $otherPublicKey ) ?
-            Crypto::decryptMessage( $message, $this->getMyEncPublicKey() ) :
-            Crypto::decryptMessage( $message, Crypto::generateEncPublicKey( $this->getMyEncSharedKey( $otherPublicKey ) ) );
+        if ( $otherPublicKey === null) {
+
+            $target = Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
+
+        }
+        else {
+
+            $target = Crypto::decryptMessage(
+                $message,
+                Crypto::generateEncPublicKey( $this->getMyEncSharedKey( $otherPublicKey ) )
+            );
+
+            if ( $target === null ) {
+
+                $target = Crypto::decryptMessage( $message, $otherPublicKey );
+
+            }
+
+        }
+
+		return $target;
 
 	}
 
