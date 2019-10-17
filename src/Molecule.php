@@ -191,6 +191,67 @@ class Molecule
 
 	}
 
+
+	/**
+	 * @param Wallet $sourceWallet
+	 * @param Wallet $remainderWallet
+	 * @param $value
+	 * @param array|null $batchMeta
+	 * @return $this
+	 */
+	public function initBatchCreation ( Wallet $sourceWallet, Wallet $remainderWallet, $value, array $batchMeta = null )
+	{
+		$this->molecularHash = null;
+
+		// Initializing a new Atom to remove tokens from source
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'V',
+			$sourceWallet->token,
+			-$value,
+			null,
+			null,
+			null,
+			null,
+			$this->generateIndex()
+		);
+
+		// Initializing a new Atom to add tokens to recipient
+		$this->atoms[] = new Atom(
+			null,
+			null,
+			'C',
+			$sourceWallet->token,
+			$value,
+			'batch',
+			null,
+			$batchMeta,
+			null,
+			$this->generateIndex()
+		);
+
+		// Initializing a new Atom to deposit remainder in a new wallet
+		$this->atoms[] = new Atom(
+			$remainderWallet->position,
+			$remainderWallet->address,
+			'V',
+			$sourceWallet->token,
+			$sourceWallet->balance - $value,
+			'walletBundle',
+			$sourceWallet->bundle,
+			null,
+			null,
+			$this->generateIndex()
+		);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+
+	}
+
+
 	/**
 	 * Initialize an M-type molecule with the given data
 	 *
