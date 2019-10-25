@@ -68,6 +68,7 @@ class KnishIO
 				$wallet->position = $balance[ 'position' ];
 				$wallet->balance = $balance[ 'amount' ];
 				$wallet->bundle = $balance[ 'bundleHash' ];
+				$wallet->batch_id = $balance[ 'batch_id' ];
 			}
 		}
 
@@ -184,6 +185,27 @@ class KnishIO
 			] )
 		);
 	}
+
+
+	/**
+	 * @param $fromSecret
+	 * @param $toBundle
+	 * @param $token
+	 * @param $amount
+	 */
+	public static function splitToken ($fromWallet, $toBundle, $token, $amount ) {
+
+		$fromWallet = static::getBalance( $fromSecret, $token );
+		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
+			];
+		}
+
+		return static::transferToken($fromSecret, new WalletShadow($toBundle), $token, $amount);
+	}
+
 
 	/**
 	 * @return Client

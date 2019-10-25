@@ -30,6 +30,14 @@ class Wallet
 {
 
 	/**
+	 * @return string
+	 */
+	public static function generateBatchId () {
+		return Strings::randomString( 64 );
+	}
+
+
+	/**
 	 * Wallet constructor.
 	 *
 	 * @param string $secret
@@ -44,6 +52,7 @@ class Wallet
 		$this->token = $token;
 		$this->balance = 0;
 		$this->molecules = [];
+		$this->batch_id = null;
 
 		if ( $secret ) {
 			$this->key = static::generateWalletKey( $secret, $token, $this->position );
