@@ -8,6 +8,7 @@ namespace WishKnish\KnishIO\Client;
 
 use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 
 /**
@@ -68,7 +69,7 @@ class KnishIO
 				$wallet->position = $balance[ 'position' ];
 				$wallet->balance = $balance[ 'amount' ];
 				$wallet->bundle = $balance[ 'bundleHash' ];
-				$wallet->batch_id = $balance[ 'batch_id' ];
+				$wallet->batchId = $balance[ 'batch_id' ];
 			}
 		}
 
@@ -90,21 +91,21 @@ class KnishIO
 		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
 
-		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
+		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',
 			];
 		}
 
-		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
+		if ( ! CheckMolecule::molecularHash( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong hash for the molecule',
 			];
 		}
 
-		if ( ! Molecule::verifyOts( $molecule ) ) {
+		if ( ! CheckMolecule::ots( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong OTS in the molecule',
@@ -129,7 +130,7 @@ class KnishIO
 	 * @return array
 	 * @throws \Exception|\ReflectionException|InvalidResponseException
 	 */
-	public static function transferToken ( $fromSecret, $to, $token, $amount )
+	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{
 		$fromWallet = static::getBalance( $fromSecret, $token );
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
@@ -142,6 +143,9 @@ class KnishIO
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
 
+		// Remainder wallet
+		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
+
 		// If the wallet is not transferred in a variable and the user does not have a balance wallet,
 		// then create a new one for him
 		if ( $toWallet === null ) {
@@ -149,7 +153,7 @@ class KnishIO
 		}
 
 		$molecule = new Molecule();
-		$molecule->initValue( $fromWallet, $toWallet, new Wallet( $fromSecret, $token ), $amount );
+		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
 		$molecule->sign( $fromSecret );
 
 		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
@@ -192,9 +196,12 @@ class KnishIO
 	 * @param $toBundle
 	 * @param $token
 	 * @param $amount
+	 * @return array
+	 * @throws \ReflectionException
 	 */
-	public static function splitToken ($fromWallet, $toBundle, $token, $amount ) {
+	public static function splitToken ($fromSecret, $toBundle, $token, $amount ) {
 
+		// Get a from wallet from the DB
 		$fromWallet = static::getBalance( $fromSecret, $token );
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
 			return [
@@ -203,7 +210,20 @@ class KnishIO
 			];
 		}
 
-		return static::transferToken($fromSecret, new WalletShadow($toBundle), $token, $amount);
+		// Get a batch ID for the recipient wallet
+		$batchId = ($fromWallet->balance - $amount) > 0 // has a remainder?
+			? Wallet::generateBatchId()
+			: $fromWallet->batchId;
+
+		// To wallet
+		$toWallet = new WalletShadow( $toBundle, $token, $batchId );
+
+		// Remainder wallet
+		$remainderWallet = new Wallet( $fromSecret, $token );
+		$remainderWallet->batchId = $batchId;
+
+		// Token transfering
+		return static::transferToken($fromSecret, $toWallet, $token, $amount, $remainderWallet);
 	}
 
 

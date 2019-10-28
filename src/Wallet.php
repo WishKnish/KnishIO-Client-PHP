@@ -52,7 +52,7 @@ class Wallet
 		$this->token = $token;
 		$this->balance = 0;
 		$this->molecules = [];
-		$this->batch_id = null;
+		$this->batchId = null;
 
 		if ( $secret ) {
 			$this->key = static::generateWalletKey( $secret, $token, $this->position );

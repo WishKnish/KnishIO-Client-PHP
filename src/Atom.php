@@ -37,6 +37,7 @@ class Atom
 	public $isotope;
 	public $token;
 	public $value;
+	public $batchId;
 	public $metaType;
 	public $metaId;
 	public $meta;
@@ -58,13 +59,14 @@ class Atom
 	 * @param null|string $otsFragment
      * @param null|integer $index
 	 */
-	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null)
+	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $batchId = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null)
 	{
 		$this->position = $position;
 		$this->walletAddress = $walletAddress;
 		$this->isotope = $isotope;
 		$this->token = $token;
 		$this->value = null !== $value ? ( string ) $value : null;
+		$this->batchId = $batchId;
 
 		$this->metaType = $metaType;
 		$this->metaId = $metaId;
@@ -95,6 +97,11 @@ class Atom
 				if ( $property->class === self::class && $property->isPublic() && ! $property->isStatic() ) {
 					$value = $property->getValue( $atom );
 					$name = $property->getName();
+
+					// Old atoms support (without batch_id field)
+					if ($name === 'batchId' && $value === null) {
+						 continue;
+					}
 
 					if ( \in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
 						continue;
