@@ -104,55 +104,49 @@ class TokenTransactionTest extends StandartTestCase
 		// Initial code
 		$this->beforeExecute ();
 
-		// Create a secret key
-		$secret = Crypto::generateSecret(null, 2048);
+		// Secret array
+		$secret = [
+			'fungible'	=> Crypto::generateSecret(null, 2048),
+			'stackable'	=> Crypto::generateSecret(null, 2048),
+		];
 
-		// Token meta initialization
+
+		// --- Create a non-stackable token
 		$tokenMeta = [
 			'name'			=> $this->token_slug['fungible'],
 			'fungibility'	=> 'fungible',
 			'splittable'	=> 0,
 			'supply'		=> 'limited',
 			'decimals'		=> 0,
-			'icon'			=> 'name',
+			'icon'			=> 'icon',
 		];
+		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], 1000, $tokenMeta);
+		if ($response['status'] !== 'accepted') {
+			dump ($response['reason']);
+		}
+		$this->assertEquals($response['status'], 'accepted');
 
-		// Create a token
-		$response = KnishIO::createToken($secret, $this->token_slug['fungible'], 1000, $tokenMeta);
 
-		// Save data
-		$this->saveData (['secret' => $secret]);
-	}
-
-	/**
-	 * Test create token
-	 *
-	 * @throws \ReflectionException
-	 */
-	public function testCreateToken2 () {
-
-		// Initial code
-		$this->beforeExecute ();
-
-		// Create a secret key
-		$secret = Crypto::generateSecret(null, 2048);
-
-		// Token meta initialization
+		// --- Create a stackable token
 		$tokenMeta = [
 			'name'			=> $this->token_slug['stackable'],
-			'fungibility'	=> 'fungible',
-			'splittable'	=> 0,
+			'fungibility'	=> 'stackable',
+			'splittable'	=> 1,
 			'supply'		=> 'limited',
 			'decimals'		=> 0,
-			'icon'			=> 'name',
+			'icon'			=> 'icon',
 		];
+		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], 1000, $tokenMeta);
+		if ($response['status'] !== 'accepted') {
+			dump ($response['reason']);
+		}
+		$this->assertEquals($response['status'], 'accepted');
 
-		// Create a token
-		$response = KnishIO::createToken($secret, $this->token_slug['stackable'], 1000, $tokenMeta);
 
 		// Save data
 		$this->saveData (['secret' => $secret]);
 	}
+
 
 
 }

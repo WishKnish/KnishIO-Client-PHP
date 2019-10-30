@@ -86,9 +86,17 @@ class KnishIO
 	 */
 	public static function createToken ( $secret, $token, $amount, array $metas = [] )
 	{
+		// Recipient wallet
+		$recipientWallet = new Wallet( $secret, $token );
+
+		// For stackable token - create a batch ID
+		if (array_get($metas, 'fungibility') === 'stackable') {
+			$recipientWallet->batchId = Wallet::generateBatchId();
+		}
+
 		$molecule = new Molecule();
         $fromWallet = new Wallet( $secret );
-		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
+		$molecule->initTokenCreation( $fromWallet, $recipientWallet, $amount, $metas );
 		$molecule->sign( $secret );
 
 		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
