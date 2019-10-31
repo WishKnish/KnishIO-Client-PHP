@@ -22,7 +22,7 @@ class KnishIO
 	private static $query = [
 		'molecule' => 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }',
         'wallet' => 'query($address: String, $walletBundle: String, $token: String) { Wallet(address: $address, bundleHash: $walletBundle, token: $token) { bundleHash, address, position, amount, tokenSlug, createdAt, } }',
-		'balance'  => 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, position, amount, createdAt } }',
+		'balance'  => 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, batchId, position, amount, createdAt } }',
 	];
 
 	/**
@@ -69,7 +69,7 @@ class KnishIO
 				$wallet->position = $balance[ 'position' ];
 				$wallet->balance = $balance[ 'amount' ];
 				$wallet->bundle = $balance[ 'bundleHash' ];
-				$wallet->batchId = $balance[ 'batch_id' ];
+				$wallet->batchId = $balance[ 'batchId' ];
 			}
 		}
 
@@ -99,6 +99,11 @@ class KnishIO
 		$molecule->initTokenCreation( $fromWallet, $recipientWallet, $amount, $metas );
 		$molecule->sign( $secret );
 
+		// Check the molecule
+		$molecule->check();
+
+		/*
+
 		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
@@ -119,6 +124,8 @@ class KnishIO
 				'reason' => 'Wrong OTS in the molecule',
 			];
 		}
+
+		*/
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 		return \array_intersect_key(
@@ -164,6 +171,11 @@ class KnishIO
 		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
 		$molecule->sign( $fromSecret );
 
+		// Check the molecule
+		$molecule->check($fromWallet);
+
+		/*
+
 		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
@@ -185,7 +197,10 @@ class KnishIO
 			];
 		}
 
+		*/
+
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
+		dd ($response);
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',

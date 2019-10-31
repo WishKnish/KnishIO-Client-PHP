@@ -54,6 +54,17 @@ class TokenTransactionTest extends StandartTestCase
 
 
 	/**
+	 * @param array $response
+	 */
+	protected function checkResponse (array $response) {
+		if ($response['status'] !== 'accepted') {
+			dump ($response['reason']);
+		}
+		$this->assertEquals($response['status'], 'accepted');
+	}
+
+
+	/**
 	 * Before execute
 	 */
 	protected function beforeExecute () {
@@ -108,6 +119,7 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = [
 			'fungible'	=> Crypto::generateSecret(null, 2048),
 			'stackable'	=> Crypto::generateSecret(null, 2048),
+			'recipient'	=> Crypto::generateSecret(null, 2048),
 		];
 
 
@@ -121,10 +133,7 @@ class TokenTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], 1000, $tokenMeta);
-		if ($response['status'] !== 'accepted') {
-			dump ($response['reason']);
-		}
-		$this->assertEquals($response['status'], 'accepted');
+		$this->checkResponse($response);
 
 
 		// --- Create a stackable token
@@ -137,15 +146,37 @@ class TokenTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], 1000, $tokenMeta);
-		if ($response['status'] !== 'accepted') {
-			dump ($response['reason']);
-		}
-		$this->assertEquals($response['status'], 'accepted');
+		$this->checkResponse($response);
 
 
 		// Save data
 		$this->saveData (['secret' => $secret]);
 	}
+
+
+	/**
+	 * Test token transfering
+	 *
+	 * @throws \ReflectionException
+	 */
+	public function testTokenTransaction () {
+
+		// Initial code
+		$this->beforeExecute ();
+
+		// Secrets initialization
+		$secret = array_get($this->getData(), 'secret');
+
+		// Get a bundle hash from the recipient secret
+		$toBundle = Crypto::generateBundleHash($secret['recipient']);
+
+
+
+		// --- Batch transfer (splitting)
+		$response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
+		$this->checkResponse($response);
+	}
+
 
 
 

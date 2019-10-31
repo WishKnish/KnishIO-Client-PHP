@@ -88,6 +88,7 @@ class Molecule
 
 		$this->molecularHash = null;
 
+
 		// Initializing a new Atom to remove tokens from source
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
@@ -96,6 +97,7 @@ class Molecule
 			$sourceWallet->token,
 			-$value,
 			$sourceWallet->batchId,
+			null,
 			null,
 			null,
 			null,
