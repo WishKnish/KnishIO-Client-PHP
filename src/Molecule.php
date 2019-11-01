@@ -101,7 +101,7 @@ class Molecule
 			null,
 			null,
 			null,
-            $this->generateIndex()
+			$this->generateIndex()
 		);
 
 		// Initializing a new Atom to add tokens to recipient

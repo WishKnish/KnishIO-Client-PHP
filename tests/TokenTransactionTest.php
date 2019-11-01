@@ -123,6 +123,8 @@ class TokenTransactionTest extends StandartTestCase
 		];
 
 
+		/*
+
 		// --- Create a non-stackable token
 		$tokenMeta = [
 			'name'			=> $this->token_slug['fungible'],
@@ -134,6 +136,8 @@ class TokenTransactionTest extends StandartTestCase
 		];
 		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], 1000, $tokenMeta);
 		$this->checkResponse($response);
+
+		*/
 
 
 		// --- Create a stackable token
