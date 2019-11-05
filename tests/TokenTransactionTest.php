@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Molecule;
+use WishKnish\KnishIO\Wallet;
 
 
 /**
@@ -158,12 +159,14 @@ class TokenTransactionTest extends StandartTestCase
 	}
 
 
+
+
 	/**
 	 * Test token transfering
 	 *
 	 * @throws \ReflectionException
 	 */
-	public function testTokenTransaction () {
+	public function testBatchSplitTransaction () {
 
 		// Initial code
 		$this->beforeExecute ();
@@ -171,13 +174,36 @@ class TokenTransactionTest extends StandartTestCase
 		// Secrets initialization
 		$secret = array_get($this->getData(), 'secret');
 
-		// Get a bundle hash from the recipient secret
+		// Get to bundle hashes from the recipient secret
 		$toBundle = Crypto::generateBundleHash($secret['recipient']);
-
-
 
 		// --- Batch transfer (splitting)
 		$response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
+		$this->checkResponse($response);
+	}
+
+
+	/**
+	 * Test token transfering
+	 *
+	 * @throws \ReflectionException
+	 */
+	public function testBatchFullTransaction () {
+
+		// Initial code
+		$this->beforeExecute ();
+
+		// Secrets initialization
+		$secret = array_get($this->getData(), 'secret');
+
+		// Get to bundle hashes from the recipient secret
+		$toBundle = Crypto::generateBundleHash($secret['recipient']);
+
+		// Get a from wallet to get it balance
+		$fromWallet = KnishIO::getBalance( $secret['stackable'], $this->token_slug['stackable'] );
+
+		// --- Batch transfer (splitting)
+		$response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], $fromWallet->balance);
 		$this->checkResponse($response);
 	}
 

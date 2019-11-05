@@ -201,7 +201,6 @@ class KnishIO
 		*/
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		dd ($response);
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',
@@ -220,6 +219,7 @@ class KnishIO
 	 * @param $toBundle
 	 * @param $token
 	 * @param $amount
+	 * @param null $remainderWallet
 	 * @return array
 	 * @throws \ReflectionException
 	 */
