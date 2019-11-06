@@ -31,25 +31,28 @@ class TokenTransactionTest extends StandartTestCase
 	 *
 	 * @param array $data
 	 */
-	protected function saveData (array $data) {
-		file_put_contents($this->data_filepath, \json_encode($data));
+	protected function saveData (array $data, $filepath = null) {
+		$filepath = $filepath ?? $this->data_filepath;
+		file_put_contents($filepath, \json_encode($data));
 	}
 
 
 	/**
 	 * @return mixed
 	 */
-	protected function getData () {
-		return json_decode(file_get_contents($this->data_filepath), true);
+	protected function getData ($filepath = null) {
+		$filepath = $filepath ?? $this->data_filepath;
+		return json_decode(file_get_contents($filepath), true);
 	}
 
 
 	/**
 	 * @return mixed
 	 */
-	protected function clearData () {
-		if (file_exists($this->data_filepath) ) {
-			unlink($this->data_filepath);
+	protected function clearData ($filepath = null) {
+		$filepath = $filepath ?? $this->data_filepath;
+		if (file_exists($filepath) ) {
+			unlink($filepath);
 		}
 	}
 
@@ -190,6 +193,8 @@ class TokenTransactionTest extends StandartTestCase
 	 */
 	public function testBatchFullTransaction () {
 
+		return;
+
 		// Initial code
 		$this->beforeExecute ();
 
@@ -208,6 +213,41 @@ class TokenTransactionTest extends StandartTestCase
 	}
 
 
+
+	/*
+
+	$molecule_data = \json_decode(file_get_contents(__DIR__.'/molecule.json'), true);
+
+		dump ($molecule_data);
+
+		$molecule = new ClientMolecule();
+		foreach ($molecule_data as $key => $value) {
+			if ($key !== 'atoms') {
+				$molecule->$key = $value;
+			}
+			else {
+				foreach ($value as $atom_data) {
+					$molecule->atoms[] = new ClientAtom(
+						$atom_data['position'],
+						$atom_data['walletAddress'],
+						$atom_data['isotope'],
+						$atom_data['token'],
+						$atom_data['value'],
+						$atom_data['batchId'],
+						$atom_data['metaType'],
+						$atom_data['metaId'],
+						$atom_data['meta'],
+						$atom_data['otsFragment'],
+						$atom_data['index']
+					);
+				}
+			}
+		}
+
+		dd ($molecule);
+		die ('OK');
+
+	*/
 
 
 }
