@@ -183,6 +183,10 @@ class TokenTransactionTest extends StandartTestCase
 		// --- Batch transfer (splitting)
 		$response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
 		$this->checkResponse($response);
+
+		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
+		// $response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
+		// $this->checkResponse($response);
 	}
 
 
@@ -193,8 +197,6 @@ class TokenTransactionTest extends StandartTestCase
 	 */
 	public function testBatchFullTransaction () {
 
-		return;
-
 		// Initial code
 		$this->beforeExecute ();
 
@@ -202,7 +204,8 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = array_get($this->getData(), 'secret');
 
 		// Get to bundle hashes from the recipient secret
-		$toBundle = Crypto::generateBundleHash($secret['recipient']);
+		$toSecret = Crypto::generateSecret(null, 2048);
+		$toBundle = Crypto::generateBundleHash($toSecret);
 
 		// Get a from wallet to get it balance
 		$fromWallet = KnishIO::getBalance( $secret['stackable'], $this->token_slug['stackable'] );
@@ -212,42 +215,6 @@ class TokenTransactionTest extends StandartTestCase
 		$this->checkResponse($response);
 	}
 
-
-
-	/*
-
-	$molecule_data = \json_decode(file_get_contents(__DIR__.'/molecule.json'), true);
-
-		dump ($molecule_data);
-
-		$molecule = new ClientMolecule();
-		foreach ($molecule_data as $key => $value) {
-			if ($key !== 'atoms') {
-				$molecule->$key = $value;
-			}
-			else {
-				foreach ($value as $atom_data) {
-					$molecule->atoms[] = new ClientAtom(
-						$atom_data['position'],
-						$atom_data['walletAddress'],
-						$atom_data['isotope'],
-						$atom_data['token'],
-						$atom_data['value'],
-						$atom_data['batchId'],
-						$atom_data['metaType'],
-						$atom_data['metaId'],
-						$atom_data['meta'],
-						$atom_data['otsFragment'],
-						$atom_data['index']
-					);
-				}
-			}
-		}
-
-		dd ($molecule);
-		die ('OK');
-
-	*/
 
 
 }
