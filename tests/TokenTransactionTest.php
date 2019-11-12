@@ -119,11 +119,19 @@ class TokenTransactionTest extends StandartTestCase
 		// Initial code
 		$this->beforeExecute ();
 
+
+		// Full amount
+		$full_amount = 1000;
+
 		// Secret array
 		$secret = [
 			'fungible'	=> Crypto::generateSecret(null, 2048),
 			'stackable'	=> Crypto::generateSecret(null, 2048),
-			'recipient'	=> Crypto::generateSecret(null, 2048),
+			'recipient'	=> [
+				Crypto::generateSecret(null, 2048),
+				Crypto::generateSecret(null, 2048),
+				Crypto::generateSecret(null, 2048),
+			],
 		];
 
 
@@ -138,7 +146,7 @@ class TokenTransactionTest extends StandartTestCase
 			'decimals'		=> 0,
 			'icon'			=> 'icon',
 		];
-		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], 1000, $tokenMeta);
+		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
 		*/
@@ -153,12 +161,15 @@ class TokenTransactionTest extends StandartTestCase
 			'decimals'		=> 0,
 			'icon'			=> 'icon',
 		];
-		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], 1000, $tokenMeta);
+		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
 
 		// Save data
-		$this->saveData (['secret' => $secret]);
+		$this->saveData (['secret' => $secret, 'amount' => [
+			'full'			=> $full_amount,
+			'transaction'	=> 100,
+		]]);
 	}
 
 
@@ -171,6 +182,12 @@ class TokenTransactionTest extends StandartTestCase
 	 */
 	public function testBatchSplitTransaction () {
 
+		// Data
+		$data = $this->getData();
+		$from_secret = array_get($data, 'secret.stackable');
+		$transaction_amount = array_get($data, 'amount.transaction');
+		$full_amount = array_get($data, 'amount.full');
+
 		// Initial code
 		$this->beforeExecute ();
 
@@ -178,15 +195,15 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = array_get($this->getData(), 'secret');
 
 		// Get to bundle hashes from the recipient secret
-		$toBundle = Crypto::generateBundleHash($secret['recipient']);
+		$toBundle = Crypto::generateBundleHash(array_get($data, 'secret.recipient.0'));
 
 		// --- Batch transfer (splitting)
-		$response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
+		$response = KnishIO::splitToken($from_secret, $toBundle, $this->token_slug['stackable'], $transaction_amount);
 		$this->checkResponse($response);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
-		// $response = KnishIO::splitToken($secret['stackable'], $toBundle, $this->token_slug['stackable'], 100);
-		// $this->checkResponse($response);
+		$response = KnishIO::splitToken($from_secret, $toBundle, $this->token_slug['stackable'], $transaction_amount);
+		$this->checkResponse($response);
 	}
 
 
@@ -196,6 +213,8 @@ class TokenTransactionTest extends StandartTestCase
 	 * @throws \ReflectionException
 	 */
 	public function testBatchFullTransaction () {
+
+		return;
 
 		// Initial code
 		$this->beforeExecute ();
