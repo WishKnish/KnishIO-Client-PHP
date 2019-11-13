@@ -5,8 +5,9 @@ namespace WishKnish\KnishIO\Client\Tests;
 use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
-use WishKnish\KnishIO\Wallet;
+
 
 
 /**
@@ -65,6 +66,19 @@ class TokenTransactionTest extends StandartTestCase
 			dump ($response['reason']);
 		}
 		$this->assertEquals($response['status'], 'accepted');
+	}
+
+
+	/**
+	 * Check wallet amount
+	 *
+	 * @param string $bundle
+	 * @param int $amount
+	 * @throws \ReflectionException
+	 */
+	protected function checkWalletAmount (string $bundle, string $token, int $amount) {
+		$wallet = KnishIO::getBalance($bundle, $token);
+		$this->assertEquals($wallet->balance, $amount);
 	}
 
 
@@ -187,6 +201,7 @@ class TokenTransactionTest extends StandartTestCase
 		$from_secret = array_get($data, 'secret.stackable');
 		$transaction_amount = array_get($data, 'amount.transaction');
 		$full_amount = array_get($data, 'amount.full');
+		$token = $this->token_slug['stackable'];
 
 		// Initial code
 		$this->beforeExecute ();
@@ -195,15 +210,31 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = array_get($this->getData(), 'secret');
 
 		// Get to bundle hashes from the recipient secret
-		$toBundle = Crypto::generateBundleHash(array_get($data, 'secret.recipient.0'));
+		$toBundle = [
+			Crypto::generateBundleHash(array_get($data, 'secret.recipient.0')),
+			Crypto::generateBundleHash(array_get($data, 'secret.recipient.1')),
+			Crypto::generateBundleHash(array_get($data, 'secret.recipient.2')),
+		];
 
 		// --- Batch transfer (splitting)
-		$response = KnishIO::splitToken($from_secret, $toBundle, $this->token_slug['stackable'], $transaction_amount);
+		$response = KnishIO::splitToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
+		$this->checkWalletAmount($toBundle[0], $token, $transaction_amount);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
-		$response = KnishIO::splitToken($from_secret, $toBundle, $this->token_slug['stackable'], $transaction_amount);
+		$response = KnishIO::splitToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
+		$this->checkWalletAmount($toBundle[0], $token, $transaction_amount * 2);
+
+		// --- Batch transfer to other recipient
+		$response = KnishIO::splitToken($from_secret, $toBundle[1], $token, $transaction_amount);
+		$this->checkResponse($response);
+		$this->checkWalletAmount($toBundle[1], $token, $transaction_amount);
+
+		// --- Batch transfer without remainder
+		$response = KnishIO::splitToken($from_secret, $toBundle[2], $token, $full_amount - $transaction_amount*3);
+		$this->checkResponse($response);
+		$this->checkWalletAmount($toBundle[2], $token,$full_amount - $transaction_amount*3);
 	}
 
 

@@ -59,6 +59,9 @@ class KnishIO
 				'token'      => $token,
 			]
 		);
+		//dump ($response);
+
+		// @todo add errors handing: check the 'errors' key from a response
 
 		if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
 			$balance = $response[ 'data' ][ 'Balance' ];
@@ -72,7 +75,6 @@ class KnishIO
 				$wallet->batchId = $balance[ 'batchId' ];
 			}
 		}
-
 		return $wallet;
 	}
 
@@ -225,7 +227,7 @@ class KnishIO
 	 */
 	public static function splitToken ($fromSecret, $toBundle, $token, $amount ) {
 
-		// Get a from wallet from the DB
+		// Get a 'from' wallet from the DB
 		$fromWallet = static::getBalance( $fromSecret, $token );
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
 			return [
@@ -234,10 +236,29 @@ class KnishIO
 			];
 		}
 
-		// Get a batch ID for the recipient wallet
-		$batchId = ($fromWallet->balance - $amount) > 0 // has a remainder?
-			? Wallet::generateBatchId()
-			: $fromWallet->batchId;
+
+
+		// Get a recipient wallet from the DB (shadow wallet)
+		$toWallet = static::getBalance($toBundle, $token);
+
+
+
+		// Has already a shadow wallet? Use batch ID from it
+		if ($toWallet !== null) {
+			$batchId = $toWallet->batchId;
+		}
+
+		// Has a remainder?
+		else if (($fromWallet->balance - $amount) > 0) {
+			$batchId = Wallet::generateBatchId();
+		}
+
+		// Has no remainder?: use batch ID from the source wallet
+		else {
+			$batchId = $fromWallet->batchId;
+		}
+
+
 
 		// To wallet
 		$toWallet = new WalletShadow( $toBundle, $token, $batchId );
