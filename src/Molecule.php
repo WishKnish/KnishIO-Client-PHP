@@ -138,6 +138,50 @@ class Molecule
 
 	}
 
+    /**
+     * Initialize a C-type molecule to issue a new type of identifier
+     *
+     * @param Wallet $sourceWallet
+     * @param string $source
+     * @param string $type
+     * @param string $code
+     *
+     * @return self
+     */
+	public function initIdentifierCreation (  Wallet $sourceWallet, $source, $type, $code )
+    {
+
+        $this->molecularHash = null;
+
+        $this->atoms[] = new Atom(
+            $sourceWallet->position,
+            $sourceWallet->address,
+            'C',
+            $sourceWallet->token,
+            null,
+            null,
+            'identifier',
+            $type,
+            [
+                [
+                    'key' => 'code',
+                    'value' => $code,
+                ],
+                [
+                    'key' => 'hash',
+                    'value' => Crypto::generateBundleHash( \trim( $source ) ),
+                ],
+            ],
+            null,
+            $this->generateIndex()
+        );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+
+    }
+
 	/**
 	 * Initialize a C-type molecule to issue a new type of token
 	 *
