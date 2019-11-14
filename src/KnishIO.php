@@ -42,6 +42,16 @@ class KnishIO
 		static::$client = null;
 	}
 
+
+	/**
+	 * @param string $code
+	 * @return bool
+	 */
+	protected static function isBundleHash (string $code) : bool {
+		return (mb_strlen($code) === 64);
+	}
+
+
 	/**
 	 * @param string $code
 	 * @param string $token
@@ -55,13 +65,13 @@ class KnishIO
 			static::$query[ 'balance' ],
 			[
 				// If bundle hash came, we pass it, otherwise we consider it a secret
-				'bundleHash' => mb_strlen( ( string ) $code ) === 64 ? $code : Crypto::generateBundleHash( $code ),
+				'bundleHash' => static::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code ),
 				'token'      => $token,
 			]
 		);
 		//dump ($response);
 
-		// @todo add errors handing: check the 'errors' key from a response
+		// @todo add errors handling: check the 'errors' key from a response
 
 		if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
 			$balance = $response[ 'data' ][ 'Balance' ];
@@ -104,32 +114,6 @@ class KnishIO
 		// Check the molecule
 		$molecule->check();
 
-
-		/*
-
-		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Incorrect "V" isotopes in a molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::molecularHash( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong hash for the molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::ots( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong OTS in the molecule',
-			];
-		}
-
-		*/
-
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
@@ -158,11 +142,50 @@ class KnishIO
 			];
 		}
 
+		// Is a non-stackable token & $to is a bundle hash? Error, bundle hash can be passed only for a shadow wallet
+		if (!$fromWallet->batchId && is_string($to) && static::isBundleHash($to) ) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The recipient cannot be a bundle hash for a non-stackable token',
+			];
+		}
+
+
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
 
 		// Remainder wallet
 		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
+
+
+		// --- BEGIN: Batch ID initialization
+		if ($fromWallet->batchId) {
+
+			// Has already a shadow wallet? Use batch ID from it
+			if ($toWallet !== null) {
+				$batchId = $toWallet->batchId;
+			}
+
+			// Has a remainder?
+			else if (($fromWallet->balance - $amount) > 0) {
+				$batchId = Wallet::generateBatchId();
+			}
+
+			// Has no remainder?: use batch ID from the source wallet
+			else {
+				$batchId = $fromWallet->batchId;
+			}
+
+			// If $to parameter is a bundle hash & shadow wallet does not exist: create it
+			if ($toWallet === null) {
+				$toWallet = new WalletShadow( $to, $token, $batchId );
+			}
+
+			// Set remainder wallet batch ID
+			$remainderWallet->batchId = $batchId;
+		}
+		// --- END: Batch ID initialization
+
 
 		// If the wallet is not transferred in a variable and the user does not have a balance wallet,
 		// then create a new one for him
@@ -177,31 +200,6 @@ class KnishIO
 		// Check the molecule
 		$molecule->check($fromWallet);
 
-		/*
-
-		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Incorrect "V" isotopes in a molecule',
-			];
-		}
-
-		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong hash for the molecule',
-			];
-		}
-
-		if ( ! Molecule::verifyOts( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong OTS in the molecule',
-			];
-		}
-
-		*/
-
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
@@ -213,62 +211,6 @@ class KnishIO
 				'status',
 			] )
 		);
-	}
-
-
-	/**
-	 * @param $fromSecret
-	 * @param $toBundle
-	 * @param $token
-	 * @param $amount
-	 * @param null $remainderWallet
-	 * @return array
-	 * @throws \ReflectionException
-	 */
-	public static function splitToken ($fromSecret, $toBundle, $token, $amount ) {
-
-		// Get a 'from' wallet from the DB
-		$fromWallet = static::getBalance( $fromSecret, $token );
-		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
-			];
-		}
-
-
-
-		// Get a recipient wallet from the DB (shadow wallet)
-		$toWallet = static::getBalance($toBundle, $token);
-
-
-
-		// Has already a shadow wallet? Use batch ID from it
-		if ($toWallet !== null) {
-			$batchId = $toWallet->batchId;
-		}
-
-		// Has a remainder?
-		else if (($fromWallet->balance - $amount) > 0) {
-			$batchId = Wallet::generateBatchId();
-		}
-
-		// Has no remainder?: use batch ID from the source wallet
-		else {
-			$batchId = $fromWallet->batchId;
-		}
-
-
-
-		// To wallet
-		$toWallet = new WalletShadow( $toBundle, $token, $batchId );
-
-		// Remainder wallet
-		$remainderWallet = new Wallet( $fromSecret, $token );
-		$remainderWallet->batchId = $batchId;
-
-		// Token transfering
-		return static::transferToken($fromSecret, $toWallet, $token, $amount, $remainderWallet);
 	}
 
 
