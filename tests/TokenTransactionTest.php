@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use BI\BigInteger;
 use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -100,7 +101,7 @@ class TokenTransactionTest extends StandartTestCase
 	public function testClearAll () {
 
 		// Base dir
-		$base_dir = __DIR__.'/../../../../';
+		$base_dir = __DIR__.'/../../wishknish_dev/';
 
 		// Check is a clear file exists
 		$knishio_clear_testfile = $base_dir.'\vendor\wishknish\knishio\tests\TokenTransactionTest.php';
@@ -145,6 +146,7 @@ class TokenTransactionTest extends StandartTestCase
 				Crypto::generateSecret(null, 2048),
 				Crypto::generateSecret(null, 2048),
 				Crypto::generateSecret(null, 2048),
+				Crypto::generateSecret(null, 2048),
 			],
 		];
 
@@ -185,7 +187,9 @@ class TokenTransactionTest extends StandartTestCase
 	/**
 	 * @throws \ReflectionException
 	 */
-	public function testBaseSplitTransaction () {
+	public function testBaseTransaction () {
+
+		// dump ('BEGIN: testBaseSplitTransaction');
 
 		// Data
 		$data = $this->getData();
@@ -201,11 +205,9 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = array_get($this->getData(), 'secret');
 
 		// Get to bundle hashes from the recipient secret
-		$toSecret = [
-			array_get($data, 'secret.recipient.0'),
-			array_get($data, 'secret.recipient.1'),
-			array_get($data, 'secret.recipient.2'),
-		];
+		$toSecret = array_get($data, 'secret.recipient');
+
+
 
 		// --- Batch transfer (splitting)
 		$response = KnishIO::transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
@@ -217,15 +219,27 @@ class TokenTransactionTest extends StandartTestCase
 		$this->checkResponse($response);
 		$this->checkWalletAmount($toSecret[0], $token, $transaction_amount * 2);
 
+
+
 		// --- Batch transfer to other recipient
 		$response = KnishIO::transferToken($from_secret, $toSecret[1], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletAmount($toSecret[1], $token, $transaction_amount);
 
-		// --- Batch transfer without remainder
-		$response = KnishIO::transferToken($from_secret, $toSecret[2], $token, $full_amount - $transaction_amount*3);
+
+
+		// --- Batch 1-st transfer
+		$response = KnishIO::transferToken($from_secret, $toSecret[2], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletAmount($toSecret[2], $token,$full_amount - $transaction_amount*3);
+		$this->checkWalletAmount($toSecret[2], $token, $transaction_amount);
+
+		// --- Batch lastd transfer
+		$remainder_amount = $full_amount - $transaction_amount*4;
+		$response = KnishIO::transferToken($from_secret, $toSecret[2], $token, $remainder_amount);
+		$this->checkResponse($response);
+		$this->checkWalletAmount($toSecret[2], $token, $remainder_amount + $transaction_amount);
+
+		// dump ('END: testBaseSplitTransaction');
 	}
 
 
@@ -235,7 +249,7 @@ class TokenTransactionTest extends StandartTestCase
 	 *
 	 * @throws \ReflectionException
 	 */
-	public function testBatchSplitTransaction () {
+	public function testBatchTransaction () {
 
 		// Data
 		$data = $this->getData();
@@ -251,11 +265,10 @@ class TokenTransactionTest extends StandartTestCase
 		$secret = array_get($this->getData(), 'secret');
 
 		// Get to bundle hashes from the recipient secret
-		$toBundle = [
-			Crypto::generateBundleHash(array_get($data, 'secret.recipient.0')),
-			Crypto::generateBundleHash(array_get($data, 'secret.recipient.1')),
-			Crypto::generateBundleHash(array_get($data, 'secret.recipient.2')),
-		];
+		$toBundle = [];
+		foreach (array_get($data, 'secret.recipient') as $secret) {
+			$toBundle[] = Crypto::generateBundleHash($secret);
+		}
 
 		// --- Batch transfer (splitting)
 		$response = KnishIO::transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
@@ -267,15 +280,25 @@ class TokenTransactionTest extends StandartTestCase
 		$this->checkResponse($response);
 		$this->checkWalletAmount($toBundle[0], $token, $transaction_amount * 2);
 
+
+
 		// --- Batch transfer to other recipient
 		$response = KnishIO::transferToken($from_secret, $toBundle[1], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletAmount($toBundle[1], $token, $transaction_amount);
 
-		// --- Batch transfer without remainder
-		$response = KnishIO::transferToken($from_secret, $toBundle[2], $token, $full_amount - $transaction_amount*3);
+
+
+		// --- Batch 1-st transfer
+		$response = KnishIO::transferToken($from_secret, $toBundle[2], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletAmount($toBundle[2], $token,$full_amount - $transaction_amount*3);
+		$this->checkWalletAmount($toBundle[2], $token, $transaction_amount);
+
+		// --- Batch last transfer
+		$remainder_amount = $full_amount - $transaction_amount * 4;
+		$response = KnishIO::transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
+		$this->checkResponse($response);
+		$this->checkWalletAmount($toBundle[2], $token, $remainder_amount + $transaction_amount);
 	}
 
 

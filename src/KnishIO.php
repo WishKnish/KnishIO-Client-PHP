@@ -151,8 +151,12 @@ class KnishIO
 		}
 
 
+		// $time = microtime(true);
+
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
+
+		// dump ('static::getBalance: '.(microtime(true) - $time));
 
 		// Remainder wallet
 		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
@@ -227,6 +231,7 @@ class KnishIO
 				'headers'     => [
 					'User-Agent' => 'KnishIO/0.1',
 					'Accept'     => 'application/json',
+					// 'Connection' => 'close',
 				]
 			] );
 		}
@@ -242,12 +247,17 @@ class KnishIO
 	 */
 	private static function request ( $query, $variables )
 	{
+		// $time = microtime(true);
+
 		$response = static::getClient()->post( null, [
 			'json' => [
 				'query'     => $query,
 				'variables' => $variables,
 			]
 		] );
+
+		// dump (array_search($query, static::$query) .': '. (microtime(true) - $time));
+
 		$responseJson = \json_decode( $response->getBody()->getContents(), true );
 
 		if ( $responseJson === null ) {
