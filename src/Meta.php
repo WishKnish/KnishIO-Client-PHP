@@ -56,15 +56,23 @@ class Meta
 	}
 
 	/**
-	 * @param array $meta
+	 * @param array|object $meta
 	 * @return array
 	 */
-	public static function aggregateMeta ( array $meta )
+	public static function aggregateMeta ( $meta )
 	{
 		$aggregate = [];
 		if ( count( $meta ) ) {
 			foreach ( $meta as $metaEntry ) {
-				$aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
+				if ( is_object( $metaEntry ) ) {
+					$metaKey = $metaEntry->key;
+					$metaValue = $metaEntry->value;
+				} else {
+					$metaKey = $metaEntry[ 'key' ];
+					$metaValue = $metaEntry[ 'value' ];
+				}
+
+				$aggregate[ $metaKey ] = $metaValue;
 			}
 		}
 		return $aggregate;
