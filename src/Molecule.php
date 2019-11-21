@@ -198,6 +198,37 @@ class Molecule
 
 
 	/**
+	 * Shadow wallet bindind
+	 *
+	 * @param Wallet $sourceWallet
+	 * @param Wallet $recipientWallet
+	 */
+	public function initShadowWalletBinding ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, $tokenMeta = [])
+	{
+
+		// Create an 'C' atom
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'C',
+			$sourceWallet->token,
+			$amount,
+			$recipientWallet->batchId,
+			'token',
+			$recipientWallet->token,
+			$tokenMeta,
+			null,
+			$this->generateIndex()
+		);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+
+	}
+
+
+	/**
 	 * Initialize an M-type molecule with the given data
 	 *
 	 * @param Wallet $wallet

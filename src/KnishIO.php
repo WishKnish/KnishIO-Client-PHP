@@ -124,6 +124,50 @@ class KnishIO
 		);
 	}
 
+
+	/**
+	 * Bind shadow wallet
+	 *
+	 * @param $bundleHash
+	 * @param $token
+	 */
+	public static function bindShadowWallet ($secret, $token, $recipentWallet = null) {
+
+		// Get a from wallet from the request (shadow wallet)
+		$fromWallet = static::getBalance( $secret, $token );
+		if ( $fromWallet === null) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The source wallet does not exist',
+			];
+		}
+
+		// If the recipient wallet has been passed, if not, create a new one
+		$recipientWallet = $recipentWallet ?? new Wallet ($secret, $token);
+		$recipientWallet->batchId = $fromWallet->batchId;
+
+		// Create & sign a molecule
+		$molecule = new Molecule();
+		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $fromWallet->balance );
+		$molecule->sign( $secret );
+
+		dd ($molecule);
+
+		// Check the molecule
+		$molecule->check();
+
+		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
+		return \array_intersect_key(
+			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
+				'status' => 'rejected',
+				'reason' => 'Invalid response from server',
+			],
+			\array_flip( [ 'reason', 'status', ] )
+		);
+
+	}
+
+
 	/**
 	 * @param string $fromSecret
 	 * @param string|Wallet $to
@@ -151,12 +195,8 @@ class KnishIO
 		}
 
 
-		// $time = microtime(true);
-
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
-
-		// dump ('static::getBalance: '.(microtime(true) - $time));
 
 		// Remainder wallet
 		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
@@ -197,6 +237,7 @@ class KnishIO
 			$toWallet = new Wallet( $to, $token );
 		}
 
+		// Create & sign a molecule
 		$molecule = new Molecule();
 		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
 		$molecule->sign( $fromSecret );
@@ -231,7 +272,6 @@ class KnishIO
 				'headers'     => [
 					'User-Agent' => 'KnishIO/0.1',
 					'Accept'     => 'application/json',
-					// 'Connection' => 'close',
 				]
 			] );
 		}
@@ -247,16 +287,12 @@ class KnishIO
 	 */
 	private static function request ( $query, $variables )
 	{
-		// $time = microtime(true);
-
 		$response = static::getClient()->post( null, [
 			'json' => [
 				'query'     => $query,
 				'variables' => $variables,
 			]
 		] );
-
-		// dump (array_search($query, static::$query) .': '. (microtime(true) - $time));
 
 		$responseJson = \json_decode( $response->getBody()->getContents(), true );
 

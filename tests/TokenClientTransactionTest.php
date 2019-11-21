@@ -2,7 +2,6 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-use BI\BigInteger;
 use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -15,7 +14,7 @@ use WishKnish\KnishIO\Molecule;
  * Class TokenTransactionTest
  * @package WishKnish\KnishIO\Tests
  */
-class TokenTransactionTest extends StandartTestCase
+class TokenClientTransactionTest extends StandartTestCase
 {
 
 	// Token slugs
@@ -24,8 +23,15 @@ class TokenTransactionTest extends StandartTestCase
 		'stackable'	=> 'UTSTACKABLE',
 	];
 
-	// Data filepath
-	protected $data_filepath = 'TokenTransactionTest.data';
+
+	/**
+	 * Data filepath
+	 *
+	 * @return string
+	 */
+	protected function dataFilepath () {
+		return class_basename(static::class).'.data';
+	}
 
 
 	/**
@@ -34,7 +40,7 @@ class TokenTransactionTest extends StandartTestCase
 	 * @param array $data
 	 */
 	protected function saveData (array $data, $filepath = null) {
-		$filepath = $filepath ?? $this->data_filepath;
+		$filepath = $filepath ?? $this->dataFilepath();
 		file_put_contents($filepath, \json_encode($data));
 	}
 
@@ -43,7 +49,7 @@ class TokenTransactionTest extends StandartTestCase
 	 * @return mixed
 	 */
 	protected function getData ($filepath = null) {
-		$filepath = $filepath ?? $this->data_filepath;
+		$filepath = $filepath ?? $this->dataFilepath();
 		return json_decode(file_get_contents($filepath), true);
 	}
 
@@ -52,7 +58,7 @@ class TokenTransactionTest extends StandartTestCase
 	 * @return mixed
 	 */
 	protected function clearData ($filepath = null) {
-		$filepath = $filepath ?? $this->data_filepath;
+		$filepath = $filepath ?? $this->dataFilepath();
 		if (file_exists($filepath) ) {
 			unlink($filepath);
 		}
@@ -100,23 +106,27 @@ class TokenTransactionTest extends StandartTestCase
 	 */
 	public function testClearAll () {
 
-		// Base dir
-		$base_dir = __DIR__.'/../../wishknish_dev/';
+		// Root path
+		$root_path = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
+			'/../../../../../';
 
-		// Check is a clear file exists
-		$knishio_clear_testfile = $base_dir.'\vendor\wishknish\knishio\tests\TokenTransactionTest.php';
-		if (file_exists($knishio_clear_testfile) ) {
+		// Class & filepath
+		$class = \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class;
+		$filepath = (new \ReflectionClass($class))->getFileName();
+
+		// If a file is exists
+		if (file_exists($filepath) ) {
 
 			// Create & run a unit test command
 			$command = new \PHPUnit\TextUI\Command();
 			$response = $command->run([
-				$base_dir.'/vendor/phpunit/phpunit/phpunit',
+				'phpunit',
 				'--configuration',
-				$base_dir.'\phpunit.xml',
+				$root_path.'\phpunit.xml',
 				'--filter',
 				'/(::testClearAll)( .*)?$/',
-				'WishKnish\KnishIO\Tests\TokenTransactionTest',
-				$knishio_clear_testfile,
+				$class,
+				$filepath,
 				'--teamcity',
 			], false);
 		}
@@ -125,10 +135,10 @@ class TokenTransactionTest extends StandartTestCase
 
 
 	/**
- * Test create token
- *
- * @throws \ReflectionException
- */
+	 * Test create token
+	 *
+	 * @throws \ReflectionException
+	 */
 	public function testCreateToken () {
 
 		// Initial code
@@ -140,13 +150,13 @@ class TokenTransactionTest extends StandartTestCase
 
 		// Secret array
 		$secret = [
-			'fungible'	=> Crypto::generateSecret(null, 2048),
-			'stackable'	=> Crypto::generateSecret(null, 2048),
+			'fungible'	=> Crypto::generateSecret(),
+			'stackable'	=> Crypto::generateSecret(),
 			'recipient'	=> [
-				Crypto::generateSecret(null, 2048),
-				Crypto::generateSecret(null, 2048),
-				Crypto::generateSecret(null, 2048),
-				Crypto::generateSecret(null, 2048),
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
 			],
 		];
 
@@ -189,7 +199,9 @@ class TokenTransactionTest extends StandartTestCase
 	 */
 	public function testBaseTransaction () {
 
-		// dump ('BEGIN: testBaseSplitTransaction');
+		// Initial code
+		$this->beforeExecute ();
+
 
 		// Data
 		$data = $this->getData();
@@ -198,8 +210,6 @@ class TokenTransactionTest extends StandartTestCase
 		$transaction_amount = array_get($data, 'amount.transaction');
 		$full_amount = array_get($data, 'amount.full');
 
-		// Initial code
-		$this->beforeExecute ();
 
 		// Secrets initialization
 		$secret = array_get($this->getData(), 'secret');
@@ -302,6 +312,21 @@ class TokenTransactionTest extends StandartTestCase
 	}
 
 
+	/**
+	 * Bind shadow wallets
+	 */
+	public function testBindShadowWallets () {
+
+		// Initial code
+		$this->beforeExecute ();
+
+		// Data
+		$recipients	= array_get($this->getData(), 'secret.recipient');
+		$token		= $this->token_slug['stackable'];
+
+
+		KnishIO::bindShadowWallet($recipients[0], $token);
+	}
 
 
 }

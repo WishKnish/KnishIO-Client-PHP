@@ -188,7 +188,7 @@ class Wallet
 		$bigIntSecret = new BigInteger( $secret, 16 );
 
 		// Adding new position to the user secret to produce the indexed key
-		$indexedKey = $bigIntSecret->add( new BigInteger( $position, 16 ) );
+		$indexedKey = $bigIntSecret->add( new BigInteger( ($position === null) ? 0 : $position, 16 ) );
 
 		// Hashing the indexed key to produce the intermediate key
 		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )
