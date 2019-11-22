@@ -324,7 +324,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		$recipients	= array_get($this->getData(), 'secret.recipient');
 		$token		= $this->token_slug['stackable'];
 
-
+		// Bind a shadow wallet
 		KnishIO::bindShadowWallet($recipients[0], $token);
 	}
 

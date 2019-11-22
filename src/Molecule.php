@@ -208,14 +208,14 @@ class Molecule
 
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
-			$sourceWallet->position,
-			$sourceWallet->address,
+			$recipientWallet->position,
+			$recipientWallet->address,
 			'C',
-			$sourceWallet->token,
-			$amount,
-			$recipientWallet->batchId,
-			'token',
 			$recipientWallet->token,
+			$amount,
+			$sourceWallet->batchId,
+			'wallet',
+			$sourceWallet->token,
 			$tokenMeta,
 			null,
 			$this->generateIndex()

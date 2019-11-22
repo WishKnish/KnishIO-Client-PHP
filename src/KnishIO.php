@@ -75,14 +75,26 @@ class KnishIO
 
 		if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
 			$balance = $response[ 'data' ][ 'Balance' ];
-
 			if ( $balance[ 'tokenSlug' ] === $token ) {
-				$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
-				$wallet->address = $balance[ 'address' ];
-				$wallet->position = $balance[ 'position' ];
+
+				// If the balance is NULL - it is a shadow wallet
+				if ($balance[ 'position' ] === null) {
+					$wallet = new WalletShadow(
+						$balance['bundleHash'], $balance['tokenSlug'], $balance['batchId']
+					);
+				}
+
+				// Regular wallet
+				else {
+					$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
+					$wallet->address = $balance[ 'address' ];
+					$wallet->position = $balance[ 'position' ];
+					$wallet->bundle = $balance[ 'bundleHash' ];
+					$wallet->batchId = $balance[ 'batchId' ];
+				}
+
+				// Bind other data
 				$wallet->balance = $balance[ 'amount' ];
-				$wallet->bundle = $balance[ 'bundleHash' ];
-				$wallet->batchId = $balance[ 'batchId' ];
 			}
 		}
 		return $wallet;
@@ -151,12 +163,11 @@ class KnishIO
 		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $fromWallet->balance );
 		$molecule->sign( $secret );
 
-		dd ($molecule);
-
 		// Check the molecule
 		$molecule->check();
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
+		dd ($response);
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',

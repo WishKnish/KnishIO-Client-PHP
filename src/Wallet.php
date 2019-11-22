@@ -185,10 +185,10 @@ class Wallet
 	{
 
 		// Converting secret to bigInt
-		$bigIntSecret = new BigInteger( $secret, 16 );
+		$bigIntSecret = static::toBigInteger($secret);
 
 		// Adding new position to the user secret to produce the indexed key
-		$indexedKey = $bigIntSecret->add( new BigInteger( ($position === null) ? 0 : $position, 16 ) );
+		$indexedKey = $bigIntSecret->add( static::toBigInteger($position) );
 
 		// Hashing the indexed key to produce the intermediate key
 		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )
@@ -210,6 +210,17 @@ class Wallet
 				) )->squeeze( 1024 )
 		);
 
+	}
+
+	/**
+	 * To BigInteger
+	 *
+	 * @param $value
+	 * @return BigInteger
+	 */
+	public static function toBigInteger ($value) : BigInteger
+	{
+		return new BigInteger( $value, 16 );
 	}
 
 }
