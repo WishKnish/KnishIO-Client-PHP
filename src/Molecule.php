@@ -200,22 +200,45 @@ class Molecule
 	/**
 	 * Shadow wallet bindind
 	 *
-	 * @param Wallet $sourceWallet
-	 * @param Wallet $recipientWallet
+	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
+	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
 	 */
 	public function initShadowWalletBinding ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, $tokenMeta = [])
 	{
 
-		// Create an 'C' atom
+		$this->molecularHash = null;
+
+		foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
+
+			$has = \array_filter( $tokenMeta,
+				static function ( $token ) use ( $walletKey ) {
+
+					return \is_array( $token )
+						&& \array_key_exists( 'key', $token )
+						&& $walletKey === $token[ 'key' ];
+
+				}
+			);
+
+			if ( empty( $has ) && ! \array_key_exists( $walletKey, $tokenMeta ) ) {
+
+				$tokenMeta[ $walletKey ] = $recipientWallet
+					->{ \strtolower( \substr( $walletKey, 6 ) ) };
+
+			}
+
+		}
+
+		// The primary atom tells the ledger that a certain amount of the new token is being issued.
 		$this->atoms[] = new Atom(
-			$recipientWallet->position,
-			$recipientWallet->address,
+			$sourceWallet->position,
+			$sourceWallet->address,
 			'C',
-			$recipientWallet->token,
-			$amount,
-			$sourceWallet->batchId,
-			'wallet',
 			$sourceWallet->token,
+			$amount,
+			$recipientWallet->batchId,
+			'token',
+			$recipientWallet->token,
 			$tokenMeta,
 			null,
 			$this->generateIndex()
@@ -224,6 +247,36 @@ class Molecule
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
+
+
+
+		/*
+
+		// Meta data intialization
+		$tokenMeta['walletPosition'] = $recipientWallet->position;
+		$tokenMeta['walletAddress'] = $recipientWallet->address;
+		$tokenMeta['walletToken'] = $recipientWallet->token;
+
+		// Create an 'C' atom
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'C',
+			$sourceWallet->token,
+			$amount,
+			$recipientWallet->batchId,
+			'token',
+			$recipientWallet->token,
+			$tokenMeta,
+			null,
+			$this->generateIndex()
+		);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+
+		*/
 
 	}
 

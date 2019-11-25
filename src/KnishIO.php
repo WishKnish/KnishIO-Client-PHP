@@ -145,22 +145,35 @@ class KnishIO
 	 */
 	public static function bindShadowWallet ($secret, $token, $recipentWallet = null) {
 
-		// Get a from wallet from the request (shadow wallet)
-		$fromWallet = static::getBalance( $secret, $token );
-		if ( $fromWallet === null) {
+		// From wallet (a USER wallet, used for signing)
+		$fromWallet = new Wallet( $secret );
+
+		// Shadow wallet (to get a Batch ID & balance from it)
+		$shadowWallet = static::getBalance( $secret, $token );
+		if ( $shadowWallet === null) {
 			return [
 				'status' => 'rejected',
-				'reason' => 'The source wallet does not exist',
+				'reason' => 'The shadow wallet does not exist',
 			];
 		}
 
 		// If the recipient wallet has been passed, if not, create a new one
 		$recipientWallet = $recipentWallet ?? new Wallet ($secret, $token);
-		$recipientWallet->batchId = $fromWallet->batchId;
+		$recipientWallet->batchId = $shadowWallet->batchId;
+
+		$metas = [
+			'name'			=> $this->token_slug['fungible'],
+			'fungibility'	=> 'fungible',
+			'splittable'	=> 0,
+			'supply'		=> 'limited',
+			'decimals'		=> 0,
+			'icon'			=> 'icon',
+		];
+
 
 		// Create & sign a molecule
 		$molecule = new Molecule();
-		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $fromWallet->balance );
+		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $shadowWallet->balance );
 		$molecule->sign( $secret );
 
 		// Check the molecule
@@ -198,6 +211,7 @@ class KnishIO
 		}
 
 		// Is a non-stackable token & $to is a bundle hash? Error, bundle hash can be passed only for a shadow wallet
+		// @todo add logic to get target wallet by bundle hash for non-stackable tokens
 		if (!$fromWallet->batchId && is_string($to) && static::isBundleHash($to) ) {
 			return [
 				'status' => 'rejected',
