@@ -161,16 +161,6 @@ class KnishIO
 		$recipientWallet = $recipentWallet ?? new Wallet ($secret, $token);
 		$recipientWallet->batchId = $shadowWallet->batchId;
 
-		$metas = [
-			'name'			=> $this->token_slug['fungible'],
-			'fungibility'	=> 'fungible',
-			'splittable'	=> 0,
-			'supply'		=> 'limited',
-			'decimals'		=> 0,
-			'icon'			=> 'icon',
-		];
-
-
 		// Create & sign a molecule
 		$molecule = new Molecule();
 		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $shadowWallet->balance );

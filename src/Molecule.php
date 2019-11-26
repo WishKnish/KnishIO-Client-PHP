@@ -206,52 +206,6 @@ class Molecule
 	public function initShadowWalletBinding ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, $tokenMeta = [])
 	{
 
-		$this->molecularHash = null;
-
-		foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
-
-			$has = \array_filter( $tokenMeta,
-				static function ( $token ) use ( $walletKey ) {
-
-					return \is_array( $token )
-						&& \array_key_exists( 'key', $token )
-						&& $walletKey === $token[ 'key' ];
-
-				}
-			);
-
-			if ( empty( $has ) && ! \array_key_exists( $walletKey, $tokenMeta ) ) {
-
-				$tokenMeta[ $walletKey ] = $recipientWallet
-					->{ \strtolower( \substr( $walletKey, 6 ) ) };
-
-			}
-
-		}
-
-		// The primary atom tells the ledger that a certain amount of the new token is being issued.
-		$this->atoms[] = new Atom(
-			$sourceWallet->position,
-			$sourceWallet->address,
-			'C',
-			$sourceWallet->token,
-			$amount,
-			$recipientWallet->batchId,
-			'token',
-			$recipientWallet->token,
-			$tokenMeta,
-			null,
-			$this->generateIndex()
-		);
-
-		$this->atoms = Atom::sortAtoms( $this->atoms );
-
-		return $this;
-
-
-
-		/*
-
 		// Meta data intialization
 		$tokenMeta['walletPosition'] = $recipientWallet->position;
 		$tokenMeta['walletAddress'] = $recipientWallet->address;
@@ -275,9 +229,6 @@ class Molecule
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
-
-		*/
-
 	}
 
 
