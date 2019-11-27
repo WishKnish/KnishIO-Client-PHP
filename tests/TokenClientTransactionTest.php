@@ -315,7 +315,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	/**
 	 * Bind shadow wallets
 	 */
-	public function testBindShadowWallets () {
+	public function testClaimShadowWallets () {
 
 		// Initial code
 		$this->beforeExecute ();
@@ -325,7 +325,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		$token		= $this->token_slug['stackable'];
 
 		// Bind a shadow wallet
-		KnishIO::bindShadowWallet($recipients[0], $token);
+		KnishIO::claimShadowWallet($recipients[0], $token);
 	}
 
 

@@ -143,27 +143,23 @@ class KnishIO
 	 * @param $bundleHash
 	 * @param $token
 	 */
-	public static function bindShadowWallet ($secret, $token, $recipentWallet = null) {
+	public static function claimShadowWallet ($secret, $token, $recipentWallet = null) {
 
 		// From wallet (a USER wallet, used for signing)
 		$fromWallet = new Wallet( $secret );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
 		$shadowWallet = static::getBalance( $secret, $token );
-		if ( $shadowWallet === null) {
+		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'The shadow wallet does not exist',
 			];
 		}
 
-		// If the recipient wallet has been passed, if not, create a new one
-		$recipientWallet = $recipentWallet ?? new Wallet ($secret, $token);
-		$recipientWallet->batchId = $shadowWallet->batchId;
-
 		// Create & sign a molecule
 		$molecule = new Molecule();
-		$molecule->initShadowWalletBinding( $fromWallet, $recipientWallet, $shadowWallet->balance );
+		$molecule->initShadowWalletClaim( $fromWallet, $shadowWallet );
 		$molecule->sign( $secret );
 
 		// Check the molecule

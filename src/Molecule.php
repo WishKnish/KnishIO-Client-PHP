@@ -203,24 +203,18 @@ class Molecule
 	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
 	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
 	 */
-	public function initShadowWalletBinding ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, $tokenMeta = [])
+	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, $tokenMeta = [])
 	{
-
-		// Meta data intialization
-		$tokenMeta['walletPosition'] = $recipientWallet->position;
-		$tokenMeta['walletAddress'] = $recipientWallet->address;
-		$tokenMeta['walletToken'] = $recipientWallet->token;
-
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
 			$sourceWallet->address,
 			'C',
 			$sourceWallet->token,
-			$amount,
-			$recipientWallet->batchId,
-			'token',
-			$recipientWallet->token,
+			null,
+			$shadowWallet->batchId,
+			'shadowWallet',
+			$shadowWallet->token,
 			$tokenMeta,
 			null,
 			$this->generateIndex()
