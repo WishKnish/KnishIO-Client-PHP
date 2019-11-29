@@ -120,7 +120,8 @@ class KnishIO
 
 		$molecule = new Molecule();
         $fromWallet = new Wallet( $secret );
-		$molecule->initTokenCreation( $fromWallet, $recipientWallet, $amount, $metas );
+        $remainderWallet = new Wallet ( $secret );
+		$molecule->initTokenCreation( $fromWallet, $recipientWallet, $remainderWallet, $amount, $metas );
 		$molecule->sign( $secret );
 
 		// Check the molecule
@@ -157,16 +158,27 @@ class KnishIO
 			];
 		}
 
+		// Create a recipient wallet to generate new position & address
+		$recipientWallet = new Wallet( $secret, $token );
+
+		// Meta with address & position to the shadow wallet
+		$metas = [
+			'walletAddress' 	=> $recipientWallet->address,
+			'walletPosition'	=> $recipientWallet->position,
+		];
+
+		// Wallet for user remainder atom
+		$remainderWallet = new Wallet ( $secret );
+
 		// Create & sign a molecule
 		$molecule = new Molecule();
-		$molecule->initShadowWalletClaim( $fromWallet, $shadowWallet );
+		$molecule->initShadowWalletClaim( $fromWallet, $shadowWallet, $remainderWallet, $metas );
 		$molecule->sign( $secret );
 
 		// Check the molecule
 		$molecule->check();
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		dd ($response);
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',

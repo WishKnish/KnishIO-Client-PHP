@@ -66,6 +66,29 @@ class Molecule
 
 	}
 
+
+	/**
+	 * Add user remainder atom
+	 */
+	protected function addUserRemainderAtom (Wallet $remainderWallet) {
+
+		// Remainder atom
+		$this->atoms[] = new Atom(
+			$remainderWallet->position,
+			$remainderWallet->address,
+			'C',
+			$remainderWallet->token,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			$this->generateIndex()
+		);
+	}
+
+
 	/**
 	 * Initialize a V-type molecule to transfer value from one wallet to another, with a third,
 	 * regenerated wallet receiving the remainder
@@ -149,7 +172,7 @@ class Molecule
 	 * @param array $tokenMeta - additional fields to configure the token
 	 * @return self
 	 */
-	public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $tokenMeta )
+	public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $amount, array $tokenMeta )
 	{
 
 		$this->molecularHash = null;
@@ -190,6 +213,9 @@ class Molecule
             $this->generateIndex()
 		);
 
+		// User remainder atom
+		$this->addUserRemainderAtom ($remainderWallet);
+
         $this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
@@ -203,7 +229,7 @@ class Molecule
 	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
 	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
 	 */
-	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, $tokenMeta = [])
+	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, $tokenMeta = [])
 	{
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
@@ -219,6 +245,9 @@ class Molecule
 			null,
 			$this->generateIndex()
 		);
+
+		// User remainder atom
+		$this->addUserRemainderAtom ($remainderWallet);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
