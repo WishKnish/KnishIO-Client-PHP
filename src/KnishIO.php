@@ -144,13 +144,13 @@ class KnishIO
 	 * @param $bundleHash
 	 * @param $token
 	 */
-	public static function claimShadowWallet ($secret, $token, $recipentWallet = null) {
+	public static function claimShadowWallet ($secret, $token, $shadowWallet = null, $recipentWallet = null) {
 
 		// From wallet (a USER wallet, used for signing)
 		$fromWallet = new Wallet( $secret );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = static::getBalance( $secret, $token );
+		$shadowWallet = $shadowWallet ?? static::getBalance( $secret, $token );
 		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
 			return [
 				'status' => 'rejected',
@@ -160,6 +160,8 @@ class KnishIO
 
 		// Create a recipient wallet to generate new position & address
 		$recipientWallet = new Wallet( $secret, $token );
+
+		dd ([$fromWallet, $recipientWallet]);
 
 		// Meta with address & position to the shadow wallet
 		$metas = [
@@ -173,12 +175,15 @@ class KnishIO
 		// Create & sign a molecule
 		$molecule = new Molecule();
 		$molecule->initShadowWalletClaim( $fromWallet, $shadowWallet, $remainderWallet, $metas );
+//		$molecule->bundle = $shadowWallet->bundle;
 		$molecule->sign( $secret );
+
 
 		// Check the molecule
 		$molecule->check();
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
+		dd ($response);
 		return \array_intersect_key(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',

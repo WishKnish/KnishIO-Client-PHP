@@ -80,8 +80,8 @@ class Molecule
 			$remainderWallet->token,
 			null,
 			null,
-			null,
-			null,
+			'walletBundle',
+			$remainderWallet->bundle,
 			null,
 			null,
 			$this->generateIndex()

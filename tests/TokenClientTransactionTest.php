@@ -3,6 +3,7 @@
 namespace WishKnish\KnishIO\Client\Tests;
 
 use PHPUnit\Framework\TestCase as StandartTestCase;
+use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Wallet;
@@ -70,7 +71,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 */
 	protected function checkResponse (array $response) {
 		if ($response['status'] !== 'accepted') {
-			dump ($response['reason']);
+			dump ($response);
 		}
 		$this->assertEquals($response['status'], 'accepted');
 	}
@@ -324,10 +325,31 @@ class TokenClientTransactionTest extends StandartTestCase
 		$recipients	= array_get($this->getData(), 'secret.recipient');
 		$token		= $this->token_slug['stackable'];
 
-		// Bind a shadow wallet
-		$response = KnishIO::claimShadowWallet($recipients[0], $token);
 
-		dd ($response);
+
+		// --- Bind a shadow wallet with wrong USER wallet
+/*
+		// Get a shadow wallet of the recipient.0
+		$shadowWallet = KnishIO::getBalance($recipients[0], $token);
+
+		// Set a claim request with USER wallet recipient.1
+		$response = KnishIO::claimShadowWallet($recipients[1], $token, $shadowWallet);
+		$this->checkResponse ($response);
+		// ---
+*/
+
+		$user_atom = Atom::where ('token_slug', 'USER')
+			->where ('meta_type', 'token')
+			->where ('meta_id', $token)
+			->last();
+
+		dd ($user_atom);
+
+
+		// --- Bind a shadow wallet
+		$response = KnishIO::claimShadowWallet($recipients[0], $token);
+		$this->checkResponse ($response);
+		// ---
 	}
 
 
