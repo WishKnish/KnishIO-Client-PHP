@@ -10,6 +10,7 @@ use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Query\QueryBalance;
 
 /**
  * Class KnishIO
@@ -60,6 +61,21 @@ class KnishIO
 	 */
 	public static function getBalance ( $code, $token )
 	{
+		// Create a query
+		$query = new QueryBalance(static::getClient(), static::getUrl());
+
+		// Execute the query
+		$response = $query->execute([
+			// If bundle hash came, we pass it, otherwise we consider it a secret
+			'bundleHash' => static::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code ),
+			'token'      => $token,
+		]);
+
+		// Return a payload
+		return $response->payload();
+
+		/*
+
 		$wallet = null;
 		$response = static::request(
 			static::$query[ 'balance' ],
@@ -98,6 +114,8 @@ class KnishIO
 			}
 		}
 		return $wallet;
+
+		*/
 	}
 
 	/**
@@ -160,8 +178,6 @@ class KnishIO
 
 		// Create a recipient wallet to generate new position & address
 		$recipientWallet = new Wallet( $secret, $token );
-
-		dd ([$fromWallet, $recipientWallet]);
 
 		// Meta with address & position to the shadow wallet
 		$metas = [

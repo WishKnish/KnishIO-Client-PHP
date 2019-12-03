@@ -338,17 +338,11 @@ class TokenClientTransactionTest extends StandartTestCase
 		// ---
 */
 
-		$user_atom = Atom::where ('token_slug', 'USER')
-			->where ('meta_type', 'token')
-			->where ('meta_id', $token)
-			->last();
-
-		dd ($user_atom);
-
 
 		// --- Bind a shadow wallet
 		$response = KnishIO::claimShadowWallet($recipients[0], $token);
-		$this->checkResponse ($response);
+		$molecule = $this->checkResponse ($response);
+		dd ($molecule);
 		// ---
 	}
 
