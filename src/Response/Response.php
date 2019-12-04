@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Query\Query;
 
 /**
  * Class Response
@@ -14,6 +15,7 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
  */
 class Response
 {
+	protected $query;
 	protected $response;
 	protected $payload;
 	protected $dataKey;
@@ -22,8 +24,11 @@ class Response
 	 * Response constructor.
 	 * @param string $json
 	 */
-	public function __construct(string $json)
+	public function __construct(Query $query, string $json)
 	{
+		// Set a query
+		$this->query = $query;
+
 		// Json decode
 		$this->origin_response = $this->response = \json_decode( $json, true );
 
@@ -41,7 +46,6 @@ class Response
 	 */
 	public function data () : ?array {
 		if (!array_has($this->response, $this->dataKey) ) {
-			dd ($this->response);
 			throw new InvalidResponseException();
 		}
 		return array_get($this->response, $this->dataKey);
@@ -55,6 +59,14 @@ class Response
 	 */
 	public function payload () {
 		return null;
+	}
+
+
+	/**
+	 * @return Query
+	 */
+	public function query () : Query {
+		return $this->query;
 	}
 
 }

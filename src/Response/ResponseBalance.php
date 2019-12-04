@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\WalletShadow;
 

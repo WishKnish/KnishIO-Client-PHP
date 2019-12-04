@@ -37,7 +37,7 @@ abstract class Query
 	 * @param array $variables
 	 * @return mixed
 	 */
-	public function execute (array $variables) : Response {
+	public function execute (array $variables = []) : Response {
 
 		// Make a request
 		$response = $this->client->post( null, [
@@ -59,7 +59,7 @@ abstract class Query
 	 * @return Response
 	 */
 	public function createResponse (string $response) {
-		return new Response($response);
+		return new Response($this, $response);
 	}
 
 

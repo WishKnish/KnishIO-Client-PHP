@@ -11,6 +11,8 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
+use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
+use WishKnish\KnishIO\Client\Response\Response;
 
 /**
  * Class KnishIO
@@ -54,105 +56,42 @@ class KnishIO
 
 
 	/**
-	 * @param string $code
-	 * @param string $token
-	 * @return Wallet|null
-	 * @throws \Exception|\ReflectionException|InvalidResponseException
+	 * @param $code
+	 * @param $token
+	 * @return Response
+	 * @throws \Exception
 	 */
-	public static function getBalance ( $code, $token )
+	public static function getBalance ( $code, $token ) : Response
 	{
 		// Create a query
 		$query = new QueryBalance(static::getClient(), static::getUrl());
 
 		// Execute the query
-		$response = $query->execute([
+		return $query->execute([
+			// @todo move isBundleHash function to Wallet client class
 			// If bundle hash came, we pass it, otherwise we consider it a secret
 			'bundleHash' => static::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code ),
 			'token'      => $token,
 		]);
-
-		// Return a payload
-		return $response->payload();
-
-		/*
-
-		$wallet = null;
-		$response = static::request(
-			static::$query[ 'balance' ],
-			[
-				// If bundle hash came, we pass it, otherwise we consider it a secret
-				'bundleHash' => static::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code ),
-				'token'      => $token,
-			]
-		);
-		//dump ($response);
-
-		// @todo add errors handling: check the 'errors' key from a response
-
-		if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
-			$balance = $response[ 'data' ][ 'Balance' ];
-			if ( $balance[ 'tokenSlug' ] === $token ) {
-
-				// If the balance is NULL - it is a shadow wallet
-				if ($balance[ 'position' ] === null) {
-					$wallet = new WalletShadow(
-						$balance['bundleHash'], $balance['tokenSlug'], $balance['batchId']
-					);
-				}
-
-				// Regular wallet
-				else {
-					$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
-					$wallet->address = $balance[ 'address' ];
-					$wallet->position = $balance[ 'position' ];
-					$wallet->bundle = $balance[ 'bundleHash' ];
-					$wallet->batchId = $balance[ 'batchId' ];
-				}
-
-				// Bind other data
-				$wallet->balance = $balance[ 'amount' ];
-			}
-		}
-		return $wallet;
-
-		*/
 	}
 
 	/**
-	 * @param string $secret
-	 * @param string $token
-	 * @param int|float $amount
+	 * @param $secret
+	 * @param $token
+	 * @param $amount
 	 * @param array $metas
-	 * @return array
-	 * @throws \Exception|\ReflectionException|InvalidResponseException
+	 * @return Response
+	 * @throws \ReflectionException
 	 */
-	public static function createToken ( $secret, $token, $amount, array $metas = [] )
+	public static function createToken ( $secret, $token, $amount, array $metas = [] ) : Response
 	{
-		// Recipient wallet
-		$recipientWallet = new Wallet( $secret, $token );
+		$query = new QueryTokenCreate(static::getClient(), static::getUrl());
 
-		// For stackable token - create a batch ID
-		if (array_get($metas, 'fungibility') === 'stackable') {
-			$recipientWallet->batchId = Wallet::generateBatchId();
-		}
+		// Init a molecule
+		$query->initMolecule ( $secret, $token, $amount, $metas );
 
-		$molecule = new Molecule();
-        $fromWallet = new Wallet( $secret );
-        $remainderWallet = new Wallet ( $secret );
-		$molecule->initTokenCreation( $fromWallet, $recipientWallet, $remainderWallet, $amount, $metas );
-		$molecule->sign( $secret );
-
-		// Check the molecule
-		$molecule->check();
-
-		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_intersect_key(
-			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
-				'status' => 'rejected',
-				'reason' => 'Invalid response from server',
-			],
-			\array_flip( [ 'reason', 'status', ] )
-		);
+		// Execute a query
+		return $query->execute();
 	}
 
 

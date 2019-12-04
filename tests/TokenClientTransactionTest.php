@@ -85,7 +85,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @throws \ReflectionException
 	 */
 	protected function checkWalletAmount (string $bundle, string $token, int $amount) {
-		$wallet = KnishIO::getBalance($bundle, $token);
+		$wallet = KnishIO::getBalance($bundle, $token)->payload();
 		$this->assertEquals($wallet->balance, $amount);
 	}
 
@@ -171,7 +171,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], $full_amount, $tokenMeta);
-		$this->checkResponse($response);
+		$this->checkResponse($response->data());
 
 
 		// --- Create a stackable token
@@ -184,7 +184,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
-		$this->checkResponse($response);
+		$this->checkResponse($response->data());
 
 
 		// Save data
