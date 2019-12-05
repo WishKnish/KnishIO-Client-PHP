@@ -20,7 +20,6 @@ abstract class Query
 
 	protected static $query;
 
-
 	/**
 	 * Query constructor.
 	 * @param Client $client

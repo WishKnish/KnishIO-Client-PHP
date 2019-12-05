@@ -15,7 +15,6 @@ use WishKnish\KnishIO\Client\Response\ResponseBalance;
  */
 class QueryBalance extends Query
 {
-
 	// Query
 	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, batchId, position, amount, createdAt } }';
 

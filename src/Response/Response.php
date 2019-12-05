@@ -45,6 +45,13 @@ class Response
 	 * @return mixed
 	 */
 	public function data () : ?array {
+
+		// For the root class
+		if (!$this->dataKey) {
+			return $this->response;
+		}
+
+		// Check key & return custom data from the response
 		if (!array_has($this->response, $this->dataKey) ) {
 			throw new InvalidResponseException();
 		}

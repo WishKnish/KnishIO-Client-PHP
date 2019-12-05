@@ -12,6 +12,8 @@ use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
+use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
+use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -50,7 +52,7 @@ class KnishIO
 	 * @param string $code
 	 * @return bool
 	 */
-	protected static function isBundleHash (string $code) : bool {
+	public static function isBundleHash (string $code) : bool {
 		return (mb_strlen($code) === 64);
 	}
 
@@ -103,6 +105,31 @@ class KnishIO
 	 */
 	public static function claimShadowWallet ($secret, $token, $shadowWallet = null, $recipentWallet = null) {
 
+
+		// From wallet (a USER wallet, used for signing)
+		$fromWallet = new Wallet( $secret );
+
+		// Shadow wallet (to get a Batch ID & balance from it)
+		$shadowWallet = $shadowWallet ?? static::getBalance( $secret, $token )->payload();
+		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The shadow wallet does not exist',
+			];
+		}
+
+
+		// Create a query
+		$query = new QueryWalletClaim(static::getClient(), static::getUrl());
+
+		// Init a molecule
+		$query->initMolecule ( $secret, $fromWallet, $shadowWallet, $token, $recipentWallet );
+
+		// Execute a query
+		return $query->execute();
+
+		/*
+
 		// From wallet (a USER wallet, used for signing)
 		$fromWallet = new Wallet( $secret );
 
@@ -146,6 +173,7 @@ class KnishIO
 			],
 			\array_flip( [ 'reason', 'status', ] )
 		);
+		*/
 
 	}
 
@@ -160,6 +188,53 @@ class KnishIO
 	 */
 	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{
+		// Get a from wallet
+		$fromWallet = static::getBalance( $fromSecret, $token )->payload();
+		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
+			];
+		}
+
+		// Is a non-stackable token & $to is a bundle hash? Error, bundle hash can be passed only for a shadow wallet
+		// @todo add logic to get target wallet by bundle hash for non-stackable tokens
+		/*if (!$fromWallet->batchId && is_string($to) && static::isBundleHash($to) ) {
+			return [
+				'status' => 'rejected',
+				'reason' => 'The recipient cannot be a bundle hash for a non-stackable token',
+			];
+		}*/
+
+		// If this wallet is assigned, if not, try to get a valid wallet
+		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token )->payload();
+		if ($toWallet === null) {
+
+			// If from wallet has a batchID => recipient is a shadow wallet
+			if ($fromWallet->batchId) {
+				$toWallet = new WalletShadow( $to, $token );
+			}
+
+			// If the wallet is not transferred in a variable and the user does not have a balance wallet,
+			// then create a new one for him
+			else {
+				$toWallet = new Wallet( $to, $token );
+			}
+		}
+
+
+
+		// Create a query
+		$query = new QueryTokenTransfer(static::getClient(), static::getUrl());
+
+		// Init a molecule
+		$query->initMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );
+
+		// Execute a query
+		return $query->execute();
+
+
+		/*
 		$fromWallet = static::getBalance( $fromSecret, $token );
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
 			return [
@@ -239,6 +314,7 @@ class KnishIO
 				'status',
 			] )
 		);
+		*/
 	}
 
 

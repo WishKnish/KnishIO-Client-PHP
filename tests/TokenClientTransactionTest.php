@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
 
@@ -69,11 +70,12 @@ class TokenClientTransactionTest extends StandartTestCase
 	/**
 	 * @param array $response
 	 */
-	protected function checkResponse (array $response) {
-		if ($response['status'] !== 'accepted') {
+	protected function checkResponse (Response $response) {
+		$data = $response->data();
+		if ($data['status'] !== 'accepted') {
 			dump ($response);
 		}
-		$this->assertEquals($response['status'], 'accepted');
+		$this->assertEquals($data['status'], 'accepted');
 	}
 
 
@@ -171,7 +173,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], $full_amount, $tokenMeta);
-		$this->checkResponse($response->data());
+		$this->checkResponse($response);
 
 
 		// --- Create a stackable token
@@ -184,7 +186,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'icon'			=> 'icon',
 		];
 		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
-		$this->checkResponse($response->data());
+		$this->checkResponse($response);
 
 
 		// Save data
@@ -341,8 +343,8 @@ class TokenClientTransactionTest extends StandartTestCase
 
 		// --- Bind a shadow wallet
 		$response = KnishIO::claimShadowWallet($recipients[0], $token);
-		$molecule = $this->checkResponse ($response);
-		dd ($molecule);
+		dd ($response);
+		$this->checkResponse ($response);
 		// ---
 	}
 

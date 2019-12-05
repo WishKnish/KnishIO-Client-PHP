@@ -18,8 +18,6 @@ class QueryTokenCreate extends QueryMoleculePropose
 {
 	protected $fromWallet;
 	protected $recipientWallet;
-	protected $remainderWallet;
-
 
 
 	/**
@@ -29,7 +27,7 @@ class QueryTokenCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule($secret, $token, $amount, array $metas = [])
+	public function initMolecule ($secret, $token, $amount, array $metas = [])
 	{
 		// --- Create wallets
 
