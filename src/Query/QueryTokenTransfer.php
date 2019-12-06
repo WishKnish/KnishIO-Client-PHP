@@ -47,7 +47,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
 				$batchId = $fromWallet->batchId;
 			}
 
-			// Set remainder wallet batch ID
+			// Set batchID to recipient & remainder wallets
 			$toWallet->batchId = $batchId;
 			$this->remainderWallet->batchId = $batchId;
 		}

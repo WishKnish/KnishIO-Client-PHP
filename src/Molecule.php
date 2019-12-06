@@ -256,6 +256,37 @@ class Molecule
 
 
 	/**
+	 * @param Wallet $sourceWallet
+	 * @param string $bundleHash
+	 * @param array $metas
+	 */
+	public function initIdentifierCreation (Wallet $sourceWallet, string $bundleHash, array $metas) {
+
+		// Create an 'C' atom
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'C',
+			$sourceWallet->token,
+			null,
+			null,
+			'identifier',
+			$type,
+			$metas,
+			null,
+			$this->generateIndex()
+		);
+
+		// User remainder atom
+		$this->addUserRemainderAtom ($remainderWallet);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
+	/**
 	 * Initialize an M-type molecule with the given data
 	 *
 	 * @param Wallet $wallet

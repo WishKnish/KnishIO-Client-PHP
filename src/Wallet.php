@@ -36,6 +36,14 @@ class Wallet
 		return Strings::randomString( 64 );
 	}
 
+	/**
+	 * @param string $code
+	 * @return bool
+	 */
+	public static function isBundleHash (string $code) : bool {
+		return (mb_strlen($code) === 64);
+	}
+
 
 	/**
 	 * Wallet constructor.

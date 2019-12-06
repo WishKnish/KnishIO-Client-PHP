@@ -8,7 +8,8 @@ namespace WishKnish\KnishIO\Client;
 
 use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
@@ -24,11 +25,29 @@ class KnishIO
 {
 	private static $url = 'https://wishknish.com/graphql';
 	private static $client;
-	private static $query = [
-		'molecule' => 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }',
-        'wallet' => 'query($address: String, $walletBundle: String, $token: String) { Wallet(address: $address, bundleHash: $walletBundle, token: $token) { bundleHash, address, position, amount, tokenSlug, createdAt, } }',
-		'balance'  => 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, batchId, position, amount, createdAt } }',
-	];
+
+
+
+	/**
+	 * @return Client
+	 */
+	private static function getClient ()
+	{
+		if ( ! ( static::$client instanceof Client ) ) {
+			static::$client = new Client( [
+				'base_uri'    => static::$url,
+				'verify'      => false,
+				'http_errors' => false,
+				'headers'     => [
+					'User-Agent' => 'KnishIO/0.1',
+					'Accept'     => 'application/json',
+				]
+			] );
+		}
+
+		return static::$client;
+	}
+
 
 	/**
 	 * @return string
@@ -38,6 +57,7 @@ class KnishIO
 		return static::$url;
 	}
 
+
 	/**
 	 * @param string $url
 	 */
@@ -45,15 +65,6 @@ class KnishIO
 	{
 		static::$url = $url;
 		static::$client = null;
-	}
-
-
-	/**
-	 * @param string $code
-	 * @return bool
-	 */
-	public static function isBundleHash (string $code) : bool {
-		return (mb_strlen($code) === 64);
 	}
 
 
@@ -68,14 +79,16 @@ class KnishIO
 		// Create a query
 		$query = new QueryBalance(static::getClient(), static::getUrl());
 
+		// If bundle hash came, we pass it, otherwise we consider it a secret
+		$bundleHash = Wallet::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code );
+
 		// Execute the query
 		return $query->execute([
-			// @todo move isBundleHash function to Wallet client class
-			// If bundle hash came, we pass it, otherwise we consider it a secret
-			'bundleHash' => static::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code ),
+			'bundleHash' => $bundleHash,
 			'token'      => $token,
 		]);
 	}
+
 
 	/**
 	 * @param $secret
@@ -103,8 +116,7 @@ class KnishIO
 	 * @param $bundleHash
 	 * @param $token
 	 */
-	public static function claimShadowWallet ($secret, $token, $shadowWallet = null, $recipentWallet = null) {
-
+	public static function claimShadowWallet ($secret, $token, $shadowWallet = null, $recipientWallet = null) : Response {
 
 		// From wallet (a USER wallet, used for signing)
 		$fromWallet = new Wallet( $secret );
@@ -112,10 +124,7 @@ class KnishIO
 		// Shadow wallet (to get a Batch ID & balance from it)
 		$shadowWallet = $shadowWallet ?? static::getBalance( $secret, $token )->payload();
 		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The shadow wallet does not exist',
-			];
+			throw new WalletShadowException();
 		}
 
 
@@ -123,58 +132,10 @@ class KnishIO
 		$query = new QueryWalletClaim(static::getClient(), static::getUrl());
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $fromWallet, $shadowWallet, $token, $recipentWallet );
+		$query->initMolecule ( $secret, $fromWallet, $shadowWallet, $token, $recipientWallet );
 
 		// Execute a query
 		return $query->execute();
-
-		/*
-
-		// From wallet (a USER wallet, used for signing)
-		$fromWallet = new Wallet( $secret );
-
-		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = $shadowWallet ?? static::getBalance( $secret, $token );
-		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The shadow wallet does not exist',
-			];
-		}
-
-		// Create a recipient wallet to generate new position & address
-		$recipientWallet = new Wallet( $secret, $token );
-
-		// Meta with address & position to the shadow wallet
-		$metas = [
-			'walletAddress' 	=> $recipientWallet->address,
-			'walletPosition'	=> $recipientWallet->position,
-		];
-
-		// Wallet for user remainder atom
-		$remainderWallet = new Wallet ( $secret );
-
-		// Create & sign a molecule
-		$molecule = new Molecule();
-		$molecule->initShadowWalletClaim( $fromWallet, $shadowWallet, $remainderWallet, $metas );
-//		$molecule->bundle = $shadowWallet->bundle;
-		$molecule->sign( $secret );
-
-
-		// Check the molecule
-		$molecule->check();
-
-		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		dd ($response);
-		return \array_intersect_key(
-			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
-				'status' => 'rejected',
-				'reason' => 'Invalid response from server',
-			],
-			\array_flip( [ 'reason', 'status', ] )
-		);
-		*/
-
 	}
 
 
@@ -186,25 +147,13 @@ class KnishIO
 	 * @return array
 	 * @throws \Exception|\ReflectionException|InvalidResponseException
 	 */
-	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
+	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null) : Response
 	{
 		// Get a from wallet
 		$fromWallet = static::getBalance( $fromSecret, $token )->payload();
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
-			];
+			throw new TransferBalanceException('The transfer amount cannot be greater than the sender\'s balance');
 		}
-
-		// Is a non-stackable token & $to is a bundle hash? Error, bundle hash can be passed only for a shadow wallet
-		// @todo add logic to get target wallet by bundle hash for non-stackable tokens
-		/*if (!$fromWallet->batchId && is_string($to) && static::isBundleHash($to) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The recipient cannot be a bundle hash for a non-stackable token',
-			];
-		}*/
 
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token )->payload();
@@ -232,133 +181,7 @@ class KnishIO
 
 		// Execute a query
 		return $query->execute();
-
-
-		/*
-		$fromWallet = static::getBalance( $fromSecret, $token );
-		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The transfer amount cannot be greater than the sender\'s balance',
-			];
-		}
-
-		// Is a non-stackable token & $to is a bundle hash? Error, bundle hash can be passed only for a shadow wallet
-		// @todo add logic to get target wallet by bundle hash for non-stackable tokens
-		if (!$fromWallet->batchId && is_string($to) && static::isBundleHash($to) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'The recipient cannot be a bundle hash for a non-stackable token',
-			];
-		}
-
-
-		// If this wallet is assigned, if not, try to get a valid wallet
-		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
-
-		// Remainder wallet
-		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
-
-
-		// --- BEGIN: Batch ID initialization
-		if ($fromWallet->batchId) {
-
-			// Has already a shadow wallet? Use batch ID from it
-			if ($toWallet !== null) {
-				$batchId = $toWallet->batchId;
-			}
-
-			// Has a remainder?
-			else if (($fromWallet->balance - $amount) > 0) {
-				$batchId = Wallet::generateBatchId();
-			}
-
-			// Has no remainder?: use batch ID from the source wallet
-			else {
-				$batchId = $fromWallet->batchId;
-			}
-
-			// If $to parameter is a bundle hash & shadow wallet does not exist: create it
-			if ($toWallet === null) {
-				$toWallet = new WalletShadow( $to, $token, $batchId );
-			}
-
-			// Set remainder wallet batch ID
-			$remainderWallet->batchId = $batchId;
-		}
-		// --- END: Batch ID initialization
-
-
-		// If the wallet is not transferred in a variable and the user does not have a balance wallet,
-		// then create a new one for him
-		if ( $toWallet === null ) {
-			$toWallet = new Wallet( $to, $token );
-		}
-
-		// Create & sign a molecule
-		$molecule = new Molecule();
-		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
-		$molecule->sign( $fromSecret );
-
-		// Check the molecule
-		$molecule->check($fromWallet);
-
-		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_intersect_key(
-			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
-				'status' => 'rejected',
-				'reason' => 'Invalid response from server',
-			],
-			\array_flip( [
-				'reason',
-				'status',
-			] )
-		);
-		*/
 	}
 
 
-	/**
-	 * @return Client
-	 */
-	private static function getClient ()
-	{
-		if ( ! ( static::$client instanceof Client ) ) {
-			static::$client = new Client( [
-				'base_uri'    => static::$url,
-				'verify'      => false,
-				'http_errors' => false,
-				'headers'     => [
-					'User-Agent' => 'KnishIO/0.1',
-					'Accept'     => 'application/json',
-				]
-			] );
-		}
-
-		return static::$client;
-	}
-
-	/**
-	 * @param string $query
-	 * @param array $variables
-	 * @return array
-	 * @throws InvalidResponseException
-	 */
-	private static function request ( $query, $variables )
-	{
-		$response = static::getClient()->post( null, [
-			'json' => [
-				'query'     => $query,
-				'variables' => $variables,
-			]
-		] );
-
-		$responseJson = \json_decode( $response->getBody()->getContents(), true );
-
-		if ( $responseJson === null ) {
-			throw new InvalidResponseException();
-		}
-
-		return $responseJson;
-	}
 }

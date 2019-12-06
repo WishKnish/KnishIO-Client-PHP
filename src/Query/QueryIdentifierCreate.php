@@ -11,10 +11,10 @@ use WishKnish\KnishIO\Client\Wallet;
 
 
 /**
- * Class QueryTokenCreate
+ * Class QueryIdentifierCreate
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryTokenCreate extends QueryMoleculePropose
+class QueryIdentifierCreate extends QueryMoleculePropose
 {
 	protected $fromWallet;
 	protected $recipientWallet;
@@ -27,31 +27,14 @@ class QueryTokenCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule ($secret, $token, $amount, array $metas = [])
+	public function initMolecule (Wallet $sourceWallet, string $bundleHash, string $type, string $code)
 	{
-		// --- Create wallets
-
-		// From wallet
-		$this->fromWallet = new Wallet( $secret );
-
-		// Recipient wallet
-		$this->recipientWallet = new Wallet( $secret, $token );
-		if (array_get($metas, 'fungibility') === 'stackable') { // For stackable token - create a batch ID
-			$this->recipientWallet->batchId = Wallet::generateBatchId();
-		}
-
-		// Remainder wallet
-		$this->remainderWallet = new Wallet ( $secret );
-
-
-
-		// --- Create a molecule
-
 		// Create a molecule
 		$this->molecule = new Molecule();
-		$this->molecule->initTokenCreation (
-			$this->fromWallet, $this->recipientWallet, $this->remainderWallet, $amount, $metas
-		);
+		$this->molecule->initIdentifierCreation ($sourceWallet, $bundleHash, [
+			'type'	=> $type,
+			'code'	=> $code,
+		]);
 
 		// Sign a molecule
 		$this->molecule->sign( $secret );
@@ -60,6 +43,5 @@ class QueryTokenCreate extends QueryMoleculePropose
 		$this->molecule->check();
 	}
 
-	
 
 }
