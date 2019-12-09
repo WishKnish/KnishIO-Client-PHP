@@ -16,9 +16,6 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class QueryIdentifierCreate extends QueryMoleculePropose
 {
-	protected $fromWallet;
-	protected $recipientWallet;
-
 
 	/**
 	 * @param $secret
@@ -27,14 +24,16 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule (Wallet $sourceWallet, string $bundleHash, string $type, string $code)
+	public function initMolecule (string $secret, Wallet $sourceWallet, string $bundleHash, array $metas, Wallet $remainderWallet = null)
 	{
+		// Remainder wallet
+		$this->remainderWallet = $remainderWallet ?? new Wallet ( $secret );
+
+
+
 		// Create a molecule
 		$this->molecule = new Molecule();
-		$this->molecule->initIdentifierCreation ($sourceWallet, $bundleHash, [
-			'type'	=> $type,
-			'code'	=> $code,
-		]);
+		$this->molecule->initIdentifierCreation ($sourceWallet, $this->remainderWallet, $bundleHash, $metas);
 
 		// Sign a molecule
 		$this->molecule->sign( $secret );

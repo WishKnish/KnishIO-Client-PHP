@@ -32,6 +32,8 @@ class QueryWalletClaim extends QueryMoleculePropose
 		// Create a recipient wallet to generate new position & address
 		$this->recipientWallet = $recipientWallet ?? new Wallet( $secret, $token );
 
+
+
 		// Meta with address & position to the shadow wallet
 		$metas = [
 			'walletAddress' 	=> $this->recipientWallet->address,

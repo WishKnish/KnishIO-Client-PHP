@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase as StandartTestCase;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
@@ -121,8 +122,16 @@ class TokenClientTransactionTest extends StandartTestCase
 	 */
 	protected function beforeExecute () {
 
+		// Get an app url
+		$app_url = env('APP_URL', 'http://dev.wishknish'); // @todo problem with unit test env, APP_URL is null!
+
+		// Check app url
+		if (!$app_url) {
+			throw new \Exception('APP_URL is empty.');
+		}
+
 		// Override url
-		KnishIO::setUrl(env('APP_URL').'/graphql');
+		KnishIO::setUrl($app_url.'/graphql');
 	}
 
 
@@ -356,17 +365,31 @@ class TokenClientTransactionTest extends StandartTestCase
 		// --- Bind a shadow wallet with wrong USER wallet
 
 		// Get a shadow wallet of the recipient.0
-		$shadowWallet = KnishIO::getBalance($recipients[0], $token);
+		//$shadowWallet = KnishIO::getBalance($recipients[0], $token);
 
 		// Set a claim request with USER wallet recipient.1
-		$response = KnishIO::claimShadowWallet($recipients[1], $token, $shadowWallet);
+		// $response = KnishIO::claimShadowWallet($recipients[1], $token, $shadowWallet);
+		// $this->checkResponse ($response);
+		// ---
+
+
+		// Query
+		$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
+		$response = $query->execute([
+			'bundle' => Crypto::generateBundleHash($recipients[0]),
+			'type' => 'email',
+			'content' => 'test@test.test',
+		]);
+		dd ($response);
+
+		// --- Bind a shadow wallet
+		$response = KnishIO::createIdentifier($recipients[0], $token, 'email', '1234');
 		$this->checkResponse ($response);
 		// ---
 
 
 		// --- Bind a shadow wallet
 		$response = KnishIO::claimShadowWallet($recipients[0], $token);
-		dd ($response);
 		$this->checkResponse ($response);
 		// ---
 	}

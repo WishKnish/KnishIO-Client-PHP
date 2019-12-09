@@ -257,10 +257,12 @@ class Molecule
 
 	/**
 	 * @param Wallet $sourceWallet
+	 * @param Wallet $remainderWallet
 	 * @param string $bundleHash
 	 * @param array $metas
+	 * @return $this
 	 */
-	public function initIdentifierCreation (Wallet $sourceWallet, string $bundleHash, array $metas) {
+	public function initIdentifierCreation (Wallet $sourceWallet, Wallet $remainderWallet, string $bundleHash, array $metas) {
 
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
@@ -271,7 +273,7 @@ class Molecule
 			null,
 			null,
 			'identifier',
-			$type,
+			array_get($metas, 'type'),
 			$metas,
 			null,
 			$this->generateIndex()

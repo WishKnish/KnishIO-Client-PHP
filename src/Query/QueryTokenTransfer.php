@@ -29,29 +29,9 @@ class QueryTokenTransfer extends QueryMoleculePropose
 	 */
 	public function initMolecule (string $fromSecret, Wallet $fromWallet, Wallet $toWallet, string $token, $amount, Wallet $remainderWallet = null)
 	{
-		// Remainder wallet
+		// Remainder wallet (set a batch ID from the recipient wallet)
 		$this->remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
-
-
-
-		// --- BEGIN: Batch ID initialization
-		if ($fromWallet->batchId) {
-
-			// Has a remainder & is the first transaction to shadow wallet (toWallet has not a batchID)
-			if (!$toWallet->batchId && ($fromWallet->balance - $amount) > 0) {
-				$batchId = Wallet::generateBatchId();
-			}
-
-			// Has no remainder?: use batch ID from the source wallet
-			else {
-				$batchId = $fromWallet->batchId;
-			}
-
-			// Set batchID to recipient & remainder wallets
-			$toWallet->batchId = $batchId;
-			$this->remainderWallet->batchId = $batchId;
-		}
-		// --- END: Batch ID initialization
+		$this->remainderWallet->batchId = $toWallet->batchId;
 
 
 

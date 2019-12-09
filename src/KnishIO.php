@@ -12,6 +12,7 @@ use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
+use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
@@ -31,7 +32,7 @@ class KnishIO
 	/**
 	 * @return Client
 	 */
-	private static function getClient ()
+	public static function getClient ()
 	{
 		if ( ! ( static::$client instanceof Client ) ) {
 			static::$client = new Client( [
@@ -100,10 +101,47 @@ class KnishIO
 	 */
 	public static function createToken ( $secret, $token, $amount, array $metas = [] ) : Response
 	{
+		// From wallet
+		$fromWallet = new Wallet( $secret );
+
+		// Recipient wallet
+		$recipientWallet = new Wallet( $secret, $token );
+		if (array_get($metas, 'fungibility') === 'stackable') { // For stackable token - create a batch ID
+			$recipientWallet->batchId = Wallet::generateBatchId();
+		}
+
+
 		$query = new QueryTokenCreate(static::getClient(), static::getUrl());
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $token, $amount, $metas );
+		$query->initMolecule ( $secret, $fromWallet, $recipientWallet, $token, $amount, $metas );
+
+		// Execute a query
+		return $query->execute();
+	}
+
+
+	/**
+	 * @param Wallet $sourceWallet
+	 * @param string $bundleHash
+	 * @param string $type
+	 * @param string $code
+	 * @return Response
+	 * @throws \ReflectionException
+	 */
+	public static function createIdentifier ($secret, string $bundleHash, string $type, string $code)
+	{
+		// Create source & remainder wallets
+		$sourceWallet = new Wallet( $secret );
+
+		// Create & execute a query
+		$query = new QueryIdentifierCreate(static::getClient(), static::getUrl());
+
+		// Init a molecule
+		$query->initMolecule ( $secret, $sourceWallet, $bundleHash, [
+			'type' => $type,
+			'code' => $code,
+		] );
 
 		// Execute a query
 		return $query->execute();
@@ -170,6 +208,26 @@ class KnishIO
 				$toWallet = new Wallet( $to, $token );
 			}
 		}
+
+
+
+		// --- BEGIN: Batch ID initialization
+		if ($fromWallet->batchId) {
+
+			// Has a remainder & is the first transaction to shadow wallet (toWallet has not a batchID)
+			if (!$toWallet->batchId && ($fromWallet->balance - $amount) > 0) {
+				$batchId = Wallet::generateBatchId();
+			}
+
+			// Has no remainder?: use batch ID from the source wallet
+			else {
+				$batchId = $fromWallet->batchId;
+			}
+
+			// Set batchID to recipient wallet
+			$toWallet->batchId = $batchId;
+		}
+		// --- END: Batch ID initialization
 
 
 
