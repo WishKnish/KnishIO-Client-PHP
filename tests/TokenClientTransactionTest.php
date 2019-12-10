@@ -155,6 +155,7 @@ class TokenClientTransactionTest extends StandartTestCase
 
 			// Create & run a unit test command
 			$command = new \PHPUnit\TextUI\Command();
+			//ob_start();
 			$response = $command->run([
 				'phpunit',
 				'--configuration',
@@ -165,6 +166,7 @@ class TokenClientTransactionTest extends StandartTestCase
 				$filepath,
 				'--teamcity',
 			], false);
+			//$out = ob_get_contents(); ob_end_clean();
 		}
 		$this->assertEquals(true, true);
 	}
@@ -373,17 +375,20 @@ class TokenClientTransactionTest extends StandartTestCase
 		// ---
 
 
+
 		// Query
-		$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
+		/*$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
 		$response = $query->execute([
 			'bundle' => Crypto::generateBundleHash($recipients[0]),
 			'type' => 'email',
 			'content' => 'test@test.test',
-		]);
-		dd ($response);
+		]);*/
+
+		// Get a verification code
+		$code = $this->getVerificationCode(false);
 
 		// --- Bind a shadow wallet
-		$response = KnishIO::createIdentifier($recipients[0], $token, 'email', '1234');
+		$response = KnishIO::createIdentifier($recipients[0], $token, 'email', $code);
 		$this->checkResponse ($response);
 		// ---
 
@@ -394,5 +399,28 @@ class TokenClientTransactionTest extends StandartTestCase
 		// ---
 	}
 
+
+	// @todo test function, thinking about real implemenation
+	protected function getVerificationCode ($clear_log_file = true) {
+
+		// Root path
+		$log_file = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
+			'/../../../../../storage/logs/laravel.log';
+		if (!file_exists($log_file) ) {
+			throw new \Exception('Log file does not exist.');
+		}
+		$logs = file_get_contents($log_file);
+		if (!preg_match('#<p>Your verification code: <b>([A-Za-z0-9]+)</b></p>#Usi', $logs, $matches) ) {
+
+			throw new \Exception('Identifier code does not exist.');
+		}
+
+		// Remove log file
+		if ($clear_log_file) {
+			unlink($log_file);
+		}
+
+		return $matches[1];
+	}
 
 }

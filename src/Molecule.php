@@ -231,6 +231,8 @@ class Molecule
 	 */
 	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, $tokenMeta = [])
 	{
+		$this->molecularHash = null;
+
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
@@ -263,6 +265,9 @@ class Molecule
 	 * @return $this
 	 */
 	public function initIdentifierCreation (Wallet $sourceWallet, Wallet $remainderWallet, string $bundleHash, array $metas) {
+		$this->molecularHash = null;
+
+		$metas['hash'] = $bundleHash;
 
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
