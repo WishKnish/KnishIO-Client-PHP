@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseIdentifier;
 
 
 /**
@@ -27,7 +28,7 @@ class QueryLinkIdentifierMutation extends Query
 	 * @return Response
 	 */
 	public function createResponse (string $response) {
-		return new Response($this, $response);
+		return new ResponseIdentifier($this, $response);
 	}
 
 }

@@ -74,7 +74,8 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function checkResponse (Response $response) {
 		$data = $response->data();
 		if ($data['status'] !== 'accepted') {
-			dump ($response);
+			//$response->ddDebug();
+			dump ($response->data());
 		}
 		$this->assertEquals($data['status'], 'accepted');
 	}
@@ -123,7 +124,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function beforeExecute () {
 
 		// Get an app url
-		$app_url = env('APP_URL', 'http://dev.wishknish'); // @todo problem with unit test env, APP_URL is null!
+		$app_url = env('APP_URL');
 
 		// Check app url
 		if (!$app_url) {
@@ -131,7 +132,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		}
 
 		// Override url
-		KnishIO::setUrl($app_url.'/graphql');
+		KnishIO::setUrl($app_url.'graphql');
 	}
 
 
@@ -182,9 +183,8 @@ class TokenClientTransactionTest extends StandartTestCase
 		// Initial code
 		$this->beforeExecute ();
 
-
 		// Full amount
-		$full_amount = 1000;
+		$full_amount = 1000.0000000010 ;// + 1.0/(10*17);
 
 		// Secret array
 		$secret = [
@@ -223,11 +223,10 @@ class TokenClientTransactionTest extends StandartTestCase
 		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
-
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
-			'transaction'	=> 100,
+			'transaction'	=> 100.0000000001,
 		]]);
 	}
 
@@ -358,6 +357,10 @@ class TokenClientTransactionTest extends StandartTestCase
 		// Initial code
 		$this->beforeExecute ();
 
+		if (env('MAIL_DRIVER') !== 'log') {
+			throw new \Exception('MAIL_DRIVER must be "log".');
+		}
+
 		// Data
 		$recipients	= array_get($this->getData(), 'secret.recipient');
 		$token		= $this->token_slug['stackable'];
@@ -377,15 +380,19 @@ class TokenClientTransactionTest extends StandartTestCase
 
 
 		// Query
-		/*$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
+		$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
 		$response = $query->execute([
 			'bundle' => Crypto::generateBundleHash($recipients[0]),
 			'type' => 'email',
 			'content' => 'test@test.test',
-		]);*/
+		]);
+		if (!$response->success() ) {
+			dd ($response->message());
+		}
 
 		// Get a verification code
-		$code = $this->getVerificationCode(false);
+		$code = $this->getVerificationCode();
+		echo ('Verification code: "'. $code .'"');
 
 		// --- Bind a shadow wallet
 		$response = KnishIO::createIdentifier($recipients[0], $token, 'email', $code);
@@ -404,8 +411,15 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function getVerificationCode ($clear_log_file = true) {
 
 		// Root path
-		$log_file = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
-			'/../../../../../storage/logs/laravel.log';
+		$log_file_pattern = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
+			'/../../../../../storage/logs/*.log';
+		$log_files = glob($log_file_pattern);
+
+		// Get last modified log file
+		$log_files = array_combine($log_files, array_map("filemtime", $log_files));
+		arsort($log_files);
+		$log_file = key($log_files);
+
 		if (!file_exists($log_file) ) {
 			throw new \Exception('Log file does not exist.');
 		}

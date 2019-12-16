@@ -101,8 +101,8 @@ class CheckMolecule
         $firstAtom = \reset( $molecule->atoms );
 
         // Looping through each V-isotope atom
-        $sum = 0;
-        $value = 0;
+        $sum = 0.0;
+        $value = 0.0;
 
         foreach ( $molecule->atoms as $index => $vAtom ) {
 
@@ -114,7 +114,7 @@ class CheckMolecule
             }
 
             // Making sure we're in integer land
-            $value = 1 * $vAtom->value;
+            $value = 1.0 * $vAtom->value;
 
             // Making sure all V atoms of the same token
             if ( $vAtom->token !== $firstAtom->token ) {
@@ -148,7 +148,7 @@ class CheckMolecule
         }
 
         // Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-        if ( $sum !== $value ) {
+        if ( !static::cmpDec($sum, $value) ) {
 
             throw new TransferUnbalancedException();
 
@@ -167,14 +167,14 @@ class CheckMolecule
             }
 
             // Does the remainder match what should be there in the source wallet, if provided?
-            if ( $remainder !== $sum ) {
+            if ( !static::cmpDec($remainder, $sum) ) {
 
-                throw new TransferRemainderException();
+            	throw new TransferRemainderException();
 
             }
 
         } // No senderWallet, but have a remainder?
-        else if ( $value !== 0 ) {
+        else if ( !static::cmpDec($value, 0.0) ) {
 
             throw new TransferRemainderException();
 
@@ -428,5 +428,21 @@ class CheckMolecule
         }
 
     }
+
+
+	/**
+	 * Cmp deciamal with precision @todo experimental fn!!!
+	 *
+	 * @param float $val1
+	 * @param float $val2
+	 */
+    private static function cmpDec (float $val1, float $val2) : bool {
+
+    	// Min precision
+    	$precision = 0.0000000001; // @todo move precision to config!
+
+    	// Check abs difference for values
+		return abs($val1 - $val2) < $precision;
+	}
 
 }

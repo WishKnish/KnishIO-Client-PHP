@@ -34,7 +34,6 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		$this->remainderWallet->batchId = $toWallet->batchId;
 
 
-
 		// Create & sign a molecule
 		$this->molecule = new Molecule();
 		$this->molecule->initValue( $fromWallet, $toWallet, $this->remainderWallet, $amount );
