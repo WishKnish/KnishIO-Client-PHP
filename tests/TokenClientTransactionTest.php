@@ -3,9 +3,11 @@
 namespace WishKnish\KnishIO\Client\Tests;
 
 use PHPUnit\Framework\TestCase as StandartTestCase;
+use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
@@ -19,6 +21,7 @@ use WishKnish\KnishIO\Molecule;
  */
 class TokenClientTransactionTest extends StandartTestCase
 {
+	use VarDumperTestTrait;
 
 	// Token slugs
 	protected $token_slug = [
@@ -74,7 +77,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function checkResponse (Response $response) {
 		$data = $response->data();
 		if ($data['status'] !== 'accepted') {
-			//$response->ddDebug();
+			dump ($response->query());
 			dump ($response->data());
 		}
 		$this->assertEquals($data['status'], 'accepted');
@@ -379,12 +382,16 @@ class TokenClientTransactionTest extends StandartTestCase
 
 
 
+		// Bundle hash
+		$bundleHash = Crypto::generateBundleHash($recipients[0]);
+		$email = Strings::randomString(10).'@test.test';
+
 		// Query
 		$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
 		$response = $query->execute([
-			'bundle' => Crypto::generateBundleHash($recipients[0]),
-			'type' => 'email',
-			'content' => 'test@test.test',
+			'bundle'	=> $bundleHash,
+			'type'		=> 'email',
+			'content'	=> $email,
 		]);
 		if (!$response->success() ) {
 			dd ($response->message());
@@ -392,19 +399,29 @@ class TokenClientTransactionTest extends StandartTestCase
 
 		// Get a verification code
 		$code = $this->getVerificationCode();
-		echo ('Verification code: "'. $code .'"');
+		echo ("Identifier creating... \r\n");
+		echo ("Bundle hash: $bundleHash \r\n");
+		echo ("Email: $email \r\n");
+		echo ("Verification code: $code \r\n");
+
 
 		// --- Bind a shadow wallet
-		$response = KnishIO::createIdentifier($recipients[0], $token, 'email', $code);
+		$response = KnishIO::createIdentifier($recipients[0], 'email', $email, $code);
 		$this->checkResponse ($response);
 		// ---
 
+		// --- Bind a shadow wallet
+		$response = KnishIO::claimShadowWallet($recipients[1], $token);
+		$this->assertEquals($response->data()['status'], 'rejected');
+		$this->assertEquals($response->data()['reason'], 'ShadowWalletHandler::init(): ContinueID check failure.');
+		// ---
 
 		// --- Bind a shadow wallet
 		$response = KnishIO::claimShadowWallet($recipients[0], $token);
 		$this->checkResponse ($response);
 		// ---
 	}
+
 
 
 	// @todo test function, thinking about real implemenation

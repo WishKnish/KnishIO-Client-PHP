@@ -24,7 +24,7 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule (string $secret, Wallet $sourceWallet, string $bundleHash, array $metas, Wallet $remainderWallet = null)
+	public function initMolecule (string $secret, Wallet $sourceWallet, string $type, array $metas, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
 		$this->remainderWallet = $remainderWallet ?? new Wallet ( $secret );
@@ -33,7 +33,7 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 
 		// Create a molecule
 		$this->molecule = new Molecule();
-		$this->molecule->initIdentifierCreation ($sourceWallet, $this->remainderWallet, $bundleHash, $metas);
+		$this->molecule->initIdentifierCreation ($sourceWallet, $this->remainderWallet, $type, $metas);
 
 		// Sign a molecule
 		$this->molecule->sign( $secret );

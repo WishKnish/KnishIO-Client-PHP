@@ -129,7 +129,7 @@ class KnishIO
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public static function createIdentifier ($secret, string $bundleHash, string $type, string $code)
+	public static function createIdentifier ($secret, string $type, string $content, string $code)
 	{
 		// Create source & remainder wallets
 		$sourceWallet = new Wallet( $secret );
@@ -138,9 +138,9 @@ class KnishIO
 		$query = new QueryIdentifierCreate(static::getClient(), static::getUrl());
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $bundleHash, [
-			'type' => $type,
-			'code' => $code,
+		$query->initMolecule ( $secret, $sourceWallet, $type, [
+			'hash'	=> Crypto::generateBundleHash($content),
+			'code' 	=> $code,
 		] );
 
 		// Execute a query
