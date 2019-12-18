@@ -111,8 +111,14 @@ class Atom
 						$list = Meta::normalizeMeta( $value );
 
 						foreach ( $list as $meta ) {
-							$molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-							$molecularSponge->absorb( ( string ) ( $meta[ 'value' ] ?: 'null' ) );
+
+                            if ( isset( $meta[ 'value' ] ) && $meta[ 'value' ] !== null ) {
+
+                                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+                                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
+                            }
+
 						}
 
 						$property->setValue( $atom, $list );

@@ -156,7 +156,7 @@ class Molecule
             null,
             $sourceWallet->batchId,
             'wallet',
-            $newWallet->token,
+            $newWallet->address,
             [
                 [
                     'key' => 'address',
@@ -176,7 +176,7 @@ class Molecule
                 ],
                 [
                     'key' => 'amount',
-                    'value' => $newWallet->balance,
+                    'value' => "0",
                 ],
                 [
                     'key' => 'batch_id',
