@@ -99,7 +99,7 @@ class Atom
 					$name = $property->getName();
 
 					// Old atoms support (without batch_id field)
-					if ($name === 'batchId' && $value === null) {
+					if ( $name === 'batchId' && $value === null ) {
 						 continue;
 					}
 

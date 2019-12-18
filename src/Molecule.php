@@ -154,7 +154,7 @@ class Molecule
             'C',
             $sourceWallet->token,
             null,
-            null,
+            $sourceWallet->batchId,
             'wallet',
             $newWallet->token,
             [
