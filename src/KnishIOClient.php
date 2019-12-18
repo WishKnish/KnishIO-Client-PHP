@@ -11,6 +11,7 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
@@ -22,50 +23,53 @@ use WishKnish\KnishIO\Client\Response\Response;
  * Class KnishIO
  * @package WishKnish\KnishIO\Client
  */
-class KnishIO
+class KnishIOClient
 {
-	private static $url = 'https://wishknish.com/graphql';
-	private static $client;
+	// Continue ID tracking
+	private static $withContinueID = [];
 
+	// Client parameters
+	private $url = 'https://wishknish.com/graphql';
+	private $client;
 
-
-	/**
-	 * @return Client
-	 */
-	public static function getClient ()
-	{
-		if ( ! ( static::$client instanceof Client ) ) {
-			static::$client = new Client( [
-				'base_uri'    => static::$url,
-				'verify'      => false,
-				'http_errors' => false,
-				'headers'     => [
-					'User-Agent' => 'KnishIO/0.1',
-					'Accept'     => 'application/json',
-				]
-			] );
-		}
-
-		return static::$client;
-	}
+	// Source wallet
+	private $sourceWallet;
 
 
 	/**
-	 * @return string
-	 */
-	public static function getUrl ()
-	{
-		return static::$url;
-	}
-
-
-	/**
+	 * KnishIO constructor.
 	 * @param string $url
+	 * @param Client|null $client
 	 */
-	public static function setUrl ( $url )
+	public function __construct (string $url, Client $client = null)
 	{
-		static::$url = $url;
-		static::$client = null;
+		$this->url = $url;
+		$this->client = new Client( [
+			'base_uri'    => $this->url,
+			'verify'      => false,
+			'http_errors' => false,
+			'headers'     => [
+				'User-Agent' => 'KnishIO/0.1',
+				'Accept'     => 'application/json',
+			]
+		] );
+	}
+
+
+	/**
+	 * @return Wallet
+	 */
+	public function sourceWallet () : Wallet {
+		return $this->sourceWallet;
+	}
+
+
+	/**
+	 * @param $class
+	 * @return mixed
+	 */
+	public function createQuery ($class) {
+		return new $class ($this->client);
 	}
 
 
@@ -75,10 +79,10 @@ class KnishIO
 	 * @return Response
 	 * @throws \Exception
 	 */
-	public static function getBalance ( $code, $token ) : Response
+	public function getBalance ( $code, $token ) : Response
 	{
 		// Create a query
-		$query = new QueryBalance(static::getClient(), static::getUrl());
+		$query = $this->createQuery(QueryBalance::class);
 
 		// If bundle hash came, we pass it, otherwise we consider it a secret
 		$bundleHash = Wallet::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code );
@@ -99,10 +103,9 @@ class KnishIO
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public static function createToken ( $secret, $token, $amount, array $metas = [] ) : Response
+	public function createToken ( $secret, $token, $amount, array $metas = [] ) : Response
 	{
-		// From wallet
-		$fromWallet = new Wallet( $secret );
+		$sourceWallet = new Wallet($secret);
 
 		// Recipient wallet
 		$recipientWallet = new Wallet( $secret, $token );
@@ -111,13 +114,14 @@ class KnishIO
 		}
 
 
-		$query = new QueryTokenCreate(static::getClient(), static::getUrl());
+		// Create a query
+		$query = $this->createQuery(QueryTokenCreate::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $fromWallet, $recipientWallet, $token, $amount, $metas );
+		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $token, $amount, $metas );
 
-		// Execute a query
-		return $query->execute();
+		// Return a query execution result
+		return $query->execute ();
 	}
 
 
@@ -129,13 +133,13 @@ class KnishIO
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public static function createIdentifier ($secret, string $type, string $content, string $code)
+	public function createIdentifier ($secret, string $type, string $content, string $code)
 	{
 		// Create source & remainder wallets
 		$sourceWallet = new Wallet( $secret );
 
 		// Create & execute a query
-		$query = new QueryIdentifierCreate(static::getClient(), static::getUrl());
+		$query = $this->createQuery(QueryIdentifierCreate::class);
 
 		// Init a molecule
 		$query->initMolecule ( $secret, $sourceWallet, $type, [
@@ -154,23 +158,23 @@ class KnishIO
 	 * @param $bundleHash
 	 * @param $token
 	 */
-	public static function claimShadowWallet ($secret, $token, $shadowWallet = null, $recipientWallet = null) : Response {
+	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) : Response {
 
-		// From wallet (a USER wallet, used for signing)
-		$fromWallet = new Wallet( $secret );
+		// Source wallet
+		$sourceWallet = $sourceWallet ?? new Wallet( $secret );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = $shadowWallet ?? static::getBalance( $secret, $token )->payload();
-		if ( $shadowWallet === null || !$shadowWallet instanceof WalletShadow ) {
+		$shadowWallet = $shadowWallet ?? static::getBalance($secret, $token)->payload();
+		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}
 
 
 		// Create a query
-		$query = new QueryWalletClaim(static::getClient(), static::getUrl());
+		$query = $this->createQuery(QueryWalletClaim::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $fromWallet, $shadowWallet, $token, $recipientWallet );
+		$query->initMolecule($secret, $sourceWallet, $shadowWallet, $token, $recipientWallet);
 
 		// Execute a query
 		return $query->execute();
@@ -185,7 +189,7 @@ class KnishIO
 	 * @return array
 	 * @throws \Exception|\ReflectionException|InvalidResponseException
 	 */
-	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null) : Response
+	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null) : Response
 	{
 		// Get a from wallet
 		$fromWallet = static::getBalance( $fromSecret, $token )->payload();
@@ -232,7 +236,7 @@ class KnishIO
 
 
 		// Create a query
-		$query = new QueryTokenTransfer(static::getClient(), static::getUrl());
+		$query = $this->createQuery(QueryTokenTransfer::class);
 
 		// Init a molecule
 		$query->initMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );

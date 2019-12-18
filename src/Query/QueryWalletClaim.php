@@ -27,7 +27,7 @@ class QueryWalletClaim extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule (string $secret, Wallet $fromWallet, Wallet $shadowWallet, string $token, Wallet $recipientWallet = null)
+	public function initMolecule (string $secret, Wallet $sourceWallet, Wallet $shadowWallet, string $token, Wallet $recipientWallet = null)
 	{
 		// Create a recipient wallet to generate new position & address
 		$this->recipientWallet = $recipientWallet ?? new Wallet( $secret, $token );
@@ -45,7 +45,7 @@ class QueryWalletClaim extends QueryMoleculePropose
 
 		// Create & sign a molecule
 		$this->molecule = new Molecule();
-		$this->molecule->initShadowWalletClaim( $fromWallet, $shadowWallet, $this->remainderWallet, $metas );
+		$this->molecule->initShadowWalletClaim( $sourceWallet, $shadowWallet, $this->remainderWallet, $metas );
 		$this->molecule->sign( $secret );
 
 

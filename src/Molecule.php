@@ -226,8 +226,11 @@ class Molecule
 	/**
 	 * Shadow wallet bindind
 	 *
-	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
-	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
+	 * @param Wallet $sourceWallet
+	 * @param Wallet $shadowWallet
+	 * @param Wallet $remainderWallet
+	 * @param array $tokenMeta
+	 * @return $this
 	 */
 	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, $tokenMeta = [])
 	{

@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase as StandartTestCase;
 use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
@@ -21,7 +22,8 @@ use WishKnish\KnishIO\Molecule;
  */
 class TokenClientTransactionTest extends StandartTestCase
 {
-	use VarDumperTestTrait;
+	private $client;
+
 
 	// Token slugs
 	protected $token_slug = [
@@ -95,7 +97,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function checkWallet (string $bundle, string $token, $amount, bool $hasBatchID = false) {
 
 		// Get a wallet
-		$wallet = KnishIO::getBalance($bundle, $token)->payload();
+		$wallet = $this->client->getBalance($bundle, $token)->payload();
 
 		// Assert wallet's balance
 		$this->assertEquals($wallet->balance, $amount);
@@ -134,8 +136,8 @@ class TokenClientTransactionTest extends StandartTestCase
 			throw new \Exception('APP_URL is empty.');
 		}
 
-		// Override url
-		KnishIO::setUrl($app_url.'graphql');
+		// Client initialization
+		$this->client = new KnishIOClient($app_url.'graphql');
 	}
 
 
@@ -210,7 +212,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'decimals'		=> 0,
 			'icon'			=> 'icon',
 		];
-		$response = KnishIO::createToken($secret['fungible'], $this->token_slug['fungible'], $full_amount, $tokenMeta);
+		$response = $this->client->createToken($secret['fungible'], $this->token_slug['fungible'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
 
@@ -223,7 +225,7 @@ class TokenClientTransactionTest extends StandartTestCase
 			'decimals'		=> 0,
 			'icon'			=> 'icon',
 		];
-		$response = KnishIO::createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
+		$response = $this->client->createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
 		// Save data
@@ -260,32 +262,32 @@ class TokenClientTransactionTest extends StandartTestCase
 
 
 		// --- Batch transfer (splitting)
-		$response = KnishIO::transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[0], $token, $transaction_amount);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
-		$response = KnishIO::transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[0], $token, $transaction_amount * 2);
 
 
 
 		// --- Batch transfer to other recipient
-		$response = KnishIO::transferToken($from_secret, $toSecret[1], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toSecret[1], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[1], $token, $transaction_amount);
 
 
 
 		// --- Batch 1-st transfer
-		$response = KnishIO::transferToken($from_secret, $toSecret[2], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toSecret[2], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[2], $token, $transaction_amount);
 
 		// --- Batch lastd transfer
 		$remainder_amount = $full_amount - $transaction_amount*4;
-		$response = KnishIO::transferToken($from_secret, $toSecret[2], $token, $remainder_amount);
+		$response = $this->client->transferToken($from_secret, $toSecret[2], $token, $remainder_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[2], $token, $remainder_amount + $transaction_amount);
 
@@ -321,32 +323,32 @@ class TokenClientTransactionTest extends StandartTestCase
 		}
 
 		// --- Batch transfer (splitting)
-		$response = KnishIO::transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
-		$response = KnishIO::transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2);
 
 
 
 		// --- Batch transfer to other recipient
-		$response = KnishIO::transferToken($from_secret, $toBundle[1], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toBundle[1], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[1], $token, $transaction_amount);
 
 
 
 		// --- Batch 1-st transfer
-		$response = KnishIO::transferToken($from_secret, $toBundle[2], $token, $transaction_amount);
+		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $transaction_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[2], $token, $transaction_amount);
 
 		// --- Batch last transfer
 		$remainder_amount = $full_amount - $transaction_amount * 4;
-		$response = KnishIO::transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
+		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount + $transaction_amount);
 	}
@@ -373,10 +375,10 @@ class TokenClientTransactionTest extends StandartTestCase
 		// --- Bind a shadow wallet with wrong USER wallet
 
 		// Get a shadow wallet of the recipient.0
-		//$shadowWallet = KnishIO::getBalance($recipients[0], $token);
+		//$shadowWallet = $this->client->getBalance($recipients[0], $token);
 
 		// Set a claim request with USER wallet recipient.1
-		// $response = KnishIO::claimShadowWallet($recipients[1], $token, $shadowWallet);
+		// $response = $this->client->claimShadowWallet($recipients[1], $token, $shadowWallet);
 		// $this->checkResponse ($response);
 		// ---
 
@@ -387,7 +389,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		$email = Strings::randomString(10).'@test.test';
 
 		// Query
-		$query = new QueryLinkIdentifierMutation(KnishIO::getClient(), KnishIO::getUrl());
+		$query = $this->client->createQuery(QueryLinkIdentifierMutation::class);
 		$response = $query->execute([
 			'bundle'	=> $bundleHash,
 			'type'		=> 'email',
@@ -406,18 +408,19 @@ class TokenClientTransactionTest extends StandartTestCase
 
 
 		// --- Bind a shadow wallet
-		$response = KnishIO::createIdentifier($recipients[0], 'email', $email, $code);
-		$this->checkResponse ($response);
+		$id_response = $this->client->createIdentifier($recipients[0], 'email', $email, $code);
+		$this->checkResponse ($id_response);
 		// ---
 
+
 		// --- Bind a shadow wallet
-		$response = KnishIO::claimShadowWallet($recipients[1], $token);
+		$response = $this->client->claimShadowWallet($recipients[1], $token, new Wallet($recipients[1]));
 		$this->assertEquals($response->data()['status'], 'rejected');
 		$this->assertEquals($response->data()['reason'], 'ShadowWalletHandler::init(): ContinueID check failure.');
 		// ---
 
 		// --- Bind a shadow wallet
-		$response = KnishIO::claimShadowWallet($recipients[0], $token);
+		$response = $this->client->claimShadowWallet($recipients[0], $token, $id_response->query()->remainderWallet());
 		$this->checkResponse ($response);
 		// ---
 	}

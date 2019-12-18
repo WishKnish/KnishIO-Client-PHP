@@ -25,7 +25,7 @@ abstract class Query
 	 * @param Client $client
 	 * @param string $url
 	 */
-	public function __construct(Client $client, string $url)
+	public function __construct(Client $client, string $url = null)
 	{
 		$this->url = $url;
 		$this->client = $client;
@@ -39,7 +39,7 @@ abstract class Query
 	public function execute (array $variables = []) : Response {
 
 		// Make a request
-		$response = $this->client->post( null, [
+		$response = $this->client->post( $this->url, [
 			'json' => [
 				'query'     => static::$query,
 				'variables' => $variables,

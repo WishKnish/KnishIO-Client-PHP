@@ -25,7 +25,7 @@ class QueryTokenCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule ($secret, Wallet $fromWallet, Wallet $recipientWallet, $token, $amount, array $metas = [], Wallet $remainderWallet = null)
+	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $token, $amount, array $metas = [], Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
 		$this->remainderWallet = $remainderWallet ?? new Wallet ( $secret );
@@ -35,7 +35,7 @@ class QueryTokenCreate extends QueryMoleculePropose
 		// Create a molecule
 		$this->molecule = new Molecule();
 		$this->molecule->initTokenCreation (
-			$fromWallet, $recipientWallet, $this->remainderWallet, $amount, $metas
+			$sourceWallet, $recipientWallet, $this->remainderWallet, $amount, $metas
 		);
 
 		// Sign a molecule
