@@ -139,6 +139,60 @@ class Molecule
 	}
 
     /**
+     * @param Wallet $sourceWallet
+     * @param Wallet $newWallet
+     * @return self
+     */
+    public function initWalletCreation ( Wallet $sourceWallet, Wallet $newWallet )
+    {
+        $this->molecularHash = null;
+
+        // Create an 'C' atom
+        $this->atoms[] = new Atom(
+            $sourceWallet->position,
+            $sourceWallet->address,
+            'C',
+            $sourceWallet->token,
+            null,
+            null,
+            'wallet',
+            $newWallet->token,
+            [
+                [
+                    'key' => 'address',
+                    'value' => $newWallet->address,
+                ],
+                [
+                    'key' => 'token',
+                    'value' => $newWallet->token,
+                ],
+                [
+                    'key' => 'bundle',
+                    'value' => $newWallet->bundle,
+                ],
+                [
+                    'key' => 'position',
+                    'value' => $newWallet->position,
+                ],
+                [
+                    'key' => 'amount',
+                    'value' => $newWallet->balance,
+                ],
+                [
+                    'key' => 'batch_id',
+                    'value' => $newWallet->batchId,
+                ],
+            ],
+            null,
+            $this->generateIndex()
+        );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+    }
+
+    /**
      * Initialize a C-type molecule to issue a new type of identifier
      *
      * @param Wallet $sourceWallet
