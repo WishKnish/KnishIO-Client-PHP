@@ -54,8 +54,11 @@ class Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64 )
+	public function __construct ( string $secret = null, string $token = null, string $position = null, int $saltLength = null )
 	{
+		$token = default_if_null ($token, 'USER');
+		$saltLength = default_if_null($saltLength, 64);
+
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
 		$this->balance = 0;

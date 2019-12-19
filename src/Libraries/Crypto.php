@@ -25,8 +25,9 @@ class Crypto
 	 * @return string
 	 * @throws \Exception
 	 */
-	public static function generateSecret ( $seed = null, $length = 2048 )
+	public static function generateSecret ( $seed = null, $length = null )
 	{
+		$length = default_if_null($length, 2048);
 
 		return \in_array( $seed, [ null, '' ], true ) ?
 			Strings::randomString( $length ) :

@@ -83,8 +83,10 @@ class Atom
 	 * @return array[]|string|string[]|null
 	 * @throws \ReflectionException|\Exception
 	 */
-	public static function hashAtoms ( array $atoms, $output = 'base17' )
+	public static function hashAtoms ( array $atoms, string $output = null )
 	{
+		$output = default_if_null($output, 'base17');
+
 		$atomList = static::sortAtoms( $atoms );
 		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
 		$numberOfAtoms = \count( $atomList );
@@ -163,8 +165,10 @@ class Atom
      * @param array $atoms
      * @return array
      */
-	public static function sortAtoms ( array $atoms = [] )
+	public static function sortAtoms ( array $atoms = null )
     {
+		$atoms = default_if_null($atoms, []);
+
         $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 
         \usort($atomList, static function ( self $first, self $second ) {

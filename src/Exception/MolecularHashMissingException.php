@@ -19,8 +19,11 @@ class MolecularHashMissingException extends BaseException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'The molecular hash is missing', $code = 1, \Throwable $previous = null )
+	public function __construct ( string $message = null, int $code = null, \Throwable $previous = null )
 	{
+		$message	= default_if_null ($message, 'The molecular hash is missing');
+		$code		= default_if_null ($code, 1);
+
 		parent::__construct( $message, $code, $previous );
 	}
 }

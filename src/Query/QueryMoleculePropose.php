@@ -42,9 +42,9 @@ abstract class QueryMoleculePropose extends Query
 	 * @param array $variables
 	 * @return Response
 	 */
-	public function execute (array $variables = []) : Response {
+	public function execute (array $variables = null) : Response {
 		return parent::execute (
-			array_merge($variables, ['molecule' => $this->molecule])
+			array_merge(default_if_null($variables, []), ['molecule' => $this->molecule])
 		);
 	}
 

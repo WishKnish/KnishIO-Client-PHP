@@ -43,23 +43,23 @@ class KnishIOClient
 	 */
 	public function __construct (string $url, Client $client = null)
 	{
-		$this->url = $url;
-		$this->client = new Client( [
-			'base_uri'    => $this->url,
+		$this->client = default_if_null($client, new Client( [
+			'base_uri'    => $url,
 			'verify'      => false,
 			'http_errors' => false,
 			'headers'     => [
 				'User-Agent' => 'KnishIO/0.1',
 				'Accept'     => 'application/json',
 			]
-		] );
+		] ) );
+		$this->url = $url;
 	}
 
 
 	/**
 	 * @return Wallet
 	 */
-	public function sourceWallet () : Wallet {
+	public function sourceWallet () {
 		return $this->sourceWallet;
 	}
 
@@ -79,7 +79,7 @@ class KnishIOClient
 	 * @return Response
 	 * @throws \Exception
 	 */
-	public function getBalance ( $code, $token ) : Response
+	public function getBalance ( $code, $token )
 	{
 		// Create a query
 		$query = $this->createQuery(QueryBalance::class);
@@ -103,8 +103,10 @@ class KnishIOClient
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public function createToken ( $secret, $token, $amount, array $metas = [] ) : Response
+	public function createToken ( $secret, $token, $amount, array $metas = null )
 	{
+		$metas = default_if_null($metas, []);
+
 		$sourceWallet = new Wallet($secret);
 
 		// Recipient wallet
@@ -158,13 +160,13 @@ class KnishIOClient
 	 * @param $bundleHash
 	 * @param $token
 	 */
-	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) : Response {
+	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
 
 		// Source wallet
-		$sourceWallet = $sourceWallet ?? new Wallet( $secret );
+		$sourceWallet = default_if_null($sourceWallet, new Wallet( $secret ) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = $shadowWallet ?? static::getBalance($secret, $token)->payload();
+		$shadowWallet = default_if_null($shadowWallet, static::getBalance($secret, $token)->payload() );
 		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}
@@ -189,7 +191,7 @@ class KnishIOClient
 	 * @return array
 	 * @throws \Exception|\ReflectionException|InvalidResponseException
 	 */
-	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null) : Response
+	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Get a from wallet
 		$fromWallet = static::getBalance( $fromSecret, $token )->payload();

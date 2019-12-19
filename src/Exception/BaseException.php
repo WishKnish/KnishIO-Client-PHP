@@ -24,8 +24,10 @@ abstract class BaseException extends \LogicException implements IException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = null, $code = 0, \Throwable $previous = null )
+	public function __construct ( string $message = null, int $code = null, \Throwable $previous = null )
 	{
+		$code = default_if_null ($code, 0);
+
 		if ( !$message ) {
 			throw new static ( 'Unknown ' . static::class );
 		}

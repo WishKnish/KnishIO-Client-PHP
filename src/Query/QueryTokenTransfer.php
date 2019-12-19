@@ -30,7 +30,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
 	public function initMolecule (string $fromSecret, Wallet $fromWallet, Wallet $toWallet, string $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet (set a batch ID from the recipient wallet)
-		$this->remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
+		$this->remainderWallet = default_if_null ($remainderWallet, new Wallet( $fromSecret, $token ) );
 		$this->remainderWallet->batchId = $toWallet->batchId;
 
 

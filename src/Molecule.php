@@ -232,8 +232,10 @@ class Molecule
 	 * @param array $tokenMeta
 	 * @return $this
 	 */
-	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, $tokenMeta = [])
+	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, array $tokenMeta = null)
 	{
+		$tokenMeta = default_if_null($tokenMeta, []);
+
 		$this->molecularHash = null;
 
 		// Create an 'C' atom
@@ -352,8 +354,11 @@ class Molecule
 	 * @return string
 	 * @throws \Exception|\ReflectionException|AtomsMissingException
 	 */
-	public function sign ( $secret, $anonymous = false, $compressed = true )
+	public function sign ( $secret, bool $anonymous = null, bool $compressed = null )
 	{
+		$anonymous	= default_if_null($anonymous, false);
+		$compressed	= default_if_null($compressed, true);
+
 		if ( empty( $this->atoms ) ||
 			!empty( \array_filter( $this->atoms,
 				static function ( $atom ) {
@@ -471,8 +476,9 @@ class Molecule
      * @param array $atoms
      * @return int
      */
-	public static function generateNextAtomIndex ( array $atoms = [] )
+	public static function generateNextAtomIndex ( array $atoms = null )
     {
+		$atoms = default_if_null($atoms, []);
 
         $atom = \end( $atoms );
 

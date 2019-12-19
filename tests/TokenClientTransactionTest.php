@@ -14,7 +14,9 @@ use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
 
-
+/*
+C:\xampp\php5.6.0\php.exe C:/xampp/htdocs/xampp/knishio-client-php/vendor/phpunit/phpunit/phpunit --configuration C:/xampp/htdocs/xampp/knishio-client-php/phpunit.xml WishKnish\KnishIO\Client\Tests\TokenClientTransactionTest C:/xampp/htdocs/xampp/knishio-client-php\tests\TokenClientTransactionTest.php
+*/
 
 /**
  * Class TokenTransactionTest
@@ -38,7 +40,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @return string
 	 */
 	protected function dataFilepath () {
-		return class_basename(static::class).'.data';
+		return substr(strrchr(static::class, "\\"), 1).'.data';
 	}
 
 
@@ -48,7 +50,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @param array $data
 	 */
 	protected function saveData (array $data, $filepath = null) {
-		$filepath = $filepath ?? $this->dataFilepath();
+		$filepath = default_if_null($filepath, $this->dataFilepath() );
 		file_put_contents($filepath, \json_encode($data));
 	}
 
@@ -57,7 +59,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @return mixed
 	 */
 	protected function getData ($filepath = null) {
-		$filepath = $filepath ?? $this->dataFilepath();
+		$filepath = default_if_null($filepath, $this->dataFilepath() );
 		return json_decode(file_get_contents($filepath), true);
 	}
 
@@ -66,7 +68,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @return mixed
 	 */
 	protected function clearData ($filepath = null) {
-		$filepath = $filepath ?? $this->dataFilepath();
+		$filepath = default_if_null($filepath, $this->dataFilepath() );
 		if (file_exists($filepath) ) {
 			unlink($filepath);
 		}
@@ -94,7 +96,9 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @param bool $hasBatchID
 	 * @throws \ReflectionException
 	 */
-	protected function checkWallet (string $bundle, string $token, $amount, bool $hasBatchID = false) {
+	protected function checkWallet (string $bundle, string $token, $amount, bool $hasBatchID = null) {
+
+		$hasBatchID = default_if_null($hasBatchID, false);
 
 		// Get a wallet
 		$wallet = $this->client->getBalance($bundle, $token)->payload();
@@ -125,11 +129,13 @@ class TokenClientTransactionTest extends StandartTestCase
 
 	/**
 	 * Before execute
+	 *
+	 * @throws \Exception
 	 */
 	protected function beforeExecute () {
 
 		// Get an app url
-		$app_url = env('APP_URL');
+		$app_url = isset($_ENV['APP_URL']) ? $_ENV['APP_URL'] : null;
 
 		// Check app url
 		if (!$app_url) {
@@ -147,6 +153,8 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @throws \ReflectionException
 	 */
 	public function testClearAll () {
+
+		return;
 
 		// Root path
 		$root_path = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
@@ -187,6 +195,8 @@ class TokenClientTransactionTest extends StandartTestCase
 
 		// Initial code
 		$this->beforeExecute ();
+
+		return;
 
 		// Full amount
 		$full_amount = 1000.0000000010 ;// + 1.0/(10*17);

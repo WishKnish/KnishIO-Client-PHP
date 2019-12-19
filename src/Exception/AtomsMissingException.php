@@ -19,8 +19,11 @@ class AtomsMissingException extends BaseException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'The molecule does not contain atoms', $code = 1, \Throwable $previous = null )
+	public function __construct ( string $message = null, int $code = null, \Throwable $previous = null )
 	{
+		$message	= default_if_null ($message, 'The molecule does not contain atoms');
+		$code		= default_if_null ($code, 1);
+
 		parent::__construct( $message, $code, $previous );
 	}
 }

@@ -41,8 +41,11 @@ class Strings
 	 * @param string $alphabet
 	 * @return string
 	 */
-	public static function randomString ( $length = 256, $alphabet = 'abcdef0123456789' )
+	public static function randomString ( int $length = null, string $alphabet = null )
 	{
+		$length		= default_if_null($length, 256);
+		$alphabet	= default_if_null($alphabet, 'abcdef0123456789');
+
 		$array = array_map( static function () use ( $length ) {
 			return random_int( 0, 255 );
 		}, array_pad( [], $length, 0 ) );

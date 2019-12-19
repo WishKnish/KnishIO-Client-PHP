@@ -19,8 +19,11 @@ class TransferRemainderException extends BaseException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'Invalid remainder provided', $code = 1, \Throwable $previous = null )
+	public function __construct ( string $message = null, int $code = null, \Throwable $previous = null )
 	{
+		$message	= default_if_null ($message, 'Invalid remainder provided');
+		$code		= default_if_null ($code, 1);
+
 		parent::__construct( $message, $code, $previous );
 	}
 }

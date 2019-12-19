@@ -25,10 +25,13 @@ class QueryTokenCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $token, $amount, array $metas = [], Wallet $remainderWallet = null)
+	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $token, $amount, array $metas = null, Wallet $remainderWallet = null)
 	{
+		// Default metas value
+		$metas = default_if_null($metas, []);
+
 		// Remainder wallet
-		$this->remainderWallet = $remainderWallet ?? new Wallet ( $secret );
+		$this->remainderWallet = default_if_null($remainderWallet, new Wallet ($secret) );
 
 
 

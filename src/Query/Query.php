@@ -36,7 +36,10 @@ abstract class Query
 	 * @param array $variables
 	 * @return mixed
 	 */
-	public function execute (array $variables = []) : Response {
+	public function execute (array $variables = null) : Response {
+
+		// Default value of variables
+		$variables = default_if_null($variables, []);
 
 		// Make a request
 		$response = $this->client->post( $this->url, [
