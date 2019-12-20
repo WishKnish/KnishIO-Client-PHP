@@ -104,33 +104,13 @@ class KnishIO
 		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
 
-        if ( ! CheckMolecule::index( $molecule ) ) {
-            return [
-                'status' => 'rejected',
-                'reason' => 'There is an atom without an index',
-            ];
+        $verify = CheckMolecule::verify( $molecule, $fromWallet );
+
+        if ( $verify !== null ) {
+
+            return $verify;
+
         }
-
-		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Incorrect "V" isotopes in a molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::molecularHash( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong hash for the molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::ots( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong OTS in the molecule',
-			];
-		}
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 		return \array_unpacking(
@@ -177,33 +157,13 @@ class KnishIO
 		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
 		$molecule->sign( $fromSecret );
 
-        if ( ! CheckMolecule::index( $molecule ) ) {
-            return [
-                'status' => 'rejected',
-                'reason' => 'There is an atom without an index',
-            ];
+        $verify = CheckMolecule::verify( $molecule, $fromWallet );
+
+        if ( $verify !== null ) {
+
+            return $verify;
+
         }
-
-		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Incorrect "V" isotopes in a molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::molecularHash( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong hash for the molecule',
-			];
-		}
-
-		if ( ! CheckMolecule::ots( $molecule ) ) {
-			return [
-				'status' => 'rejected',
-				'reason' => 'Wrong OTS in the molecule',
-			];
-		}
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
 		return \array_unpacking(

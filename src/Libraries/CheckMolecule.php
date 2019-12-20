@@ -7,6 +7,7 @@ use desktopd\SHA3\Sponge as SHA3;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\BaseException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
@@ -29,6 +30,60 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class CheckMolecule
 {
+
+    /**
+     * @param Molecule $molecule
+     * @param Wallet $fromWallet
+     * @return array|null
+     */
+    public static function verify ( Molecule $molecule, Wallet $fromWallet )
+    {
+
+        $verification_methods = [
+            'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
+            'ots' => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
+            'isotopeM' => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
+            'isotopeV' => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
+            'index' => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
+        ];
+
+        foreach ( $verification_methods as $method => $error ) {
+
+            try {
+
+                switch ( $method ) {
+
+                    case 'isotopeV': {
+
+                        CheckMolecule::{ $method }( $molecule , $fromWallet );
+
+                        break;
+
+                    }
+                    default: {
+
+                        CheckMolecule::{ $method }( $molecule );
+
+                    }
+
+                }
+
+            }
+            catch ( BaseException $exception ) {
+
+                return [
+                    'status' => 'rejected',
+                    'reason' => $error . $exception->getMessage(),
+                ];
+
+            }
+
+        }
+
+        return null;
+
+    }
+
 	/**
 	 * @param Molecule $molecule
 	 * @return bool
