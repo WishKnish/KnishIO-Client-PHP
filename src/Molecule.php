@@ -99,6 +99,7 @@ class Molecule
 			null,
 			null,
 			null,
+            null,
             $this->generateIndex()
 		);
 
@@ -373,6 +374,7 @@ class Molecule
 
 		}
 
+        $this->atoms = Atom::sortAtoms( $this->atoms );
 		$this->molecularHash = Atom::hashAtoms( $this->atoms );
 
 		// Determine first atom

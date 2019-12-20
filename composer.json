@@ -48,7 +48,10 @@
 	"autoload": {
 		"psr-4": {
 			"WishKnish\\KnishIO\\Client\\": "src/"
-		}
+		},
+		"files": [
+			"./src/Helpers/helpers.php"
+		]
 	},
 	"repositories": [
 		{

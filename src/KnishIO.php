@@ -61,16 +61,29 @@ class KnishIO
 		);
 
 		if ( isset( $response[ 'data' ] ) && isset( $response[ 'data' ][ 'Balance' ] ) ) {
+
 			$balance = $response[ 'data' ][ 'Balance' ];
 
 			if ( $balance[ 'tokenSlug' ] === $token ) {
+
 				$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
-				$wallet->address = $balance[ 'address' ];
-				$wallet->position = $balance[ 'position' ];
-				$wallet->balance = $balance[ 'amount' ];
-				$wallet->bundle = $balance[ 'bundleHash' ];
-				$wallet->batchId = $balance[ 'batch_id' ];
+                [
+                    $wallet->address,
+                    $wallet->position,
+                    $wallet->balance,
+                    $wallet->bundle,
+                    $wallet->batchId,
+                ] = \array_unpacking(
+                    $balance,
+                    'address',
+                    'position',
+                    'amount',
+                    'bundleHash',
+                    'batch_id'
+                );
+
 			}
+
 		}
 
 		return $wallet;
@@ -90,6 +103,13 @@ class KnishIO
         $fromWallet = new Wallet( $secret );
 		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
 		$molecule->sign( $secret );
+
+        if ( ! CheckMolecule::index( $molecule ) ) {
+            return [
+                'status' => 'rejected',
+                'reason' => 'There is an atom without an index',
+            ];
+        }
 
 		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
 			return [
@@ -113,13 +133,14 @@ class KnishIO
 		}
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_intersect_key(
+		return \array_unpacking(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',
 				'reason' => 'Invalid response from server',
 			],
-			\array_flip( [ 'reason', 'status', ] )
-		);
+            'reason',
+            'status'
+        );
 	}
 
 	/**
@@ -144,7 +165,7 @@ class KnishIO
 		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token );
 
 		// Remainder wallet
-		$remainderWallet = $remainderWallet ?? new Wallet( $fromSecret, $token );
+		$remainderWallet = $remainderWallet ?: new Wallet( $fromSecret, $token );
 
 		// If the wallet is not transferred in a variable and the user does not have a balance wallet,
 		// then create a new one for him
@@ -156,21 +177,28 @@ class KnishIO
 		$molecule->initValue( $fromWallet, $toWallet, $remainderWallet, $amount );
 		$molecule->sign( $fromSecret );
 
-		if ( ! Molecule::verifyIsotopeV( $molecule, $fromWallet ) ) {
+        if ( ! CheckMolecule::index( $molecule ) ) {
+            return [
+                'status' => 'rejected',
+                'reason' => 'There is an atom without an index',
+            ];
+        }
+
+		if ( ! CheckMolecule::isotopeV( $molecule, $fromWallet ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Incorrect "V" isotopes in a molecule',
 			];
 		}
 
-		if ( ! Molecule::verifyMolecularHash( $molecule ) ) {
+		if ( ! CheckMolecule::molecularHash( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong hash for the molecule',
 			];
 		}
 
-		if ( ! Molecule::verifyOts( $molecule ) ) {
+		if ( ! CheckMolecule::ots( $molecule ) ) {
 			return [
 				'status' => 'rejected',
 				'reason' => 'Wrong OTS in the molecule',
@@ -178,16 +206,14 @@ class KnishIO
 		}
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_intersect_key(
+		return \array_unpacking(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',
 				'reason' => 'Invalid response from server',
 			],
-			\array_flip( [
-				'reason',
-				'status',
-			] )
-		);
+			'reason',
+			'status',
+        );
 	}
 
 
