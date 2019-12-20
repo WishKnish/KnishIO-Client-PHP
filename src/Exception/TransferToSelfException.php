@@ -19,11 +19,8 @@ class TransferToSelfException extends BaseException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( string $message = null, int $code = null, \Throwable $previous = null )
+	public function __construct ( $message = 'Sender and recipient(s) cannot be the same', $code = 1, \Throwable $previous = null )
 	{
-		$message	= default_if_null ($message, 'Sender and recipient(s) cannot be the same');
-		$code		= default_if_null ($code, 1);
-
 		parent::__construct( $message, $code, $previous );
 	}
 }

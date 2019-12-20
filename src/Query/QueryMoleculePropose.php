@@ -33,7 +33,7 @@ abstract class QueryMoleculePropose extends Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse (string $response) {
+	public function createResponse ($response) {
 		return new ResponseMolecule($this, $response);
 	}
 
@@ -42,7 +42,7 @@ abstract class QueryMoleculePropose extends Query
 	 * @param array $variables
 	 * @return Response
 	 */
-	public function execute (array $variables = null) : Response {
+	public function execute (array $variables = null) {
 		return parent::execute (
 			array_merge(default_if_null($variables, []), ['molecule' => $this->molecule])
 		);

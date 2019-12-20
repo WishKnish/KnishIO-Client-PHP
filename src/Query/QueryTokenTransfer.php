@@ -27,7 +27,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule (string $fromSecret, Wallet $fromWallet, Wallet $toWallet, string $token, $amount, Wallet $remainderWallet = null)
+	public function initMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet (set a batch ID from the recipient wallet)
 		$this->remainderWallet = default_if_null ($remainderWallet, new Wallet( $fromSecret, $token ) );

@@ -23,9 +23,8 @@ class WalletShadow extends Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( string $bundleHash, string $token = null, string $batchId = null )
+	public function __construct ( $bundleHash, $token = 'USER', $batchId = null )
 	{
-		$this->token = default_if_null ($token, 'USER');
 		$this->balance = 0;
 		$this->molecules = [];
 		$this->bundle = $bundleHash;

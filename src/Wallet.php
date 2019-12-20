@@ -40,7 +40,7 @@ class Wallet
 	 * @param string $code
 	 * @return bool
 	 */
-	public static function isBundleHash (string $code) : bool {
+	public static function isBundleHash ($code) {
 		return (mb_strlen($code) === 64);
 	}
 
@@ -54,11 +54,8 @@ class Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( string $secret = null, string $token = null, string $position = null, int $saltLength = null )
+	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64 )
 	{
-		$token = default_if_null ($token, 'USER');
-		$saltLength = default_if_null($saltLength, 64);
-
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
 		$this->balance = 0;
@@ -229,7 +226,7 @@ class Wallet
 	 * @param $value
 	 * @return BigInteger
 	 */
-	public static function toBigInteger ($value) : BigInteger
+	public static function toBigInteger ($value)
 	{
 		return new BigInteger( $value, 16 );
 	}

@@ -2,7 +2,6 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-use PHPUnit\Framework\TestCase as StandartTestCase;
 use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
@@ -22,7 +21,7 @@ C:\xampp\php5.6.0\php.exe C:/xampp/htdocs/xampp/knishio-client-php/vendor/phpuni
  * Class TokenTransactionTest
  * @package WishKnish\KnishIO\Tests
  */
-class TokenClientTransactionTest extends StandartTestCase
+class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 {
 	private $client;
 
@@ -96,9 +95,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @param bool $hasBatchID
 	 * @throws \ReflectionException
 	 */
-	protected function checkWallet (string $bundle, string $token, $amount, bool $hasBatchID = null) {
-
-		$hasBatchID = default_if_null($hasBatchID, false);
+	protected function checkWallet ($bundle, $token, $amount, $hasBatchID = false) {
 
 		// Get a wallet
 		$wallet = $this->client->getBalance($bundle, $token)->payload();
@@ -122,7 +119,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	 * @param int $amount
 	 * @throws \ReflectionException
 	 */
-	protected function checkWalletShadow (string $bundle, string $token, $amount) {
+	protected function checkWalletShadow ($bundle, $token, $amount) {
 		$this->checkWallet ($bundle, $token, $amount, true);
 	}
 
@@ -135,7 +132,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	protected function beforeExecute () {
 
 		// Get an app url
-		$app_url = isset($_ENV['APP_URL']) ? $_ENV['APP_URL'] : null;
+		$app_url = env('APP_URL');
 
 		// Check app url
 		if (!$app_url) {
@@ -144,6 +141,25 @@ class TokenClientTransactionTest extends StandartTestCase
 
 		// Client initialization
 		$this->client = new KnishIOClient($app_url.'graphql');
+	}
+
+
+	/**
+	 * Override run test to get set an exception block
+	 * @return mixed|void
+	 * @throws \Throwable
+	 */
+	protected function runTest()
+	{
+		try {
+			parent::runTest();
+		}
+		catch (\Exception $e) {
+			print_r($e->getMessage());
+			print_r($e->getTrace()[0]);
+			print_r($e->getTrace()[1]);
+			die ();
+		}
 	}
 
 
@@ -157,7 +173,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		return;
 
 		// Root path
-		$root_path = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
+		$root_path = dirname((new \ReflectionClass(\PHPUnit_TextUI_Command::class))->getFileName()).
 			'/../../../../../';
 
 		// Class & filepath
@@ -168,7 +184,7 @@ class TokenClientTransactionTest extends StandartTestCase
 		if (file_exists($filepath) ) {
 
 			// Create & run a unit test command
-			$command = new \PHPUnit\TextUI\Command();
+			$command = new \PHPUnit_TextUI_Command();
 			//ob_start();
 			$response = $command->run([
 				'phpunit',
@@ -194,9 +210,7 @@ class TokenClientTransactionTest extends StandartTestCase
 	public function testCreateToken () {
 
 		// Initial code
-		$this->beforeExecute ();
-
-		return;
+		$this->beforeExecute();
 
 		// Full amount
 		$full_amount = 1000.0000000010 ;// + 1.0/(10*17);

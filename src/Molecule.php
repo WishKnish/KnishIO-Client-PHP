@@ -269,7 +269,7 @@ class Molecule
 	 * @param array $metas
 	 * @return $this
 	 */
-	public function initIdentifierCreation (Wallet $sourceWallet, Wallet $remainderWallet, string $type, array $metas) {
+	public function initIdentifierCreation (Wallet $sourceWallet, Wallet $remainderWallet, $type, array $metas) {
 		$this->molecularHash = null;
 
 		// Create an 'C' atom
@@ -354,11 +354,8 @@ class Molecule
 	 * @return string
 	 * @throws \Exception|\ReflectionException|AtomsMissingException
 	 */
-	public function sign ( $secret, bool $anonymous = null, bool $compressed = null )
+	public function sign ( $secret, $anonymous = false, $compressed = true )
 	{
-		$anonymous	= default_if_null($anonymous, false);
-		$compressed	= default_if_null($compressed, true);
-
 		if ( empty( $this->atoms ) ||
 			!empty( \array_filter( $this->atoms,
 				static function ( $atom ) {

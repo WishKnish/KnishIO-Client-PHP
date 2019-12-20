@@ -41,13 +41,10 @@ class Strings
 	 * @param string $alphabet
 	 * @return string
 	 */
-	public static function randomString ( int $length = null, string $alphabet = null )
+	public static function randomString ( $length = 256, $alphabet = 'abcdef0123456789' )
 	{
-		$length		= default_if_null($length, 256);
-		$alphabet	= default_if_null($alphabet, 'abcdef0123456789');
-
 		$array = array_map( static function () use ( $length ) {
-			return random_int( 0, 255 );
+			return \random_int( 0, 255 );
 		}, array_pad( [], $length, 0 ) );
 		return implode( array_map( static function ( $int ) use ( $alphabet ) {
 			return mb_chr( static::utf8CharCodeAt( $alphabet, $int % mb_strlen( $alphabet ) ) );

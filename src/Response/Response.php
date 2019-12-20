@@ -24,7 +24,7 @@ class Response
 	 * Response constructor.
 	 * @param string $json
 	 */
-	public function __construct(Query $query, string $json)
+	public function __construct(Query $query, $json)
 	{
 		// Set a query
 		$this->query = $query;
@@ -34,7 +34,7 @@ class Response
 
 		// No-json response - error
 		if ( $this->response === null ) {
-			dd ($this->origin_response);
+			print_r ($this->origin_response);
 			throw new InvalidResponseException();
 		}
 	}
@@ -45,7 +45,7 @@ class Response
 	 *
 	 * @return mixed
 	 */
-	public function data () : ?array {
+	public function data () {
 
 		// For the root class
 		if (!$this->dataKey) {
@@ -54,7 +54,8 @@ class Response
 
 		// Check key & return custom data from the response
 		if (!array_has($this->response, $this->dataKey) ) {
-			dd ($this);
+			$this->ddDebug();
+			//dd ($this);
 			throw new InvalidResponseException();
 		}
 		return array_get($this->response, $this->dataKey);
@@ -74,7 +75,7 @@ class Response
 	/**
 	 * @return Query
 	 */
-	public function query () : Query {
+	public function query () {
 		return $this->query;
 	}
 
@@ -83,10 +84,11 @@ class Response
 	 *
 	 */
 	public function ddDebug () {
-		dd ([
+		print_r ([
 			$this->response['errors'][0]['message'],
 			$this->response['errors'][0]['trace'][1],
 		]);
+		die ();
 	}
 
 }

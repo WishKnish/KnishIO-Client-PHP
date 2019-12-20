@@ -16,7 +16,7 @@ class Math {
 	 * @param float $val1
 	 * @param float $val2
 	 */
-	public static function cmpDec (float $val1, float $val2) : bool {
+	public static function cmpDec ($val1, $val2) {
 
 		// Min precision
 		$precision = 0.0000000001; // !!! @todo move precision to config !!!

@@ -24,7 +24,7 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 	 * @param array $metas
 	 * @throws \ReflectionException
 	 */
-	public function initMolecule (string $secret, Wallet $sourceWallet, string $type, array $metas, Wallet $remainderWallet = null)
+	public function initMolecule ($secret, Wallet $sourceWallet, $type, array $metas, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
 		$this->remainderWallet = default_if_null($remainderWallet, new Wallet ( $secret ) );

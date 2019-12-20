@@ -47,6 +47,9 @@ class Sodium
             }
 
         }
+        else {
+        	throw new \Exception('Sodium extension is required.');
+		}
 
     }
 

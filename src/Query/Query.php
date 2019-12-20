@@ -25,7 +25,7 @@ abstract class Query
 	 * @param Client $client
 	 * @param string $url
 	 */
-	public function __construct(Client $client, string $url = null)
+	public function __construct(Client $client, $url = null)
 	{
 		$this->url = $url;
 		$this->client = $client;
@@ -36,7 +36,7 @@ abstract class Query
 	 * @param array $variables
 	 * @return mixed
 	 */
-	public function execute (array $variables = null) : Response {
+	public function execute (array $variables = null) {
 
 		// Default value of variables
 		$variables = default_if_null($variables, []);
@@ -60,7 +60,7 @@ abstract class Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse (string $response) {
+	public function createResponse ($response) {
 		return new Response($this, $response);
 	}
 

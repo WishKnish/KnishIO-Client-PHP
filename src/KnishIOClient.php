@@ -41,7 +41,7 @@ class KnishIOClient
 	 * @param string $url
 	 * @param Client|null $client
 	 */
-	public function __construct (string $url, Client $client = null)
+	public function __construct ($url, Client $client = null)
 	{
 		$this->client = default_if_null($client, new Client( [
 			'base_uri'    => $url,
@@ -135,7 +135,7 @@ class KnishIOClient
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public function createIdentifier ($secret, string $type, string $content, string $code)
+	public function createIdentifier ($secret, $type, $content, $code)
 	{
 		// Create source & remainder wallets
 		$sourceWallet = new Wallet( $secret );
