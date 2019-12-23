@@ -39,7 +39,7 @@ abstract class Query
 	public function execute (array $variables = null) {
 
 		// Default value of variables
-		$variables = default_if_null($variables, []);
+		$variables = \default_if_null($variables, []);
 
 		// Make a request
 		$response = $this->client->post( $this->url, [

@@ -165,7 +165,7 @@ class Atom
      */
 	public static function sortAtoms ( array $atoms = null )
     {
-		$atoms = default_if_null($atoms, []);
+		$atoms = \default_if_null($atoms, []);
 
         $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 

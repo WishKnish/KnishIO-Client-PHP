@@ -30,7 +30,7 @@ class QueryWalletClaim extends QueryMoleculePropose
 	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $shadowWallet, $token, Wallet $recipientWallet = null)
 	{
 		// Create a recipient wallet to generate new position & address
-		$this->recipientWallet = default_if_null($recipientWallet, new Wallet( $secret, $token ));
+		$this->recipientWallet = \default_if_null($recipientWallet, new Wallet( $secret, $token ));
 
 
 

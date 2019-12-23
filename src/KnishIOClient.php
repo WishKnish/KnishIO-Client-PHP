@@ -43,7 +43,7 @@ class KnishIOClient
 	 */
 	public function __construct ($url, Client $client = null)
 	{
-		$this->client = default_if_null($client, new Client( [
+		$this->client = \default_if_null($client, new Client( [
 			'base_uri'    => $url,
 			'verify'      => false,
 			'http_errors' => false,
@@ -105,7 +105,7 @@ class KnishIOClient
 	 */
 	public function createToken ( $secret, $token, $amount, array $metas = null )
 	{
-		$metas = default_if_null($metas, []);
+		$metas = \default_if_null($metas, []);
 
 		$sourceWallet = new Wallet($secret);
 
@@ -163,10 +163,10 @@ class KnishIOClient
 	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
 
 		// Source wallet
-		$sourceWallet = default_if_null($sourceWallet, new Wallet( $secret ) );
+		$sourceWallet = \default_if_null($sourceWallet, new Wallet( $secret ) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = default_if_null($shadowWallet, static::getBalance($secret, $token)->payload() );
+		$shadowWallet = \default_if_null($shadowWallet, static::getBalance($secret, $token)->payload() );
 		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}

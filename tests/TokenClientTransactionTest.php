@@ -39,7 +39,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 * @return string
 	 */
 	protected function dataFilepath () {
-		return substr(strrchr(static::class, "\\"), 1).'.data';
+		return __DIR__.'/'.substr(strrchr(static::class, "\\"), 1).'.data';
 	}
 
 
@@ -49,7 +49,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 * @param array $data
 	 */
 	protected function saveData (array $data, $filepath = null) {
-		$filepath = default_if_null($filepath, $this->dataFilepath() );
+		$filepath = \default_if_null($filepath, $this->dataFilepath() );
 		file_put_contents($filepath, \json_encode($data));
 	}
 
@@ -58,7 +58,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 * @return mixed
 	 */
 	protected function getData ($filepath = null) {
-		$filepath = default_if_null($filepath, $this->dataFilepath() );
+		$filepath = \default_if_null($filepath, $this->dataFilepath() );
 		return json_decode(file_get_contents($filepath), true);
 	}
 
@@ -67,7 +67,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 * @return mixed
 	 */
 	protected function clearData ($filepath = null) {
-		$filepath = default_if_null($filepath, $this->dataFilepath() );
+		$filepath = \default_if_null($filepath, $this->dataFilepath() );
 		if (file_exists($filepath) ) {
 			unlink($filepath);
 		}
@@ -80,8 +80,8 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	protected function checkResponse (Response $response) {
 		$data = $response->data();
 		if ($data['status'] !== 'accepted') {
-			dump ($response->query());
-			dump ($response->data());
+			print_r ($response->query());
+			print_r ($response->data());
 		}
 		$this->assertEquals($data['status'], 'accepted');
 	}
@@ -386,9 +386,10 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		// Initial code
 		$this->beforeExecute ();
 
-		if (env('MAIL_DRIVER') !== 'log') {
+
+		/*if (env('MAIL_DRIVER') !== 'log') {
 			throw new \Exception('MAIL_DRIVER must be "log".');
-		}
+		}*/
 
 		// Data
 		$recipients	= array_get($this->getData(), 'secret.recipient');
@@ -455,7 +456,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	protected function getVerificationCode ($clear_log_file = true) {
 
 		// Root path
-		$log_file_pattern = dirname((new \ReflectionClass(\PHPUnit\TextUI\Command::class))->getFileName()).
+		$log_file_pattern = dirname((new \ReflectionClass(\PHPUnit_TextUI_Command::class))->getFileName()).
 			'/../../../../../storage/logs/*.log';
 		$log_files = glob($log_file_pattern);
 

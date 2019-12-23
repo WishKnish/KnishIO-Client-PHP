@@ -234,7 +234,7 @@ class Molecule
 	 */
 	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, array $tokenMeta = null)
 	{
-		$tokenMeta = default_if_null($tokenMeta, []);
+		$tokenMeta = \default_if_null($tokenMeta, []);
 
 		$this->molecularHash = null;
 
@@ -475,7 +475,7 @@ class Molecule
      */
 	public static function generateNextAtomIndex ( array $atoms = null )
     {
-		$atoms = default_if_null($atoms, []);
+		$atoms = \default_if_null($atoms, []);
 
         $atom = \end( $atoms );
 

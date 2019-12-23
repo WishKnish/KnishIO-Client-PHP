@@ -29,7 +29,7 @@ if ( ! \function_exists( 'env' ) ) {
 	 */
 	function env ( $key )
 	{
-		return isset($key) ? $key : null;
+		return isset($_ENV[$key]) ? $_ENV[$key] : null;
 	}
 
 }
@@ -42,9 +42,16 @@ if (! function_exists('array_has')) {
 	 * @param  string|array  $keys
 	 * @return bool
 	 */
-	function array_has($array, $key)
+	function array_has($array, $keys)
 	{
-		return isset($array[$key]);
+		$keys = explode ('.', $keys);
+		foreach ($keys as $key) {
+			if (!array_key_exists($key, $array) ) {
+				return false;
+			}
+			$array = $array[$key];
+		}
+		return true;
 	}
 }
 
@@ -57,8 +64,32 @@ if (! function_exists('array_get')) {
 	 * @param  mixed   $default
 	 * @return mixed
 	 */
-	function array_get($array, $key, $default = null)
+	function array_get($array, $keys, $default = null)
 	{
-		return array_has($array, $key) ? $array[$key] : $default;
+		$keys = explode ('.', $keys);
+		foreach ($keys as $key) {
+			if (!array_has($array, $key) ) {
+				return $default;
+			}
+			$array = $array[$key];
+		}
+		return $array;
+	}
+}
+
+
+if (! function_exists('dd')) {
+	/**
+	 * Get an item from an array using "dot" notation.
+	 *
+	 * @param  \ArrayAccess|array  $array
+	 * @param  string  $key
+	 * @param  mixed   $default
+	 * @return mixed
+	 */
+	function dd($output)
+	{
+		print_r($output);
+		die ();
 	}
 }

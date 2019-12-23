@@ -27,7 +27,7 @@ class Crypto
 	 */
 	public static function generateSecret ( $seed = null, $length = null )
 	{
-		$length = default_if_null($length, 2048);
+		$length = \default_if_null($length, 2048);
 
 		return \in_array( $seed, [ null, '' ], true ) ?
 			Strings::randomString( $length ) :

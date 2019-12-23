@@ -28,10 +28,10 @@ class QueryTokenCreate extends QueryMoleculePropose
 	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $token, $amount, array $metas = null, Wallet $remainderWallet = null)
 	{
 		// Default metas value
-		$metas = default_if_null($metas, []);
+		$metas = \default_if_null($metas, []);
 
 		// Remainder wallet
-		$this->remainderWallet = default_if_null($remainderWallet, new Wallet ($secret) );
+		$this->remainderWallet = \default_if_null($remainderWallet, new Wallet ($secret) );
 
 
 
