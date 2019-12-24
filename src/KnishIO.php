@@ -172,7 +172,7 @@ class KnishIO
 				'reason' => 'Invalid response from server',
 			],
 			'reason',
-			'status',
+			'status'
         );
 	}
 
