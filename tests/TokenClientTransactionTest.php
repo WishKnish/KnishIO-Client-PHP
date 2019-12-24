@@ -17,6 +17,8 @@ use WishKnish\KnishIO\Molecule;
 C:\xampp\php5.6.0\php.exe C:/xampp/htdocs/xampp/knishio-client-php/vendor/phpunit/phpunit/phpunit --configuration C:/xampp/htdocs/xampp/knishio-client-php/phpunit.xml WishKnish\KnishIO\Client\Tests\TokenClientTransactionTest C:/xampp/htdocs/xampp/knishio-client-php\tests\TokenClientTransactionTest.php
 */
 
+// !!! @todo: this unit test must to be separated from any server side (it should work as an independent part)
+
 /**
  * Class TokenTransactionTest
  * @package WishKnish\KnishIO\Tests
@@ -24,6 +26,7 @@ C:\xampp\php5.6.0\php.exe C:/xampp/htdocs/xampp/knishio-client-php/vendor/phpuni
 class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 {
 	private $client;
+	private $dotenv;
 
 
 	// Token slugs
@@ -131,8 +134,16 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 */
 	protected function beforeExecute () {
 
+		// Load env
+		$env_path = __DIR__.'/../';
+		$env_file = implode('.', array_filter(['.env', getenv('APP_ENV')]));
+		if (is_dir($env_path) ) {
+			$this->dotenv = \Dotenv\Dotenv::createImmutable($env_path, $env_file);
+			$this->dotenv->load();
+		}
+
 		// Get an app url
-		$app_url = env('APP_URL');
+		$app_url = getenv('APP_URL');
 
 		// Check app url
 		if (!$app_url) {
@@ -170,33 +181,47 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testClearAll () {
 
-		return;
+		// PHP version
+		echo ("PHP Version: ".PHP_VERSION."\r\n");
+		echo("\r\n");
 
-		// Root path
-		$root_path = dirname((new \ReflectionClass(\PHPUnit_TextUI_Command::class))->getFileName()).
-			'/../../../../../';
 
-		// Class & filepath
-		$class = \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class;
-		$filepath = (new \ReflectionClass($class))->getFileName();
+		// PHP version comparing
+		if (version_compare(PHP_VERSION, '7.0.0') <= 0) {
+			echo ("PHP version is less than 7.0.0. Skip \"testClearAll\" test.\r\n");
+			echo("  -- DB must be cleaned manually with all data related to ".implode('", "', $this->token_slug)." tokens.\r\n");
+			echo("  -- OR should call \WishKnish\KnishIO\Tests\TokenServerTransactionTest::testClearAll server unit test instead.\r\n");
+			echo("\r\n");
+			return;
+		}
 
-		// If a file is exists
-		if (file_exists($filepath) ) {
+		// Before execute
+		$this->beforeExecute();
+
+		// Server test filepath
+		$server_test_filepath = getenv('SERVER_TEST_PATH').'TokenServerTransactionTest.php';
+
+		// File does not exist
+		if (!$server_test_filepath || !file_exists($server_test_filepath) ) {
+			print_r("SERVER_TEST_FILE is not defined. Test do not clean up.\r\n");
+		}
+		else {
+
+			// Class & filepath
+			$class = \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class;
 
 			// Create & run a unit test command
-			$command = new \PHPUnit_TextUI_Command();
-			//ob_start();
+			$command = new \PHPUnit\TextUI\Command();
 			$response = $command->run([
 				'phpunit',
 				'--configuration',
-				$root_path.'\phpunit.xml',
+				__DIR__.'/../' .'\phpunit.xml',
 				'--filter',
 				'/(::testClearAll)( .*)?$/',
 				$class,
-				$filepath,
+				$server_test_filepath,
 				'--teamcity',
 			], false);
-			//$out = ob_get_contents(); ob_end_clean();
 		}
 		$this->assertEquals(true, true);
 	}
@@ -386,27 +411,17 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		// Initial code
 		$this->beforeExecute ();
 
-
-		/*if (env('MAIL_DRIVER') !== 'log') {
-			throw new \Exception('MAIL_DRIVER must be "log".');
-		}*/
+		// Check
+		if (!is_dir(getenv('SERVER_LOG_PATH')) ) {
+			throw new \Exception("
+				SERVER_LOG_PATH is required in .env file.\r\n
+				The path must be to the SERVER storage log and SERVER must have this env: MAIL_DRIVER=log
+			");
+		}
 
 		// Data
 		$recipients	= array_get($this->getData(), 'secret.recipient');
 		$token		= $this->token_slug['stackable'];
-
-
-
-		// --- Bind a shadow wallet with wrong USER wallet
-
-		// Get a shadow wallet of the recipient.0
-		//$shadowWallet = $this->client->getBalance($recipients[0], $token);
-
-		// Set a claim request with USER wallet recipient.1
-		// $response = $this->client->claimShadowWallet($recipients[1], $token, $shadowWallet);
-		// $this->checkResponse ($response);
-		// ---
-
 
 
 		// Bundle hash
@@ -430,6 +445,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		echo ("Bundle hash: $bundleHash \r\n");
 		echo ("Email: $email \r\n");
 		echo ("Verification code: $code \r\n");
+		echo ("\r\n");
 
 
 		// --- Bind a shadow wallet
@@ -438,13 +454,13 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		// ---
 
 
-		// --- Bind a shadow wallet
+		// --- Bind a shadow wallet (with wrong bundle hash)
 		$response = $this->client->claimShadowWallet($recipients[1], $token, new Wallet($recipients[1]));
 		$this->assertEquals($response->data()['status'], 'rejected');
 		$this->assertEquals($response->data()['reason'], 'ShadowWalletHandler::init(): ContinueID check failure.');
 		// ---
 
-		// --- Bind a shadow wallet
+		// --- Bind a shadow wallet (with original bundle hash)
 		$response = $this->client->claimShadowWallet($recipients[0], $token, $id_response->query()->remainderWallet());
 		$this->checkResponse ($response);
 		// ---
@@ -456,8 +472,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	protected function getVerificationCode ($clear_log_file = true) {
 
 		// Root path
-		$log_file_pattern = dirname((new \ReflectionClass(\PHPUnit_TextUI_Command::class))->getFileName()).
-			'/../../../../../storage/logs/*.log';
+		$log_file_pattern = getenv('SERVER_LOG_PATH').'/*.log';
 		$log_files = glob($log_file_pattern);
 
 		// Get last modified log file

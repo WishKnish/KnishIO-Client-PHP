@@ -19,7 +19,6 @@
     </filter>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="APP_URL" value="http://node.knishio/"/>
         <env name="CACHE_DRIVER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
     </php>

@@ -18,22 +18,6 @@ if ( ! \function_exists( 'default_if_null' ) ) {
 
 }
 
-
-if ( ! \function_exists( 'env' ) ) {
-
-	/**
-	 * Get a default value if the passed value is null
-	 * @param $value
-	 * @param $default
-	 * @return mixed
-	 */
-	function env ( $key )
-	{
-		return isset($_ENV[$key]) ? $_ENV[$key] : null;
-	}
-
-}
-
 if (! function_exists('array_has')) {
 	/**
 	 * Check if an item or items exist in an array using "dot" notation.

@@ -28,6 +28,7 @@ class WalletShadow extends Wallet
 		$this->balance = 0;
 		$this->molecules = [];
 		$this->bundle = $bundleHash;
+		$this->token = $token;
 		$this->batchId = $batchId;
 
 		// Empty values
