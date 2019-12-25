@@ -30,6 +30,7 @@ class Wallet
 {
 
 	/**
+	 * @todo move length value to config
 	 * @return string
 	 */
 	public static function generateBatchId () {
@@ -56,7 +57,7 @@ class Wallet
 	 */
 	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64 )
 	{
-		$this->position = $position ?: Strings::randomString( $saltLength );
+		$this->position = $position ?: $this->generatePosition();
 		$this->token = $token;
 		$this->balance = 0;
 		$this->molecules = [];
@@ -70,6 +71,17 @@ class Wallet
 			$this->pubkey = $this->getMyEncPublicKey();
 		}
 	}
+
+
+	/**
+	 * Generate position
+	 *
+	 * @param null $position
+	 */
+	public function generatePosition ($saltLength = 64) {
+		return Strings::randomString( $saltLength );
+	}
+
 
 	/**
 	 * @param string $key

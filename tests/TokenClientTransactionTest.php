@@ -2,7 +2,7 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-use Symfony\Component\VarDumper\Test\VarDumperTestTrait;
+use Dotenv\Dotenv;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\KnishIOClient;
@@ -13,17 +13,25 @@ use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
 
-/*
-C:\xampp\php5.6.0\php.exe C:/xampp/htdocs/xampp/knishio-client-php/vendor/phpunit/phpunit/phpunit --configuration C:/xampp/htdocs/xampp/knishio-client-php/phpunit.xml WishKnish\KnishIO\Client\Tests\TokenClientTransactionTest C:/xampp/htdocs/xampp/knishio-client-php\tests\TokenClientTransactionTest.php
-*/
 
-// !!! @todo: this unit test must to be separated from any server side (it should work as an independent part)
+
+// !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
+
+
+// Supporing variety versions of PHPUnit
+if (!class_exists('\PHPUnit_Framework_TestCase') ) {
+	abstract class TestCaseBase extends \PHPUnit\Framework\TestCase {}
+}
+else {
+	abstract class TestCaseBase extends \PHPUnit_Framework_TestCase {}
+}
+
 
 /**
  * Class TokenTransactionTest
  * @package WishKnish\KnishIO\Tests
  */
-class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
+class TokenClientTransactionTest extends TestCaseBase
 {
 	private $client;
 	private $dotenv;
@@ -138,7 +146,15 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		$env_path = __DIR__.'/../';
 		$env_file = implode('.', array_filter(['.env', getenv('APP_ENV')]));
 		if (is_dir($env_path) ) {
-			$this->dotenv = \Dotenv\Dotenv::createImmutable($env_path, $env_file);
+
+			// Switch between dotenv versions
+			if (method_exists('\Dotenv\Dotenv','createImmutable') ) {
+				$this->dotenv = \Dotenv\Dotenv::createImmutable($env_path, $env_file);
+			}
+			else {
+				$this->dotenv = \Dotenv\Dotenv::create($env_path, $env_file);
+			}
+
 			$this->dotenv->load();
 		}
 
@@ -156,25 +172,6 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 
 
 	/**
-	 * Override run test to get set an exception block
-	 * @return mixed|void
-	 * @throws \Throwable
-	 */
-	protected function runTest()
-	{
-		try {
-			parent::runTest();
-		}
-		catch (\Exception $e) {
-			print_r($e->getMessage());
-			print_r($e->getTrace()[0]);
-			print_r($e->getTrace()[1]);
-			die ();
-		}
-	}
-
-
-	/**
 	 * Clear data test
 	 *
 	 * @throws \ReflectionException
@@ -182,16 +179,15 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	public function testClearAll () {
 
 		// PHP version
-		echo ("PHP Version: ".PHP_VERSION."\r\n");
-		echo("\r\n");
-
+		$this->output (['PHP Version: '.PHP_VERSION]);
 
 		// PHP version comparing
 		if (version_compare(PHP_VERSION, '7.0.0') <= 0) {
-			echo ("PHP version is less than 7.0.0. Skip \"testClearAll\" test.\r\n");
-			echo("  -- DB must be cleaned manually with all data related to ".implode('", "', $this->token_slug)." tokens.\r\n");
-			echo("  -- OR should call \WishKnish\KnishIO\Tests\TokenServerTransactionTest::testClearAll server unit test instead.\r\n");
-			echo("\r\n");
+			$this->output ([
+				'PHP version is less than 7.0.0. Skip "testClearAll" test.',
+				'  -- DB must be cleaned manually with all data related to '.implode('", "', $this->token_slug).' tokens.',
+				'  -- OR should call \WishKnish\KnishIO\Tests\TokenServerTransactionTest::testClearAll server unit test instead.',
+			]);
 			return;
 		}
 
@@ -441,11 +437,12 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 
 		// Get a verification code
 		$code = $this->getVerificationCode();
-		echo ("Identifier creating... \r\n");
-		echo ("Bundle hash: $bundleHash \r\n");
-		echo ("Email: $email \r\n");
-		echo ("Verification code: $code \r\n");
-		echo ("\r\n");
+		$this->output ([
+			'Identifier creating...',
+			'Bundle hash: '. $bundleHash,
+			'Email: '. $email,
+			'Verification code: '. $code
+		]);
 
 
 		// --- Bind a shadow wallet
@@ -472,7 +469,7 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 	protected function getVerificationCode ($clear_log_file = true) {
 
 		// Root path
-		$log_file_pattern = getenv('SERVER_LOG_PATH').'/*.log';
+		$log_file_pattern = getenv('SERVER_LOG_PATH').'*.log';
 		$log_files = glob($log_file_pattern);
 
 		// Get last modified log file
@@ -495,6 +492,16 @@ class TokenClientTransactionTest extends \PHPUnit_Framework_TestCase
 		}
 
 		return $matches[1];
+	}
+
+
+	/**
+	 * Output
+	 *
+	 * @param array $info
+	 */
+	protected function output (array $info) {
+		echo implode("\r\n", $info)."\r\n\r\n";
 	}
 
 }

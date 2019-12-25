@@ -10,7 +10,8 @@ namespace WishKnish\KnishIO\Client\Libraries;
 class Math {
 
 	/**
-	 *!!! @todo experimental function: we need to determine the precision value (in order with DB decimal precision value) !!!
+	 * !!! @todo experimental function: we need to determine the precision value (in order with DB decimal precision value) !!!
+	 * !!! @todo related issue https://github.com/WishKnish/KnishIO-Client-PHP/issues/22
 	 * Cmp deciamal with precision
 	 *
 	 * @param float $val1

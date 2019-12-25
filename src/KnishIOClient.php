@@ -25,15 +25,9 @@ use WishKnish\KnishIO\Client\Response\Response;
  */
 class KnishIOClient
 {
-	// Continue ID tracking
-	private static $withContinueID = [];
-
 	// Client parameters
 	private $url = 'https://wishknish.com/graphql';
 	private $client;
-
-	// Source wallet
-	private $sourceWallet;
 
 
 	/**
@@ -53,14 +47,6 @@ class KnishIOClient
 			]
 		] ) );
 		$this->url = $url;
-	}
-
-
-	/**
-	 * @return Wallet
-	 */
-	public function sourceWallet () {
-		return $this->sourceWallet;
 	}
 
 
@@ -107,6 +93,7 @@ class KnishIOClient
 	{
 		$metas = \default_if_null($metas, []);
 
+		// Source wallet
 		$sourceWallet = new Wallet($secret);
 
 		// Recipient wallet

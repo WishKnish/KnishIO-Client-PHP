@@ -34,7 +34,6 @@ class Response
 
 		// No-json response - error
 		if ( $this->response === null ) {
-			//print_r ($this->origin_response);
 			throw new InvalidResponseException();
 		}
 	}
@@ -54,7 +53,6 @@ class Response
 
 		// Check key & return custom data from the response
 		if (!array_has($this->response, $this->dataKey) ) {
-			dd ([$this->response, $this->dataKey]); die ();
 			throw new InvalidResponseException();
 		}
 		return array_get($this->response, $this->dataKey);
@@ -76,17 +74,6 @@ class Response
 	 */
 	public function query () {
 		return $this->query;
-	}
-
-
-	/**
-	 *
-	 */
-	public function ddDebug () {
-		dd ([
-			$this->response['errors'][0]['message'],
-			$this->response['errors'][0]['trace'][1],
-		]);
 	}
 
 }
