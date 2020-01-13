@@ -56,4 +56,11 @@ abstract class QueryMoleculePropose extends Query
 		return $this->remainderWallet;
 	}
 
+	/**
+	 * @return mixed
+	 */
+	public function molecule () : Molecule {
+		return $this->molecule;
+	}
+
 }

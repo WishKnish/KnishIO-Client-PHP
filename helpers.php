@@ -28,12 +28,16 @@ if (! function_exists('array_has')) {
 	 */
 	function array_has($array, $keys)
 	{
-		$keys = explode ('.', $keys);
+		$keys = (array) $keys;
+
 		foreach ($keys as $key) {
-			if (!array_key_exists($key, $array) ) {
-				return false;
+			$_keys = explode('.', $key);
+			foreach ($_keys as $_key) {
+				if (!array_key_exists($_key, $array)) {
+					return false;
+				}
+				$array = $array[$_key];
 			}
-			$array = $array[$key];
 		}
 		return true;
 	}
