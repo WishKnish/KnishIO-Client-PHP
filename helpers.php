@@ -30,13 +30,15 @@ if (! function_exists('array_has')) {
 	{
 		$keys = (array) $keys;
 
+
 		foreach ($keys as $key) {
 			$_keys = explode('.', $key);
+			$_array = $array;
 			foreach ($_keys as $_key) {
-				if (!array_key_exists($_key, $array)) {
+				if (!array_key_exists($_key, $_array)) {
 					return false;
 				}
-				$array = $array[$_key];
+				$_array = $_array[$_key];
 			}
 		}
 		return true;
