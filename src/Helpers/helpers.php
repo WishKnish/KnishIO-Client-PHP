@@ -7,7 +7,7 @@ if ( ! \function_exists( 'array_unpacking' ) ) {
      * @param string|integer ...$args
      * @return array
      */
-    function array_unpacking ( array $arr, ...$args ): array
+    function array_unpacking ( array $arr, ...$args )
     {
 
         foreach ( $args as $value ) {

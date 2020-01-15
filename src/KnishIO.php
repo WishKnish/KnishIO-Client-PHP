@@ -99,6 +99,7 @@ class KnishIO
 	 */
 	public static function createToken ( $secret, $token, $amount, array $metas = [] )
 	{
+	    $result = new \ArrayObject( [ 'reason' => null, 'status' => null ], \ArrayObject::STD_PROP_LIST | \ArrayObject::ARRAY_AS_PROPS );
 		$molecule = new Molecule();
         $fromWallet = new Wallet( $secret );
 		$molecule->initTokenCreation( $fromWallet, new Wallet( $secret, $token ), $amount, $metas );
@@ -113,7 +114,7 @@ class KnishIO
         }
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_unpacking(
+        [ $result->reason, $result->status ] = \array_unpacking(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',
 				'reason' => 'Invalid response from server',
@@ -121,6 +122,8 @@ class KnishIO
             'reason',
             'status'
         );
+
+		return $result->getArrayCopy();
 	}
 
 	/**
@@ -133,6 +136,7 @@ class KnishIO
 	 */
 	public static function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{
+        $result = new \ArrayObject( [ 'reason' => null, 'status' => null ], \ArrayObject::STD_PROP_LIST | \ArrayObject::ARRAY_AS_PROPS );
 		$fromWallet = static::getBalance( $fromSecret, $token );
 		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
 			return [
@@ -166,7 +170,7 @@ class KnishIO
         }
 
 		$response = static::request( static::$query[ 'molecule' ], [ 'molecule' => $molecule, ] );
-		return \array_unpacking(
+        [ $result->reason, $result->status ] = \array_unpacking(
 			$response[ 'data' ][ 'ProposeMolecule' ] ?: [
 				'status' => 'rejected',
 				'reason' => 'Invalid response from server',
@@ -174,6 +178,8 @@ class KnishIO
 			'reason',
 			'status'
         );
+
+		return $result->getArrayCopy();
 	}
 
 
