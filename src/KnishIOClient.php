@@ -55,7 +55,7 @@ class KnishIOClient
 	 * @return mixed
 	 */
 	public function createQuery ($class) {
-		return new $class ($this->client);
+		return new $class ($this->client, $this->url);
 	}
 
 

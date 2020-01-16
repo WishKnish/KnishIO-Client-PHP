@@ -17,6 +17,7 @@ abstract class Query
 {
 	protected $client;
 	protected $url;
+	protected $variables;
 
 	protected static $query;
 
@@ -39,13 +40,13 @@ abstract class Query
 	public function execute (array $variables = null) {
 
 		// Default value of variables
-		$variables = \default_if_null($variables, []);
+		$this->variables = \default_if_null($variables, []);
 
 		// Make a request
 		$response = $this->client->post( $this->url, [
 			'json' => [
 				'query'     => static::$query,
-				'variables' => $variables,
+				'variables' => $this->variables,
 			]
 		] );
 
@@ -64,6 +65,21 @@ abstract class Query
 		return new Response($this, $response);
 	}
 
+
+	/**
+	 * @return string|null
+	 */
+	public function url () {
+		return $this->url;
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function variables () {
+		return $this->variables;
+	}
 
 
 }

@@ -28,8 +28,10 @@ if (! function_exists('array_has')) {
 	 */
 	function array_has($array, $keys)
 	{
+		if (!is_array($array) ) {
+			return false;
+		}
 		$keys = (array) $keys;
-
 
 		foreach ($keys as $key) {
 			$_keys = explode('.', $key);

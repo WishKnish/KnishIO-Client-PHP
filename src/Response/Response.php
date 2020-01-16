@@ -60,6 +60,14 @@ class Response
 
 
 	/**
+	 * @return mixed
+	 */
+	public function response () {
+		return $this->response;
+	}
+
+
+	/**
 	 * Get a payload
 	 *
 	 * @return

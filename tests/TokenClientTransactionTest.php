@@ -91,8 +91,7 @@ class TokenClientTransactionTest extends TestCaseBase
 	protected function checkResponse (Response $response) {
 		$data = $response->data();
 		if ($data['status'] !== 'accepted') {
-			print_r ($response->query());
-			print_r ($response->data());
+			$this->debug ($response);
 		}
 		$this->assertEquals($data['status'], 'accepted');
 	}
@@ -109,7 +108,10 @@ class TokenClientTransactionTest extends TestCaseBase
 	protected function checkWallet ($bundle, $token, $amount, $hasBatchID = false) {
 
 		// Get a wallet
-		$wallet = $this->client->getBalance($bundle, $token)->payload();
+		$response = $this->client->getBalance($bundle, $token);
+		if (!$wallet = $response->payload() ) {
+			$this->debug ($response, true);
+		}
 
 		// Assert wallet's balance
 		$this->assertEquals($wallet->balance, $amount);
@@ -169,6 +171,14 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Client initialization
 		$this->client = new KnishIOClient($app_url.'graphql');
 	}
+
+
+
+	public function testMetaAggregate () {
+
+		$this->assertEquals(true, true);
+	}
+
 
 
 	/**
@@ -502,6 +512,37 @@ class TokenClientTransactionTest extends TestCaseBase
 	 */
 	protected function output (array $info) {
 		echo implode("\r\n", $info)."\r\n\r\n";
+	}
+
+
+	/**
+	 * @param Response $response
+	 * @param bool $final
+	 */
+	protected function debug (Response $response, $final = false) {
+
+		// Debug output
+		$output = [
+			'query' => get_class($response->query()),
+			'url' => $response->query()->url(),
+		];
+
+		// Reason data on the top of the output
+		if (array_has($response->data(), 'reason') ) {
+			$output['reason'] = array_get($response->data(), 'reason');
+			$output['reasonPayload'] = array_get($response->data(), 'reasonPayload');
+		}
+
+		// Other debug info
+		$output = array_merge ($output, [
+			'variables' => $response->query()->variables(),
+			'response' => $response->response(),
+		]);
+
+		print_r($output);
+		if ($final) {
+			die ();
+		}
 	}
 
 }
