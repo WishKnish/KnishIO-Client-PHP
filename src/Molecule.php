@@ -304,6 +304,42 @@ class Molecule
 
 	}
 
+    /**
+     * @param string $secret
+     * @param string $token
+     * @param int|float $amount
+     * @param string $metaType
+     * @param string $metaId
+     * @param array $meta
+     * @return self
+     * @throws \Exception
+     */
+    public function initTokenTransfer ( $secret, $token, $amount, $metaType, $metaId, array $meta = [] )
+    {
+
+        $this->molecularHash = null;
+
+        $wallet = new Wallet( $secret, $token );
+
+        $this->atoms[] = new Atom(
+            $wallet->position,
+            $wallet->address,
+            'T',
+            $wallet->token,
+            $amount,
+            $wallet->batchId,
+            $metaType,
+            $metaId,
+            $meta,
+            null,
+            $this->generateIndex()
+        );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+    }
+
 	/**
 	 * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
 	 *
@@ -430,6 +466,7 @@ class Molecule
 			&& CheckMolecule::ots( $molecule )
 			&& CheckMolecule::index( $molecule )
 			&& CheckMolecule::isotopeM( $molecule )
+            && CheckMolecule::isotopeT( $molecule )
 			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 
 	}

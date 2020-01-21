@@ -20,6 +20,7 @@ use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
+use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -41,10 +42,11 @@ class CheckMolecule
 
         $verification_methods = [
             'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
-            'ots' => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
-            'isotopeM' => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
-            'isotopeV' => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
-            'index' => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
+            'ots'           => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
+            'isotopeM'      => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
+            'isotopeV'      => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
+            'isotopeT'      => 'Isotope T verification failed - ',
+            'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
         ];
 
         foreach ( $verification_methods as $method => $error ) {
@@ -107,6 +109,41 @@ class CheckMolecule
 		return true;
 
 	}
+
+    /**
+     * @param Molecule $molecule
+     * @return boolean
+     * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException
+     */
+    public static function isotopeT ( Molecule $molecule )
+    {
+
+        static::missing( $molecule );
+
+        foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
+
+            $meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
+            $metaType = \strtolower( ( string ) $atom->metaType );
+
+            if ( $metaType === 'wallet' ) {
+
+                foreach ( [ 'position', 'bundle'] as $key ) {
+
+                    if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
+
+                        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return true;
+
+    }
 
 	/**
 	 * @param Molecule $molecule
