@@ -7,6 +7,7 @@ use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Math;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -244,7 +245,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->beforeExecute();
 
 		// Full amount
-		$full_amount = 1000.0000000010 ;// + 1.0/(10*17);
+		$full_amount = 100000000000.0/(Math::$decMultiplier);
 
 		// Secret array
 		$secret = [
@@ -286,7 +287,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
-			'transaction'	=> 100.0000000001,
+			'transaction'	=> 10000000000.0/Math::$decMultiplier,
 		]]);
 	}
 
@@ -324,7 +325,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $this->client->transferToken($from_secret, $toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($toSecret[0], $token, $transaction_amount * 2);
+		$this->checkWallet($toSecret[0], $token, $transaction_amount * 2.0);
 
 
 
@@ -341,7 +342,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->checkWallet($toSecret[2], $token, $transaction_amount);
 
 		// --- Batch lastd transfer
-		$remainder_amount = $full_amount - $transaction_amount*4;
+		$remainder_amount = $full_amount - $transaction_amount*4.0;
 		$response = $this->client->transferToken($from_secret, $toSecret[2], $token, $remainder_amount);
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[2], $token, $remainder_amount + $transaction_amount);
@@ -385,7 +386,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0);
 
 
 
@@ -402,7 +403,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->checkWalletShadow($toBundle[2], $token, $transaction_amount);
 
 		// --- Batch last transfer
-		$remainder_amount = $full_amount - $transaction_amount * 4;
+		$remainder_amount = $full_amount - $transaction_amount * 4.0;
 		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount + $transaction_amount);

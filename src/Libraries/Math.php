@@ -9,6 +9,19 @@ namespace WishKnish\KnishIO\Client\Libraries;
  */
 class Math {
 
+	// !!! @todo experimental function: we need to determine the precision value (in order with DB decimal precision value) !!!
+	public static $decMultiplier = 10 ** 18;
+
+
+	/**
+	 * @param $value
+	 * @return float|int
+	 */
+	public static function decCompleteValue ($value) {
+		return $value*static::$decMultiplier;
+	}
+
+
 	/**
 	 * !!! @todo experimental function: we need to determine the precision value (in order with DB decimal precision value) !!!
 	 * !!! @todo related issue https://github.com/WishKnish/KnishIO-Client-PHP/issues/22
@@ -19,8 +32,10 @@ class Math {
 	 */
 	public static function cmpDec ($val1, $val2) {
 
+		return abs(static::decCompleteValue($val1) - static::decCompleteValue($val2)) < static::$decMultiplier;
+
 		// Min precision
-		$precision = 0.0000000001; // !!! @todo move precision to config !!!
+		$precision = 1/(1000000000000000000); // !!! @todo move precision to config !!!
 
 		// Check abs difference for values
 		return abs($val1 - $val2) < $precision;
