@@ -10,6 +10,7 @@ use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
  * Class Wallet
@@ -24,10 +25,51 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * @property string $bundle
  * @property string $privkey
  * @property string $pubkey
+ * @property string|null $batchId
+ * @property string|null $characters
  *
  */
 class Wallet
 {
+    /**
+     * @var string|null
+     */
+    public $batchId = null;
+
+    /**
+     * @var array
+     */
+    public $molecules = [];
+
+    /**
+     * @var int|float
+     */
+    public $balance = 0;
+
+    /**
+     * @var string|null
+     */
+    public $address = null;
+
+    /**
+     * @var string|null
+     */
+    public $bundle = null;
+
+    /**
+     * @var string|null
+     */
+    public $key = null;
+
+    /**
+     * @var string|null
+     */
+    public $pubkey = null;
+
+    /**
+     * @var string|null
+     */
+    private $privkey = null;
 
 	/**
 	 * @return string
@@ -46,20 +88,18 @@ class Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64 )
+	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64, $characters = null )
 	{
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
-		$this->balance = 0;
-		$this->molecules = [];
-		$this->batchId = null;
+        $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		if ( $secret ) {
 			$this->key = static::generateWalletKey( $secret, $token, $this->position );
 			$this->address = static::generateWalletAddress( $this->key );
 			$this->bundle = Crypto::generateBundleHash( $secret );
-			$this->privkey = $this->getMyEncPrivateKey();
-			$this->pubkey = $this->getMyEncPublicKey();
+			$this->getMyEncPrivateKey();
+			$this->getMyEncPublicKey();
 		}
 	}
 
@@ -102,69 +142,99 @@ class Wallet
 	/**
 	 * Derives a private key for encrypting data with this wallet's key
 	 *
-	 * @return string
+	 * @return string|null
 	 * @throws \Exception
 	 */
 	public function getMyEncPrivateKey ()
 	{
 
-		return Crypto::generateEncPrivateKey( $this->key );
+        if ( $this->privkey === null ) {
+
+            $this->privkey = Crypto::generateEncPrivateKey( $this->key, $this->characters );
+
+        }
+
+		return $this->privkey;
 
 	}
 
 	/**
 	 * Dervies a public key for encrypting data for this wallet's consumption
 	 *
-	 * @return string
+	 * @return string|null
 	 * @throws \Exception
 	 */
 	public function getMyEncPublicKey ()
 	{
 
-		return Crypto::generateEncPublicKey( $this->getMyEncPrivateKey() );
+	    if ( $this->pubkey === null ) {
+
+            $this->pubkey = Crypto::generateEncPublicKey( $this->getMyEncPrivateKey(), $this->characters );
+
+        }
+
+		return $this->pubkey;
 
 	}
 
 	/**
 	 * Creates a shared key by combining this wallet's private key and another wallet's public key
 	 *
-	 * @param $otherPublicKey
-	 * @return string
+	 * @param string $key
+	 * @return string|null
 	 * @throws \Exception
 	 */
-	public function getMyEncSharedKey ( $otherPublicKey )
+	public function getMyEncSharedKey ( $key )
 	{
 
-		return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $otherPublicKey );
+		return Crypto::generateEncSharedKey( $this->getMyEncPrivateKey(), $key, $this->characters );
 
 	}
+
+    /**
+     * @param array $message
+     * @param string|null $key
+     * @return string|null
+     * @throws \ReflectionException
+     */
+    public function encryptMyMessage ( array $message, $key = null )
+    {
+
+        return Crypto::encryptMessage(
+            $message,
+            ( $key === null ) ? $this->getMyEncPrivateKey() : $this->getMyEncSharedKey( $key ),
+            $this->characters
+        );
+
+    }
 
 	/**
 	 * Uses the current wallet's private key to decrypt the given message
 	 *
 	 * @param string $message
-     * @param string|null $otherPublicKey
+     * @param string|null $key
 	 * @return array|null
 	 * @throws \Exception
 	 */
-	public function decryptMyMessage ( $message, $otherPublicKey = null )
+	public function decryptMyMessage ( $message, $key = null )
 	{
 
-        if ( $otherPublicKey === null) {
+        if ( $key === null ) {
 
-            $target = Crypto::decryptMessage( $message, $this->getMyEncPublicKey() );
+            $target = Crypto::decryptMessage( $message, $this->getMyEncPublicKey(), $this->characters );
 
         }
         else {
 
             $target = Crypto::decryptMessage(
                 $message,
-                Crypto::generateEncPublicKey( $this->getMyEncSharedKey( $otherPublicKey ) )
+                Crypto::generateEncPublicKey( $this->getMyEncSharedKey( $key ), $this->characters ),
+                $this->characters
             );
 
             if ( $target === null ) {
 
-                $target = Crypto::decryptMessage( $message, $otherPublicKey );
+                $target = Crypto::decryptMessage( $message, $key, $this->characters );
 
             }
 
@@ -213,4 +283,3 @@ class Wallet
 	}
 
 }
-
