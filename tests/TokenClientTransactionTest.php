@@ -7,7 +7,7 @@ use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Libraries\Math;
+use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -245,7 +245,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->beforeExecute();
 
 		// Full amount
-		$full_amount = 100000000000.0/(Math::$decMultiplier);
+		$full_amount = 10.0/(Decimal::$multiplier);
 
 		// Secret array
 		$secret = [
@@ -287,7 +287,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
-			'transaction'	=> 10000000000.0/Math::$decMultiplier,
+			'transaction'	=> 1.0/Decimal::$multiplier,
 		]]);
 	}
 
@@ -341,7 +341,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->checkResponse($response);
 		$this->checkWallet($toSecret[2], $token, $transaction_amount);
 
-		// --- Batch lastd transfer
+		// --- Batch last transfer
 		$remainder_amount = $full_amount - $transaction_amount*4.0;
 		$response = $this->client->transferToken($from_secret, $toSecret[2], $token, $remainder_amount);
 		$this->checkResponse($response);

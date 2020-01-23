@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
@@ -103,7 +104,7 @@ class Molecule
 	public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
 	{
 
-		if ( $sourceWallet->balance - $value < 0 ) {
+		if ( Decimal::cmp($value, $sourceWallet->balance) > 0 ) {
 
 			throw new BalanceInsufficientException();
 

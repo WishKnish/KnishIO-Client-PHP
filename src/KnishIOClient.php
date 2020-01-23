@@ -11,6 +11,7 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
@@ -182,7 +183,7 @@ class KnishIOClient
 	{
 		// Get a from wallet
 		$fromWallet = static::getBalance( $fromSecret, $token )->payload();
-		if ( $fromWallet === null || $fromWallet->balance < $amount ) {
+		if ( $fromWallet === null || Decimal::cmp($fromWallet->balance, $amount) < 0) {
 			throw new TransferBalanceException('The transfer amount cannot be greater than the sender\'s balance');
 		}
 

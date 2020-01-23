@@ -127,7 +127,7 @@ class CheckMolecule
             if ( $index > 0 ) {
 
                 // Negative V atom in a non-primary position?
-                if ( $value < 0 ) {
+                if ( Decimal::cmp($value, 0.0) < 0 ) {
 
                     throw new TransferMalformedException();
 
@@ -148,7 +148,7 @@ class CheckMolecule
         }
 
         // Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-        if ( !Math::cmpDec($sum, $value) ) {
+        if ( !Decimal::equal($sum, $value) ) {
 
             throw new TransferUnbalancedException();
 
@@ -160,21 +160,21 @@ class CheckMolecule
             $remainder = $senderWallet->balance + $firstAtom->value;
 
             // Is there enough balance to send?
-            if ( $remainder < 0 ) {
+            if ( $remainder < 0.0 ) {
 
                 throw new TransferBalanceException();
 
             }
 
             // Does the remainder match what should be there in the source wallet, if provided?
-            if ( !Math::cmpDec($remainder, $sum) ) {
+            if ( !Decimal::equal($remainder, $sum) ) {
 
             	throw new TransferRemainderException();
 
             }
 
         } // No senderWallet, but have a remainder?
-        else if ( !Math::cmpDec($value, 0.0) ) {
+        else if ( !Decimal::equal($value, 0) ) {
 
             throw new TransferRemainderException();
 
