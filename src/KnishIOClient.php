@@ -154,7 +154,7 @@ class KnishIOClient
 		$sourceWallet = \default_if_null($sourceWallet, new Wallet( $secret ) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = \default_if_null($shadowWallet, static::getBalance($secret, $token)->payload() );
+		$shadowWallet = \default_if_null($shadowWallet, $this->getBalance($secret, $token)->payload() );
 		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}
@@ -182,13 +182,13 @@ class KnishIOClient
 	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Get a from wallet
-		$fromWallet = static::getBalance( $fromSecret, $token )->payload();
+		$fromWallet = $this->getBalance( $fromSecret, $token )->payload();
 		if ( $fromWallet === null || Decimal::cmp($fromWallet->balance, $amount) < 0) {
 			throw new TransferBalanceException('The transfer amount cannot be greater than the sender\'s balance');
 		}
 
 		// If this wallet is assigned, if not, try to get a valid wallet
-		$toWallet = $to instanceof Wallet ? $to : static::getBalance( $to, $token )->payload();
+		$toWallet = $to instanceof Wallet ? $to : $this->getBalance( $to, $token )->payload();
 		if ($toWallet === null) {
 
 			// If from wallet has a batchID => recipient is a shadow wallet

@@ -443,7 +443,7 @@ class TokenClientTransactionTest extends TestCaseBase
 			'content'	=> $email,
 		]);
 		if (!$response->success() ) {
-			dd ($response->message());
+			$this->debug ($response, true);
 		}
 
 		// Get a verification code
