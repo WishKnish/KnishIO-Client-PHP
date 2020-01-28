@@ -35,7 +35,7 @@ class Decimal {
 	 * @return float|int
 	 */
 	public static function val ($val) {
-		if ($val * static::$multiplier < 1) {
+		if (abs($val * static::$multiplier) < 1) {
 			return 0.0;
 		}
 		return $val;
@@ -49,7 +49,6 @@ class Decimal {
 	 * @param float $val2
 	 */
 	public static function cmp ($val1, $val2, $debug = false) {
-
 		$val1 = static::val($val1) * static::$multiplier;
 		$val2 = static::val($val2) * static::$multiplier;
 
