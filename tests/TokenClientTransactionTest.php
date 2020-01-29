@@ -245,7 +245,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->beforeExecute();
 
 		// Full amount
-		$full_amount = 10.0/(Decimal::$multiplier);
+		$full_amount = 10000.0 + 10.0/(Decimal::$multiplier);
 
 		// Secret array
 		$secret = [
@@ -287,7 +287,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
-			'transaction'	=> 1.0/Decimal::$multiplier,
+			'transaction'	=> 1000.0 + 1.0/Decimal::$multiplier,
 		]]);
 	}
 
