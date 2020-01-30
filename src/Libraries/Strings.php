@@ -4,14 +4,13 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\libraries;
+namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
-use LZCompressor\LZString;
 
 /**
  * Class Str
- * @package WishKnish\KnishIO\Client\libraries
+ * @package WishKnish\KnishIO\Client\Libraries
  */
 class Strings
 {
@@ -135,9 +134,9 @@ class Strings
 	 * @param string $str
 	 * @return string
 	 */
-	public static function compress ( $str )
+	public static function hexToBase64 ( $str )
 	{
-		return LZString::compressToBase64( $str );
+		return \base64_encode( \hex2bin( $str ) );
 	}
 
 	/**
@@ -146,9 +145,9 @@ class Strings
 	 * @param string $str
 	 * @return string
 	 */
-	public static function decompress ( $str )
+	public static function base64ToHex ( $str )
 	{
-		return LZString::decompressFromBase64( $str );
+		return \bin2hex( \base64_decode( $str ) );
 	}
 
 }

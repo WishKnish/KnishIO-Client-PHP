@@ -8,7 +8,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
-use WishKnish\KnishIO\Client\libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
 /**
@@ -23,6 +23,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
+ * @property integer|null $index
  * @property string|null $otsFragment
  * @property integer $createdAt
  *
@@ -36,9 +37,11 @@ class Atom
 	public $isotope;
 	public $token;
 	public $value;
+	public $batchId;
 	public $metaType;
 	public $metaId;
 	public $meta;
+	public $index;
 	public $otsFragment;
 	public $createdAt;
 
@@ -54,19 +57,22 @@ class Atom
 	 * @param null|string $metaId
 	 * @param array $meta
 	 * @param null|string $otsFragment
+     * @param null|integer $index
 	 */
-	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null )
+	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $batchId = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null)
 	{
 		$this->position = $position;
 		$this->walletAddress = $walletAddress;
 		$this->isotope = $isotope;
 		$this->token = $token;
 		$this->value = null !== $value ? ( string ) $value : null;
+		$this->batchId = $batchId;
 
 		$this->metaType = $metaType;
 		$this->metaId = $metaId;
 		$this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
 
+		$this->index = $index;
 		$this->otsFragment = $otsFragment;
 		$this->createdAt = Strings::currentTimeMillis();
 	}
@@ -79,23 +85,25 @@ class Atom
 	 */
 	public static function hashAtoms ( array $atoms, $output = 'base17' )
 	{
-		$atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
-
-		ksort( $atoms, SORT_NUMERIC );
-
+		$atomList = static::sortAtoms( $atoms );
 		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
-		$numberOfAtoms = count( $atomList );
+		$numberOfAtoms = \count( $atomList );
 
 		foreach ( $atomList as $atom ) {
 			$molecularSponge->absorb( $numberOfAtoms );
 
 			foreach ( ( new \ReflectionClass( $atom ) )->getProperties() as $property ) {
 
-				if ( $property->class === self::class && $property->isPublic() && !$property->isStatic() ) {
+				if ( $property->class === self::class && $property->isPublic() && ! $property->isStatic() ) {
 					$value = $property->getValue( $atom );
 					$name = $property->getName();
 
-					if ( $name === 'otsFragment' ) {
+					// Old atoms support (without batch_id field)
+					if ( $name === 'batchId' && $value === null ) {
+						 continue;
+					}
+
+					if ( \in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
 						continue;
 					}
 
@@ -103,8 +111,14 @@ class Atom
 						$list = Meta::normalizeMeta( $value );
 
 						foreach ( $list as $meta ) {
-							$molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-							$molecularSponge->absorb( ( string ) ( $meta[ 'value' ] ?: 'null' ) );
+
+                            if ( isset( $meta[ 'value' ] ) && $meta[ 'value' ] !== null ) {
+
+                                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+                                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
+                            }
+
 						}
 
 						$property->setValue( $atom, $list );
@@ -112,7 +126,7 @@ class Atom
 						continue;
 					}
 
-					if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+					if ( \in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
 
 						$molecularSponge->absorb( ( string ) $value );
 						continue;
@@ -129,17 +143,17 @@ class Atom
 		switch ( $output ) {
 			case 'hex':
 			{
-				$target = bin2hex( $molecularSponge->squeeze( 32 ) );
+				$target = \bin2hex( $molecularSponge->squeeze( 32 ) );
 				break;
 			}
 			case 'array':
 			{
-				$target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
+				$target = \str_split( \bin2hex( $molecularSponge->squeeze( 32 ) ) );
 				break;
 			}
 			case 'base17':
 			{
-				$target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+				$target = \str_pad( Strings::charsetBaseConvert( \bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
 				break;
 			}
 			default:
@@ -150,4 +164,26 @@ class Atom
 
 		return $target;
 	}
+
+    /**
+     * @param array $atoms
+     * @return array
+     */
+	public static function sortAtoms ( array $atoms = [] )
+    {
+        $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
+
+        \usort($atomList, static function ( self $first, self $second ) {
+
+            if ( $first->index === $second->index ) {
+                return 0;
+            }
+
+            return $first->index < $second->index ? -1 : 1;
+
+        });
+
+        return $atomList;
+    }
+
 }

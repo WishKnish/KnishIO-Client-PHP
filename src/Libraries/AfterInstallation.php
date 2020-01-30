@@ -1,10 +1,10 @@
 <?php
 
-namespace WishKnish\KnishIO\Client\libraries;
+namespace WishKnish\KnishIO\Client\Libraries;
 
 /**
  * Class AfterInstallation
- * @package WishKnish\KnishIO\Client\libraries
+ * @package WishKnish\KnishIO\Client\Libraries
  */
 class AfterInstallation
 {
