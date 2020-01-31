@@ -225,6 +225,58 @@ class Molecule
 
 
 	/**
+	 * 'T' isotope: receive tokens from the server side
+	 *
+	 * @param Wallet $sourceWallet
+	 * @param Wallet $recipientWallet
+	 * @param Wallet $remainderWallet
+	 * @param $value
+	 * @param array $meta
+	 * @return $this
+	 */
+	public function initTokenReceive ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value, array $metas = null)
+	{
+		$metas = \default_if_null($metas, []);
+
+		$this->molecularHash = null;
+
+		// Meta type & ID
+		$metaType = 'wallet';
+		$metaId = $recipientWallet->address;
+
+		// For the shadow wallet use bundle
+		if ($recipientWallet instanceof WalletShadow) {
+			$metaType = 'walletBundle';
+			$metaId = $recipientWallet->bundle;
+		}
+
+		// Initializing a new Atom to add tokens to recipient
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'T',
+			$recipientWallet->token,
+			$value,
+			$recipientWallet->batchId,
+			$metaType,
+			$metaId,
+			$metas,
+			null,
+			$this->generateIndex()
+		);
+
+
+		// User remainder atom
+		$this->addUserRemainderAtom ($remainderWallet);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+
+	}
+
+
+	/**
 	 * Shadow wallet bindind
 	 *
 	 * @param Wallet $sourceWallet

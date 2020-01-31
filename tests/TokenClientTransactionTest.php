@@ -257,6 +257,12 @@ class TokenClientTransactionTest extends TestCaseBase
 				Crypto::generateSecret(),
 				Crypto::generateSecret(),
 			],
+			'receivers' => [
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
+				Crypto::generateSecret(),
+			],
 		];
 
 		// --- Create a non-stackable token
@@ -289,6 +295,36 @@ class TokenClientTransactionTest extends TestCaseBase
 			'full'			=> $full_amount,
 			'transaction'	=> 1000.0 + 1.0/Decimal::$multiplier,
 		]]);
+	}
+
+
+	/**
+	 * @throws \ReflectionException
+	 */
+	public function testReceiveToken () {
+
+		// Initial code
+		$this->beforeExecute ();
+
+		// Data
+		$data = $this->getData();
+		$token = $this->token_slug['fungible'];
+		$transaction_amount = array_get($data, 'amount.transaction');
+		$full_amount = array_get($data, 'amount.full');
+
+		// Secrets initialization
+		$secret = array_get($this->getData(), 'secret');
+
+		// Get to bundle hashes from the recipient secret
+		$toBundle = [];
+		foreach (array_get($data, 'secret.receivers') as $recipient_secret) {
+			$toBundle[] = Crypto::generateBundleHash($recipient_secret);
+		}
+
+		// --- Batch transfer (splitting)
+		$response = $this->client->receiveToken($secret['fungible'], $token, $transaction_amount, $toBundle[0]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 1.0);
 	}
 
 

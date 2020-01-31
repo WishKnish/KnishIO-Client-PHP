@@ -16,6 +16,7 @@ use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
+use WishKnish\KnishIO\Client\Query\QueryTokenReceive;
 use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -108,7 +109,46 @@ class KnishIOClient
 		$query = $this->createQuery(QueryTokenCreate::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $token, $amount, $metas );
+		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
+
+		// Return a query execution result
+		return $query->execute ();
+	}
+
+
+
+	/**
+	 * @param $secret
+	 * @param $token
+	 * @param $amount
+	 * @param array $metas
+	 * @return Response
+	 * @throws \ReflectionException
+	 */
+	public function receiveToken ( $secret, $token, $value, $foreignBundle = null, array $metas = null )
+	{
+		$metas = \default_if_null($metas, []);
+
+		// Source wallet
+		$sourceWallet = new Wallet($secret);
+
+
+		// Shadow wallet for foreign user
+		if ($foreignBundle) {
+			$recipientWallet = new WalletShadow( $foreignBundle, $token );
+		}
+
+		// Wallet for current user
+		else {
+			$recipientWallet = new Wallet( $secret, $token );
+		}
+
+
+		// Create a query
+		$query = $this->createQuery(QueryTokenReceive::class);
+
+		// Init a molecule
+		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $value, $metas );
 
 		// Return a query execution result
 		return $query->execute ();
