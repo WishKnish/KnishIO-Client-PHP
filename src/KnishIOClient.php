@@ -129,6 +129,9 @@ class KnishIOClient
 	{
 		$metas = \default_if_null($metas, []);
 
+		// Set token to metas
+		$metas['token'] = $token;
+
 		// Source wallet
 		$sourceWallet = new Wallet($secret);
 

@@ -42,6 +42,8 @@ class TokenClientTransactionTest extends TestCaseBase
 	protected $token_slug = [
 		'fungible'	=> 'UTFUNGIBLE',
 		'stackable'	=> 'UTSTACKABLE',
+		'env.fungible' => 'UTENVFUNGIBLE',
+		'env.stackable' => 'UTENVSTACKABLE',
 	];
 
 
@@ -133,8 +135,8 @@ class TokenClientTransactionTest extends TestCaseBase
 	 * @param int $amount
 	 * @throws \ReflectionException
 	 */
-	protected function checkWalletShadow ($bundle, $token, $amount) {
-		$this->checkWallet ($bundle, $token, $amount, true);
+	protected function checkWalletShadow ($bundle, $token, $amount, $hasBatchId) {
+		$this->checkWallet ($bundle, $token, $amount, $hasBatchId);
 	}
 
 
@@ -235,9 +237,7 @@ class TokenClientTransactionTest extends TestCaseBase
 
 
 	/**
-	 * Test create token
-	 *
-	 * @throws \ReflectionException
+	 * @throws \Exception
 	 */
 	public function testCreateToken () {
 
@@ -247,10 +247,16 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Full amount
 		$full_amount = 10000.0 + 10.0/(Decimal::$multiplier);
 
+		$env_secret = env('SECRET_TOKEN_KNISH');
+		if (!$env_secret) {
+			throw new \Exception('env.SECRET_TOKEN_KNISH is not set.');
+		}
+
 		// Secret array
 		$secret = [
 			'fungible'	=> Crypto::generateSecret(),
 			'stackable'	=> Crypto::generateSecret(),
+			'env' => $env_secret,
 			'recipient'	=> [
 				Crypto::generateSecret(),
 				Crypto::generateSecret(),
@@ -290,6 +296,34 @@ class TokenClientTransactionTest extends TestCaseBase
 		$response = $this->client->createToken($secret['stackable'], $this->token_slug['stackable'], $full_amount, $tokenMeta);
 		$this->checkResponse($response);
 
+
+
+		// --- Create a ENV non-stackable & stackable tokens
+		// ... non-stackable
+		$tokenMeta = [
+			'name'			=> $this->token_slug['env.fungible'],
+			'fungibility'	=> 'fungible',
+			'splittable'	=> 0,
+			'supply'		=> 'limited',
+			'decimals'		=> 0,
+			'icon'			=> 'icon',
+		];
+		$response = $this->client->createToken($secret['env'], $this->token_slug['env.fungible'], $full_amount, $tokenMeta);
+		$this->checkResponse($response);
+		// ... stackable token
+		$tokenMeta = [
+			'name'			=> $this->token_slug['env.stackable'],
+			'fungibility'	=> 'stackable',
+			'splittable'	=> 1,
+			'supply'		=> 'limited',
+			'decimals'		=> 0,
+			'icon'			=> 'icon',
+		];
+		$response = $this->client->createToken($secret['env'], $this->token_slug['env.stackable'], $full_amount, $tokenMeta);
+		$this->checkResponse($response);
+
+
+
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
@@ -308,23 +342,66 @@ class TokenClientTransactionTest extends TestCaseBase
 
 		// Data
 		$data = $this->getData();
-		$token = $this->token_slug['fungible'];
 		$transaction_amount = array_get($data, 'amount.transaction');
 		$full_amount = array_get($data, 'amount.full');
 
 		// Secrets initialization
 		$secret = array_get($this->getData(), 'secret');
 
+		// Receivers
+		$receivers = array_get($data, 'secret.receivers');
+
 		// Get to bundle hashes from the recipient secret
 		$toBundle = [];
-		foreach (array_get($data, 'secret.receivers') as $recipient_secret) {
-			$toBundle[] = Crypto::generateBundleHash($recipient_secret);
+		foreach ($receivers as $receiver_secret) {
+			$toBundle[] = Crypto::generateBundleHash($receiver_secret);
 		}
 
-		// --- Batch transfer (splitting)
-		$response = $this->client->receiveToken($secret['fungible'], $token, $transaction_amount, $toBundle[0]);
+
+
+		// ------------ FUNGIBLE ----------------
+
+		// Set token as FUNGIBLE
+		$token = $this->token_slug['env.fungible'];
+
+		// --- RECEIVER.0
+
+		// --- Base receive (NOT-splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 1.0);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 1.0, false);
+
+		// --- Base receive (NOT-splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[0]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0, false);
+
+		// --- RECEIVER.1
+
+		// --- Base receive (NOT-splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[1]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[1], $token, $transaction_amount * 1.0, false);
+
+		// Claim shadow wallet
+		$this->claimShadowWallet ($token, $receivers[0], [$receivers[1]]);
+
+
+
+		// ------------ STACKABLE ----------------
+
+		// Set token as STACKABLE
+		$token = $this->token_slug['env.stackable'];
+
+		// --- Batch receive (splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[0]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 1.0, true);
+
+		// --- Batch receive (splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[0]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0, true);
 	}
 
 
@@ -417,32 +494,32 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Batch transfer (splitting)
 		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount, true);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0, true);
 
 
 
 		// --- Batch transfer to other recipient
 		$response = $this->client->transferToken($from_secret, $toBundle[1], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[1], $token, $transaction_amount);
+		$this->checkWalletShadow($toBundle[1], $token, $transaction_amount, true);
 
 
 
 		// --- Batch 1-st transfer
 		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[2], $token, $transaction_amount);
+		$this->checkWalletShadow($toBundle[2], $token, $transaction_amount, true);
 
 		// --- Batch last transfer
 		$remainder_amount = $full_amount - $transaction_amount * 4.0;
 		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount + $transaction_amount);
+		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount + $transaction_amount, true);
 	}
 
 
@@ -454,6 +531,23 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Initial code
 		$this->beforeExecute ();
 
+		// Data
+		$recipients	= array_get($this->getData(), 'secret.recipient');
+		$token		= $this->token_slug['stackable'];
+
+		// Claim shadow wallet
+		$this->claimShadowWallet ($token, $recipients[0], [$recipients[1]]);
+	}
+
+
+	/**
+	 * Claim shadow wallet
+	 *
+	 * @param array $recipients: 0-indexed recipient is original recipient (right), > 0-indexed recipient is wrong
+	 * @throws \Exception
+	 */
+	protected function claimShadowWallet ($token, $recipient, array $intruders = [])
+	{
 		// Check
 		if (!is_dir(getenv('SERVER_LOG_PATH')) ) {
 			throw new \Exception("
@@ -462,13 +556,8 @@ class TokenClientTransactionTest extends TestCaseBase
 			");
 		}
 
-		// Data
-		$recipients	= array_get($this->getData(), 'secret.recipient');
-		$token		= $this->token_slug['stackable'];
-
-
 		// Bundle hash
-		$bundleHash = Crypto::generateBundleHash($recipients[0]);
+		$bundleHash = Crypto::generateBundleHash($recipient);
 		$email = Strings::randomString(10).'@test.test';
 
 		// Query
@@ -493,23 +582,26 @@ class TokenClientTransactionTest extends TestCaseBase
 
 
 		// --- Bind a shadow wallet
-		$id_response = $this->client->createIdentifier($recipients[0], 'email', $email, $code);
+		$id_response = $this->client->createIdentifier($recipient, 'email', $email, $code);
 		$this->checkResponse ($id_response);
 		// ---
 
+		// Add recipent to intruders array to check than old recipient wallet is not acceptable
+		$intruders[] = $recipient;
 
 		// --- Bind a shadow wallet (with wrong bundle hash)
-		$response = $this->client->claimShadowWallet($recipients[1], $token, new Wallet($recipients[1]));
-		$this->assertEquals($response->data()['status'], 'rejected');
-		$this->assertNotEquals(strpos($response->data()['reason'], 'ContinueID check failure'), false);
-		// ---
+		foreach ($intruders as $intruder) {
+			$response = $this->client->claimShadowWallet($intruder, $token, new Wallet($intruder));
+			$this->assertEquals($response->data()['status'], 'rejected');
+			$this->assertNotEquals(strpos($response->data()['reason'], 'ContinueID check failure'), false);
+		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
-		$response = $this->client->claimShadowWallet($recipients[0], $token, $id_response->query()->remainderWallet());
+		$response = $this->client->claimShadowWallet($recipient, $token, $id_response->query()->remainderWallet());
 		$this->checkResponse ($response);
 		// ---
-	}
 
+	}
 
 
 	// @todo test function, thinking about real implemenation

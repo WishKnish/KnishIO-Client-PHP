@@ -234,10 +234,8 @@ class Molecule
 	 * @param array $meta
 	 * @return $this
 	 */
-	public function initTokenReceive ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value, array $metas = null)
+	public function initTokenReceive ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value, array $metas)
 	{
-		$metas = \default_if_null($metas, []);
-
 		$this->molecularHash = null;
 
 		// Meta type & ID
@@ -255,7 +253,7 @@ class Molecule
 			$sourceWallet->position,
 			$sourceWallet->address,
 			'T',
-			$recipientWallet->token,
+			$sourceWallet->token,
 			$value,
 			$recipientWallet->batchId,
 			$metaType,
