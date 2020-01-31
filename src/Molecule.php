@@ -234,7 +234,7 @@ class Molecule
 	 * @param array $meta
 	 * @return $this
 	 */
-	public function initTokenReceive ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value, array $metas)
+	public function initTokenReceive ( Wallet $sourceWallet, Wallet $recipientWallet, $value, array $metas)
 	{
 		$this->molecularHash = null;
 
@@ -262,10 +262,6 @@ class Molecule
 			null,
 			$this->generateIndex()
 		);
-
-
-		// User remainder atom
-		$this->addUserRemainderAtom ($remainderWallet);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
