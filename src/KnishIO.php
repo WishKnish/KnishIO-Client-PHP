@@ -73,13 +73,17 @@ class KnishIO
                     $wallet->balance,
                     $wallet->bundle,
                     $wallet->batchId,
+                    $wallet->pubkey,
+                    $wallet->characters,
                 ] = \array_unpacking(
-                    $balance,
+                    (array) $balance,
                     'address',
                     'position',
                     'amount',
                     'bundleHash',
-                    'batch_id'
+                    'batch_id',
+                    'pubkey',
+                    'characters'
                 );
 
 			}
@@ -191,7 +195,7 @@ class KnishIO
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	public static function splitToken ($fromSecret, $toBundle, $token, $amount ) {
+	public static function splitToken ( $fromSecret, $toBundle, $token, $amount ) {
 
 		// Get a from wallet from the DB
 		$fromWallet = static::getBalance( $fromSecret, $token );

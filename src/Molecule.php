@@ -99,6 +99,8 @@ class Molecule
 			null,
 			null,
 			null,
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -114,6 +116,8 @@ class Molecule
 			'walletBundle',
 			$recipientWallet->bundle,
 			null,
+            $recipientWallet->pubkey,
+            $recipientWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -129,6 +133,8 @@ class Molecule
 			'walletBundle',
 			$sourceWallet->bundle,
 			null,
+            $remainderWallet->pubkey,
+            $remainderWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -165,7 +171,11 @@ class Molecule
 				'position' => $newWallet->position,
 				'amount'   => '0',
 				'batch_id' => $newWallet->batchId,
+                'pubkey'   => $newWallet->pubkey,
+                'characters' => $newWallet->characters,
 			],
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -203,6 +213,8 @@ class Molecule
 				'code' => $code,
 				'hash' => Crypto::generateBundleHash( \trim( $source ) ),
 			],
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -227,7 +239,7 @@ class Molecule
 
 		$this->molecularHash = null;
 
-		foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
+		foreach ( [ 'walletAddress', 'walletPosition', 'walletPubkey', 'walletCharacters' ] as $walletKey ) {
 
 			$has = \array_filter( $tokenMeta,
 				static function ( $token ) use ( $walletKey ) {
@@ -259,6 +271,8 @@ class Molecule
 			'token',
 			$recipientWallet->token,
 			$tokenMeta,
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -294,6 +308,8 @@ class Molecule
 			$metaType,
 			$metaId,
 			$meta,
+            $wallet->pubkey,
+            $wallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -319,7 +335,7 @@ class Molecule
 
         $this->molecularHash = null;
 
-        $wallet = new Wallet( $secret, $token );
+        $wallet = new Wallet( $secret, 'USER' );
 
         $this->atoms[] = new Atom(
             $wallet->position,
@@ -330,7 +346,9 @@ class Molecule
             $wallet->batchId,
             $metaType,
             $metaId,
-            $meta,
+            \array_merge( $meta, [ 'token' => $token ] ),
+            $wallet->pubkey,
+            $wallet->characters,
             null,
             $this->generateIndex()
         );
@@ -466,6 +484,7 @@ class Molecule
 			&& CheckMolecule::ots( $molecule )
 			&& CheckMolecule::index( $molecule )
 			&& CheckMolecule::isotopeM( $molecule )
+            && CheckMolecule::isotopeC( $molecule )
             && CheckMolecule::isotopeT( $molecule )
 			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 

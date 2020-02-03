@@ -20,9 +20,12 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $isotope
  * @property string|null $token
  * @property string|null $value
+ * @property string|null $batchId
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
+ * @property string|null $pubkey
+ * @property string|null $characters
  * @property integer|null $index
  * @property string|null $otsFragment
  * @property integer $createdAt
@@ -35,14 +38,16 @@ class Atom
 	public $position;
 	public $walletAddress;
 	public $isotope;
-	public $token;
-	public $value;
-	public $batchId;
-	public $metaType;
-	public $metaId;
-	public $meta;
-	public $index;
-	public $otsFragment;
+	public $token = null;
+	public $value = null;
+	public $batchId = null;
+	public $metaType = null;
+	public $metaId = null;
+	public $meta = [];
+    public $pubkey = null;
+    public $characters = null;
+	public $index = null;
+	public $otsFragment = null;
 	public $createdAt;
 
 	/**
@@ -59,7 +64,21 @@ class Atom
 	 * @param null|string $otsFragment
      * @param null|integer $index
 	 */
-	public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $batchId = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null)
+	public function __construct (
+	    $position,
+        $walletAddress,
+        $isotope,
+        $token = null,
+        $value = null,
+        $batchId = null,
+        $metaType = null,
+        $metaId = null,
+        array $meta = null,
+        $pubkey = null,
+        $characters = null,
+        $otsFragment = null,
+        $index = null
+    )
 	{
 		$this->position = $position;
 		$this->walletAddress = $walletAddress;
@@ -71,6 +90,8 @@ class Atom
 		$this->metaType = $metaType;
 		$this->metaId = $metaId;
 		$this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
+        $this->pubkey = $pubkey;
+        $this->characters = $characters;
 
 		$this->index = $index;
 		$this->otsFragment = $otsFragment;
@@ -92,14 +113,14 @@ class Atom
 		foreach ( $atomList as $atom ) {
 			$molecularSponge->absorb( $numberOfAtoms );
 
-			foreach ( ( new \ReflectionClass( $atom ) )->getProperties() as $property ) {
+			foreach ( ( new \ReflectionClass( $atom ) )->getProperties( \ReflectionProperty::IS_PUBLIC ) as $property ) {
 
-				if ( $property->class === self::class && $property->isPublic() && ! $property->isStatic() ) {
+				if ( $property->class === self::class && !$property->isStatic() ) {
 					$value = $property->getValue( $atom );
 					$name = $property->getName();
 
 					// Old atoms support (without batch_id field)
-					if ( $name === 'batchId' && $value === null ) {
+					if ( \in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
 						 continue;
 					}
 
@@ -112,7 +133,7 @@ class Atom
 
 						foreach ( $list as $meta ) {
 
-                            if ( isset( $meta[ 'value' ] ) && $meta[ 'value' ] !== null ) {
+                            if ( isset( $meta[ 'value' ] ) ) {
 
                                 $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
                                 $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
