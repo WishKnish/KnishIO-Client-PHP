@@ -1,4 +1,5 @@
 <?php
+
 namespace WishKnish\KnishIO\Client\Libraries;
 
 
@@ -19,6 +20,7 @@ use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
+use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
@@ -31,59 +33,60 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule
 {
 
-	/**
-	 * @param Molecule $molecule
-	 * @param Wallet $fromWallet
-	 * @return array|null
-	 */
-	public static function verify ( Molecule $molecule, Wallet $fromWallet )
-	{
+    /**
+     * @param Molecule $molecule
+     * @param Wallet $fromWallet
+     * @return array|null
+     */
+    public static function verify ( Molecule $molecule, Wallet $fromWallet = null )
+    {
 
-		$verification_methods = [
-			'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
-			'ots'           => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
-			'isotopeM'      => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
-			'isotopeV'      => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
-			'isotopeT'      => 'Isotope T verification failed - ',
-			'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
-		];
+        $verification_methods = [
+            'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
+            'ots'           => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
+            'isotopeM'      => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
+            'isotopeC'      => 'Isotope C verification failed - ',
+            'isotopeV'      => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
+            'isotopeT'      => 'Isotope T verification failed - ',
+            'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
+        ];
 
-		foreach ( $verification_methods as $method => $error ) {
+        foreach ( $verification_methods as $method => $error ) {
 
-			try {
+            try {
 
-				switch ( $method ) {
+                switch ( $method ) {
 
-					case 'isotopeV': {
+                    case 'isotopeV': {
 
-						CheckMolecule::{ $method }( $molecule , $fromWallet );
+                        CheckMolecule::{ $method }( $molecule , $fromWallet );
 
-						break;
+                        break;
 
-					}
-					default: {
+                    }
+                    default: {
 
-						CheckMolecule::{ $method }( $molecule );
+                        CheckMolecule::{ $method }( $molecule );
 
-					}
+                    }
 
-				}
+                }
 
-			}
-			catch ( BaseException $exception ) {
+            }
+            catch ( BaseException $exception ) {
 
-				return [
-					'status' => 'rejected',
-					'reason' => $error . $exception->getMessage(),
-				];
+                return [
+                    'status' => 'rejected',
+                    'reason' => $error . $exception->getMessage(),
+                ];
 
-			}
+            }
 
-		}
+        }
 
-		return null;
+        return null;
 
-	}
+    }
 
 	/**
 	 * @param Molecule $molecule
@@ -109,44 +112,86 @@ class CheckMolecule
 
 	}
 
-	/**
-	 * @param Molecule $molecule
-	 * @return boolean
-	 * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException
-	 */
-	public static function isotopeT ( Molecule $molecule )
-	{
+    /**
+     * @param Molecule $molecule
+     * @return boolean
+     * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException|WrongTokenTypeException
+     */
+    public static function isotopeT ( Molecule $molecule )
+    {
 
-		static::missing( $molecule );
+        static::missing( $molecule );
 
-		foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
+        foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
 
-			$meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
-			$metaType = \strtolower( ( string ) $atom->metaType );
+            $meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
+            $metaType = \strtolower( ( string ) $atom->metaType );
 
-			if ( $metaType === 'wallet' ) {
+            if ( $metaType === 'wallet' ) {
 
-				foreach ( [ 'position', 'bundle'] as $key ) {
+                foreach ( [ 'position', 'bundle'] as $key ) {
 
-					if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
+                    if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
 
-						throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+                        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
 
-					}
+                    }
 
-				}
+                }
 
-			}
+            }
 
-		}
+            foreach ( [ 'token', ] as $key ) {
 
-		return true;
+                if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
 
-	}
+                    throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+
+                }
+
+            }
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+    /**
+     * @param Molecule $molecule
+     * @return bool
+     * @throws WrongTokenTypeException
+     */
+    public static function isotopeC ( Molecule $molecule )
+    {
+
+        static::missing( $molecule );
+
+        // Select all atoms C
+        foreach ( static::isotopeFilter( 'C', $molecule->atoms ) as $atom ) {
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
+
+        }
+
+        return true;
+
+    }
 
 	/**
 	 * @param Molecule $molecule
 	 * @return bool
+     * @throws MetaMissingException|WrongTokenTypeException
 	 */
 	public static function isotopeM ( Molecule $molecule )
 	{
@@ -161,6 +206,12 @@ class CheckMolecule
 				throw new MetaMissingException();
 
 			}
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
 
 		}
 

@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use desktopd\SHA3\Sponge as SHA3;
+use WishKnish\KnishIO\Client\Libraries\Base58;
+use WishKnish\KnishIO\Client\Libraries\Soda;
 
 /**
  * Class Crypto
@@ -15,7 +17,10 @@ use desktopd\SHA3\Sponge as SHA3;
 class Crypto
 {
 
-    private static $sodium = false;
+    /**
+     * @var string
+     */
+    private static $characters = Base58::GMP;
 
 	/**
 	 * Generates a secret based on an optional seed
@@ -57,156 +62,98 @@ class Crypto
 	 * Encrypts the given message or data with the recipient's public key
 	 *
 	 * @param array|object $message
-	 * @param string $recipientPrivateKey
-	 * @return string
+     * @param string $key
+	 * @return string|null
 	 * @throws \Exception|\ReflectionException
 	 */
-	public static function encryptMessage ( $message, $recipientPrivateKey )
+	public static function encryptMessage ( $message, $key )
 	{
 
-        static::includedSodium();
-
-		$sharedPair = \sodium_crypto_box_keypair();
-		$nonce = \random_bytes( SODIUM_CRYPTO_BOX_NONCEBYTES );
-        $bin = $nonce .
-           \sodium_crypto_box_secretkey( $sharedPair ) .
-           \sodium_crypto_box(
-               \json_encode( $message ),
-               $nonce,
-               \sodium_crypto_box_keypair_from_secretkey_and_publickey(
-                   \hex2bin( $recipientPrivateKey ),
-                   \sodium_crypto_box_publickey( $sharedPair )
-               )
-           );
-        $target = \bin2hex( $bin );
-
-        \sodium_memzero( $nonce );
-        \sodium_memzero( $sharedPair );
-        \sodium_memzero( $bin );
-
-        return $target;
+        return ( new Soda( static::$characters ) )
+            ->encrypt( $message, $key );
 
 	}
 
 	/**
 	 * Uses the given private key to decrypt an encrypted message
 	 *
-	 * @param string $ciphertext
-	 * @param string $recipientPublicKey
+	 * @param string $decrypted
+     * @param string $privateKey
+     * @param string $publicKey
 	 * @return array|null
      * @throws \ReflectionException
 	 */
-	public static function decryptMessage ( $ciphertext, $recipientPublicKey )
-	{
+    public static function decryptMessage( $decrypted, $privateKey, $publicKey )
+    {
 
-        static::includedSodium();
+        return ( new Soda( static::$characters ) )
+            ->decrypt( $decrypted, $privateKey, $publicKey );
 
-        $cipher = \hex2bin( $ciphertext );
-        $target = null;
-
-        if ( ! empty( $cipher ) ||
-            ( SODIUM_CRYPTO_BOX_NONCEBYTES + SODIUM_CRYPTO_BOX_SECRETKEYBYTES ) < \mb_strlen( $cipher, '8bit' ) ) {
-
-            $nonce = \mb_substr( $cipher, 0, SODIUM_CRYPTO_BOX_NONCEBYTES, '8bit' );
-            $shared = \mb_substr( $cipher, SODIUM_CRYPTO_BOX_NONCEBYTES, SODIUM_CRYPTO_BOX_SECRETKEYBYTES, '8bit' );
-            $message = \mb_substr( $cipher, SODIUM_CRYPTO_BOX_NONCEBYTES + SODIUM_CRYPTO_BOX_SECRETKEYBYTES, null, '8bit' );
-
-            $target = \json_decode(
-                \sodium_crypto_box_open(
-                    $message,
-                    $nonce,
-                    \sodium_crypto_box_keypair_from_secretkey_and_publickey(
-                        $shared,
-                        \hex2bin(  $recipientPublicKey )
-                    )
-                ),
-                true
-            );
-
-            \sodium_memzero( $nonce );
-            \sodium_memzero( $shared );
-            \sodium_memzero( $message );
-            \sodium_memzero( $cipher );
-
-        }
-
-		return $target;
-
-	}
+    }
 
 	/**
 	 * Derives a private key for encrypting data with the given key
 	 *
-	 * @param string $key
-	 * @return string
+	 * @param string|null $key
+	 * @return string|null
 	 * @throws \Exception|\ReflectionException
 	 */
-	public static function generateEncPrivateKey ( $key )
+	public static function generateEncPrivateKey ( $key = null )
 	{
-        static::includedSodium();
 
-		return \bin2hex(
-			\sodium_crypto_box_secretkey(
-				SHA3::init( SHA3::SHAKE256 )
-					->absorb( $key )
-					->squeeze( SODIUM_CRYPTO_BOX_KEYPAIRBYTES )
-			)
-		);
+		return ( new Soda( static::$characters ) )
+            ->generatePrivateKey( $key );
 
 	}
 
 	/**
 	 * Derives a public key for encrypting data for this wallet's consumption
 	 *
-	 * @param string $privateKey
-	 * @return string
+	 * @param string $key
+	 * @return string|null
      * @throws \ReflectionException
 	 */
-	public static function generateEncPublicKey ( $privateKey )
+	public static function generateEncPublicKey ( $key )
 	{
 
-        static::includedSodium();
-
-		return \bin2hex(
-			\sodium_crypto_box_publickey_from_secretkey( \hex2bin( $privateKey ) )
-		);
-
-	}
-
-	/**
-	 * Creates a shared key by combining this wallet's private key and another wallet's public key
-	 *
-	 * @param string $privateKey
-	 * @param string $otherPublicKey
-	 * @return string
-     * @throws \ReflectionException
-	 */
-	public static function generateEncSharedKey ( $privateKey, $otherPublicKey )
-	{
-
-	    static::includedSodium();
-
-		return \bin2hex(
-			\sodium_crypto_scalarmult(
-				\hex2bin( $privateKey ),
-				\hex2bin( $otherPublicKey )
-			)
-		);
+		return ( new Soda( static::$characters ) )
+            ->generatePublicKey( $key );
 
 	}
 
     /**
-     * @throws \ReflectionException
+     * @param string $characters
      */
-    private static function includedSodium ()
+	public static function setCharacters ( $characters )
     {
 
-        if ( ! \extension_loaded( 'sodium' ) && ! static::$sodium ) {
-            Sodium::libsodium2sodium();
-            static::$sodium = true;
-        }
+        $constant = Base58::class . '::' . $characters;
+
+        static::$characters = \defined( $constant ) ? \constant( $constant ) : static::$characters;
+
+    }
+
+    /**
+     * @return string
+     */
+    public static function getCharacters ()
+    {
+
+        return static::$characters;
+
+    }
+
+    /**
+     * @param string $key
+     * @param string $publicKey
+     * @return string
+     * @throws \ReflectionException
+     */
+    public static function hashShare ( $key, $publicKey )
+    {
+
+        return ( new Soda( static::$characters ) )->shortHash( $key, $publicKey );
 
     }
 
 }
-

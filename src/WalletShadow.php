@@ -6,8 +6,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
-
-use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
  * Class WalletShadow
@@ -15,6 +14,11 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  */
 class WalletShadow extends Wallet
 {
+
+    /**
+     * @var string|null
+     */
+    private $privkey = null;
 
 	/**
 	 * WalletShadow constructor.
@@ -25,27 +29,21 @@ class WalletShadow extends Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( $bundleHash, $token = 'USER', $batchId = null )
+	public function __construct ( $bundleHash, $token = 'USER', string $batchId = null, $characters = null )
 	{
-		parent::__construct(null, $token);
-
-		// Initialize properties
+		$this->token = $token;
+		$this->balance = 0;
+		$this->molecules = [];
 		$this->bundle = $bundleHash;
 		$this->batchId = $batchId;
+        $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
+
+		// Empty values
+		$this->position = null;
 		$this->key = null;
 		$this->address = null;
-		$this->privkey = null;
 		$this->pubkey = null;
-	}
 
-
-	/**
-	 * Generate position (for the Shadow Wallet it always will be NULL)
-	 *
-	 * @param null $position
-	 */
-	public function generatePosition ($saltLength = 64) {
-		return null;
 	}
 
 }

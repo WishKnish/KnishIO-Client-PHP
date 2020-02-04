@@ -116,42 +116,30 @@ class KnishIOClient
 	}
 
 
-
 	/**
 	 * @param $secret
 	 * @param $token
-	 * @param $amount
-	 * @param array $metas
-	 * @return Response
-	 * @throws \ReflectionException
+	 * @param $value
+	 * @param $to wallet address OR bundle
+	 * @param array|null $metas
+	 * @return mixed
+	 * @throws \Exception
 	 */
-	public function receiveToken ( $secret, $token, $value, $foreignBundle = null, array $metas = null )
+	public function receiveToken ( $secret, $token, $value, $to, array $metas = null )
 	{
 		$metas = \default_if_null($metas, []);
-
-		// Set token to metas
-		$metas['token'] = $token;
 
 		// Source wallet
 		$sourceWallet = new Wallet($secret);
 
-
-		// Shadow wallet for foreign user
-		if ($foreignBundle) {
-			$recipientWallet = new WalletShadow( $foreignBundle, $token );
-		}
-
-		// Wallet for current user
-		else {
-			$recipientWallet = new Wallet( $secret, $token );
-		}
-
+		// Meta type
+		$metaType = Wallet::isBundleHash( $to ) ? 'walletbundle' : 'wallet';
 
 		// Create a query
 		$query = $this->createQuery(QueryTokenReceive::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $value, $metas );
+		$query->initMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
 
 		// Return a query execution result
 		return $query->execute ();
@@ -166,7 +154,7 @@ class KnishIOClient
 	 * @return Response
 	 * @throws \ReflectionException
 	 */
-	public function createIdentifier ($secret, $type, $content, $code)
+	public function createIdentifier ($secret, $type, $contact, $code)
 	{
 		// Create source & remainder wallets
 		$sourceWallet = new Wallet( $secret );
@@ -175,10 +163,7 @@ class KnishIOClient
 		$query = $this->createQuery(QueryIdentifierCreate::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $type, [
-			'hash'	=> Crypto::generateBundleHash($content),
-			'code' 	=> $code,
-		] );
+		$query->initMolecule ( $secret, $sourceWallet, $type, $contact, $code);
 
 		// Execute a query
 		return $query->execute();
