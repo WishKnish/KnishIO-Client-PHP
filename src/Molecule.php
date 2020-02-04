@@ -84,6 +84,8 @@ class Molecule
 			'walletBundle',
 			$remainderWallet->bundle,
 			null,
+			$remainderWallet->pubkey,
+			$remainderWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -256,6 +258,8 @@ class Molecule
 			'token',
 			$recipientWallet->token,
 			$tokenMeta,
+			$sourceWallet->pubkey,
+			$sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -297,6 +301,8 @@ class Molecule
 			'shadowWallet',
 			$shadowWallet->token,
 			$tokenMeta,
+			$sourceWallet->pubkey,
+			$sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
