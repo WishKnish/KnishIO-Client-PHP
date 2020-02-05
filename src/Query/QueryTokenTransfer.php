@@ -29,9 +29,11 @@ class QueryTokenTransfer extends QueryMoleculePropose
 	 */
 	public function initMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
 	{
-		// Remainder wallet (set a batch ID from the recipient wallet)
-		$this->remainderWallet = \default_if_null ($remainderWallet, new Wallet( $fromSecret, $token ) );
-		$this->remainderWallet->batchId = $toWallet->batchId;
+		// Remainder wallet
+		$this->remainderWallet = \default_if_null (
+			$remainderWallet,
+			Wallet::create($fromSecret, $token, $toWallet->batchId, $fromWallet->characters)
+		);
 
 
 		// Create & sign a molecule

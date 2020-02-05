@@ -71,6 +71,32 @@ class Wallet
      */
     private $privkey = null;
 
+
+	/**
+	 * @param $secretOrBundle
+	 * @param $token
+	 * @param string|null $batchId
+	 * @param null $characters
+	 * @return Wallet|WalletShadow
+	 * @throws \Exception
+	 */
+    public static function create ($secretOrBundle, $token, string $batchId = null, $characters = null) {
+
+    	// Shadow wallet
+    	if (static::isBundleHash($secretOrBundle) ) {
+			return new WalletShadow($secretOrBundle, $token, $batchId, $characters);
+		}
+
+    	// Base wallet
+		$wallet = new Wallet($secretOrBundle, $token);
+		$wallet->batchId = $batchId;
+		$wallet->characters = $characters;
+		return $wallet;
+	}
+
+
+
+
 	/**
 	 * Wallet constructor.
 	 *
@@ -119,9 +145,7 @@ class Wallet
      */
     public static function generateBatchId ()
     {
-
         return Strings::randomString( 64 );
-
     }
 
 
@@ -169,6 +193,35 @@ class Wallet
 		);
 
 	}
+
+
+	/**
+	 * Get a recipient batch ID
+	 * $this is a client sender wallet
+	 *
+	 * @param $senderWallet
+	 * @param $transferAmount
+	 */
+	public function initBatchId ($senderWallet, $transferAmount) {
+
+		if ($senderWallet->batchId) {
+
+			// Has a remainder & is the first transaction to shadow wallet (toWallet has not a batchID)
+			if (!$this->batchId && ($senderWallet->balance - $transferAmount) > 0) {
+				$batchId = Wallet::generateBatchId();
+			}
+
+			// Has no remainder?: use batch ID from the source wallet
+			else {
+				$batchId = $senderWallet->batchId;
+			}
+
+			// Set batchID to recipient wallet
+			$this->batchId = $batchId;
+		}
+
+	}
+
 
 	/**
 	 * Derives a private key for encrypting data with this wallet's key

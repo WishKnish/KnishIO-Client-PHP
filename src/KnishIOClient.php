@@ -53,6 +53,14 @@ class KnishIOClient
 
 
 	/**
+	 * @param $url
+	 */
+	public function setUrl ($url) {
+		$this->url = $url;
+	}
+
+
+	/**
 	 * @param $class
 	 * @return mixed
 	 */
@@ -215,41 +223,17 @@ class KnishIOClient
 			throw new TransferBalanceException('The transfer amount cannot be greater than the sender\'s balance');
 		}
 
+
 		// If this wallet is assigned, if not, try to get a valid wallet
 		$toWallet = $to instanceof Wallet ? $to : $this->getBalance( $to, $token )->payload();
+
+		// Has not wallet yet - create it
 		if ($toWallet === null) {
-
-			// If from wallet has a batchID => recipient is a shadow wallet
-			if ($fromWallet->batchId) {
-				$toWallet = new WalletShadow( $to, $token );
-			}
-
-			// If the wallet is not transferred in a variable and the user does not have a balance wallet,
-			// then create a new one for him
-			else {
-				$toWallet = new Wallet( $to, $token );
-			}
+			$toWallet = Wallet::create($to, $token);
 		}
 
-
-
-		// --- BEGIN: Batch ID initialization
-		if ($fromWallet->batchId) {
-
-			// Has a remainder & is the first transaction to shadow wallet (toWallet has not a batchID)
-			if (!$toWallet->batchId && ($fromWallet->balance - $amount) > 0) {
-				$batchId = Wallet::generateBatchId();
-			}
-
-			// Has no remainder?: use batch ID from the source wallet
-			else {
-				$batchId = $fromWallet->batchId;
-			}
-
-			// Set batchID to recipient wallet
-			$toWallet->batchId = $batchId;
-		}
-		// --- END: Batch ID initialization
+		// Batch ID initialization
+		$toWallet->initBatchId($fromWallet, $amount);
 
 
 
