@@ -119,21 +119,16 @@ class Soda
     }
 
     /**
-     * @param string $msg
      * @param string $key
      * @return string
+     * @throws \Exception
      */
-    public function shortHash ( $msg, $key )
+    public function shortHash ( $key )
     {
         return $this->encode(
-            \sodium_crypto_shorthash(
-                $msg,
-                \sodium_crypto_generichash (
-                    $key,
-                    $this->decode( $key ),
-                    SODIUM_CRYPTO_SHORTHASH_KEYBYTES
-                )
-            )
+            SHA3::init( SHA3::SHAKE256 )
+                ->absorb( $key )
+                ->squeeze( 8 )
         );
     }
 

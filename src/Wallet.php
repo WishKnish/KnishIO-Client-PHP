@@ -270,7 +270,6 @@ class Wallet
 
     /**
      * @param array $message
-     * @param boolean $meToo
      * @param mixed ...$keys
      * @return array
      * @throws \ReflectionException|\Exception
@@ -284,7 +283,7 @@ class Wallet
 
         foreach ( $keys as $key ) {
 
-            $encrypt[ Crypto::hashShare( $key, $key ) ] = Crypto::encryptMessage( $message, $key );
+            $encrypt[ Crypto::hashShare( $key ) ] = Crypto::encryptMessage( $message, $key );
 
         }
 
@@ -310,7 +309,7 @@ class Wallet
 
         if ( \is_array( $message ) ) {
 
-            $hash = Crypto::hashShare( $pubKey, $pubKey );
+            $hash = Crypto::hashShare( $pubKey );
             $encrypt = '0';
 
             if ( \array_key_exists( $hash,  $message ) ) {
