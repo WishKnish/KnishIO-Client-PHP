@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use GuzzleHttp\Client;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;

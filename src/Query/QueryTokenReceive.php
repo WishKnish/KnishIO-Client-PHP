@@ -6,10 +6,8 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 
 /**
@@ -20,16 +18,16 @@ class QueryTokenReceive extends QueryMoleculePropose
 {
 
 
-	/**
-	 * @param $secret
-	 * @param Wallet $sourceWallet
-	 * @param $token
-	 * @param $value
-	 * @param $metaType
-	 * @param $metaId
-	 * @param array|null $metas
-	 * @throws \ReflectionException
-	 */
+    /**
+     * @param $secret
+     * @param Wallet $sourceWallet
+     * @param $token
+     * @param $value
+     * @param $metaType
+     * @param $metaId
+     * @param array|null $metas
+     * @throws \ReflectionException|\Exception
+     */
 	public function initMolecule ($secret, Wallet $sourceWallet, $token, $value, $metaType, $metaId, array $metas = null)
 	{
 		// Default metas value

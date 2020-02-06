@@ -6,8 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 /**
  * Class ResponseBalance

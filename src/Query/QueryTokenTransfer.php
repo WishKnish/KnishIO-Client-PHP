@@ -6,10 +6,8 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 
 /**
@@ -20,13 +18,13 @@ class QueryTokenTransfer extends QueryMoleculePropose
 {
 
 
-	/**
-	 * @param $secret
-	 * @param $token
-	 * @param $amount
-	 * @param array $metas
-	 * @throws \ReflectionException
-	 */
+    /**
+     * @param $secret
+     * @param $token
+     * @param $amount
+     * @param array $metas
+     * @throws \ReflectionException|\Exception
+     */
 	public function initMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet

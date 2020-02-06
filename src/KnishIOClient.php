@@ -12,7 +12,6 @@ use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
-use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
@@ -91,14 +90,14 @@ class KnishIOClient
 	}
 
 
-	/**
-	 * @param $secret
-	 * @param $token
-	 * @param $amount
-	 * @param array $metas
-	 * @return Response
-	 * @throws \ReflectionException
-	 */
+    /**
+     * @param $secret
+     * @param $token
+     * @param $amount
+     * @param array $metas
+     * @return Response
+     * @throws \ReflectionException|\Exception
+     */
 	public function createToken ( $secret, $token, $amount, array $metas = null )
 	{
 		$metas = \default_if_null($metas, []);
@@ -160,7 +159,7 @@ class KnishIOClient
 	 * @param string $type
 	 * @param string $code
 	 * @return Response
-	 * @throws \ReflectionException
+	 * @throws \ReflectionException|\Exception
 	 */
 	public function createIdentifier ($secret, $type, $contact, $code)
 	{
@@ -178,12 +177,13 @@ class KnishIOClient
 	}
 
 
-	/**
-	 * Bind shadow wallet
-	 *
-	 * @param $bundleHash
-	 * @param $token
-	 */
+    /**
+     * Bind shadow wallet
+     *
+     * @param $bundleHash
+     * @param $token
+     * @throws \Exception
+     */
 	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
 
 		// Source wallet
