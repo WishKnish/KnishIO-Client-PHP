@@ -9,6 +9,7 @@ namespace WishKnish\KnishIO\Client;
 use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Libraries\Base58;
 
@@ -206,12 +207,12 @@ class Wallet
 
 		if ($senderWallet->batchId) {
 
-			// Has a remainder & is the first transaction to shadow wallet (toWallet has not a batchID)
-			if (!$this->batchId && ($senderWallet->balance - $transferAmount) > 0) {
+			// Has a remainder value (source balance is bigger than a transfer value)
+			if (!$this->batchId && Decimal::cmp($senderWallet->balance, $transferAmount) > 0) {
 				$batchId = Wallet::generateBatchId();
 			}
 
-			// Has no remainder?: use batch ID from the source wallet
+			// Has no remainder? use batch ID from the source wallet
 			else {
 				$batchId = $senderWallet->batchId;
 			}

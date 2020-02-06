@@ -245,7 +245,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$this->beforeExecute();
 
 		// Full amount
-		$full_amount = 10000.0 + 10.0/(Decimal::$multiplier);
+		$full_amount = 1000.00001; //10000.0 + 10.0/(Decimal::$multiplier);
 
 		$env_secret = env('SECRET_TOKEN_KNISH');
 		if (!$env_secret) {
@@ -327,7 +327,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// Save data
 		$this->saveData (['secret' => $secret, 'amount' => [
 			'full'			=> $full_amount,
-			'transaction'	=> 1000.0 + 1.0/Decimal::$multiplier,
+			'transaction'	=> 100.000001, //1000.0 + 1.0/Decimal::$multiplier,
 		]]);
 	}
 

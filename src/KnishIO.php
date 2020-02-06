@@ -48,6 +48,7 @@ class KnishIO
 	 */
 	public static function setUrl ( $url )
 	{
+		static::$url = $url;
 		static::client()->setUrl($url);
 	}
 

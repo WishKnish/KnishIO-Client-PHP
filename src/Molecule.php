@@ -71,21 +71,21 @@ class Molecule
 	/**
 	 * Add user remainder atom
 	 */
-	protected function addUserRemainderAtom (Wallet $remainderWallet) {
+	protected function addUserRemainderAtom (Wallet $userRemainderWallet) {
 
 		// Remainder atom
 		$this->atoms[] = new Atom(
-			$remainderWallet->position,
-			$remainderWallet->address,
+			$userRemainderWallet->position,
+			$userRemainderWallet->address,
 			'C',
-			$remainderWallet->token,
+			$userRemainderWallet->token,
 			null,
 			null,
 			'walletBundle',
-			$remainderWallet->bundle,
+			$userRemainderWallet->bundle,
 			null,
-			$remainderWallet->pubkey,
-			$remainderWallet->characters,
+			$userRemainderWallet->pubkey,
+			$userRemainderWallet->characters,
 			null,
 			$this->generateIndex()
 		);
@@ -171,12 +171,15 @@ class Molecule
 
 	}
 
+
 	/**
 	 * @param Wallet $sourceWallet
 	 * @param Wallet $newWallet
-	 * @return self
+	 * @param Wallet|null $userRemainderWallet
+	 * @return $this
+	 * @throws \Exception
 	 */
-	public function initWalletCreation ( Wallet $sourceWallet, Wallet $newWallet )
+	public function initWalletCreation ( Wallet $sourceWallet, Wallet $newWallet, Wallet $userRemainderWallet )
 	{
 		$this->molecularHash = null;
 
@@ -206,6 +209,9 @@ class Molecule
 			$this->generateIndex()
 		);
 
+		// User remainder atom
+		$this->addUserRemainderAtom ($userRemainderWallet);
+
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
@@ -221,7 +227,7 @@ class Molecule
 	 * @param array $tokenMeta - additional fields to configure the token
 	 * @return self
 	 */
-	public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $amount, array $tokenMeta )
+	public function initTokenCreation ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $userRemainderWallet, $amount, array $tokenMeta )
 	{
 
 		$this->molecularHash = null;
@@ -265,7 +271,7 @@ class Molecule
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ($remainderWallet);
+		$this->addUserRemainderAtom ($userRemainderWallet);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -284,7 +290,7 @@ class Molecule
 	 * @param array $tokenMeta
 	 * @return $this
 	 */
-	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $remainderWallet, array $tokenMeta = null)
+	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $userRemainderWallet, array $tokenMeta = null)
 	{
 		$tokenMeta = \default_if_null($tokenMeta, []);
 
@@ -308,7 +314,7 @@ class Molecule
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ($remainderWallet);
+		$this->addUserRemainderAtom ($userRemainderWallet);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -326,7 +332,7 @@ class Molecule
 	 *
 	 * @return self
 	 */
-	public function initIdentifierCreation ( Wallet $sourceWallet, Wallet $remainderWallet, $type, $contact, $code )
+	public function initIdentifierCreation ( Wallet $sourceWallet, Wallet $userRemainderWallet, $type, $contact, $code )
 	{
 		$this->molecularHash = null;
 
@@ -350,7 +356,7 @@ class Molecule
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ($remainderWallet);
+		$this->addUserRemainderAtom ($userRemainderWallet);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 

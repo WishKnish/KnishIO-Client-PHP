@@ -28,7 +28,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 class KnishIOClient
 {
 	// Client parameters
-	private $url = 'https://wishknish.com/graphql';
+	private $url;
 	private $client;
 
 
