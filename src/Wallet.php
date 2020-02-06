@@ -74,10 +74,10 @@ class Wallet
 
 
 	/**
-	 * @param $secretOrBundle
-	 * @param $token
+	 * @param string $secretOrBundle
+	 * @param string $token
 	 * @param string|null $batchId
-	 * @param null $characters
+	 * @param string|null $characters
 	 * @return Wallet|WalletShadow
 	 * @throws \Exception
 	 */
@@ -91,7 +91,7 @@ class Wallet
     	// Base wallet
 		$wallet = new Wallet($secretOrBundle, $token);
 		$wallet->batchId = $batchId;
-		$wallet->characters = $characters;
+		$wallet->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
 		return $wallet;
 	}
 
