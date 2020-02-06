@@ -31,9 +31,9 @@ class WalletShadow extends Wallet
 	 */
 	public function __construct ( $bundleHash, $token = 'USER', string $batchId = null, $characters = null )
 	{
-		$this->token = $token;
-		$this->balance = 0;
-		$this->molecules = [];
+
+	    parent::__construct(null, $token );
+
 		$this->bundle = $bundleHash;
 		$this->batchId = $batchId;
         $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
