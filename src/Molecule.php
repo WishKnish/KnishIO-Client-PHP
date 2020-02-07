@@ -67,11 +67,15 @@ class Molecule
 
 	}
 
-
-	/**
-	 * Add user remainder atom
-	 */
+    /**
+     * Add user remainder atom
+     *
+     * @param Wallet $userRemainderWallet
+     * @return self
+     */
 	protected function addUserRemainderAtom (Wallet $userRemainderWallet) {
+
+        $this->molecularHash = null;
 
 		// Remainder atom
 		$this->atoms[] = new Atom(
@@ -89,6 +93,10 @@ class Molecule
 			null,
 			$this->generateIndex()
 		);
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
 	}
 
 
