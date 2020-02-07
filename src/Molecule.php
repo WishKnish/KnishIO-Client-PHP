@@ -183,7 +183,7 @@ class Molecule
 	/**
 	 * @param Wallet $sourceWallet
 	 * @param Wallet $newWallet
-	 * @param Wallet|null $userRemainderWallet
+	 * @param Wallet $userRemainderWallet
 	 * @return $this
 	 * @throws \Exception
 	 */
