@@ -20,6 +20,7 @@ use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
+use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
@@ -37,13 +38,14 @@ class CheckMolecule
      * @param Wallet $fromWallet
      * @return array|null
      */
-    public static function verify ( Molecule $molecule, Wallet $fromWallet )
+    public static function verify ( Molecule $molecule, Wallet $fromWallet = null )
     {
 
         $verification_methods = [
             'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
             'ots'           => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
             'isotopeM'      => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
+            'isotopeC'      => 'Isotope C verification failed - ',
             'isotopeV'      => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
             'isotopeT'      => 'Isotope T verification failed - ',
             'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
@@ -113,7 +115,7 @@ class CheckMolecule
     /**
      * @param Molecule $molecule
      * @return boolean
-     * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException
+     * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException|WrongTokenTypeException
      */
     public static function isotopeT ( Molecule $molecule )
     {
@@ -139,6 +141,47 @@ class CheckMolecule
 
             }
 
+            foreach ( [ 'token', ] as $key ) {
+
+                if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
+
+                    throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+
+                }
+
+            }
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
+
+        }
+
+        return true;
+
+    }
+
+    /**
+     * @param Molecule $molecule
+     * @return bool
+     * @throws WrongTokenTypeException
+     */
+    public static function isotopeC ( Molecule $molecule )
+    {
+
+        static::missing( $molecule );
+
+        // Select all atoms C
+        foreach ( static::isotopeFilter( 'C', $molecule->atoms ) as $atom ) {
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
+
         }
 
         return true;
@@ -148,6 +191,7 @@ class CheckMolecule
 	/**
 	 * @param Molecule $molecule
 	 * @return bool
+     * @throws MetaMissingException|WrongTokenTypeException
 	 */
 	public static function isotopeM ( Molecule $molecule )
 	{
@@ -162,6 +206,12 @@ class CheckMolecule
 				throw new MetaMissingException();
 
 			}
+
+            if ( $atom->token !== 'USER' ) {
+
+                throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+
+            }
 
 		}
 
@@ -195,8 +245,8 @@ class CheckMolecule
 		$firstAtom = \reset( $molecule->atoms );
 
 		// Looping through each V-isotope atom
-		$sum = 0;
-		$value = 0;
+		$sum = 0.0;
+		$value = 0.0;
 
 		foreach ( $molecule->atoms as $index => $vAtom ) {
 
@@ -208,7 +258,7 @@ class CheckMolecule
 			}
 
 			// Making sure we're in integer land
-			$value = 1 * $vAtom->value;
+			$value = 1.0 * $vAtom->value;
 
 			// Making sure all V atoms of the same token
 			if ( $vAtom->token !== $firstAtom->token ) {
@@ -221,7 +271,7 @@ class CheckMolecule
 			if ( $index > 0 ) {
 
 				// Negative V atom in a non-primary position?
-				if ( $value < 0 ) {
+				if ( Decimal::cmp($value, 0.0) < 0 ) {
 
 					throw new TransferMalformedException();
 
@@ -242,7 +292,7 @@ class CheckMolecule
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-		if ( $sum !== $value ) {
+		if ( !Decimal::equal($sum, $value) ) {
 
 			throw new TransferUnbalancedException();
 
@@ -254,21 +304,21 @@ class CheckMolecule
 			$remainder = $senderWallet->balance + $firstAtom->value;
 
 			// Is there enough balance to send?
-			if ( $remainder < 0 ) {
+			if ( Decimal::cmp($remainder, 0) < 0 ) {
 
 				throw new TransferBalanceException();
 
 			}
 
 			// Does the remainder match what should be there in the source wallet, if provided?
-			if ( $remainder !== $sum ) {
+			if ( !Decimal::equal($remainder, $sum) ) {
 
 				throw new TransferRemainderException();
 
 			}
 
 		} // No senderWallet, but have a remainder?
-		else if ( $value !== 0 ) {
+		else if ( !Decimal::equal($value, 0.0) ) {
 
 			throw new TransferWalletException();
 
