@@ -29,12 +29,15 @@ class Response
 		// Set a query
 		$this->query = $query;
 
+		// Origin response
+		$this->origin_response = $json;
+
 		// Json decode
-		$this->origin_response = $this->response = \json_decode( $json, true );
+		$this->response = \json_decode( $json, true );
 
 		// No-json response - error
 		if ( $this->response === null ) {
-			print_r ($this);
+			// print_r ($this);
 			print_r ($this->origin_response);
 			throw new InvalidResponseException();
 		}
