@@ -44,6 +44,8 @@ class ResponseBalance extends Response
 			$wallet->position = $balance[ 'position' ];
 			$wallet->bundle = $balance[ 'bundleHash' ];
 			$wallet->batchId = $balance[ 'batchId' ];
+            $wallet->characters = $balance[ 'characters' ];
+            $wallet->pubkey = $balance[ 'pubkey' ];
 		}
 
 		// Bind other data
