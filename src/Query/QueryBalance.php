@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Response\ResponseBalance;
+use WishKnish\KnishIO\Client\Response\Response;
 
 
 /**

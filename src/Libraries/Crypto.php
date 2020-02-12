@@ -145,14 +145,13 @@ class Crypto
 
     /**
      * @param string $key
-     * @param string $publicKey
      * @return string
-     * @throws \ReflectionException
+     * @throws \ReflectionException|\Exception
      */
-    public static function hashShare ( $key, $publicKey )
+    public static function hashShare ( $key )
     {
 
-        return ( new Soda( static::$characters ) )->shortHash( $key, $publicKey );
+        return ( new Soda( static::$characters ) )->shortHash( $key );
 
     }
 

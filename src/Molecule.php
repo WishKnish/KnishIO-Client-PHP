@@ -67,11 +67,15 @@ class Molecule
 
 	}
 
-
-	/**
-	 * Add user remainder atom
-	 */
+    /**
+     * Add user remainder atom
+     *
+     * @param Wallet $userRemainderWallet
+     * @return self
+     */
 	protected function addUserRemainderAtom (Wallet $userRemainderWallet) {
+
+        $this->molecularHash = null;
 
 		// Remainder atom
 		$this->atoms[] = new Atom(
@@ -89,6 +93,10 @@ class Molecule
 			null,
 			$this->generateIndex()
 		);
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
 	}
 
 
@@ -175,7 +183,7 @@ class Molecule
 	/**
 	 * @param Wallet $sourceWallet
 	 * @param Wallet $newWallet
-	 * @param Wallet|null $userRemainderWallet
+	 * @param Wallet $userRemainderWallet
 	 * @return $this
 	 * @throws \Exception
 	 */
@@ -322,16 +330,17 @@ class Molecule
 	}
 
 
-	/**
-	 * Initialize a C-type molecule to issue a new type of identifier
-	 *
-	 * @param Wallet $sourceWallet
-	 * @param string $source
-	 * @param string $type
-	 * @param string $code
-	 *
-	 * @return self
-	 */
+    /**
+     * Initialize a C-type molecule to issue a new type of identifier
+     *
+     * @param Wallet $sourceWallet
+     * @param string $source
+     * @param string $type
+     * @param string $code
+     *
+     * @return self
+     * @throws \Exception
+     */
 	public function initIdentifierCreation ( Wallet $sourceWallet, Wallet $userRemainderWallet, $type, $contact, $code )
 	{
 		$this->molecularHash = null;
