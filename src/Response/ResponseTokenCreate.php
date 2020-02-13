@@ -7,21 +7,10 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class ResponseMolecule
+ * Class ResponsTokenCreate
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMolecule extends Response
+class ResponseTokenCreate extends ResponseMolecule
 {
-	protected $dataKey = 'data.ProposeMolecule';
-
-    /**
-     * @return array
-     */
-    public function payload ()
-    {
-
-        return $this->data();
-
-    }
 
 }
