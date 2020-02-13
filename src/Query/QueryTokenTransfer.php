@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseTokenTransfer;
 use WishKnish\KnishIO\Client\Wallet;
 
 
@@ -42,6 +44,16 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		// Check the molecule
 		$this->molecule->check($fromWallet);
 	}
+
+    /**
+     * Create a response
+     *
+     * @param string $response
+     * @return Response
+     */
+    public function createResponse ($response) {
+        return new ResponseTokenTransfer($this, $response);
+    }
 
 
 }

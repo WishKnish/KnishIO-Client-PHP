@@ -6,12 +6,19 @@
 
 namespace WishKnish\KnishIO\Client;
 
-
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
  * Class KnishIO
  * @package WishKnish\KnishIO\Client
+ *
+ * @method createToken ( string $secret, string $token, $amount, array $metas = null )
+ * @method transferToken ( string $fromSecret, $to, string $token, $amount, Wallet $remainderWallet = null )
+ * @method getBalance ( string $code, string $token )
+ * @method createIdentifier ( string $secret, $type, $contact, $code )
+ * @method claimShadowWallet ( string $secret, string $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null )
+ * @method receiveToken ( string $secret, string $token, $value, $to, array $metas = null )
+ *
  */
 class KnishIO
 {
@@ -21,18 +28,16 @@ class KnishIO
 		'getBalance', 'createToken', 'receiveToken', 'createIdentifier', 'claimShadowWallet', 'transferToken'
 	];
 
-
 	/**
 	 * Get a KnishIOClient object
 	 */
 	private static function client ()
 	{
-		if (!static::$client) {
-			static::$client = new KnishIOClient(static::$url);
+		if ( !static::$client ) {
+			static::$client = new KnishIOClient( static::$url );
 		}
 		return static::$client;
 	}
-
 
 	/**
 	 * @return string
@@ -42,16 +47,14 @@ class KnishIO
 		return static::$url;
 	}
 
-
 	/**
 	 * @param string $url
 	 */
 	public static function setUrl ( $url )
 	{
 		static::$url = $url;
-		static::client()->setUrl($url);
+		static::client()->setUrl( $url );
 	}
-
 
 	/**
 	 * @param $name
@@ -59,22 +62,21 @@ class KnishIO
 	 * @return |null
 	 * @throws \Exception
 	 */
-	public static function __callStatic ($name, $arguments)
+	public static function __callStatic ( $name, $arguments )
 	{
 		// Check method
-		if (!in_array($name, static::$methods, true) || !method_exists(static::client(), $name) ) {
-			throw new \Exception('Method KnishIOClient::'.$name.' is not a query method.');
+		if ( !\in_array( $name, static::$methods, true ) || !\method_exists( static::client(), $name ) ) {
+			throw new \Exception( 'Method KnishIOClient::' . $name . ' is not a query method.' );
 		}
 
 		// Execute & get a response
-		$response = call_user_func_array([static::client(), $name], $arguments);
-		if (!$response instanceof Response) {
-			throw new \Exception('Method KnishIOClient::'.$name.' has not provide a valid response.');
+		$response = \call_user_func_array( [ static::client(), $name ], $arguments );
+		if ( !$response instanceof Response ) {
+			throw new \Exception( 'Method KnishIOClient::' . $name . ' has not provide a valid response.' );
 		}
 
 		// Get a response payload
 		return $response->payload();
 	}
-
 
 }
