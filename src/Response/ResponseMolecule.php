@@ -14,4 +14,14 @@ class ResponseMolecule extends Response
 {
 	protected $dataKey = 'data.ProposeMolecule';
 
+    /**
+     * @return array
+     */
+    public function payload ()
+    {
+
+        return $this->data();
+
+    }
+
 }

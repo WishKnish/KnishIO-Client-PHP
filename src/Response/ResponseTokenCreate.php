@@ -13,14 +13,4 @@ namespace WishKnish\KnishIO\Client\Response;
 class ResponseTokenCreate extends ResponseMolecule
 {
 
-    /**
-     * @return array
-     */
-    public function payload ()
-    {
-
-        return $this->data();
-
-    }
-
 }
