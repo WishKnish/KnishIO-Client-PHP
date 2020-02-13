@@ -14,7 +14,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
  * Class QueryMoleculePropose
  * @package WishKnish\KnishIO\Client\Query
  */
-abstract class QueryMoleculePropose extends Query
+class QueryMoleculePropose extends Query
 {
 	// Query
 	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }';
@@ -42,8 +42,9 @@ abstract class QueryMoleculePropose extends Query
 	 * @return Response
 	 */
 	public function execute (array $variables = null) {
+		$molecule = array_get($variables, 'molecule', $this->molecule);
 		return parent::execute (
-			array_merge(\default_if_null($variables, []), ['molecule' => $this->molecule])
+			array_merge(\default_if_null($variables, []), ['molecule' => $molecule])
 		);
 	}
 

@@ -409,6 +409,42 @@ class Molecule
 
 	}
 
+
+	/**
+	 * Initialize meta append molecule
+	 * 
+	 * @param Wallet $sourceWallet
+	 * @param array $meta
+	 * @param $metaType
+	 * @param $metaId
+	 * @return $this
+	 */
+	public function initMetaAppend ( Wallet $sourceWallet, array $meta, $metaType, $metaId )
+	{
+		$this->molecularHash = null;
+
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'A',
+			$sourceWallet->token,
+			null,
+			null,
+			$metaType,
+			$metaId,
+			$meta,
+			$sourceWallet->pubkey,
+			$sourceWallet->characters,
+			null,
+			$this->generateIndex()
+		);
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+
+	}
+
     /**
      * @param string $secret
      * @param string $token
