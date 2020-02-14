@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
 
@@ -48,6 +50,14 @@ class QueryTokenCreate extends QueryMoleculePropose
 		$this->molecule->check();
 	}
 
-
+    /**
+     * Create a response
+     *
+     * @param string $response
+     * @return Response
+     */
+    public function createResponse ($response) {
+        return new ResponseTokenCreate($this, $response);
+    }
 
 }
