@@ -401,7 +401,13 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Batch receive (splitting)
 		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0, true);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 1.0, true);
+
+		// --- Batch receive (splitting) WITHOUT a remainder
+		$remainder_amount = ($full_amount - $transaction_amount * 2.0);
+		$response = $this->client->receiveToken($secret['env'], $token, $remainder_amount, $toBundle[0]);
+		$this->checkResponse($response);
+		$this->checkWalletShadow($toBundle[0], $token, $remainder_amount, true);
 	}
 
 
@@ -499,7 +505,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $this->client->transferToken($from_secret, $toBundle[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount * 2.0, true);
+		$this->checkWalletShadow($toBundle[0], $token, $transaction_amount, true);
 
 
 
@@ -519,7 +525,7 @@ class TokenClientTransactionTest extends TestCaseBase
 		$remainder_amount = $full_amount - $transaction_amount * 4.0;
 		$response = $this->client->transferToken($from_secret, $toBundle[2], $token, $remainder_amount);
 		$this->checkResponse($response);
-		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount + $transaction_amount, true);
+		$this->checkWalletShadow($toBundle[2], $token, $remainder_amount, true);
 	}
 
 
@@ -592,8 +598,8 @@ class TokenClientTransactionTest extends TestCaseBase
 		// --- Bind a shadow wallet (with wrong bundle hash)
 		foreach ($intruders as $intruder) {
 			$response = $this->client->claimShadowWallet($intruder, $token, new Wallet($intruder));
-			$this->assertEquals($response->data()['status'], 'rejected');
-			$this->assertNotEquals(strpos($response->data()['reason'], 'ContinueID check failure'), false);
+			$this->assertEquals($response->status(), 'rejected');
+			$this->assertNotEquals(strpos($response->reason(), 'ContinueID verification failure'), false);
 		}
 
 		// --- Bind a shadow wallet (with original bundle hash)

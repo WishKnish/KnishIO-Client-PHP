@@ -59,7 +59,7 @@ class KnishIO
 	/**
 	 * @param $name
 	 * @param $arguments
-	 * @return |null
+	 * @return mixed
 	 * @throws \Exception
 	 */
 	public static function __callStatic ( $name, $arguments )
@@ -76,7 +76,7 @@ class KnishIO
 		}
 
 		// Get a response payload
-		return $response->payload();
+		return $response;
 	}
 
 }

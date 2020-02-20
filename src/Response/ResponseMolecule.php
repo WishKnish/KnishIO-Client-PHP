@@ -6,6 +6,8 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Molecule;
+
 /**
  * Class ResponseMolecule
  * @package WishKnish\KnishIO\Client\Response
@@ -14,14 +16,47 @@ class ResponseMolecule extends Response
 {
 	protected $dataKey = 'data.ProposeMolecule';
 
-    /**
-     * @return array
-     */
-    public function payload ()
-    {
 
-        return $this->data();
+	/**
+	 * @return Molecule|null
+	 */
+    public function payload () {
+    	if ( !$data = $this->data() ) {
+    		return null;
+		}
 
+    	$molecule = new Molecule();
+		$molecule->molecularHash = array_get($data, 'molecularHash');
+		$molecule->status = array_get($data, 'status');
+		$molecule->createdAt = array_get($data, 'createdAt');
+        return $molecule;
     }
+
+
+	/**
+	 * Success?
+	 *
+	 * @return mixed
+	 */
+	public function success () {
+		return ($this->status() === 'accepted');
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+    public function status () {
+    	return array_get($this->data(), 'status', 'rejected');
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function reason () {
+		return array_get($this->data(), 'reason', 'Invalid response from server');
+	}
+
 
 }

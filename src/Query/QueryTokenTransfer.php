@@ -18,6 +18,7 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class QueryTokenTransfer extends QueryMoleculePropose
 {
+	protected $fromWallet;
 
 
     /**
@@ -35,6 +36,8 @@ class QueryTokenTransfer extends QueryMoleculePropose
 			Wallet::create($fromSecret, $token, $toWallet->batchId, $fromWallet->characters)
 		);
 
+		// Save a from wallet
+		$this->fromWallet = $fromWallet;
 
 		// Create & sign a molecule
 		$this->molecule = new Molecule();
@@ -55,5 +58,12 @@ class QueryTokenTransfer extends QueryMoleculePropose
         return new ResponseTokenTransfer($this, $response);
     }
 
+
+	/**
+	 * @return mixed
+	 */
+    public function fromWallet () {
+    	return $this->fromWallet;
+	}
 
 }

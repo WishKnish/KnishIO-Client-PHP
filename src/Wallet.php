@@ -198,23 +198,23 @@ class Wallet
 
 	/**
 	 * Get a recipient batch ID
-	 * $this is a client sender wallet
 	 *
 	 * @param $senderWallet
 	 * @param $transferAmount
+	 * @param bool $noSplitting
 	 */
-	public function initBatchId ($senderWallet, $transferAmount) {
+	public function initBatchId ($senderWallet, $transferAmount, $noSplitting = false) {
 
 		if ($senderWallet->batchId) {
 
-			// Has a remainder value (source balance is bigger than a transfer value)
-			if (!$this->batchId && Decimal::cmp($senderWallet->balance, $transferAmount) > 0) {
-				$batchId = Wallet::generateBatchId();
+			// No splitting flag /* or transfer without a remainder */: use a sender's batch ID
+			if ($noSplitting /* || Decimal::equal($senderWallet->balance, $transferAmount) */) {
+				$batchId = $senderWallet->batchId;
 			}
 
-			// Has no remainder? use batch ID from the source wallet
+			// Generate new batch ID
 			else {
-				$batchId = $senderWallet->batchId;
+				$batchId = Wallet::generateBatchId();
 			}
 
 			// Set batchID to recipient wallet
