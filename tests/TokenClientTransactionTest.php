@@ -597,7 +597,7 @@ class TokenClientTransactionTest extends TestCaseBase
 
 		// --- Bind a shadow wallet (with wrong bundle hash)
 		foreach ($intruders as $intruder) {
-			$response = $this->client->claimShadowWallet($intruder, $token, new Wallet($intruder));
+			$response = $this->client->claimShadowWallet($intruder, $token);
 			$this->assertEquals($response->status(), 'rejected');
 			$this->assertNotEquals(strpos($response->reason(), 'ContinueID verification failure'), false);
 		}

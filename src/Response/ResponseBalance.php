@@ -32,27 +32,8 @@ class ResponseBalance extends Response
 			return null;
 		}
 
-		// Shadow wallet
-		if ($balance[ 'position' ] === null) {
-			$wallet = new WalletShadow( $balance['bundleHash'], $balance['tokenSlug'], $balance['batchId'] );
-		}
-
-		// Regular wallet
-		else {
-			$wallet = new Wallet( null, $balance[ 'tokenSlug' ] );
-			$wallet->address = $balance[ 'address' ];
-			$wallet->position = $balance[ 'position' ];
-			$wallet->bundle = $balance[ 'bundleHash' ];
-			$wallet->batchId = $balance[ 'batchId' ];
-            $wallet->characters = $balance[ 'characters' ];
-            $wallet->pubkey = $balance[ 'pubkey' ];
-		}
-
-		// Bind other data
-		$wallet->balance = $balance[ 'amount' ];
-
-		// Return a wallet
-		return $wallet;
+		// Return a client wallet object
+		return ResponseWalletList::toClientWallet($balance);
 	}
 
 }

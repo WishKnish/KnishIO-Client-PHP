@@ -17,7 +17,8 @@ use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenReceive;
 use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
-use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
+use WishKnish\KnishIO\Client\Query\QueryShadowWalletClaim;
+use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -184,23 +185,30 @@ class KnishIOClient
      * @param $token
      * @throws \Exception
      */
-	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
+	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null) {
 
 		// Source wallet
 		$sourceWallet = \default_if_null($sourceWallet, new Wallet( $secret ) );
 
-		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = \default_if_null($shadowWallet, $this->getBalance($secret, $token)->payload() );
-		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
+		// Get shadow wallet list
+		$query = $this->createQuery(QueryWalletList::class);
+		$response = $query->execute([
+			'bundleHash'	=> Crypto::generateBundleHash($secret),
+			'token'			=> $token,
+		]);
+		$shadowWallets = $response->payload();
+
+		// Shadow wallet
+		if (!$shadowWallets) {
 			throw new WalletShadowException();
 		}
 
 
 		// Create a query
-		$query = $this->createQuery(QueryWalletClaim::class);
+		$query = $this->createQuery(QueryShadowWalletClaim::class);
 
 		// Init a molecule
-		$query->initMolecule($secret, $sourceWallet, $shadowWallet, $token, $recipientWallet);
+		$query->initMolecule($secret, $sourceWallet, $shadowWallets);
 
 		// Execute a query
 		return $query->execute();
