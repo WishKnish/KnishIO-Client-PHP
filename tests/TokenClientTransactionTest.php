@@ -4,7 +4,6 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use Dotenv\Dotenv;
 use WishKnish\KnishIO\Atom;
-use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
@@ -15,28 +14,16 @@ use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
 
 
-
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 
-
-// Supporing variety versions of PHPUnit
-if (!class_exists('\PHPUnit_Framework_TestCase') ) {
-	abstract class TestCaseBase extends \PHPUnit\Framework\TestCase {}
-}
-else {
-	abstract class TestCaseBase extends \PHPUnit_Framework_TestCase {}
-}
 
 
 /**
  * Class TokenTransactionTest
  * @package WishKnish\KnishIO\Tests
  */
-class TokenClientTransactionTest extends TestCaseBase
+class TokenClientTransactionTest extends TestCase
 {
-	private $client;
-	private $dotenv;
-
 
 	// Token slugs
 	protected $token_slug = [
@@ -45,59 +32,6 @@ class TokenClientTransactionTest extends TestCaseBase
 		'env.fungible' => 'UTENVFUNGIBLE',
 		'env.stackable' => 'UTENVSTACKABLE',
 	];
-
-
-	/**
-	 * Data filepath
-	 *
-	 * @return string
-	 */
-	protected function dataFilepath () {
-		return __DIR__.'/'.substr(strrchr(static::class, "\\"), 1).'.data';
-	}
-
-
-	/**
-	 * Save data
-	 *
-	 * @param array $data
-	 */
-	protected function saveData (array $data, $filepath = null) {
-		$filepath = \default_if_null($filepath, $this->dataFilepath() );
-		file_put_contents($filepath, \json_encode($data));
-	}
-
-
-	/**
-	 * @return mixed
-	 */
-	protected function getData ($filepath = null) {
-		$filepath = \default_if_null($filepath, $this->dataFilepath() );
-		return json_decode(file_get_contents($filepath), true);
-	}
-
-
-	/**
-	 * @return mixed
-	 */
-	protected function clearData ($filepath = null) {
-		$filepath = \default_if_null($filepath, $this->dataFilepath() );
-		if (file_exists($filepath) ) {
-			unlink($filepath);
-		}
-	}
-
-
-	/**
-	 * @param array $response
-	 */
-	protected function checkResponse (Response $response) {
-		$data = $response->data();
-		if ($data['status'] !== 'accepted') {
-			$this->debug ($response);
-		}
-		$this->assertEquals($data['status'], 'accepted');
-	}
 
 
 	/**
@@ -137,49 +71,6 @@ class TokenClientTransactionTest extends TestCaseBase
 	 */
 	protected function checkWalletShadow ($bundle, $token, $amount, $hasBatchId) {
 		$this->checkWallet ($bundle, $token, $amount, $hasBatchId);
-	}
-
-
-	/**
-	 * Before execute
-	 *
-	 * @throws \Exception
-	 */
-	protected function beforeExecute () {
-
-		// Load env
-		$env_path = __DIR__.'/../';
-		$env_file = implode('.', array_filter(['.env', getenv('APP_ENV')]));
-		if (is_dir($env_path) ) {
-
-			// Switch between dotenv versions
-			if (method_exists('\Dotenv\Dotenv','createImmutable') ) {
-				$this->dotenv = \Dotenv\Dotenv::createImmutable($env_path, $env_file);
-			}
-			else {
-				$this->dotenv = \Dotenv\Dotenv::create($env_path, $env_file);
-			}
-
-			$this->dotenv->load();
-		}
-
-		// Get an app url
-		$app_url = getenv('APP_URL');
-
-		// Check app url
-		if (!$app_url) {
-			throw new \Exception('APP_URL is empty.');
-		}
-
-		// Client initialization
-		$this->client = new KnishIOClient($app_url.'graphql');
-	}
-
-
-
-	public function testMetaAggregate () {
-
-		$this->assertEquals(true, true);
 	}
 
 
@@ -640,44 +531,8 @@ class TokenClientTransactionTest extends TestCaseBase
 	}
 
 
-	/**
-	 * Output
-	 *
-	 * @param array $info
-	 */
-	protected function output (array $info) {
-		echo implode("\r\n", $info)."\r\n\r\n";
-	}
 
 
-	/**
-	 * @param Response $response
-	 * @param bool $final
-	 */
-	protected function debug (Response $response, $final = false) {
 
-		// Debug output
-		$output = [
-			'query' => get_class($response->query()),
-			'url' => $response->query()->url(),
-		];
-
-		// Reason data on the top of the output
-		if (array_has($response->data(), 'reason') ) {
-			$output['reason'] = array_get($response->data(), 'reason');
-			$output['reasonPayload'] = array_get($response->data(), 'reasonPayload');
-		}
-
-		// Other debug info
-		$output = array_merge ($output, [
-			'variables' => $response->query()->variables(),
-			'response' => $response->response(),
-		]);
-
-		print_r($output);
-		if ($final) {
-			die ();
-		}
-	}
 
 }
