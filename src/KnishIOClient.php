@@ -53,6 +53,14 @@ class KnishIOClient
 
 
 	/**
+	 * @return mixed
+	 */
+	public function client () {
+		return $this->client;
+	}
+
+
+	/**
 	 * @param $url
 	 */
 	public function setUrl ($url) {

@@ -82,47 +82,13 @@ class TokenClientTransactionTest extends TestCase
 	 */
 	public function testClearAll () {
 
-		// PHP version
-		$this->output (['PHP Version: '.PHP_VERSION]);
-
-		// PHP version comparing
-		if (version_compare(PHP_VERSION, '7.0.0') <= 0) {
-			$this->output ([
-				'PHP version is less than 7.0.0. Skip "testClearAll" test.',
-				'  -- DB must be cleaned manually with all data related to '.implode('", "', $this->token_slug).' tokens.',
-				'  -- OR should call \WishKnish\KnishIO\Tests\TokenServerTransactionTest::testClearAll server unit test instead.',
-			]);
-			return;
-		}
-
-		// Before execute
+		// Initial code
 		$this->beforeExecute();
 
-		// Server test filepath
-		$server_test_filepath = getenv('SERVER_TEST_PATH').'TokenServerTransactionTest.php';
+		// Call server cleanup
+		$this->callServerCleanup(\WishKnish\KnishIO\Tests\TokenServerTransactionTest::class);
 
-		// File does not exist
-		if (!$server_test_filepath || !file_exists($server_test_filepath) ) {
-			print_r("SERVER_TEST_FILE is not defined. Test do not clean up.\r\n");
-		}
-		else {
-
-			// Class & filepath
-			$class = \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class;
-
-			// Create & run a unit test command
-			$command = new \PHPUnit\TextUI\Command();
-			$response = $command->run([
-				'phpunit',
-				'--configuration',
-				__DIR__.'/../' .'\phpunit.xml',
-				'--filter',
-				'/(::testClearAll)( .*)?$/',
-				$class,
-				$server_test_filepath,
-				'--teamcity',
-			], false);
-		}
+		// Deafult assertion
 		$this->assertEquals(true, true);
 	}
 

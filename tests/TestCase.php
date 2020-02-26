@@ -167,4 +167,58 @@ abstract class TestCase extends TestCaseBase {
 		echo implode("\r\n", $info)."\r\n\r\n";
 	}
 
+
+	/**
+	 * Clear data test
+	 *
+	 * @throws \ReflectionException
+	 */
+	protected function callThirdPartyTest ($class, $test, $test_dir) {
+
+		// PHP version
+		$this->output (['PHP Version: '.PHP_VERSION]);
+
+		// PHP version comparing
+		if (version_compare(PHP_VERSION, '7.0.0') <= 0) {
+			$this->output ([
+				"PHP version is less than 7.0.0. Skip '{$test}' test.",
+				"  -- DB must be cleaned manually",
+				"  -- OR should call {$class}::{$test} server unit test instead.",
+			]);
+			return;
+		}
+
+		// Server test filepath
+		$server_test_filepath = $test_dir.class_basename($class).'.php';
+
+		// File does not exist
+		if (!$server_test_filepath || !file_exists($server_test_filepath) ) {
+			print_r("SERVER_TEST_FILE is not defined. Test do not clean up.\r\n");
+		}
+		else {
+
+			// Create & run a unit test command
+			$command = new \PHPUnit\TextUI\Command();
+			$response = $command->run([
+				'phpunit',
+				'--configuration',
+				__DIR__.'/../' .'\phpunit.xml',
+				'--filter',
+				'/(::'.$test.')( .*)?$/',
+				$class,
+				$server_test_filepath,
+				'--teamcity',
+			], false);
+		}
+		$this->assertEquals(true, true);
+	}
+
+
+	/**
+	 * @throws \ReflectionException
+	 */
+	protected function callServerCleanup ($class) {
+		$this->callThirdPartyTest($class, 'testClearAll', getenv('SERVER_TEST_PATH') );
+	}
+
 }
