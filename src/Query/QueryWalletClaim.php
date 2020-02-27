@@ -6,6 +6,8 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -17,18 +19,21 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryWalletClaim extends QueryMoleculePropose
 {
 
+    protected $recipientWallet;
 
     /**
-     * @param $secret
-     * @param $token
-     * @param $amount
-     * @param array $metas
-     * @throws \ReflectionException|\Exception
+     * @param string $secret
+     * @param Wallet $sourceWallet
+     * @param Wallet $shadowWallet
+     * @param string $token
+     * @param Wallet|null $recipientWallet
+     * @throws ReflectionException
+     * @throws Exception
      */
-	public function initMolecule ($secret, Wallet $sourceWallet, Wallet $shadowWallet, $token, Wallet $recipientWallet = null)
+	public function initMolecule ( $secret, Wallet $sourceWallet, Wallet $shadowWallet, $token, Wallet $recipientWallet = null )
 	{
 		// Create a recipient wallet to generate new position & address
-		$this->recipientWallet = \default_if_null($recipientWallet, new Wallet( $secret, $token ));
+		$this->recipientWallet = default_if_null( $recipientWallet, new Wallet( $secret, $token ) );
 
 
 

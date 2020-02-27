@@ -6,7 +6,9 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use GuzzleHttp\Client;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
@@ -38,7 +40,7 @@ class KnishIOClient
 	 */
 	public function __construct ($url, Client $client = null)
 	{
-		$this->client = \default_if_null($client, new Client( [
+		$this->client = default_if_null($client, new Client( [
 			'base_uri'    => $url,
 			'verify'      => false,
 			'http_errors' => false,
@@ -72,7 +74,7 @@ class KnishIOClient
 	 * @param $code
 	 * @param $token
 	 * @return Response
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function getBalance ( $code, $token )
 	{
@@ -91,23 +93,23 @@ class KnishIOClient
 
 
     /**
-     * @param $secret
-     * @param $token
-     * @param $amount
+     * @param string $secret
+     * @param string $token
+     * @param int|float $amount
      * @param array $metas
      * @return Response
-     * @throws \ReflectionException|\Exception
+     * @throws Exception
      */
 	public function createToken ( $secret, $token, $amount, array $metas = null )
 	{
-		$metas = \default_if_null($metas, []);
+		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
-		$sourceWallet = new Wallet($secret);
+		$sourceWallet = new Wallet( $secret );
 
 		// Recipient wallet
 		$recipientWallet = new Wallet( $secret, $token );
-		if (array_get($metas, 'fungibility') === 'stackable') { // For stackable token - create a batch ID
+		if ( array_get($metas, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 			$recipientWallet->batchId = Wallet::generateBatchId();
 		}
 
@@ -130,14 +132,14 @@ class KnishIOClient
 	 * @param $to wallet address OR bundle
 	 * @param array|null $metas
 	 * @return mixed
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function receiveToken ( $secret, $token, $value, $to, array $metas = null )
 	{
-		$metas = \default_if_null($metas, []);
+		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
-		$sourceWallet = new Wallet($secret);
+		$sourceWallet = new Wallet( $secret );
 
 		// Meta type
 		$metaType = Wallet::isBundleHash( $to ) ? 'walletbundle' : 'wallet';
@@ -159,8 +161,17 @@ class KnishIOClient
 	 * @param string $type
 	 * @param string $code
 	 * @return Response
-	 * @throws \ReflectionException|\Exception
+	 * @throws ReflectionException|Exception
 	 */
+
+    /**
+     * @param string $secret
+     * @param $type
+     * @param $contact
+     * @param $code
+     * @return mixed
+     * @throws Exception
+     */
 	public function createIdentifier ($secret, $type, $contact, $code)
 	{
 		// Create source & remainder wallets
@@ -180,17 +191,21 @@ class KnishIOClient
     /**
      * Bind shadow wallet
      *
-     * @param $bundleHash
-     * @param $token
-     * @throws \Exception
+     * @param string $secret
+     * @param string $token
+     * @param Wallet|null $sourceWallet
+     * @param Wallet|null $shadowWallet
+     * @param null $recipientWallet
+     * @return mixed
+     * @throws Exception
      */
 	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
 
 		// Source wallet
-		$sourceWallet = \default_if_null($sourceWallet, new Wallet( $secret ) );
+		$sourceWallet = default_if_null($sourceWallet, new Wallet( $secret ) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = \default_if_null($shadowWallet, $this->getBalance($secret, $token)->payload() );
+		$shadowWallet = default_if_null($shadowWallet, $this->getBalance($secret, $token)->payload() );
 		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}
@@ -213,7 +228,7 @@ class KnishIOClient
 	 * @param string $token
 	 * @param int|float $amount
 	 * @return array
-	 * @throws \Exception|\ReflectionException|InvalidResponseException
+	 * @throws Exception|ReflectionException|InvalidResponseException
 	 */
 	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
 	{

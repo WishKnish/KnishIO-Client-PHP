@@ -2,6 +2,8 @@
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class TransferRemainderException
  * @package WishKnish\KnishIO\Client\Exception
@@ -17,9 +19,9 @@ class TransferRemainderException extends BaseException
 	 * TransferRemainderException constructor.
 	 * @param string $message
 	 * @param int $code
-	 * @param \Throwable|null $previous
+	 * @param Throwable|null $previous
 	 */
-	public function __construct ( $message = 'Invalid remainder provided', $code = 1, \Throwable $previous = null )
+	public function __construct ( $message = 'Invalid remainder provided', $code = 1, Throwable $previous = null )
 	{
 		parent::__construct( $message, $code, $previous );
 	}

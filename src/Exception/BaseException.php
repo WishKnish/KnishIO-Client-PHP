@@ -2,6 +2,9 @@
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use LogicException;
+use Throwable;
+
 /**
  * Class BaseException
  * @package WishKnish\KnishIO\Client\Exception
@@ -11,7 +14,7 @@ namespace WishKnish\KnishIO\Client\Exception;
  * @property string $file
  * @property integer $line
  */
-abstract class BaseException extends \LogicException implements IException
+abstract class BaseException extends LogicException implements IException
 {
 	protected $message = 'Unknown exception';
 	protected $code = 0;
@@ -22,9 +25,9 @@ abstract class BaseException extends \LogicException implements IException
 	 * BaseException constructor.
 	 * @param null $message
 	 * @param int $code
-	 * @param \Throwable|null $previous
+	 * @param Throwable|null $previous
 	 */
-	public function __construct ( $message = null, $code = 0, \Throwable $previous = null )
+	public function __construct ( $message = null, $code = 0, Throwable $previous = null )
 	{
 		if ( !$message ) {
 			throw new static ( 'Unknown ' . static::class );

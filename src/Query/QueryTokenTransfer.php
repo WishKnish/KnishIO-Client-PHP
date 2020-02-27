@@ -27,12 +27,21 @@ class QueryTokenTransfer extends QueryMoleculePropose
      * @param array $metas
      * @throws \ReflectionException|\Exception
      */
-	public function initMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
+    /**
+     * @param $fromSecret
+     * @param Wallet $fromWallet
+     * @param Wallet $toWallet
+     * @param string $token
+     * @param int|float $amount
+     * @param Wallet|null $remainderWallet
+     * @throws \ReflectionException
+     */
+	public function initMolecule ( $fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null )
 	{
 		// Remainder wallet
-		$this->remainderWallet = \default_if_null (
+		$this->remainderWallet = default_if_null (
 			$remainderWallet,
-			Wallet::create($fromSecret, $token, $toWallet->batchId, $fromWallet->characters)
+			Wallet::create( $fromSecret, $token, $toWallet->batchId, $fromWallet->characters )
 		);
 
 
@@ -42,7 +51,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		$this->molecule->sign( $fromSecret );
 
 		// Check the molecule
-		$this->molecule->check($fromWallet);
+		$this->molecule->check( $fromWallet );
 	}
 
     /**
@@ -51,7 +60,8 @@ class QueryTokenTransfer extends QueryMoleculePropose
      * @param string $response
      * @return Response
      */
-    public function createResponse ($response) {
+    public function createResponse ( $response )
+    {
         return new ResponseTokenTransfer($this, $response);
     }
 

@@ -24,16 +24,16 @@ class ResponseBalance extends Response
 	 * @return Wallet|WalletShadow|null
 	 * @throws \Exception
 	 */
-	public function payload()
+	public function payload ()
 	{
 		// Get data
 		$balance = $this->data();
-		if (!$balance) {
+		if ( !$balance ) {
 			return null;
 		}
 
 		// Shadow wallet
-		if ($balance[ 'position' ] === null) {
+		if ( $balance[ 'position' ] === null ) {
 			$wallet = new WalletShadow( $balance['bundleHash'], $balance['tokenSlug'], $balance['batchId'] );
 		}
 

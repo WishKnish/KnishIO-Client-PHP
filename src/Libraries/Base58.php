@@ -22,9 +22,9 @@ class Base58 extends Base
      * @var array
      */
     private $options = [
-        "characters" => Base::GMP,
-        "check" => false,
-        "version" => 0x00,
+        'characters' => Base::GMP,
+        'check' => false,
+        'version' => 0x00,
     ];
 
     /**
@@ -37,12 +37,12 @@ class Base58 extends Base
 
         parent::__construct( $options );
 
-        $this->options = \array_merge( $this->options, $options );
+        $this->options = array_merge( $this->options, $options );
 
-        if ( \extension_loaded( 'gmp' ) ) {
+        if ( extension_loaded( 'gmp' ) ) {
             $this->encoder = new GmpEncoder( $this->options );
         }
-        elseif ( \extension_loaded( 'bcmath' ) ) {
+        else if ( extension_loaded( 'bcmath' ) ) {
             $this->encoder = new BcmathEncoder( $this->options );
         }
         else {

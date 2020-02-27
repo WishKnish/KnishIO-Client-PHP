@@ -2,7 +2,8 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use desktopd\SHA3\Sponge as SHA3;
-use WishKnish\KnishIO\Client\Libraries\Base58;
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Base58Static as B58;
 
 /**
@@ -17,21 +18,21 @@ class Soda
     /**
      * @var string|null
      */
-    public $characters = null;
+    public $characters;
 
     /**
      * Soda constructor.
      * @param string|null $characters
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     public function __construct ( $characters = null )
     {
 
         $constant = Base58::class . '::' . $characters;
 
-        $this->characters = \defined( $constant ) ? \constant( $constant ) : Base58::GMP;
+        $this->characters = defined( $constant ) ? constant( $constant ) : Base58::GMP;
 
-        if ( ! \extension_loaded( 'sodium' ) ) {
+        if ( ! extension_loaded( 'sodium' ) ) {
 
             Sodium::libsodium2sodium();
 
@@ -45,14 +46,14 @@ class Soda
      * @param array|object $message
      * @param string $key
      * @return string
-     * @throws \Exception|\ReflectionException
+     * @throws Exception|ReflectionException
      */
     public function encrypt ( $message, $key )
     {
 
         return $this->encode(
-            \sodium_crypto_box_seal(
-                \json_encode( (array) $message ),
+            sodium_crypto_box_seal(
+                json_encode( (array) $message ),
                 $this->decode( $key )
             )
         );
@@ -66,15 +67,14 @@ class Soda
      * @param string $privateKey
      * @param string $publicKey
      * @return array|null
-     * @throws \ReflectionException
      */
     public function decrypt ( $decrypted, $privateKey, $publicKey )
     {
 
-        return \json_decode(
-            \sodium_crypto_box_seal_open(
+        return json_decode(
+            sodium_crypto_box_seal_open(
                 $this->decode( $decrypted ),
-                \sodium_crypto_box_keypair_from_secretkey_and_publickey(
+                sodium_crypto_box_keypair_from_secretkey_and_publickey(
                     $this->decode( $privateKey ),
                     $this->decode( $publicKey )
                 )
@@ -89,13 +89,13 @@ class Soda
      *
      * @param string $key
      * @return string
-     * @throws \Exception|\ReflectionException
+     * @throws Exception|ReflectionException
      */
     public function generatePrivateKey ( $key )
     {
 
         return $this->encode(
-            \sodium_crypto_box_secretkey(
+            sodium_crypto_box_secretkey(
                 SHA3::init( SHA3::SHAKE256 )
                     ->absorb( $key )
                     ->squeeze( SODIUM_CRYPTO_BOX_KEYPAIRBYTES )
@@ -109,19 +109,18 @@ class Soda
      *
      * @param string $key
      * @return string
-     * @throws \ReflectionException
      */
     public function generatePublicKey ( $key )
     {
 
-        return $this->encode( \sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
+        return $this->encode( sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
 
     }
 
     /**
      * @param string $key
      * @return string
-     * @throws \Exception
+     * @throws Exception
      */
     public function shortHash ( $key )
     {
