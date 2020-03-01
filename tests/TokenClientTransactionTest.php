@@ -403,6 +403,52 @@ class TokenClientTransactionTest extends TestCase
 	}
 
 
+
+	/**
+	 *
+	 */
+	public function testVIsotopeCombination () {
+		$this->beforeExecute();
+
+		// Data
+		$data = $this->getData();
+		$token = $this->token_slug['fungible'];
+		$transaction_amount = array_get($data, 'amount.transaction');
+		$full_amount = array_get($data, 'amount.full');
+
+		// Recipient.2: last transaction from wallet => recipient.0 without remainder
+		$from_secret = array_get($data, 'secret.recipient')[2];
+
+		// Get a from wallet
+		$from_wallet = $this->client->getBalance( $from_secret, $token )->payload();
+
+
+		// Use a source secret to generate a recipient wallet (balance = 0)
+		$recipient_secret = array_get($data, 'secret.fungible');
+
+
+		// Create a meta molecule
+		$molecule = new \WishKnish\KnishIO\Client\Molecule();
+
+		// Init meta atoms
+		$molecule->initMeta(new Wallet($from_secret),
+			['key1' => 'value1', 'key2' => 'value2'],
+			'metaType',
+			'metaId'
+		);
+
+		// Init value atoms
+		$molecule->initValue($from_wallet, new Wallet($recipient_secret), new Wallet($from_secret), 1);
+
+
+		// Sign & check the molecule
+		$molecule->sign($from_secret);
+		$molecule->check();
+
+	}
+
+
+
 	/**
 	 * Claim shadow wallet
 	 *

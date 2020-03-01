@@ -110,7 +110,8 @@ class QueryClientTest extends TestCase
 		$this->beforeExecute();
 
 		// New wallet
-		$newWallet = new Wallet(Crypto::generateSecret(), 'UTINITWALLET');
+		$new_wallet_secret = Crypto::generateSecret();
+		$newWallet = new Wallet($new_wallet_secret, 'UTINITWALLET');
 
 		// Create a molecule
 		$molecule = new Molecule();
