@@ -41,6 +41,16 @@ class Molecule
 	public $createdAt;
 	public $atoms;
 
+
+	/**
+	 * @return string
+	 */
+	public static function continueIdKey () {
+		return 'bundleContinueID';
+	}
+
+
+
 	/**
 	 * Molecule constructor.
 	 * @param null|string $cellSlug
@@ -67,6 +77,23 @@ class Molecule
 
 	}
 
+
+	/**
+	 * @param Atom $atom
+	 * @return $this
+	 */
+	public function addAtom (Atom $atom) : self
+	{
+		$this->molecularHash = null;
+
+		$this->atoms[] =  $atom;
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
     /**
      * Add user remainder atom
      *
@@ -85,7 +112,7 @@ class Molecule
 			$userRemainderWallet->token,
 			null,
 			null,
-			'walletBundle',
+			static::continueIdKey(),
 			$userRemainderWallet->bundle,
 			null,
 			$userRemainderWallet->pubkey,
