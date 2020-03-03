@@ -582,27 +582,23 @@ class Molecule
 	}
 
 	/**
-	 * @param array|Wallet null $senderWallet
+	 * @param Wallet|null $senderWallet
 	 * @return bool
 	 * @throws \ReflectionException
 	 */
-	public function check ( $senderWallet = null )
+	public function check ( Wallet $senderWallet = null )
 	{
 		return static::verify( $this, $senderWallet );
 	}
 
 	/**
 	 * @param Molecule $molecule
-	 * @param array|null $senderWallets
+	 * @param Wallet $senderWallet
 	 * @return bool
-	 * @throws \ReflectionException
+	 * @throws \ReflectionException|\Exception
 	 */
-	public static function verify ( Molecule $molecule, $senderWallets = null )
+	public static function verify ( Molecule $molecule, Wallet $senderWallet = null )
 	{
-		// Convert to the array
-		if (!is_array($senderWallets) ) {
-			$senderWallets = [$senderWallets];
-		}
 
 		return CheckMolecule::molecularHash( $molecule )
 			&& CheckMolecule::ots( $molecule )
@@ -610,7 +606,7 @@ class Molecule
 			&& CheckMolecule::isotopeM( $molecule )
             && CheckMolecule::isotopeC( $molecule )
             && CheckMolecule::isotopeT( $molecule )
-			&& CheckMolecule::isotopeV( $molecule, $senderWallets );
+			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 
 	}
 

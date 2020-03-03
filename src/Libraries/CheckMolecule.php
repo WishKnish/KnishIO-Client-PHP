@@ -33,12 +33,12 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule
 {
 
-	/**
-	 * @param Molecule $molecule
-	 * @param array|null $fromWallets
-	 * @return array|null
-	 */
-    public static function verify ( Molecule $molecule, array $fromWallets = null )
+    /**
+     * @param Molecule $molecule
+     * @param Wallet $fromWallet
+     * @return array|null
+     */
+    public static function verify ( Molecule $molecule, Wallet $fromWallet = null )
     {
 
         $verification_methods = [
@@ -59,7 +59,7 @@ class CheckMolecule
 
                     case 'isotopeV': {
 
-                        CheckMolecule::{ $method }( $molecule , $fromWallets );
+                        CheckMolecule::{ $method }( $molecule , $fromWallet );
 
                         break;
 
@@ -111,70 +111,6 @@ class CheckMolecule
 		return true;
 
 	}
-
-
-	/**
-	 * @param $atoms
-	 * @return array
-	 */
-	public static function getIsotopeBunches ($atoms, $isotope) {
-
-		// Result bunches
-		$bunches = [];
-
-		// @todo move all this logic to the separated classes
-		// End closue isotope customization
-		$closureStartBunch = null;
-		switch ($isotope) {
-
-			// V isotope - is the next V bunch is started: value < 0
-			case 'V':
-				$closureStartBunch = static function ($atom) {
-					return ($atom->value < 0);
-				};
-				break;
-
-			// C isotope - is metaType == walletBundle is a user remainder atom, other metaType - new C isotope bunch is started
-			case 'C':
-				$closureStartBunch = static function ($atom) {
-					return ($atom->metaType !== 'walletBundle');
-				};
-				break;
-		}
-
-		// Find each isotope bunch
-		$start = null;
-		foreach ( $atoms as $index => $atom ) {
-
-			// Bunch is started
-			if ($start !== null) {
-
-				// Not searchable isotope: end of the bunch
-				if ($atom->isotope !== $isotope || ($closureStartBunch && $closureStartBunch($atom)) ) {
-
-					// Add a bunch
-					$bunches[] = array_slice($atoms, $start, $index - $start);
-
-					// Reset start index
-					$start = null;
-				}
-
-				// The last searchable isotope: check end of the atom's list
-				else if ($index === count($atoms) - 1) {
-					$bunches[] = array_slice($atoms, $start, count($atoms) - $start);
-				}
-			}
-
-			// Bunch is NOT started
-			if ($atom->isotope === $isotope && $start === null) {
-				$start = $index;
-			}
-		}
-
-		return $bunches;
-	}
-
-
 
     /**
      * @param Molecule $molecule
@@ -283,18 +219,19 @@ class CheckMolecule
 
 	}
 
-
 	/**
 	 * Verification of V-isotope molecules checks to make sure that:
 	 * 1. we're sending and receiving the same token
 	 * 2. we're only subtracting on the first atom
 	 *
 	 * @param Molecule $molecule
-	 * @param array|null $senderWallets
+	 * @param Wallet $senderWallet
 	 * @return bool
+	 * @throws AtomsMissingException|TransferMismatchedException|TransferMalformedException|TransferToSelfException|TransferUnbalancedException|TransferBalanceException|TransferRemainderException
 	 */
-	public static function isotopeV ( Molecule $molecule, array $senderWallets = null )
+	public static function isotopeV ( Molecule $molecule, Wallet $senderWallet = null )
 	{
+
 		static::missing( $molecule );
 
 		// Select all atoms V
@@ -304,37 +241,14 @@ class CheckMolecule
 
 		}
 
-		// Get isotope 'V' bunches
-		$isotopeBunches = static::getIsotopeBunches($molecule->atoms, 'V');
-
-		// @todo Temporarily exception to check multi bunches
-		if (count($isotopeBunches) > 1) {
-			throw new TransferMismatchedException('Only one \'V\' isotope bunch is now supported.');
-		}
-
-		// Check each sequence
-		foreach ($isotopeBunches as $index => $bunch) {
-			static::isotopeBunchV ($bunch, array_get($senderWallets, $index));
-		}
-
-		return true;
-	}
-
-
-	/**
-	 * @param array $atoms
-	 * @param Wallet|null $senderWallet
-	 */
-	protected static function isotopeBunchV ( array $atoms, Wallet $senderWallet = null ) {
-
 		// Grabbing the first atom
-		$firstAtom = \reset( $atoms );
+		$firstAtom = \reset( $molecule->atoms );
 
 		// Looping through each V-isotope atom
 		$sum = 0.0;
 		$value = 0.0;
 
-		foreach ( $atoms as $index => $vAtom ) {
+		foreach ( $molecule->atoms as $index => $vAtom ) {
 
 			// Not V? Next...
 			if ( $vAtom->isotope !== 'V' ) {
@@ -414,8 +328,6 @@ class CheckMolecule
 		return true;
 
 	}
-
-
 
 	/**
 	 * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with

@@ -63,5 +63,4 @@ class QueryMoleculePropose extends Query
 		return $this->molecule;
 	}
 
-
 }

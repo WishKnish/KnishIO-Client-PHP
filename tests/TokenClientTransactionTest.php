@@ -9,7 +9,6 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
@@ -432,33 +431,20 @@ class TokenClientTransactionTest extends TestCase
 		$molecule = new \WishKnish\KnishIO\Client\Molecule();
 
 		// Init meta atoms
-		/*$molecule->initMeta(new Wallet($from_secret),
-			['key1' => 'value1', 'key2' => 'value2'],
-			'metaType',
-			'metaId'
-		);
-		*/
-
-		// Init value atoms
-		$molecule->initValue($from_wallet, new Wallet($recipient_secret), new Wallet($from_secret), 1);
-
-		// Init meta atoms
 		$molecule->initMeta(new Wallet($from_secret),
 			['key1' => 'value1', 'key2' => 'value2'],
 			'metaType',
 			'metaId'
 		);
 
+		// Init value atoms
+		$molecule->initValue($from_wallet, new Wallet($recipient_secret), new Wallet($from_secret), 1);
+
+
 		// Sign & check the molecule
 		$molecule->sign($from_secret);
-		$molecule->check([$from_wallet, $from_wallet]);
+		$molecule->check();
 
-		// Create & execute a query
-		$response = $this->client->createQuery(QueryMoleculePropose::class)
-			->execute (['molecule' => $molecule]);
-
-		// Check the response
-		$this->checkResponse($response);
 	}
 
 
