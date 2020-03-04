@@ -27,7 +27,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
      * @param array $metas
      * @throws \ReflectionException|\Exception
      */
-	public function initMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
+	public function fillMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
 		$this->remainderWallet = \default_if_null (
@@ -38,8 +38,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		// Save a from wallet
 		$this->fromWallet = $fromWallet;
 
-		// Create & sign a molecule
-		$this->molecule = new Molecule();
+		// Fill the molecule
 		$this->molecule->initValue( $fromWallet, $toWallet, $this->remainderWallet, $amount );
 		$this->molecule->sign( $fromSecret );
 

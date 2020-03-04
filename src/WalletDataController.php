@@ -9,12 +9,11 @@ namespace WishKnish\KnishIO\Client;
 use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
- * Class WalletShadow
+ * Class WalletDataController
  * @package WishKnish\KnishIO\Client
  */
-class WalletShadow extends Wallet
+class WalletDataController extends Wallet
 {
-
 
 	/**
 	 * WalletShadow constructor.
@@ -25,20 +24,11 @@ class WalletShadow extends Wallet
 	 * @param integer $saltLength
 	 * @throws \Exception
 	 */
-	public function __construct ( $bundleHash, $token = 'USER', string $batchId = null, $characters = null )
+	public function __construct ( $secretOrBundle, $token, string $batchId = null, $characters = null )
 	{
+		parent::__construct($secretOrBundle, 'USER', null, $characters);
 
-	    parent::__construct(null, $token );
 
-		$this->bundle = $bundleHash;
-		$this->batchId = $batchId;
-        $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
-
-		// Empty values
-		$this->position = null;
-		$this->key = null;
-		$this->address = null;
-		$this->pubkey = null;
 
 	}
 

@@ -218,6 +218,26 @@ class Molecule
 	{
 		$this->molecularHash = null;
 
+		// Metas
+		$metas = [
+			'address'  => $newWallet->address,
+			'token'    => $newWallet->token,
+			'bundle'   => $newWallet->bundle,
+			'position' => $newWallet->position,
+			'amount'   => '0',
+			'batch_id' => $newWallet->batchId,
+			'pubkey'   => $newWallet->pubkey,
+			'characters' => $newWallet->characters,
+		];
+
+		// Add data controller metas
+		if ($sourceWallet instanceof WalletDataController) {
+			$metas = array_merge($metas, [
+				'dataController'	=> true,
+				'cell'				=> $this->cellSlug,
+			]);
+		}
+
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
@@ -228,16 +248,7 @@ class Molecule
 			$sourceWallet->batchId,
 			'wallet',
 			$newWallet->address,
-			[
-				'address'  => $newWallet->address,
-				'token'    => $newWallet->token,
-				'bundle'   => $newWallet->bundle,
-				'position' => $newWallet->position,
-				'amount'   => '0',
-				'batch_id' => $newWallet->batchId,
-                'pubkey'   => $newWallet->pubkey,
-                'characters' => $newWallet->characters,
-			],
+			$metas,
             $sourceWallet->pubkey,
             $sourceWallet->characters,
 			null,

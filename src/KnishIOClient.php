@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client;
 
 use GuzzleHttp\Client;
+use WishKnish\KnishIO\Client\Exception\BaseException;
+use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
@@ -14,6 +16,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
+use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenReceive;
 use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
@@ -78,6 +81,29 @@ class KnishIOClient
 
 
 	/**
+	 * @param $class
+	 * @param Molecule|null $molecule
+	 */
+	public function createMoleculeQuery ($class, Molecule $molecule = null) {
+
+		// Create base query
+		$query = $this->createQuery($class);
+
+		// Only instances of QueryMoleculePropose supported
+		if (!$query instanceof QueryMoleculePropose) {
+			throw new CodeException(static::class.'::createMoleculeQuery - required class instance of QueryMoleculePropose.');
+		}
+
+		// Set molecule for the current query
+		if ($molecule) {
+			$query->setMolecule($molecule);
+		}
+
+		return $query;
+	}
+
+
+	/**
 	 * @param $code
 	 * @param $token
 	 * @return Response
@@ -122,10 +148,10 @@ class KnishIOClient
 
 
 		// Create a query
-		$query = $this->createQuery(QueryTokenCreate::class);
+		$query = $this->createMoleculeQuery(QueryTokenCreate::class);
 
-		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
+		// Fill a molecule
+		$query->fillMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
 
 		// Return a query execution result
 		return $query->execute ();
@@ -152,10 +178,10 @@ class KnishIOClient
 		$metaType = Wallet::isBundleHash( $to ) ? 'walletbundle' : 'wallet';
 
 		// Create a query
-		$query = $this->createQuery(QueryTokenReceive::class);
+		$query = $this->createMoleculeQuery(QueryTokenReceive::class);
 
-		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
+		// Fill a molecule
+		$query->fillMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
 
 		// Return a query execution result
 		return $query->execute ();
@@ -176,10 +202,10 @@ class KnishIOClient
 		$sourceWallet = new Wallet( $secret );
 
 		// Create & execute a query
-		$query = $this->createQuery(QueryIdentifierCreate::class);
+		$query = $this->createMoleculeQuery(QueryIdentifierCreate::class);
 
-		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $type, $contact, $code);
+		// Fill a molecule
+		$query->fillMolecule ( $secret, $sourceWallet, $type, $contact, $code);
 
 		// Execute a query
 		return $query->execute();
@@ -213,10 +239,10 @@ class KnishIOClient
 
 
 		// Create a query
-		$query = $this->createQuery(QueryShadowWalletClaim::class);
+		$query = $this->createMoleculeQuery(QueryShadowWalletClaim::class);
 
-		// Init a molecule
-		$query->initMolecule($secret, $sourceWallet, $shadowWallets);
+		// Fill a molecule
+		$query->fillMolecule($secret, $sourceWallet, $shadowWallets);
 
 		// Execute a query
 		return $query->execute();
@@ -254,10 +280,10 @@ class KnishIOClient
 
 
 		// Create a query
-		$query = $this->createQuery(QueryTokenTransfer::class);
+		$query = $this->createMoleculeQuery(QueryTokenTransfer::class);
 
-		// Init a molecule
-		$query->initMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );
+		// Fill a molecule
+		$query->fillMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );
 
 		// Execute a query
 		return $query->execute();

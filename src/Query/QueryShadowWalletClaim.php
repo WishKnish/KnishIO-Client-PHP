@@ -26,11 +26,8 @@ class QueryShadowWalletClaim extends QueryMoleculePropose
      * @param array $metas
      * @throws \ReflectionException|\Exception
      */
-	public function initMolecule ($secret, Wallet $sourceWallet, array $shadowWallets)
+	public function fillMolecule ($secret, Wallet $sourceWallet, array $shadowWallets)
 	{
-		// Create & sign a molecule
-		$this->molecule = new Molecule();
-
 		// Add 'C' atoms for the shadow wallets claim
 		foreach ($shadowWallets as $shadowWallet) {
 

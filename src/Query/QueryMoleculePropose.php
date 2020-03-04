@@ -27,6 +27,14 @@ class QueryMoleculePropose extends Query
 
 
 	/**
+	 * Init
+	 */
+	public function init () {
+		$this->molecule = new Molecule();
+	}
+
+
+	/**
 	 * Create a response
 	 *
 	 * @param string $response
@@ -55,6 +63,15 @@ class QueryMoleculePropose extends Query
 	public function remainderWallet () {
 		return $this->remainderWallet;
 	}
+
+
+	/**
+	 * @param Molecule $molecule
+	 */
+	public function setMolecule (Molecule $molecule) {
+		$this->molecule = $molecule;
+	}
+
 
 	/**
 	 * @return mixed
