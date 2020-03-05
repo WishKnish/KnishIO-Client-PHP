@@ -101,6 +101,7 @@ abstract class TestCase extends TestCaseBase {
 
 		// Client initialization
 		$this->client = new KnishIOClient($app_url.'graphql');
+		$this->output(['Query URL: '. $this->client->url()]);
 	}
 
 
