@@ -24,6 +24,7 @@ class QueryIdentifierCreate extends QueryMoleculePropose
      * @param string $contact
      * @param string $code
      * @param Wallet|null $remainderWallet
+	 */
 	public function fillMolecule ($secret, Wallet $sourceWallet, $type, $contact, $code, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
