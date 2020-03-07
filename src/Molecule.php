@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
+use Exception;
+use ReflectionException;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -136,12 +138,12 @@ class Molecule
 	 * @param Wallet $remainderWallet
 	 * @param integer|float $value
 	 * @return self
-	 * @throws \Exception
+	 * @throws BalanceInsufficientException
 	 */
 	public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
 	{
 
-		if ( Decimal::cmp($value, $sourceWallet->balance) > 0 ) {
+		if ( Decimal::cmp( $value, $sourceWallet->balance ) > 0 ) {
 
 			throw new BalanceInsufficientException();
 
@@ -212,7 +214,6 @@ class Molecule
 	 * @param Wallet $newWallet
 	 * @param Wallet $userRemainderWallet
 	 * @return $this
-	 * @throws \Exception
 	 */
 	public function initWalletCreation ( Wallet $sourceWallet, Wallet $newWallet, Wallet $userRemainderWallet )
 	{
@@ -269,6 +270,7 @@ class Molecule
 	 *
 	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
 	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
+     * @param Wallet $userRemainderWallet
 	 * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
 	 * @param array $tokenMeta - additional fields to configure the token
 	 * @return self
@@ -369,12 +371,13 @@ class Molecule
      * Initialize a C-type molecule to issue a new type of identifier
      *
      * @param Wallet $sourceWallet
-     * @param string $source
+     * @param Wallet $userRemainderWallet
      * @param string $type
+     * @param string $contact
      * @param string $code
      *
      * @return self
-     * @throws \Exception
+     * @throws Exception
      */
 	public function initIdentifierCreation ( Wallet $sourceWallet, Wallet $userRemainderWallet, $type, $contact, $code )
 	{
@@ -481,14 +484,13 @@ class Molecule
 	}
 
     /**
-     * @param string $secret
+     * @param Wallet $sourceWallet
      * @param string $token
      * @param int|float $amount
      * @param string $metaType
      * @param string $metaId
      * @param array $meta
      * @return self
-     * @throws \Exception
      */
 	public function initTokenTransfer ( Wallet $sourceWallet, $token, $amount, $metaType, $metaId, array $meta = [] )
     {

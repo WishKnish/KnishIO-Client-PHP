@@ -2,7 +2,6 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Tuupola\Base58Proxy as Base;
-use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
  * Class Base58Static
@@ -15,9 +14,9 @@ class Base58Static extends Base
      * @var array
      */
     public static $options = [
-        "characters" => Base58::GMP,
-        "check" => false,
-        "version" => 0x00,
+        'characters' => Base58::GMP,
+        'check' => false,
+        'version' => 0x00,
     ];
 
     /**

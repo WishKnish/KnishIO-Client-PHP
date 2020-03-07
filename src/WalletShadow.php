@@ -16,23 +16,23 @@ class WalletShadow extends Wallet
 {
 
 
-	/**
-	 * WalletShadow constructor.
-	 *
-	 * @param string $secret
-	 * @param string $token
-	 * @param string|null $position
-	 * @param integer $saltLength
-	 * @throws \Exception
-	 */
-	public function __construct ( $bundleHash, $token = 'USER', string $batchId = null, $characters = null )
+    /**
+     * WalletShadow constructor.
+     *
+     * @param string $bundleHash
+     * @param string $token
+     * @param string|null $batchId
+     * @param string|null $characters
+     * @throws Exception
+     */
+	public function __construct ( $bundleHash, $token = 'USER', $batchId = null, $characters = null )
 	{
 
 	    parent::__construct(null, $token );
 
 		$this->bundle = $bundleHash;
 		$this->batchId = $batchId;
-        $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
+        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		// Empty values
 		$this->position = null;

@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -76,7 +77,7 @@ class KnishIO
 		}
 
 		// Get a response payload
-		return $response;
+		return $response->payload();
 	}
 
 }

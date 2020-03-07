@@ -27,8 +27,9 @@ class QueryLinkIdentifierMutation extends Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse ($response) {
-		return new ResponseIdentifier($this, $response);
+	public function createResponse ( $response )
+    {
+		return new ResponseIdentifier( $this, $response );
 	}
 
 }

@@ -24,9 +24,9 @@ abstract class Query
 	/**
 	 * Query constructor.
 	 * @param Client $client
-	 * @param string $url
+	 * @param string|null $url
 	 */
-	public function __construct(Client $client, $url = null)
+	public function __construct ( Client $client, $url = null )
 	{
 		$this->url = $url;
 		$this->client = $client;
@@ -45,13 +45,13 @@ abstract class Query
 
 
 	/**
-	 * @param array $variables
+	 * @param array|null $variables
 	 * @return mixed
 	 */
-	public function execute (array $variables = null) {
+	public function execute ( array $variables = null ) {
 
 		// Default value of variables
-		$this->variables = \default_if_null($variables, []);
+		$this->variables = default_if_null( $variables, [] );
 
 		// Make a request
 		$response = $this->client->post( $this->url, [
@@ -62,7 +62,7 @@ abstract class Query
 		] );
 
 		// Return a response
-		return $this->createResponse($response->getBody()->getContents());
+		return $this->createResponse( $response->getBody()->getContents() );
 	}
 
 
@@ -72,15 +72,17 @@ abstract class Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse ($response) {
-		return new Response($this, $response);
+	public function createResponse ( $response )
+    {
+		return new Response( $this, $response );
 	}
 
 
 	/**
 	 * @return string|null
 	 */
-	public function url () {
+	public function url ()
+    {
 		return $this->url;
 	}
 
@@ -88,7 +90,8 @@ abstract class Query
 	/**
 	 * @return mixed
 	 */
-	public function variables () {
+	public function variables ()
+    {
 		return $this->variables;
 	}
 

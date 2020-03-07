@@ -39,7 +39,7 @@ class TokenClientTransactionTest extends TestCase
 	{
 		parent::beforeExecute();
 
-		$this->client->setUrl('https://staging.knish.io/graphql');
+		//$this->client->setUrl('https://staging.knish.io/graphql');
 	}
 
 

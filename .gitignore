@@ -1,6 +1,4 @@
 .idea/
 vendor/
-bin/
 composer.lock
 test.php
-run

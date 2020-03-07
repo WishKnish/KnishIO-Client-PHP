@@ -6,9 +6,9 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use GuzzleHttp\Client;
-use WishKnish\KnishIO\Client\Exception\BaseException;
-use WishKnish\KnishIO\Client\Exception\CodeException;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
@@ -16,13 +16,12 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenReceive;
 use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryShadowWalletClaim;
-use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Exception\CodeException;
 
 /**
  * Class KnishIO
@@ -110,7 +109,6 @@ class KnishIOClient
 		return $query;
 	}
 
-
 	/**
 	 * @param $code
 	 * @param $token
@@ -146,7 +144,7 @@ class KnishIOClient
 		$metas = \default_if_null($metas, []);
 
 		// Source wallet
-		$sourceWallet = new Wallet($secret);
+		$sourceWallet = new Wallet( $secret );
 
 		// Recipient wallet
 		$recipientWallet = new Wallet( $secret, $token );
