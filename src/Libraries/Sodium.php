@@ -1,6 +1,8 @@
 <?php
 namespace WishKnish\KnishIO\Client\Libraries;
 
+use ReflectionException;
+use ReflectionExtension;
 use ReflectionFunction;
 
 /**
@@ -11,24 +13,25 @@ class Sodium
 {
 
     /**
-     * @throws \ReflectionException
+     * @throws ReflectionException
+     * @throws \Exception
      */
     public static function libsodium2sodium ()
     {
 
-        if ( \extension_loaded( 'libsodium' ) ) {
+        if ( extension_loaded( 'libsodium' ) ) {
 
-            $sodium = new \ReflectionExtension( 'libsodium' );
+            $sodium = new ReflectionExtension( 'libsodium' );
 
             foreach ( $sodium->getConstants() as $primaryName => $value ) {
 
-                if ( \stripos( $primaryName, 'SODIUM_' ) !== 0 ) {
+                if ( stripos( $primaryName, 'SODIUM_' ) !== 0 ) {
 
-                    $name = \strtoupper( \str_replace( '\\', '_', $primaryName ) );
+                    $name = strtoupper( str_replace( '\\', '_', $primaryName ) );
 
-                    if ( ! \defined( $name ) ) {
+                    if ( ! defined( $name ) ) {
 
-                        \define( $name, $value );
+                        define( $name, $value );
 
                     }
 
@@ -38,9 +41,9 @@ class Sodium
 
             foreach ( $sodium->getFunctions() as $primaryName => $launch ) {
 
-                if ( \stripos( $primaryName, 'sodium_' ) !== 0 ) {
+                if ( stripos( $primaryName, 'sodium_' ) !== 0 ) {
 
-                    static::createFunctionAlias( $launch, \lcfirst( \str_replace( '\\', '_', $primaryName ) ) );
+                    static::createFunctionAlias( $launch, lcfirst( str_replace( '\\', '_', $primaryName ) ) );
 
                 }
 
@@ -59,16 +62,16 @@ class Sodium
      * @param ReflectionFunction $functionReflection
      * @param string $aliasName
      * @return bool
-     * @throws \ReflectionException
+     * @throws ReflectionException
      */
     private static function createFunctionAlias ( $functionReflection, $aliasName )
     {
 
-        if ( ! \function_exists( $aliasName ) ) {
+        if ( ! function_exists( $aliasName ) ) {
 
             $functionName = $functionReflection->getName();
 
-            if ( \stripos( $functionName, '\\' ) !== 0 ) {
+            if ( stripos( $functionName, '\\' ) !== 0 ) {
 
                 $functionName = '\\'.$functionName;
 
@@ -97,14 +100,14 @@ class Sodium
 
                     $val = $param->getDefaultValue();
 
-                    if ( \is_string( $val ) ) {
+                    if ( is_string( $val ) ) {
                         $val = "'$val'";
                     }
 
                     $function .= ' = ' . $val;
 
                 }
-                else if ( \in_array( $functionName, [ '\Sodium\hex2bin', '\Sodium\memzero', ], true ) ) {
+                else if ( in_array( $functionName, [ '\Sodium\hex2bin', '\Sodium\memzero', ], true ) ) {
 
                     if ( $param->getPosition() === 1 ) {
 

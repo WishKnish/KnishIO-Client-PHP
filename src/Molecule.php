@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
+use Exception;
+use ReflectionException;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -109,12 +111,12 @@ class Molecule
 	 * @param Wallet $remainderWallet
 	 * @param integer|float $value
 	 * @return self
-	 * @throws \Exception
+	 * @throws BalanceInsufficientException
 	 */
 	public function initValue ( Wallet $sourceWallet, Wallet $recipientWallet, Wallet $remainderWallet, $value )
 	{
 
-		if ( Decimal::cmp($value, $sourceWallet->balance) > 0 ) {
+		if ( Decimal::cmp( $value, $sourceWallet->balance ) > 0 ) {
 
 			throw new BalanceInsufficientException();
 
@@ -185,7 +187,6 @@ class Molecule
 	 * @param Wallet $newWallet
 	 * @param Wallet $userRemainderWallet
 	 * @return $this
-	 * @throws \Exception
 	 */
 	public function initWalletCreation ( Wallet $sourceWallet, Wallet $newWallet, Wallet $userRemainderWallet )
 	{
@@ -231,6 +232,7 @@ class Molecule
 	 *
 	 * @param Wallet $sourceWallet - wallet signing the transaction. This should ideally be the USER wallet.
 	 * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
+     * @param Wallet $userRemainderWallet
 	 * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
 	 * @param array $tokenMeta - additional fields to configure the token
 	 * @return self
@@ -242,20 +244,20 @@ class Molecule
 
 		foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
 
-			$has = \array_filter( $tokenMeta,
+			$has = array_filter( $tokenMeta,
 				static function ( $token ) use ( $walletKey ) {
 
-					return \is_array( $token )
-						&& \array_key_exists( 'key', $token )
+					return is_array( $token )
+						&& array_key_exists( 'key', $token )
 						&& $walletKey === $token[ 'key' ];
 
 				}
 			);
 
-			if ( empty( $has ) && ! \array_key_exists( $walletKey, $tokenMeta ) ) {
+			if ( empty( $has ) && ! array_key_exists( $walletKey, $tokenMeta ) ) {
 
 				$tokenMeta[ $walletKey ] = $recipientWallet
-					->{ \strtolower( \substr( $walletKey, 6 ) ) };
+					->{ strtolower( substr( $walletKey, 6 ) ) };
 
 			}
 
@@ -294,13 +296,13 @@ class Molecule
 	 *
 	 * @param Wallet $sourceWallet
 	 * @param Wallet $shadowWallet
-	 * @param Wallet $remainderWallet
+	 * @param Wallet $userRemainderWallet
 	 * @param array $tokenMeta
 	 * @return $this
 	 */
 	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $userRemainderWallet, array $tokenMeta = null)
 	{
-		$tokenMeta = \default_if_null($tokenMeta, []);
+		$tokenMeta = default_if_null( $tokenMeta, [] );
 
 		$this->molecularHash = null;
 
@@ -322,7 +324,7 @@ class Molecule
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ($userRemainderWallet);
+		$this->addUserRemainderAtom ( $userRemainderWallet );
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -334,12 +336,13 @@ class Molecule
      * Initialize a C-type molecule to issue a new type of identifier
      *
      * @param Wallet $sourceWallet
-     * @param string $source
+     * @param Wallet $userRemainderWallet
      * @param string $type
+     * @param string $contact
      * @param string $code
      *
      * @return self
-     * @throws \Exception
+     * @throws Exception
      */
 	public function initIdentifierCreation ( Wallet $sourceWallet, Wallet $userRemainderWallet, $type, $contact, $code )
 	{
@@ -356,7 +359,7 @@ class Molecule
 			$type,
 			[
 				'code' => $code,
-				'hash' => Crypto::generateBundleHash( \trim( $contact ) ),
+				'hash' => Crypto::generateBundleHash( trim( $contact ) ),
 			],
             $sourceWallet->pubkey,
             $sourceWallet->characters,
@@ -410,14 +413,13 @@ class Molecule
 	}
 
     /**
-     * @param string $secret
+     * @param Wallet $sourceWallet
      * @param string $token
      * @param int|float $amount
      * @param string $metaType
      * @param string $metaId
      * @param array $meta
      * @return self
-     * @throws \Exception
      */
 	public function initTokenTransfer ( Wallet $sourceWallet, $token, $amount, $metaType, $metaId, array $meta = [] )
     {
@@ -432,7 +434,7 @@ class Molecule
             null,
             $metaType,
             $metaId,
-            \array_merge( $meta, [ 'token' => $token ] ),
+            array_merge( $meta, [ 'token' => $token ] ),
 			$sourceWallet->pubkey,
 			$sourceWallet->characters,
             null,
@@ -467,12 +469,12 @@ class Molecule
 	 * @param bool $anonymous
      * @param bool $compressed
 	 * @return string
-	 * @throws \Exception|\ReflectionException|AtomsMissingException
+	 * @throws Exception|ReflectionException|AtomsMissingException
 	 */
 	public function sign ( $secret, $anonymous = false, $compressed = true )
 	{
 		if ( empty( $this->atoms ) ||
-			!empty( \array_filter( $this->atoms,
+			!empty( array_filter( $this->atoms,
 				static function ( $atom ) {
 
 					return !( $atom instanceof Atom );
@@ -495,7 +497,7 @@ class Molecule
 		$this->molecularHash = Atom::hashAtoms( $this->atoms );
 
 		// Determine first atom
-		$firstAtom = \reset( $this->atoms );
+		$firstAtom = reset( $this->atoms );
 
 		// Generate the private signing key for this molecule
 		$key = Wallet::generateWalletKey( $secret, $firstAtom->token, $firstAtom->position );
@@ -551,7 +553,7 @@ class Molecule
 	/**
 	 * @param Wallet|null $senderWallet
 	 * @return bool
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function check ( Wallet $senderWallet = null )
 	{
@@ -562,7 +564,7 @@ class Molecule
 	 * @param Molecule $molecule
 	 * @param Wallet $senderWallet
 	 * @return bool
-	 * @throws \ReflectionException|\Exception
+	 * @throws ReflectionException|Exception
 	 */
 	public static function verify ( Molecule $molecule, Wallet $senderWallet = null )
 	{
@@ -594,7 +596,7 @@ class Molecule
 	public static function generateNextAtomIndex ( array $atoms = [] )
 	{
 
-		$atom = \end( $atoms );
+		$atom = end( $atoms );
 
 		return ( false === $atom ) ? 0 : $atom->index + 1;
 

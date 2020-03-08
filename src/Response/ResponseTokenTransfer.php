@@ -19,7 +19,7 @@ class ResponseTokenTransfer extends ResponseMolecule
     {
 
         $result = new \ArrayObject( [ 'reason' => null, 'status' => null ], \ArrayObject::STD_PROP_LIST | \ArrayObject::ARRAY_AS_PROPS );
-        [ $result->reason, $result->status ] = \array_unpacking(
+        list ( $result->reason, $result->status, ) = array_unpacking(
             $this->data() ?: [
                 'status' => 'rejected',
                 'reason' => 'Invalid response from server',

@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -59,20 +60,20 @@ class KnishIO
 	/**
 	 * @param $name
 	 * @param $arguments
-	 * @return |null
-	 * @throws \Exception
+	 * @return mixed|null
+	 * @throws Exception
 	 */
 	public static function __callStatic ( $name, $arguments )
 	{
 		// Check method
-		if ( !\in_array( $name, static::$methods, true ) || !\method_exists( static::client(), $name ) ) {
-			throw new \Exception( 'Method KnishIOClient::' . $name . ' is not a query method.' );
+		if ( !in_array( $name, static::$methods, true ) || !method_exists( static::client(), $name ) ) {
+			throw new Exception( 'Method KnishIOClient::' . $name . ' is not a query method.' );
 		}
 
 		// Execute & get a response
-		$response = \call_user_func_array( [ static::client(), $name ], $arguments );
+		$response = call_user_func_array( [ static::client(), $name ], $arguments );
 		if ( !$response instanceof Response ) {
-			throw new \Exception( 'Method KnishIOClient::' . $name . ' has not provide a valid response.' );
+			throw new Exception( 'Method KnishIOClient::' . $name . ' has not provide a valid response.' );
 		}
 
 		// Get a response payload

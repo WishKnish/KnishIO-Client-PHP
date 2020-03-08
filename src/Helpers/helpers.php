@@ -1,6 +1,6 @@
 <?php
 
-if ( ! \function_exists( 'array_unpacking' ) ) {
+if ( !function_exists( 'array_unpacking' ) ) {
 
     /**
      * @param array $arr
@@ -12,19 +12,19 @@ if ( ! \function_exists( 'array_unpacking' ) ) {
 
         foreach ( $args as $value ) {
 
-            if ( ! \is_string( $value ) && ! \is_integer( $value ) ) {
+            if ( ! is_string( $value ) && ! is_int( $value ) ) {
 
-                throw new \InvalidArgumentException( 'All arguments except the first must be either an integer or a string.' );
+                throw new InvalidArgumentException( 'All arguments except the first must be either an integer or a string.' );
 
             }
 
         }
 
-        $new = \array_intersect_key( $arr, \array_flip( $args ) );
+        $new = array_intersect_key( $arr, array_flip( $args ) );
 
-        return \array_map( static function ( $item ) use ( $new ) {
+        return array_map( static function ( $item ) use ( $new ) {
 
-            return \key_exists( $item, $new ) ? $new[ $item ] : null;
+            return array_key_exists( $item, $new ) ? $new[ $item ] : null;
 
         }, $args );
 
@@ -33,7 +33,7 @@ if ( ! \function_exists( 'array_unpacking' ) ) {
 }
 
 
-if ( ! \function_exists( 'default_if_null' ) ) {
+if ( !function_exists( 'default_if_null' ) ) {
 
 	/**
 	 * Get a default value if the passed value is null
@@ -43,7 +43,7 @@ if ( ! \function_exists( 'default_if_null' ) ) {
 	 */
 	function default_if_null ( $value, $default )
 	{
-		if ($value === null) {
+		if ( $value === null ) {
 			return $default;
 		}
 		return $value;
@@ -51,52 +51,52 @@ if ( ! \function_exists( 'default_if_null' ) ) {
 
 }
 
-if (! function_exists('array_has')) {
+if ( !function_exists( 'array_has' ) ) {
 	/**
 	 * Check if an item or items exist in an array using "dot" notation.
 	 *
-	 * @param  \ArrayAccess|array  $array
+	 * @param ArrayAccess|array  $array
 	 * @param  string|array  $keys
 	 * @return bool
 	 */
-	function array_has($array, $keys)
+	function array_has( $array, $keys )
 	{
-		if (!is_array($array) ) {
+		if ( !is_array( $array ) ) {
 			return false;
 		}
 		$keys = (array) $keys;
 
-		foreach ($keys as $key) {
-			$_keys = explode('.', $key);
+		foreach ( $keys as $key ) {
+			$_keys = explode( '.', $key );
 			$_array = $array;
-			foreach ($_keys as $_key) {
-				if (!array_key_exists($_key, $_array)) {
+			foreach ( $_keys as $_key ) {
+				if ( !array_key_exists( $_key, $_array ) ) {
 					return false;
 				}
-				$_array = $_array[$_key];
+				$_array = $_array[ $_key ];
 			}
 		}
 		return true;
 	}
 }
 
-if (! function_exists('array_get')) {
+if ( !function_exists( 'array_get' ) ) {
 	/**
 	 * Get an item from an array using "dot" notation.
 	 *
-	 * @param  \ArrayAccess|array  $array
-	 * @param  string  $key
+	 * @param ArrayAccess|array  $array
+	 * @param  string  $keys
 	 * @param  mixed   $default
 	 * @return mixed
 	 */
-	function array_get($array, $keys, $default = null)
+	function array_get( $array, $keys, $default = null )
 	{
-		$keys = explode ('.', $keys);
-		foreach ($keys as $key) {
-			if (!array_has($array, $key) ) {
+		$expKeys = explode( '.', $keys );
+		foreach ( $expKeys as $key ) {
+			if ( !array_has( $array, $key ) ) {
 				return $default;
 			}
-			$array = $array[$key];
+			$array = $array[ $key ];
 		}
 		return $array;
 	}

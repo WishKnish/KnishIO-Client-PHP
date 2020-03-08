@@ -21,8 +21,9 @@ class ResponseIdentifier extends Response
 	 *
 	 * @return mixed
 	 */
-	public function success () {
-		return array_get($this->data(), 'set');
+	public function success ()
+    {
+		return array_get( $this->data(), 'set' );
 	}
 
 
@@ -31,8 +32,9 @@ class ResponseIdentifier extends Response
 	 *
 	 * @return mixed
 	 */
-	public function message () {
-		return array_get($this->data(), 'message');
+	public function message ()
+    {
+		return array_get( $this->data(), 'message' );
 	}
 
 }

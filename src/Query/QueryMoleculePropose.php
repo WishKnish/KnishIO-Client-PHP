@@ -32,18 +32,20 @@ abstract class QueryMoleculePropose extends Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse ($response) {
-		return new ResponseMolecule($this, $response);
+	public function createResponse ( $response )
+    {
+		return new ResponseMolecule( $this, $response );
 	}
 
 
 	/**
-	 * @param array $variables
+	 * @param array|null $variables
 	 * @return Response
 	 */
-	public function execute (array $variables = null) {
+	public function execute ( array $variables = null )
+    {
 		return parent::execute (
-			array_merge(\default_if_null($variables, []), ['molecule' => $this->molecule])
+			array_merge( default_if_null( $variables, [] ), [ 'molecule' => $this->molecule ] )
 		);
 	}
 
@@ -51,14 +53,16 @@ abstract class QueryMoleculePropose extends Query
 	/**
 	 * @return mixed
 	 */
-	public function remainderWallet () {
+	public function remainderWallet ()
+    {
 		return $this->remainderWallet;
 	}
 
 	/**
 	 * @return mixed
 	 */
-	public function molecule () : Molecule {
+	public function molecule ()
+    {
 		return $this->molecule;
 	}
 

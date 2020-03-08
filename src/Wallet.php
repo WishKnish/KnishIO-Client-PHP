@@ -8,6 +8,8 @@ namespace WishKnish\KnishIO\Client;
 
 use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -35,7 +37,7 @@ class Wallet
     /**
      * @var string|null
      */
-    public $batchId = null;
+    public $batchId;
 
     /**
      * @var array
@@ -50,38 +52,38 @@ class Wallet
     /**
      * @var string|null
      */
-    public $address = null;
+    public $address;
 
     /**
      * @var string|null
      */
-    public $bundle = null;
+    public $bundle;
 
     /**
      * @var string|null
      */
-    public $key = null;
+    public $key;
 
     /**
      * @var string|null
      */
-    public $pubkey = null;
+    public $pubkey;
 
     /**
      * @var string|null
      */
-    private $privkey = null;
+    private $privkey;
 
 
-	/**
-	 * @param string $secretOrBundle
-	 * @param string $token
-	 * @param string|null $batchId
-	 * @param string|null $characters
-	 * @return Wallet|WalletShadow
-	 * @throws \Exception
-	 */
-    public static function create ($secretOrBundle, $token, string $batchId = null, $characters = null) {
+    /**
+     * @param string $secretOrBundle
+     * @param string $token
+     * @param string|null $batchId
+     * @param string|null $characters
+     * @return Wallet|WalletShadow
+     * @throws Exception
+     */
+    public static function create ($secretOrBundle, $token, $batchId = null, $characters = null) {
 
     	// Shadow wallet
     	if (static::isBundleHash($secretOrBundle) ) {
@@ -91,7 +93,7 @@ class Wallet
     	// Base wallet
 		$wallet = new Wallet($secretOrBundle, $token);
 		$wallet->batchId = $batchId;
-		$wallet->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
+		$wallet->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
 		return $wallet;
 	}
 
@@ -105,14 +107,15 @@ class Wallet
 	 * @param string $token
 	 * @param string|null $position
 	 * @param integer $saltLength
-	 * @throws \Exception
+     * @param string $characters
+	 * @throws Exception
 	 */
 	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64, $characters = null )
 	{
 
 		$this->position = $position ?: Strings::randomString( $saltLength );
 		$this->token = $token;
-        $this->characters = \defined(Base58::class . '::' . $characters ) ? $characters : null;
+        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		if ( $secret ) {
 
@@ -124,7 +127,7 @@ class Wallet
 
     /**
      * @param string $secret
-     * @throws \Exception
+     * @throws Exception
      */
 	public function sign ( $secret )
     {
@@ -162,7 +165,7 @@ class Wallet
 	/**
 	 * @param string $key
 	 * @return string
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	protected static function generateWalletAddress ( $key )
 	{
@@ -173,9 +176,9 @@ class Wallet
 
 			$workingFragment = $fragment;
 
-			foreach ( \range( 1, 16 ) as $_ ) {
+			foreach ( range( 1, 16 ) as $_ ) {
 
-				$workingFragment = \bin2hex(
+				$workingFragment = bin2hex(
 					SHA3::init( SHA3::SHAKE256 )
 						->absorb( $workingFragment )
 						->squeeze( 64 )
@@ -187,9 +190,9 @@ class Wallet
 
 		}
 
-		return \bin2hex(
+		return bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
-				->absorb( \bin2hex( $digestSponge->squeeze( 1024 ) ) )
+				->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )
 				->squeeze( 32 )
 		);
 
@@ -200,16 +203,16 @@ class Wallet
 	 * Get a recipient batch ID
 	 * $this is a client sender wallet
 	 *
-	 * @param $senderWallet
-	 * @param $transferAmount
+	 * @param Wallet $senderWallet
+	 * @param int|float $transferAmount
 	 */
 	public function initBatchId ($senderWallet, $transferAmount) {
 
-		if ($senderWallet->batchId) {
+		if ( $senderWallet->batchId ) {
 
 			// Has a remainder value (source balance is bigger than a transfer value)
-			if (!$this->batchId && Decimal::cmp($senderWallet->balance, $transferAmount) > 0) {
-				$batchId = Wallet::generateBatchId();
+			if ( !$this->batchId && Decimal::cmp( $senderWallet->balance, $transferAmount ) > 0 ) {
+				$batchId = static::generateBatchId();
 			}
 
 			// Has no remainder? use batch ID from the source wallet
@@ -228,7 +231,7 @@ class Wallet
 	 * Derives a private key for encrypting data with this wallet's key
 	 *
 	 * @return string|null
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function getMyEncPrivateKey ()
 	{
@@ -249,7 +252,7 @@ class Wallet
 	 * Dervies a public key for encrypting data for this wallet's consumption
 	 *
 	 * @return string|null
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function getMyEncPublicKey ()
 	{
@@ -272,7 +275,7 @@ class Wallet
      * @param array $message
      * @param mixed ...$keys
      * @return array
-     * @throws \ReflectionException|\Exception
+     * @throws ReflectionException|Exception
      */
     public function encryptMyMessage ( array $message, ...$keys )
     {
@@ -297,7 +300,7 @@ class Wallet
 	 * @param string|array $message
      *
 	 * @return array|null
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function decryptMyMessage ( $message )
 	{
@@ -307,12 +310,12 @@ class Wallet
         $pubKey = $this->getMyEncPublicKey();
         $encrypt = $message;
 
-        if ( \is_array( $message ) ) {
+        if ( is_array( $message ) ) {
 
             $hash = Crypto::hashShare( $pubKey );
             $encrypt = '0';
 
-            if ( \array_key_exists( $hash,  $message ) ) {
+            if ( array_key_exists( $hash,  $message ) ) {
 
                 $encrypt = $message[ $hash ];
 
@@ -329,7 +332,7 @@ class Wallet
 	 * @param string $token
 	 * @param string $position
 	 * @return string
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public static function generateWalletKey ( $secret, $token, $position )
 	{
@@ -352,9 +355,9 @@ class Wallet
 		}
 
 		// Hashing the intermediate key to produce the private key
-		return \bin2hex(
+		return bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
-				->absorb( \bin2hex(
+				->absorb( bin2hex(
 					$intermediateKeySponge
 						->squeeze( 1024 )
 				) )->squeeze( 1024 )
