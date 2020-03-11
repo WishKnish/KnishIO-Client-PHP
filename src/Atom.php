@@ -8,6 +8,10 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use desktopd\SHA3\Sponge as SHA3;
+use Exception;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionProperty;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -38,16 +42,16 @@ class Atom
 	public $position;
 	public $walletAddress;
 	public $isotope;
-	public $token = null;
-	public $value = null;
-	public $batchId = null;
-	public $metaType = null;
-	public $metaId = null;
+	public $token;
+	public $value;
+	public $batchId;
+	public $metaType;
+	public $metaId;
 	public $meta = [];
-    public $pubkey = null;
-    public $characters = null;
-	public $index = null;
-	public $otsFragment = null;
+    public $pubkey;
+    public $characters;
+	public $index;
+	public $otsFragment;
 	public $createdAt;
 
 	/**
@@ -58,9 +62,12 @@ class Atom
 	 * @param string $isotope
 	 * @param null|string $token
 	 * @param null|string $value
+     * @param string|null $batchId
 	 * @param null|string $metaType
 	 * @param null|string $metaId
 	 * @param array $meta
+     * @param string|null $pubkey
+     * @param string|null $characters
 	 * @param null|string $otsFragment
      * @param null|integer $index
 	 */
@@ -102,29 +109,29 @@ class Atom
 	 * @param array $atoms
 	 * @param string $output
 	 * @return array[]|string|string[]|null
-	 * @throws \ReflectionException|\Exception
+	 * @throws ReflectionException|Exception
 	 */
 	public static function hashAtoms ( array $atoms, $output = 'base17' )
 	{
 		$atomList = static::sortAtoms( $atoms );
 		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
-		$numberOfAtoms = \count( $atomList );
+		$numberOfAtoms = count( $atomList );
 
 		foreach ( $atomList as $atom ) {
 			$molecularSponge->absorb( $numberOfAtoms );
 
-			foreach ( ( new \ReflectionClass( $atom ) )->getProperties( \ReflectionProperty::IS_PUBLIC ) as $property ) {
+			foreach ( ( new ReflectionClass( $atom ) )->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ) {
 
 				if ( $property->class === self::class && !$property->isStatic() ) {
 					$value = $property->getValue( $atom );
 					$name = $property->getName();
 
 					// Old atoms support (without batch_id field)
-					if ( \in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
+					if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
 						 continue;
 					}
 
-					if ( \in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
+					if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
 						continue;
 					}
 
@@ -147,7 +154,7 @@ class Atom
 						continue;
 					}
 
-					if ( \in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+					if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
 
 						$molecularSponge->absorb( ( string ) $value );
 						continue;
@@ -164,17 +171,17 @@ class Atom
 		switch ( $output ) {
 			case 'hex':
 			{
-				$target = \bin2hex( $molecularSponge->squeeze( 32 ) );
+				$target = bin2hex( $molecularSponge->squeeze( 32 ) );
 				break;
 			}
 			case 'array':
 			{
-				$target = \str_split( \bin2hex( $molecularSponge->squeeze( 32 ) ) );
+				$target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
 				break;
 			}
 			case 'base17':
 			{
-				$target = \str_pad( Strings::charsetBaseConvert( \bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+				$target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
 				break;
 			}
 			default:
@@ -192,11 +199,11 @@ class Atom
      */
 	public static function sortAtoms ( array $atoms = null )
     {
-		$atoms = \default_if_null($atoms, []);
+		$atoms = default_if_null($atoms, []);
 
         $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
 
-        \usort($atomList, static function ( self $first, self $second ) {
+        usort($atomList, static function ( self $first, self $second ) {
 
             if ( $first->index === $second->index ) {
                 return 0;

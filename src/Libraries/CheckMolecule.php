@@ -4,6 +4,8 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 
 use desktopd\SHA3\Sponge as SHA3;
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
@@ -59,14 +61,14 @@ class CheckMolecule
 
                     case 'isotopeV': {
 
-                        CheckMolecule::{ $method }( $molecule , $fromWallet );
+                        static::{ $method }( $molecule , $fromWallet );
 
                         break;
 
                     }
                     default: {
 
-                        CheckMolecule::{ $method }( $molecule );
+                        static::{ $method }( $molecule );
 
                     }
 
@@ -125,13 +127,13 @@ class CheckMolecule
         foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
 
             $meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
-            $metaType = \strtolower( ( string ) $atom->metaType );
+            $metaType = strtolower( ( string ) $atom->metaType );
 
             if ( $metaType === 'wallet' ) {
 
                 foreach ( [ 'position', 'bundle'] as $key ) {
 
-                    if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
+                    if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
 
                         throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
 
@@ -143,7 +145,7 @@ class CheckMolecule
 
             foreach ( [ 'token', ] as $key ) {
 
-                if ( !\key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
+                if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
 
                     throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
 
@@ -242,7 +244,7 @@ class CheckMolecule
 		}
 
 		// Grabbing the first atom
-		$firstAtom = \reset( $molecule->atoms );
+		$firstAtom = reset( $molecule->atoms );
 
 		// Looping through each V-isotope atom
 		$sum = 0.0;
@@ -334,7 +336,7 @@ class CheckMolecule
 	 *
 	 * @param Molecule $molecule
 	 * @return bool
-	 * @throws \ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
+	 * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
 	 */
 	public static function molecularHash ( Molecule $molecule )
 	{
@@ -359,7 +361,7 @@ class CheckMolecule
 	 *
 	 * @param Molecule $molecule
 	 * @return bool
-	 * @throws \Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
+	 * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
 	 */
 	public static function ots ( Molecule $molecule )
 	{
@@ -367,7 +369,7 @@ class CheckMolecule
 		static::missing( $molecule );
 
 		// Determine first atom
-		$firstAtom = \reset( $molecule->atoms );
+		$firstAtom = reset( $molecule->atoms );
 
 		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
 		$normalizedHash = static::normalizedHash( $molecule->molecularHash );
@@ -382,13 +384,13 @@ class CheckMolecule
 		}
 
 		// Wrong size? Maybe it's compressed
-		if ( \mb_strlen( $ots ) !== 2048 ) {
+		if ( mb_strlen( $ots ) !== 2048 ) {
 
 			// Attempt decompression
 			$ots = Strings::base64ToHex( $ots );
 
 			// Still wrong? That's a failure
-			if ( \mb_strlen( $ots ) !== 2048 ) {
+			if ( mb_strlen( $ots ) !== 2048 ) {
 
 				throw new SignatureMalformedException();
 
@@ -411,7 +413,7 @@ class CheckMolecule
 
 			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $index ]; $iterationCount < $condition; $iterationCount++ ) {
 
-				$workingChunk = \bin2hex(
+				$workingChunk = bin2hex(
 					SHA3::init( SHA3::SHAKE256 )
 						->absorb( $workingChunk )
 						->squeeze( 64 )
@@ -424,14 +426,14 @@ class CheckMolecule
 		}
 
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
-		$digest = \bin2hex(
+		$digest = bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
 				->absorb( $keyFragments )
 				->squeeze( 1024 )
 		);
 
 		// Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
-		$address = \bin2hex(
+		$address = bin2hex(
 			SHA3::init( SHA3::SHAKE256 )
 				->absorb( $digest )
 				->squeeze( 32 )
@@ -456,7 +458,7 @@ class CheckMolecule
 	public static function isotopeFilter ( $isotope, array $atoms )
 	{
 
-		return \array_filter(
+		return array_filter(
 			$atoms,
 			static function ( Atom $atom ) use ( $isotope ) { return $isotope === $atom->isotope; }
 		);
@@ -495,11 +497,11 @@ class CheckMolecule
 			'8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8,
 		];
 
-		foreach ( \str_split( $hash ) as $index => $symbol ) {
+		foreach ( str_split( $hash ) as $index => $symbol ) {
 
-			$lower = \strtolower( ( string ) $symbol );
+			$lower = strtolower( ( string ) $symbol );
 
-			if ( \array_key_exists( $lower, $mapped ) ) {
+			if ( array_key_exists( $lower, $mapped ) ) {
 
 				$target[ $index ] = $mapped[ $lower ];
 
@@ -525,7 +527,7 @@ class CheckMolecule
 	protected static function normalize ( array $mappedHashArray )
 	{
 
-		$total = \array_sum( $mappedHashArray );
+		$total = array_sum( $mappedHashArray );
 		$totalCondition = $total < 0;
 
 		while ( $total < 0 || $total > 0 ) {

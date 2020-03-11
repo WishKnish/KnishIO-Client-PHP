@@ -7,8 +7,8 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use desktopd\SHA3\Sponge as SHA3;
-use WishKnish\KnishIO\Client\Libraries\Base58;
-use WishKnish\KnishIO\Client\Libraries\Soda;
+use Exception;
+use ReflectionException;
 
 /**
  * Class Crypto
@@ -28,15 +28,15 @@ class Crypto
 	 * @param null $seed
 	 * @param int $length
 	 * @return string
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public static function generateSecret ( $seed = null, $length = null )
 	{
-		$length = \default_if_null($length, 2048);
+		$length = default_if_null($length, 2048);
 
-		return \in_array( $seed, [ null, '' ], true ) ?
+		return in_array( $seed, [ null, '' ], true ) ?
 			Strings::randomString( $length ) :
-			\bin2hex( SHA3::init( SHA3::SHAKE256 )
+			bin2hex( SHA3::init( SHA3::SHAKE256 )
 				->absorb( $seed )
 				->squeeze( $length / 4 ) );
 
@@ -47,12 +47,12 @@ class Crypto
 	 *
 	 * @param string $secret
 	 * @return string
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public static function generateBundleHash ( $secret )
 	{
 
-		return \bin2hex( SHA3::init( SHA3::SHAKE256 )
+		return bin2hex( SHA3::init( SHA3::SHAKE256 )
 			->absorb( $secret )
 			->squeeze( 32 ) );
 
@@ -64,7 +64,7 @@ class Crypto
 	 * @param array|object $message
      * @param string $key
 	 * @return string|null
-	 * @throws \Exception|\ReflectionException
+	 * @throws Exception|ReflectionException
 	 */
 	public static function encryptMessage ( $message, $key )
 	{
@@ -81,7 +81,7 @@ class Crypto
      * @param string $privateKey
      * @param string $publicKey
 	 * @return array|null
-     * @throws \ReflectionException
+     * @throws ReflectionException
 	 */
     public static function decryptMessage( $decrypted, $privateKey, $publicKey )
     {
@@ -96,7 +96,7 @@ class Crypto
 	 *
 	 * @param string|null $key
 	 * @return string|null
-	 * @throws \Exception|\ReflectionException
+	 * @throws Exception|ReflectionException
 	 */
 	public static function generateEncPrivateKey ( $key = null )
 	{
@@ -111,7 +111,7 @@ class Crypto
 	 *
 	 * @param string $key
 	 * @return string|null
-     * @throws \ReflectionException
+     * @throws ReflectionException
 	 */
 	public static function generateEncPublicKey ( $key )
 	{
@@ -129,7 +129,7 @@ class Crypto
 
         $constant = Base58::class . '::' . $characters;
 
-        static::$characters = \defined( $constant ) ? \constant( $constant ) : static::$characters;
+        static::$characters = defined( $constant ) ? constant( $constant ) : static::$characters;
 
     }
 
@@ -146,7 +146,7 @@ class Crypto
     /**
      * @param string $key
      * @return string
-     * @throws \ReflectionException|\Exception
+     * @throws ReflectionException|Exception
      */
     public static function hashShare ( $key )
     {

@@ -19,19 +19,19 @@ class QueryTokenReceive extends QueryMoleculePropose
 
 
     /**
-     * @param $secret
+     * @param string $secret
      * @param Wallet $sourceWallet
-     * @param $token
+     * @param string $token
      * @param $value
-     * @param $metaType
-     * @param $metaId
+     * @param string $metaType
+     * @param string $metaId
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
 	public function initMolecule ($secret, Wallet $sourceWallet, $token, $value, $metaType, $metaId, array $metas = null)
 	{
 		// Default metas value
-		$metas = \default_if_null($metas, []);
+		$metas = default_if_null( $metas, [] );
 
 		// Create & sign a molecule
 		$this->molecule = new Molecule();

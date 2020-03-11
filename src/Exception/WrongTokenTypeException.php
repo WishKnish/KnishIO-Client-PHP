@@ -1,6 +1,8 @@
 <?php
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class WrongTokenTypeException
  * @package WishKnish\KnishIO\Client\Exception
@@ -16,9 +18,9 @@ class WrongTokenTypeException extends BaseException
      * WrongTokenTypeException constructor.
      * @param string $message
      * @param int $code
-     * @param \Throwable|null $previous
+     * @param Throwable|null $previous
      */
-    public function __construct ( $message = 'Wrong type of token for this isotope', $code = 1, \Throwable $previous = null )
+    public function __construct ( $message = 'Wrong type of token for this isotope', $code = 1, Throwable $previous = null )
     {
         parent::__construct( $message, $code, $previous );
     }

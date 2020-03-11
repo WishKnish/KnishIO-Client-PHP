@@ -27,8 +27,9 @@ class QueryBalance extends Query
 	 * @param string $response
 	 * @return Response
 	 */
-	public function createResponse ($response) {
-		return new ResponseBalance($this, $response);
+	public function createResponse ( $response )
+    {
+		return new ResponseBalance( $this, $response );
 	}
 
 }
