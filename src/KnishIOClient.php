@@ -8,6 +8,10 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
+use GuzzleHttp\Handler\StreamHandler;
+use Psr\Http\Message\RequestInterface;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
@@ -29,8 +33,23 @@ use WishKnish\KnishIO\Client\Response\Response;
 class KnishIOClient
 {
 	// Client parameters
+    /**
+     * @var string
+     */
 	private $url;
+    /**
+     * @var Client
+     */
 	private $client;
+    /**
+     * @var string
+     */
+    private $bundle;
+
+    /**
+     * @var HandlerStack
+     */
+    private $handler;
 
 
 	/**
@@ -38,25 +57,46 @@ class KnishIOClient
 	 * @param string $url
 	 * @param Client|null $client
 	 */
-	public function __construct ($url, Client $client = null)
+	public function __construct ( $url, Client $client = null )
 	{
-		$this->client = default_if_null($client, new Client( [
-			'base_uri'    => $url,
+        $this->url = $url;
+        $this->handler = HandlerStack::create( new StreamHandler() );
+        $this->client = default_if_null( $client, new Client( [
+			'base_uri'    => $this->url,
 			'verify'      => false,
 			'http_errors' => false,
+            'handler' => $this->handler,
 			'headers'     => [
 				'User-Agent' => 'KnishIO/0.1',
 				'Accept'     => 'application/json',
 			]
 		] ) );
-		$this->url = $url;
 	}
 
+	private function addXAuthTokenHeader ()
+    {
+        $this->handler->push( Middleware::mapRequest( function ( RequestInterface $request ) {
+            return $request->withHeader( 'X-Auth-Token', $this->bundle );
+        } ), 'addXAuthTokenHeader' );
+    }
+
+
+    /**
+     * @param string $bundleOrSecret
+     * @throws Exception
+     */
+    public function setBundle ( $bundleOrSecret )
+    {
+        $this->bundle = Wallet::isBundleHash( $bundleOrSecret ) ? $bundleOrSecret : Crypto::generateBundleHash( $bundleOrSecret );
+        $this->handler->remove( 'addXAuthTokenHeader' );
+        $this->addXAuthTokenHeader();
+    }
 
 	/**
-	 * @param $url
+	 * @param string $url
 	 */
-	public function setUrl ($url) {
+	public function setUrl ( $url )
+    {
 		$this->url = $url;
 	}
 
@@ -65,10 +105,10 @@ class KnishIOClient
 	 * @param $class
 	 * @return mixed
 	 */
-	public function createQuery ($class) {
-		return new $class ($this->client, $this->url);
+	public function createQuery ( $class )
+    {
+		return new $class ( $this->client, $this->url );
 	}
-
 
 	/**
 	 * @param $code
@@ -78,6 +118,7 @@ class KnishIOClient
 	 */
 	public function getBalance ( $code, $token )
 	{
+	    $this->setBundle( $code );
 		// Create a query
 		$query = $this->createQuery(QueryBalance::class);
 
@@ -91,7 +132,6 @@ class KnishIOClient
 		]);
 	}
 
-
     /**
      * @param string $secret
      * @param string $token
@@ -102,6 +142,8 @@ class KnishIOClient
      */
 	public function createToken ( $secret, $token, $amount, array $metas = null )
 	{
+        $this->setBundle( $secret );
+
 		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
@@ -124,7 +166,6 @@ class KnishIOClient
 		return $query->execute ();
 	}
 
-
 	/**
 	 * @param $secret
 	 * @param $token
@@ -136,6 +177,8 @@ class KnishIOClient
 	 */
 	public function receiveToken ( $secret, $token, $value, $to, array $metas = null )
 	{
+        $this->setBundle( $secret );
+
 		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
@@ -154,16 +197,6 @@ class KnishIOClient
 		return $query->execute ();
 	}
 
-
-	/**
-	 * @param Wallet $sourceWallet
-	 * @param string $bundleHash
-	 * @param string $type
-	 * @param string $code
-	 * @return Response
-	 * @throws ReflectionException|Exception
-	 */
-
     /**
      * @param string $secret
      * @param $type
@@ -172,8 +205,10 @@ class KnishIOClient
      * @return mixed
      * @throws Exception
      */
-	public function createIdentifier ($secret, $type, $contact, $code)
+	public function createIdentifier ( $secret, $type, $contact, $code )
 	{
+        $this->setBundle( $secret );
+
 		// Create source & remainder wallets
 		$sourceWallet = new Wallet( $secret );
 
@@ -187,7 +222,6 @@ class KnishIOClient
 		return $query->execute();
 	}
 
-
     /**
      * Bind shadow wallet
      *
@@ -199,28 +233,30 @@ class KnishIOClient
      * @return mixed
      * @throws Exception
      */
-	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null) {
+	public function claimShadowWallet ( $secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null )
+    {
+
+        $this->setBundle( $secret );
 
 		// Source wallet
-		$sourceWallet = default_if_null($sourceWallet, new Wallet( $secret ) );
+		$sourceWallet = default_if_null( $sourceWallet, new Wallet( $secret ) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
-		$shadowWallet = default_if_null($shadowWallet, $this->getBalance($secret, $token)->payload() );
+		$shadowWallet = default_if_null( $shadowWallet, $this->getBalance($secret, $token)->payload() );
 		if ($shadowWallet === null || !$shadowWallet instanceof WalletShadow) {
 			throw new WalletShadowException();
 		}
 
 
 		// Create a query
-		$query = $this->createQuery(QueryWalletClaim::class);
+		$query = $this->createQuery( QueryWalletClaim::class );
 
 		// Init a molecule
-		$query->initMolecule($secret, $sourceWallet, $shadowWallet, $token, $recipientWallet);
+		$query->initMolecule( $secret, $sourceWallet, $shadowWallet, $token, $recipientWallet );
 
 		// Execute a query
 		return $query->execute();
 	}
-
 
 	/**
 	 * @param string $fromSecret
@@ -230,12 +266,14 @@ class KnishIOClient
 	 * @return array
 	 * @throws Exception|ReflectionException|InvalidResponseException
 	 */
-	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null)
+	public function transferToken ( $fromSecret, $to, $token, $amount, Wallet $remainderWallet = null )
 	{
+        $this->setBundle( $fromSecret );
+
 		// Get a from wallet
 		$fromWallet = $this->getBalance( $fromSecret, $token )->payload();
-		if ( $fromWallet === null || Decimal::cmp($fromWallet->balance, $amount) < 0) {
-			throw new TransferBalanceException('The transfer amount cannot be greater than the sender\'s balance');
+		if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0) {
+			throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
 		}
 
 
@@ -244,11 +282,11 @@ class KnishIOClient
 
 		// Has not wallet yet - create it
 		if ($toWallet === null) {
-			$toWallet = Wallet::create($to, $token);
+			$toWallet = Wallet::create( $to, $token );
 		}
 
 		// Batch ID initialization
-		$toWallet->initBatchId($fromWallet, $amount);
+		$toWallet->initBatchId( $fromWallet, $amount );
 
 
 
@@ -261,6 +299,5 @@ class KnishIOClient
 		// Execute a query
 		return $query->execute();
 	}
-
 
 }

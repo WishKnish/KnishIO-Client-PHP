@@ -157,8 +157,9 @@ class Wallet
 	 * @param string $code
 	 * @return bool
 	 */
-	public static function isBundleHash ($code) {
-		return (mb_strlen($code) === 64);
+	public static function isBundleHash ( $code )
+    {
+		return ( mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
 	}
 
 
