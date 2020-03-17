@@ -8,17 +8,42 @@ namespace WishKnish\KnishIO\Client\Query;
 
 
 
+use WishKnish\KnishIO\Client\Response\ResponseMetaType;
+
 /**
  * Class QueryMetaType
  * @package WishKnish\KnishIO\Client\Query
  */
 class QueryMetaType extends Query
 {
-
 	// Query
-	protected static $query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ] ) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: keys, value: $value, values: $values ) { metaType, metaTypes, metaId, metaIds, key, keys, value, values } }';
+	protected static $query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ] ) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values ) {
+		metaType, 
+		instances {
+			metaType,
+			metaId,
+			createdAt
+		},
+    	metas {
+			molecularHash,
+			position,
+			metaType,
+			metaId,
+			key,
+			value,
+			createdAt
+    	},
+		createdAt
+	} }';
 
 
+	/**
+	 * @param string $response
+	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletList
+	 */
+	public function createResponse ($response) {
+		return new ResponseMetaType($this, $response);
+	}
 
 
 }

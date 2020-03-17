@@ -83,7 +83,7 @@ class QueryMetaTest extends TestCase
 			[
 				'key1_1' => 'value1_1_last',
 				'key1_2' => 'value1_2_last',
-				'key_shared' => 'value_shared',
+				'key_shared' => 'value_shared_last',
 			],
 			'metaType1',
 			'metaId1',
@@ -102,7 +102,7 @@ class QueryMetaTest extends TestCase
 			[
 				'key2_1' => 'value2_1_last',
 				'key2_2' => 'value2_2_last',
-				'key_shared' => 'value_shared',
+				'key_shared' => 'value_shared_last',
 			],
 			'metaType2',
 			'metaId2',
@@ -121,7 +121,7 @@ class QueryMetaTest extends TestCase
 			[
 				'key3_1' => 'value3_1_last',
 				'key3_2' => 'value3_2_last',
-				'key_shared' => 'value_shared',
+				'key_shared' => 'value_shared_last',
 			],
 			'metaType3',
 			'metaId3',
@@ -156,10 +156,9 @@ class QueryMetaTest extends TestCase
 		// Execute query & check response
 		$query = new QueryMetaType($this->guzzle_client);
 		$response = $query->execute([
-			'metaType' => 'metaType1',
-			'metaId' => 'value_shared',
+			'key' => 'value_shared',
 		]);
-		dd ($response);
+		dd ($response->data());
 		$this->checkResponse ($response);
 	}
 
