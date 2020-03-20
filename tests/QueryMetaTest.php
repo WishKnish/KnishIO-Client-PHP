@@ -156,7 +156,7 @@ class QueryMetaTest extends TestCase
 		// Execute query & check response
 		$query = new QueryMetaType($this->guzzle_client);
 		$response = $query->execute([
-			'key' => 'value_shared',
+			'metaType' => 'metaType1',
 		]);
 		dd ($response->data());
 		$this->checkResponse ($response);

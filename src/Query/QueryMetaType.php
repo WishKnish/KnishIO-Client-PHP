@@ -22,7 +22,16 @@ class QueryMetaType extends Query
 		instances {
 			metaType,
 			metaId,
-			createdAt
+			createdAt,
+			metas {
+				molecularHash,
+				position,
+				metaType,
+				metaId,
+				key,
+				value,
+				createdAt
+			},
 		},
     	metas {
 			molecularHash,
