@@ -35,6 +35,9 @@ class KnishIOClient
 	private $url;
 	private $client;
 
+	// Saved source wallets to keep last source wallet value for ContinuID
+	private $sourceWallets = []; // [secret1 => Wallet1, secret2 => Wallet2, etc...]
+
 
 	/**
 	 * KnishIO constructor.
@@ -53,6 +56,25 @@ class KnishIOClient
 			]
 		] ) );
 		$this->url = $url;
+	}
+
+
+	/**
+	 * @param $secret
+	 * @param $wallet
+	 */
+	public function setSourceWallet ($secret, $wallet) {
+		$this->sourceWallets[$secret] = $wallet;
+	}
+
+
+	/**
+	 * @param $secret
+	 * @return mixed
+	 * @throws Exception
+	 */
+	public function getSourceWallet ($secret) {
+		return array_get($this->sourceWallets, $secret, new Wallet( $secret ) );
 	}
 
 
@@ -146,7 +168,7 @@ class KnishIOClient
 		$metas = \default_if_null($metas, []);
 
 		// Source wallet
-		$sourceWallet = new Wallet( $secret );
+		$sourceWallet = $this->getSourceWallet($secret);
 
 		// Recipient wallet
 		$recipientWallet = new Wallet( $secret, $token );
@@ -160,6 +182,7 @@ class KnishIOClient
 
 		// Fill a molecule
 		$query->fillMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
+		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
 		// Return a query execution result
 		return $query->execute ();
@@ -207,13 +230,14 @@ class KnishIOClient
 	public function createIdentifier ($secret, $type, $contact, $code)
 	{
 		// Create source & remainder wallets
-		$sourceWallet = new Wallet( $secret );
+		$sourceWallet = $this->getSourceWallet($secret);
 
 		// Create & execute a query
 		$query = $this->createMoleculeQuery(QueryIdentifierCreate::class);
 
 		// Fill a molecule
 		$query->fillMolecule ( $secret, $sourceWallet, $type, $contact, $code);
+		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
 		// Execute a query
 		return $query->execute();
@@ -230,7 +254,7 @@ class KnishIOClient
 	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null) {
 
 		// Source wallet
-		$sourceWallet = \default_if_null($sourceWallet, new Wallet( $secret ) );
+		$sourceWallet = \default_if_null($sourceWallet, $this->getSourceWallet($secret) );
 
 		// Get shadow wallet list
 		$query = $this->createQuery(QueryWalletList::class);
@@ -251,6 +275,7 @@ class KnishIOClient
 
 		// Fill a molecule
 		$query->fillMolecule($secret, $sourceWallet, $shadowWallets);
+		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
 		// Execute a query
 		return $query->execute();

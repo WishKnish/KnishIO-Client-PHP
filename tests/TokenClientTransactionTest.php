@@ -579,10 +579,10 @@ class TokenClientTransactionTest extends TestCase
 
 		// --- Bind a shadow wallet (with wrong bundle hash)
 		foreach ($intruders as $intruder) {
-			$response = $this->client->claimShadowWallet($intruder, $token);
+			$response = $this->client->claimShadowWallet($intruder, $token, new Wallet($intruder));
 			$this->assertEquals($response->status(), 'rejected');
 
-			$continue_id_error = strpos($response->reason(), 'ContinueID verification failure');
+			$continue_id_error = strpos($response->reason(), 'ContinuID verification failure');
 			if (!$continue_id_error) {
 				$this->debug ($response, true);
 			}
