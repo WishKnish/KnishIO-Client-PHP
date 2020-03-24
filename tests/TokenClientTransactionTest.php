@@ -590,7 +590,7 @@ class TokenClientTransactionTest extends TestCase
 		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
-		$response = $this->client->claimShadowWallet($recipient, $token, $id_response->query()->remainderWallet());
+		$response = $this->client->claimShadowWallet($recipient, $token);
 		$this->checkResponse ($response);
 		// ---
 

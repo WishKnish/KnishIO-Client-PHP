@@ -24,6 +24,7 @@ use WishKnish\KnishIO\Client\Query\QueryShadowWalletClaim;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
 /**
  * Class KnishIO
@@ -61,20 +62,24 @@ class KnishIOClient
 
 	/**
 	 * @param $secret
-	 * @param $wallet
-	 */
-	public function setSourceWallet ($secret, $wallet) {
-		$this->sourceWallets[$secret] = $wallet;
-	}
-
-
-	/**
-	 * @param $secret
 	 * @return mixed
 	 * @throws Exception
 	 */
 	public function getSourceWallet ($secret) {
 		return array_get($this->sourceWallets, $secret, new Wallet( $secret ) );
+	}
+
+
+	/**
+	 * @param $response
+	 * @param $secret
+	 */
+	public function updateSourceWallet ($response, $secret) {
+
+		// Update source wallet only for the success response
+		if ($response instanceof ResponseMolecule && $response->success() ) {
+			$this->sourceWallets[$secret] = $response->query()->remainderWallet();
+		}
 	}
 
 
@@ -182,10 +187,15 @@ class KnishIOClient
 
 		// Fill a molecule
 		$query->fillMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
-		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
-		// Return a query execution result
-		return $query->execute ();
+		// Execute a query
+		$response = $query->execute ();
+
+		// Update source wallet on success reponse
+		$this->updateSourceWallet($response, $secret);
+
+		// Return a response
+		return $response;
 	}
 
 
@@ -237,10 +247,15 @@ class KnishIOClient
 
 		// Fill a molecule
 		$query->fillMolecule ( $secret, $sourceWallet, $type, $contact, $code);
-		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
 		// Execute a query
-		return $query->execute();
+		$response = $query->execute();
+
+		// Update source wallet on success reponse
+		$this->updateSourceWallet($response, $secret);
+
+		// Return a response
+		return $response;
 	}
 
 
@@ -275,10 +290,15 @@ class KnishIOClient
 
 		// Fill a molecule
 		$query->fillMolecule($secret, $sourceWallet, $shadowWallets);
-		$this->setSourceWallet( $secret, $query->remainderWallet() );
 
 		// Execute a query
-		return $query->execute();
+		$response = $query->execute();
+
+		// Update source wallet on success reponse
+		$this->updateSourceWallet($response, $secret);
+
+		// Return a response
+		return $response;
 	}
 
 
