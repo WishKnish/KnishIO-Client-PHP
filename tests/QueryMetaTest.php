@@ -42,6 +42,10 @@ class QueryMetaTest extends TestCase
 		$this->guzzle_client = $this->client->client();
 	}
 
+	public function sourceWallet () {
+		return new Wallet ($this->source_secret);
+	}
+
 
 	/**
 	 * Clear data test
@@ -68,69 +72,70 @@ class QueryMetaTest extends TestCase
 
 		$this->beforeExecute();
 
-		// Create a meta molecule
-		$molecule = new Molecule();
-		$molecule->initMeta($this->source_wallet,
+		// metaType1
+		$this->createMetas ('metaType1', 'metaId1', [
 			[
 				'key1_1' => 'value1_1',
 				'key1_2' => 'value1_2',
 				'key_shared' => 'value_shared',
 			],
-			'metaType1',
-			'metaId1',
-		);
-		$molecule->initMeta($this->source_wallet,
 			[
 				'key1_1' => 'value1_1_last',
 				'key1_2' => 'value1_2_last',
 				'key_shared' => 'value_shared_last',
 			],
-			'metaType1',
-			'metaId1',
-		);
+		]);
 
-		$molecule->initMeta($this->source_wallet,
+		// metaType2
+		$this->createMetas ('metaType2', 'metaId2', [
 			[
 				'key2_1' => 'value2_1',
 				'key2_2' => 'value2_2',
 				'key_shared' => 'value_shared',
 			],
-			'metaType2',
-			'metaId2',
-		);
-		$molecule->initMeta($this->source_wallet,
 			[
 				'key2_1' => 'value2_1_last',
 				'key2_2' => 'value2_2_last',
 				'key_shared' => 'value_shared_last',
 			],
-			'metaType2',
-			'metaId2',
-		);
+		]);
 
-		$molecule->initMeta($this->source_wallet,
+		// metaType3
+		$this->createMetas ('metaType2', 'metaId2', [
 			[
 				'key3_1' => 'value3_1',
 				'key3_2' => 'value3_2',
 				'key_shared' => 'value_shared',
 			],
-			'metaType3',
-			'metaId3',
-		);
-		$molecule->initMeta($this->source_wallet,
 			[
 				'key3_1' => 'value3_1_last',
 				'key3_2' => 'value3_2_last',
 				'key_shared' => 'value_shared_last',
 			],
-			'metaType3',
-			'metaId3',
-		);
+		]);
+	}
+
+
+	/**
+	 * Create metas
+	 *
+	 * @param $meta_type
+	 * @param $meta_id
+	 * @param $metas
+	 * @throws \ReflectionException
+	 */
+	protected function createMetas ($meta_type, $meta_id, $metas_array)
+	{
+		$source_wallet = new Wallet ($this->source_secret);
+
+		$molecule = new Molecule();
+
+		foreach ($metas_array as $metas) {
+			$molecule->initMeta($source_wallet, $metas, $meta_type, $meta_id);
+		}
 
 		$molecule->sign($this->source_secret);
 		$molecule->check();
-
-		// Execute query & check response
 		$this->executeProposeMolecule($molecule);
 	}
 

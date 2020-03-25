@@ -32,6 +32,31 @@ class QueryMetaType extends Query
 				value,
 				createdAt
 			},
+			atoms {
+				molecularHash,
+				position,
+				isotope,
+				walletAddress,
+				tokenSlug,
+				batchId,
+				value,
+				index,
+				metaType,
+				metaId,
+				otsFragment,
+				createdAt
+			},
+			molecules {
+				molecularHash,
+				cellSlug,
+				bundleHash,
+				status,
+				height,
+				createdAt,
+				receivedAt,
+				processedAt,
+				broadcastedAt
+			}
 		},
     	metas {
 			molecularHash,
