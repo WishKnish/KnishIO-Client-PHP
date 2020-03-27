@@ -208,7 +208,7 @@ class QueryMetaTest extends TestCase
 		// ---------------- META ID
 
 
-		// --- metaType = metaType1
+		// --- metaId = metaId1
 		$response = $query->execute([
 			'metaId' => 'metaId1',
 		]);
@@ -222,7 +222,7 @@ class QueryMetaTest extends TestCase
 		]);
 
 
-		// --- metaTypes IN [metaType1, metaType2]
+		// --- metaIds IN [metaId2, metaId3]
 		$response = $query->execute([
 			'metaIds' => ['metaId2', 'metaId3'],
 		]);
@@ -242,7 +242,7 @@ class QueryMetaTest extends TestCase
 		]);
 
 
-		// --- metaType = metaType4
+		// --- metaId = metaId4
 		$response = $query->execute([
 			'metaId' => 'metaId4',
 		]);
@@ -314,6 +314,12 @@ class QueryMetaTest extends TestCase
 				],
 			]
 		]);
+
+		// --- key = key_4_1
+		$response = $query->execute([
+			'key' => 'key_4_1',
+		]);
+		$this->assertEquals($this->getLimitedResult($response->data()), []);
 
 
 
@@ -405,6 +411,12 @@ class QueryMetaTest extends TestCase
 				],
 			]
 		]);
+
+		// --- values = value4_1
+		$response = $query->execute([
+			'value' => 'value4_1'
+		]);
+		$this->assertEquals($this->getLimitedResult($response->data()), []);
 
 
 

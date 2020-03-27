@@ -77,7 +77,7 @@ class KnishIO
 		}
 
 		// Get a response payload
-		return $response->payload();
+		return $response;
 	}
 
 }
