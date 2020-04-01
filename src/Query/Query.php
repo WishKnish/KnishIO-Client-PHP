@@ -20,6 +20,7 @@ abstract class Query
 	protected $variables;
 
 	protected static $query;
+	protected $fields = [];
 
 	/**
 	 * Query constructor.
@@ -45,10 +46,21 @@ abstract class Query
 
 
 	/**
+	 * @return array
+	 */
+	public function fields () {
+		return $this->fields;
+	}
+
+
+	/**
 	 * @param array|null $variables
 	 * @return mixed
 	 */
-	public function execute ( array $variables = null ) {
+	public function execute ( array $variables = null, array $fields = null ) {
+
+		// Return fields
+		$fields = $fields ?? $this->fields;
 
 		// Default value of variables
 		$this->variables = default_if_null( $variables, [] );
@@ -56,13 +68,40 @@ abstract class Query
 		// Make a request
 		$response = $this->client->post( $this->url, [
 			'json' => [
-				'query'     => static::$query,
+				'query'     => $this->compiledQuery($fields),
 				'variables' => $this->variables,
 			]
 		] );
 
 		// Return a response
 		return $this->createResponse( $response->getBody()->getContents() );
+	}
+
+
+	/**
+	 * @param array $fields
+	 * @return mixed
+	 */
+	public function compiledQuery (array $fields) {
+		return str_replace(
+			['@fields'],
+			[$this->compileFields($fields)],
+			static::$query
+		);
+	}
+
+
+	/**
+	 * @param array $fields
+	 * @return string
+	 */
+	protected function compileFields (array $fields) {
+		foreach ($fields as $key => $field) {
+			if (is_array($field) ) {
+				$fields[$key] = $key .' '. $this->compileFields($field);
+			}
+		}
+		return '{'.implode(', ', $fields).'}';
 	}
 
 

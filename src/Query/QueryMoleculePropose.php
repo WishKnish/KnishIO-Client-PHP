@@ -17,7 +17,23 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 class QueryMoleculePropose extends Query
 {
 	// Query
-	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }';
+	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
+		@fields 
+	}';
+
+	// Fields
+	protected $fields = [
+		'molecularHash',
+		'height',
+		'depth',
+		'status',
+		'reason',
+		'reasonPayload',
+		'createdAt',
+		'receivedAt',
+		'processedAt',
+		'broadcastedAt',
+	];
 
 	// Molecule
 	protected $molecule;

@@ -17,7 +17,22 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 class QueryWalletList extends Query
 {
 	// Query
-	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) { address, bundleHash, tokenSlug, batchId, position, amount, characters, pubkey, createdAt } }';
+	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
+	 	@fields
+	}';
+
+	// Fields
+	protected $fields = [
+		'address',
+		'bundleHash',
+		'tokenSlug',
+		'batchId',
+		'position',
+		'amount',
+		'characters',
+		'pubkey',
+		'createdAt',
+	];
 
 
 	/**
