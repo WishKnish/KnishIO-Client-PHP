@@ -59,9 +59,6 @@ abstract class Query
 	 */
 	public function execute ( array $variables = null, array $fields = null ) {
 
-		// Return fields
-		$fields = $fields ?? $this->fields;
-
 		// Default value of variables
 		$this->variables = default_if_null( $variables, [] );
 
@@ -82,10 +79,17 @@ abstract class Query
 	 * @param array $fields
 	 * @return mixed
 	 */
-	public function compiledQuery (array $fields) {
+	public function compiledQuery (array $fields = null) {
+
+		// Fields
+		if ($fields !== null) {
+			$this->fields = $fields;
+		}
+
+		// Compiled query
 		return str_replace(
 			['@fields'],
-			[$this->compileFields($fields)],
+			[$this->compiledFields($this->fields)],
 			static::$query
 		);
 	}
@@ -95,10 +99,10 @@ abstract class Query
 	 * @param array $fields
 	 * @return string
 	 */
-	protected function compileFields (array $fields) {
+	protected function compiledFields (array $fields) {
 		foreach ($fields as $key => $field) {
 			if (is_array($field) ) {
-				$fields[$key] = $key .' '. $this->compileFields($field);
+				$fields[$key] = $key .' '. $this->compiledFields($field);
 			}
 		}
 		return '{'.implode(', ', $fields).'}';
