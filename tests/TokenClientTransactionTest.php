@@ -433,15 +433,16 @@ class TokenClientTransactionTest extends TestCase
 		// Custom recipient list
 		$recipients = [
 			array_get($data, 'secret.fungible'),
-			array_get($data, 'secret.recipient')[0],
-			array_get($data, 'secret.recipient')[1]
+			array_get($data, 'secret.recipient.0'),
+			array_get($data, 'secret.recipient.1')
 		];
 
 		// Wallets
 		$source_wallet = $this->client->getBalance( $from_secret, $token )->payload();
-		$recipient_wallets = [
-			new Wallet($recipients[0], $token), new Wallet($recipients[1], $token), new Wallet($recipients[2], $token)
-		];
+		$recipient_wallets = [];
+		foreach ($recipients as $recipient) {
+			$recipient_wallets[] = new Wallet($recipient, $token);
+		}
 		$remainder_wallet = new Wallet($from_secret, $token);
 
 		// Value
