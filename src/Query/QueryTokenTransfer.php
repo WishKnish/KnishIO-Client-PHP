@@ -19,14 +19,6 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenTransfer extends QueryMoleculePropose
 {
 
-
-    /**
-     * @param $secret
-     * @param $token
-     * @param $amount
-     * @param array $metas
-     * @throws \ReflectionException|\Exception
-     */
     /**
      * @param $fromSecret
      * @param Wallet $fromWallet
@@ -35,6 +27,7 @@ class QueryTokenTransfer extends QueryMoleculePropose
      * @param int|float $amount
      * @param Wallet|null $remainderWallet
      * @throws \ReflectionException
+     * @throws \Exception
      */
 	public function initMolecule ( $fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null )
 	{
@@ -64,6 +57,5 @@ class QueryTokenTransfer extends QueryMoleculePropose
     {
         return new ResponseTokenTransfer($this, $response);
     }
-
 
 }

@@ -56,5 +56,4 @@ class QueryWalletClaim extends QueryMoleculePropose
 		$this->molecule->check();
 	}
 
-
 }

@@ -19,7 +19,6 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenCreate extends QueryMoleculePropose
 {
 
-
     /**
      * @param $secret
      * @param $token

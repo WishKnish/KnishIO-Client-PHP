@@ -17,7 +17,6 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenReceive extends QueryMoleculePropose
 {
 
-
     /**
      * @param string $secret
      * @param Wallet $sourceWallet
@@ -42,6 +41,5 @@ class QueryTokenReceive extends QueryMoleculePropose
 		// Check the molecule
 		$this->molecule->check();
 	}
-
 
 }
