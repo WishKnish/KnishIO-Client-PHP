@@ -490,6 +490,37 @@ class QueryMetaTest extends TestCase
 
 
 
+	/**
+	 * @throws \ReflectionException
+	 */
+	public function testMetaTotals ()
+	{
+		$this->beforeExecute();
+
+		// Execute query & check response
+		$query = new QueryMetaType($this->guzzle_client);
+
+
+		// ---------------- META TYPE
+
+		// --- metaType = metaType1
+		$response = $query->execute([
+
+		], [
+			'instanceCount'
+		]);
+		dd ($response);
+		$this->assertEquals($this->getLimitedResult($response->data()), [
+			[
+				'metaType' => 'metaType1',
+				'instances' => [
+					['metaType' => 'metaType1', 'metaId' => 'metaId1'],
+				],
+			],
+		]);
+	}
+
+
 
 
 
