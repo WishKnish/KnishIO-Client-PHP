@@ -203,10 +203,10 @@ class KnishIOClient
 	 * @param $secret
 	 * @param $token
 	 * @param $value
-	 * @param $to wallet address OR bundle
+	 * @param $to [bundle|secret|Wallet]
 	 * @param array|null $metas
 	 * @return mixed
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function receiveToken ( $secret, $token, $value, $to, array $metas = null )
 	{
@@ -215,14 +215,42 @@ class KnishIOClient
 		// Source wallet
 		$sourceWallet = new Wallet($secret);
 
-		// Meta type
-		$metaType = Wallet::isBundleHash( $to ) ? 'walletbundle' : 'wallet';
+		// Is a string? $to is bundle or secret
+		if (is_string($to) ) {
+
+			// Bundle: set metaType
+			if (Wallet::isBundleHash( $to ) ) {
+				$metaType = 'walletbundle';
+				$metaId = $to;
+			}
+
+			// Secret: create a new wallet (not shadow)
+			else {
+				$to = Wallet::create($to, $token);
+			}
+		}
+
+		// Is a wallet object?
+		if ($to instanceof Wallet) {
+
+			// Meta type: wallet
+			$metaType = 'wallet';
+
+			// Set wallet metas
+			$metas = array_merge($metas, [
+				'position' => $to->position,
+				'bundle' => $to->bundle,
+			]);
+
+			// Set metaId as an wallet address
+			$metaId = $to->address;
+		}
 
 		// Create a query
 		$query = $this->createMoleculeQuery(QueryTokenReceive::class);
 
 		// Fill a molecule
-		$query->fillMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
+		$query->fillMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $metaId, $metas );
 
 		// Return a query execution result
 		return $query->execute ();

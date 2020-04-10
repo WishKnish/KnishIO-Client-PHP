@@ -249,6 +249,22 @@ class TokenClientTransactionTest extends TestCase
 		$this->checkResponse($response);
 		$this->checkWalletShadow($toBundle[1], $token, $transaction_amount * 1.0, false);
 
+
+		// --- RECEIVER.2
+
+		// --- Base receive (NOT-splitting)
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $receivers[2]);
+		$this->checkResponse($response);
+		$this->checkWallet($toBundle[2], $token, $transaction_amount * 1.0, false);
+
+		// --- RECEIVER.3
+
+		// --- Base receive (NOT-splitting)
+		$wallet = Wallet::create($receivers[3], $token);
+		$response = $this->client->receiveToken($secret['env'], $token, $transaction_amount, $wallet);
+		$this->checkResponse($response);
+		$this->checkWallet($receivers[3], $token, $transaction_amount * 1.0, false);
+
 		// Claim shadow wallet
 		$this->claimShadowWallet ($token, $receivers[0], [$receivers[1]]);
 
