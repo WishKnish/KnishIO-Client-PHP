@@ -13,6 +13,6 @@ class ResponseAuthentication extends ResponseMolecule
     {
         $molecule = $this->data();
 
-        return $molecule[ 'status' ] === 'rejected' ? null : $molecule[ 'reason' ];
+        return $molecule[ 'status' ] === 'rejected' ? [] : json_decode( $molecule[ 'reason' ] );
     }
 }
