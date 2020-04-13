@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
 
 /**
@@ -15,10 +16,27 @@ use WishKnish\KnishIO\Client\Query\Query;
  */
 class Response
 {
+    /**
+     * @var Query
+     */
 	protected $query;
+
+    /**
+     * @var array|null
+     */
 	protected $response;
+
 	protected $payload;
+
+    /**
+     * @var string
+     */
 	protected $dataKey;
+
+    /**
+     * @var string
+     */
+	protected $errorKey = 'error';
 
 	/**
 	 * Response constructor.
@@ -39,6 +57,17 @@ class Response
 		if ( $this->response === null ) {
 			throw new InvalidResponseException();
 		}
+
+        if ( array_has( $this->response, $this->errorKey ) ) {
+
+            $error = array_get( $this->response, $this->errorKey );
+
+            if ( stripos( $error, 'Unauthenticated' ) !== false ) {
+                throw new UnauthenticatedException();
+            }
+
+            throw new InvalidResponseException( $error );
+        }
 	}
 
 
@@ -59,6 +88,7 @@ class Response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
 			throw new InvalidResponseException();
 		}
+
 		return array_get( $this->response, $this->dataKey );
 	}
 

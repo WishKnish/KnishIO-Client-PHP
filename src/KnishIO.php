@@ -26,7 +26,12 @@ class KnishIO
 	private static $url = 'https://wishknish.com/graphql';
 	private static $client;
 	private static $methods = [
-		'getBalance', 'createToken', 'receiveToken', 'createIdentifier', 'claimShadowWallet', 'transferToken'
+		'getBalance',
+        'createToken',
+        'receiveToken',
+        'createIdentifier',
+        'claimShadowWallet',
+        'transferToken',
 	];
 
 	/**

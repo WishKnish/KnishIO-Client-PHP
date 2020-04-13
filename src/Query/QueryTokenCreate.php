@@ -19,21 +19,21 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenCreate extends QueryMoleculePropose
 {
 
-
-	/**
-	 * @param $secret
-	 * @param $token
-	 * @param $amount
-	 * @param array $metas
-	 * @throws \ReflectionException
-	 */
+    /**
+     * @param $secret
+     * @param $token
+     * @param $amount
+     * @param array $metas
+     * @throws \ReflectionException
+     * @throws \Exception
+     */
 	public function fillMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $metas = null, Wallet $remainderWallet = null)
 	{
 		// Default metas value
-		$metas = \default_if_null($metas, []);
+		$metas = default_if_null( $metas, [] );
 
 		// Remainder wallet
-		$this->remainderWallet = \default_if_null($remainderWallet, new Wallet ($secret) );
+		$this->remainderWallet = default_if_null( $remainderWallet, new Wallet ($secret) );
 
 
 
@@ -55,8 +55,9 @@ class QueryTokenCreate extends QueryMoleculePropose
      * @param string $response
      * @return Response
      */
-    public function createResponse ($response) {
-        return new ResponseTokenCreate($this, $response);
+    public function createResponse ( $response )
+    {
+        return new ResponseTokenCreate( $this, $response );
     }
 
 }
