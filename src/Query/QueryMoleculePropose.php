@@ -28,7 +28,7 @@ class QueryMoleculePropose extends Query
 		'depth',
 		'status',
 		'reason',
-		'reasonPayload',
+		'payload',
 		'createdAt',
 		'receivedAt',
 		'processedAt',

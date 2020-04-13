@@ -143,7 +143,7 @@ abstract class TestCase extends TestCaseBase {
 		// Reason data on the top of the output
 		if (array_has($response->data(), 'reason') ) {
 			$output['reason'] = array_get($response->data(), 'reason');
-			$output['reasonPayload'] = array_get($response->data(), 'reasonPayload');
+			$output['payload'] = array_get($response->data(), 'payload');
 		}
 
 		// Other debug info
