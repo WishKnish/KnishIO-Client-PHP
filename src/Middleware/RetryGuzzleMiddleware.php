@@ -22,8 +22,8 @@ class RetryGuzzleMiddleware extends RetryMiddleware
             $options[ 'retries' ] = 0;
         }
 
-        if ( $options[ 'retries' ] > 0 && isset( $options[ 'auth_token_header' ] ) && $options[ 'auth_token_header' ] instanceof Closure ) {
-            $request = $options[ 'auth_token_header' ]( $request );
+        if ( $options[ 'retries' ] > 0 && isset($options['x_auth_token_getter']) && $options['x_auth_token_getter'] instanceof Closure) {
+			$request->withHeader( 'X-Auth-Token', $options['x_auth_token_getter']() );
         }
 
         return parent::__invoke( $request, $options );

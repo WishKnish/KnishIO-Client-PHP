@@ -30,6 +30,8 @@ use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
+use WishKnish\KnishIO\HttpClient\HttpClient;
+use WishKnish\KnishIO\HttpClient\HttpClientInterface;
 
 
 /**
@@ -38,7 +40,6 @@ use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
  */
 class KnishIOClient
 {
-	// Client parameters
 
     /**
      * @var string
@@ -53,110 +54,18 @@ class KnishIOClient
     /**
      * @var string
      */
-    private $xAuthToken;
-
-    /**
-     * @var string
-     */
     private $secret;
 
-    /**
-     * @var array
-     */
-    private $pendingRequest = [];
 
 	/**
-	 * KnishIO constructor.
-	 * @param string $url
-	 * @param Client|null $client
+	 * KnishIOClient constructor.
+	 * @param $url
+	 * @param HttpClientInterface|null $client
 	 */
-	public function __construct ( $url, Client $client = null )
+	public function __construct ( $url, HttpClientInterface $client = null )
 	{
-	    $handler = HandlerStack::create( new CurlMultiHandler() );
-        $handler->push( function ( callable $handler ) {
-            return new RetryGuzzleMiddleware(
-                function ( $retries, RequestInterface $request, ResponseInterface $response = null, RequestException $exception = null ) {
-                    return $retries === 0 && $response !== null && $response->getStatusCode() === 401;
-                },
-                $handler,
-                null
-            );
-        } );
-
         $this->url = $url;
-        $this->client = default_if_null( $client, new Client( [
-			'base_uri'    => $this->url,
-			'verify'      => false,
-			'http_errors' => false,
-            'handler'     => $handler,
-			'headers'     => [
-				'User-Agent' => 'KnishIO/0.1',
-				'Accept'     => 'application/json',
-			],
-            'auth_token_header' => function ( RequestInterface $request ) {
-
-                $this->setAuthToken( $this->authentication( $this->getSecret() )->payload() );
-                $pending = array_values( ( new ArrayObject( $this->pendingRequest ) )->getArrayCopy() );
-                $callable = array_pop( $pending  );
-
-                if ( $callable !== null ) { $request = $callable(); }
-
-                return $request->withHeader( 'X-Auth-Token', $this->xAuthToken );
-            },
-		] ) );
-	}
-
-    /**
-     * @param string $name
-     * @param callable $variables
-     * @return bool
-     */
-	protected function addPending( $name, array $variables = [] )
-    {
-        if ( isset( $this->pendingRequest[ $name ] ) ) {
-
-            unset ( $this->pendingRequest[ $name ] );
-
-            return true;
-        }
-
-        $this->pending( $name, function () use ( $name, $variables ) { return $this->{ $name }( ...$variables ); } );
-
-        return false;
-    }
-
-    /**
-     * @param string $name
-     * @param callable $closure
-     */
-    protected function pending ( $name, callable $closure )
-    {
-        $this->pendingRequest[ $name ] = $closure;
-    }
-
-    /**
-     * @param string $authToken
-     * @throws Exception
-     */
-    public function setAuthToken ( $authToken )
-    {
-        $this->xAuthToken = $authToken;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getAuthToken ()
-    {
-        return $this->xAuthToken;
-    }
-
-	/**
-	 * @param string $url
-	 */
-	public function setUrl ( $url )
-    {
-		$this->url = $url;
+        $this->client = default_if_null( $client, new HttpClient($url) );
 	}
 
 	/**

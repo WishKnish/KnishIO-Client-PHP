@@ -50,8 +50,7 @@ abstract class Query
 	{
 		$this->url = $url;
 		$this->client = $client;
-        $this->request = new Request( 'POST', $url, [ 'Content-Type' => 'application/json' ], json_encode( [] ) );
-		
+
 		// Init
 		$this->init ();
 	}
@@ -68,73 +67,29 @@ abstract class Query
      * @param array|null $variables
      * @return Request
      */
-	protected function setRequest( array $variables = null )
+	protected function setRequest( array $variables = null, array $fields = null )
     {
         // Default value of variables
         $this->variables = default_if_null( $variables, [] );
 
+        // Set a request
         $this->request = new Request(
             'POST',
             $this->url,
             [ 'Content-Type' => 'application/json' ],
-            json_encode( [ 'query' => static::$query, 'variables' => $this->variables, ] )
+            json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
         );
 
         return $this->request;
     }
 
-    /**
-     * @return Request
-     */
-    public function getRequest ()
-    {
-	    return $this->request;
-    }
-
-    /**
-     * @param array $options
-     * @return \Psr\Http\Message\ResponseInterface
-     */
-    public function send ( array $options = [] )
-    {
-        return $this->client->send( $this->getRequest(), $options );
-    }
 
 	/**
-	 * @return array
+	 * @return Request
 	 */
-	public function fields () {
-		return $this->fields;
-	}
-
-	/**
-	 * @param array|null $variables
-     * @param boolean $request
-	 * @return mixed
-	 */
-	public function execute ( array $variables = null, array $fields = null,  $request = false ) {
-
-		// Default value of variables
-		$this->variables = default_if_null( $variables, [] );
-
-        $this->setRequest( $variables );
-
-        if ( $request ) {
-            return $this->getRequest();
-        }
-
-		// Make a request
-		$response = $this->send();
-
-		// Make a request
-		$response = $this->client->post( $this->url, [
-			'json' => [
-				'query'     => $this->compiledQuery($fields),
-				'variables' => $this->variables,
-			]
-		] );
-		// Return a response
-		return $this->createResponse( $response->getBody()->getContents() );
+	public function getRequest ()
+	{
+		return $this->request;
 	}
 
 
@@ -142,8 +97,8 @@ abstract class Query
 	 * @param array $fields
 	 * @return mixed
 	 */
-	public function compiledQuery (array $fields = null) {
-
+	public function compiledQuery (array $fields = null)
+	{
 		// Fields
 		if ($fields !== null) {
 			$this->fields = $fields;
@@ -162,13 +117,45 @@ abstract class Query
 	 * @param array $fields
 	 * @return string
 	 */
-	protected function compiledFields (array $fields) {
+	protected function compiledFields (array $fields)
+	{
 		foreach ($fields as $key => $field) {
 			if (is_array($field) ) {
 				$fields[$key] = $key .' '. $this->compiledFields($field);
 			}
 		}
 		return '{'.implode(', ', $fields).'}';
+	}
+
+
+    /**
+     * @param array $options
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function send ( array $options = [] )
+    {
+        return $this->client->send( $this->getRequest(), $options );
+    }
+
+
+	/**
+	 * @param array|null $variables
+     * @param boolean $request
+	 * @return mixed
+	 */
+	public function execute ( array $variables = null, array $fields = null ) {
+
+		// Default value of variables
+		$this->variables = default_if_null( $variables, [] );
+
+		// Set a request
+        $this->setRequest( $variables, $fields );
+
+		// Make a request
+		$response = $this->send();
+
+		// Return a response
+		return $this->createResponse( $response->getBody()->getContents() );
 	}
 
 
