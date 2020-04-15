@@ -68,6 +68,7 @@ class KnishIOClient
         $this->client = default_if_null( $client, new HttpClient($url) );
 	}
 
+
 	/**
 	 * @param $class
 	 * @return mixed
@@ -77,6 +78,7 @@ class KnishIOClient
 		return new $class ( $this->client, $this->url );
 	}
 
+
     /**
      * @return string
      */
@@ -84,6 +86,7 @@ class KnishIOClient
     {
         return $this->secret;
     }
+
 
 	/**
 	 * @param string $code
@@ -106,8 +109,9 @@ class KnishIOClient
 		return $query->execute( [
             'bundleHash' => $bundleHash,
             'token'      => $token,
-        ], $this->addPending( __FUNCTION__, func_get_args() ) );
+        ] );
 	}
+
 
     /**
      * @param string $secret
@@ -138,11 +142,12 @@ class KnishIOClient
 		$query = $this->createQuery(QueryTokenCreate::class );
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
+		$query->fillMolecule ( $secret, $sourceWallet, $recipientWallet, $amount, $metas );
 
         // Return a query execution result
-		return $query->execute ( null, $this->addPending( __FUNCTION__, func_get_args() ) );
+		return $query->execute ();
 	}
+
 
 	/**
 	 * @param string $secret
@@ -170,11 +175,12 @@ class KnishIOClient
 		$query = $this->createQuery(QueryTokenReceive::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
+		$query->fillMolecule ( $secret, $sourceWallet, $token, $value, $metaType, $to, $metas );
 
 		// Return a query execution result
-		return $query->execute ( null, $this->addPending( __FUNCTION__, func_get_args() ) );
+		return $query->execute ();
 	}
+
 
     /**
      * @param string $secret
@@ -196,10 +202,10 @@ class KnishIOClient
 		$query = $this->createQuery(QueryIdentifierCreate::class);
 
 		// Init a molecule
-		$query->initMolecule ( $secret, $sourceWallet, $type, $contact, $code);
+		$query->fillMolecule ( $secret, $sourceWallet, $type, $contact, $code);
 
 		// Execute a query
-		return $query->execute( null, $this->addPending( __FUNCTION__, func_get_args() ) );
+		return $query->execute();
 	}
 
     /**
@@ -215,7 +221,6 @@ class KnishIOClient
      */
 	public function claimShadowWallet ( $secret, $token, Wallet $sourceWallet = null, Wallet $shadowWallet = null, $recipientWallet = null )
     {
-
         $this->secret = $secret;
 
 		// Source wallet
@@ -233,11 +238,12 @@ class KnishIOClient
 		$query = $this->createQuery( QueryWalletClaim::class );
 
 		// Init a molecule
-		$query->initMolecule( $secret, $sourceWallet, $shadowWallet, $token, $recipientWallet );
+		$query->fillMolecule( $secret, $sourceWallet, $shadowWallet, $token, $recipientWallet );
 
 		// Execute a query
-		return $query->execute( null, $this->addPending( __FUNCTION__, func_get_args() ) );
+		return $query->execute();
 	}
+
 
 	/**
 	 * @param string $fromSecret
@@ -276,11 +282,12 @@ class KnishIOClient
 		$query = $this->createQuery(QueryTokenTransfer::class);
 
 		// Init a molecule
-		$query->initMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );
+		$query->fillMolecule ( $fromSecret, $fromWallet, $toWallet, $token, $amount, $remainderWallet );
 
 		// Execute a query
-		return $query->execute( null, $this->addPending( __FUNCTION__, func_get_args() ) );
+		return $query->execute();
 	}
+
 
     /**
      * @param string $bundleOrSecret
@@ -290,6 +297,7 @@ class KnishIOClient
 	public function getContinueId ( $bundleOrSecret )
     {
         $this->secret = $bundleOrSecret;
+
         /** @var  QueryContinueId $query */
         $query = $this->createQuery(QueryContinueId::class );
 
@@ -299,20 +307,33 @@ class KnishIOClient
         ] );
     }
 
+
     /**
      * @param string $secret
      * @throws Exception
      */
-    public function authentication ( $secret )
+    public function authentication ( $secret = null )
     {
+    	$secret = default_if_null($secret, $this->secret);
+
+    	// Save secert
         $this->secret = $secret;
 
         /** @var Wallet $wallet */
         $wallet = $this->getContinueId( $secret )->payload() ?: new Wallet( $secret );
+
         /** @var QueryAuthentication $query */
         $query = $this->createQuery( QueryAuthentication::class );
-        $query->initMolecule( $secret, $wallet );
+        $query->fillMolecule( $secret, $wallet );
 
-        return $query->execute();
+        // Get a response
+        $response = $query->execute();
+
+        // If the response is success - set auth token
+        if ($response->success() ) {
+        	$this->client->setAuthToken($response->payload() );
+		}
+
+        return $response;
     }
 }

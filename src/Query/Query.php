@@ -9,6 +9,7 @@ namespace WishKnish\KnishIO\Client\Query;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\HttpClient\HttpClientInterface;
 use function GuzzleHttp\json_encode;
 
 /**
@@ -26,27 +27,33 @@ abstract class Query
      * @var string|null
      */
 	protected $url;
+
+
+	/**
+	 * @var Request
+	 */
+	protected $request;
+
+
     /**
      * @var array|null
      */
 	protected $variables;
 
-    /**
-     * @var Request
-     */
-    protected $request;
 
     /**
      * @var string
      */
 	protected static $query;
 
+
+
 	/**
 	 * Query constructor.
 	 * @param Client $client
 	 * @param string|null $url
 	 */
-	public function __construct ( Client $client, $url = null )
+	public function __construct ( HttpClientInterface $client, $url = null )
 	{
 		$this->url = $url;
 		$this->client = $client;
@@ -63,33 +70,38 @@ abstract class Query
 	}
 
 
-    /**
-     * @param array|null $variables
-     * @return Request
-     */
-	protected function setRequest( array $variables = null, array $fields = null )
-    {
-        // Default value of variables
-        $this->variables = default_if_null( $variables, [] );
-
-        // Set a request
-        $this->request = new Request(
-            'POST',
-            $this->url,
-            [ 'Content-Type' => 'application/json' ],
-            json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
-        );
-
-        return $this->request;
-    }
-
-
 	/**
 	 * @return Request
 	 */
 	public function getRequest ()
 	{
 		return $this->request;
+	}
+
+
+	/**
+	 * @param array|null $variables
+     * @param boolean $request
+	 * @return mixed
+	 */
+	public function execute ( array $variables = null, array $fields = null ) {
+
+		// Default value of variables
+		$this->variables = default_if_null( $variables, [] );
+
+		// Set a request
+		$this->request = new Request(
+			'POST',
+			$this->url,
+			[ 'Content-Type' => 'application/json' ],
+			json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
+		);
+
+		// Make a request
+		$response = $this->client->send( $this->request, $options );
+
+		// Return a response
+		return $this->createResponse( $response->getBody()->getContents() );
 	}
 
 
@@ -125,37 +137,6 @@ abstract class Query
 			}
 		}
 		return '{'.implode(', ', $fields).'}';
-	}
-
-
-    /**
-     * @param array $options
-     * @return \Psr\Http\Message\ResponseInterface
-     */
-    public function send ( array $options = [] )
-    {
-        return $this->client->send( $this->getRequest(), $options );
-    }
-
-
-	/**
-	 * @param array|null $variables
-     * @param boolean $request
-	 * @return mixed
-	 */
-	public function execute ( array $variables = null, array $fields = null ) {
-
-		// Default value of variables
-		$this->variables = default_if_null( $variables, [] );
-
-		// Set a request
-        $this->setRequest( $variables, $fields );
-
-		// Make a request
-		$response = $this->send();
-
-		// Return a response
-		return $this->createResponse( $response->getBody()->getContents() );
 	}
 
 

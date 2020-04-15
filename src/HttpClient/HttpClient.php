@@ -17,29 +17,18 @@ use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
  */
 class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 
+
 	/**
 	 * @var string
 	 */
 	private $xAuthToken;
 
 
-	protected $request;
-
-	/**
-	 * @var string
-	 */
-	private $secret;
-
-	/**
-	 * @var array
-	 */
-	private $pendingRequest = [];
-
 
 	/**
 	 *
 	 */
-	public static function handler () {
+	/*public static function handler () {
 
 		// Create a handler
 		$handler = HandlerStack::create( new CurlMultiHandler() );
@@ -59,7 +48,7 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 				null
 			);
 		} );
-	}
+	}*/
 
 
 	/**
@@ -75,20 +64,11 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 			'base_uri'    => $url,
 			'verify'      => false,
 			'http_errors' => false,
-			'handler'     => static::handler(),
+			// 'handler'     => static::handler(),
 			'headers'     => [
 				'User-Agent' => 'KnishIO/0.1',
 				'Accept'     => 'application/json',
 			],
-			'x_auth_token_getter' => static function () {
-
-				// Set auth token
-				$this->setAuthToken( $this->authentication( $this->getSecret() )->payload() );
-
-				// Return an auth token
-				return $this->xAuthToken;
-
-			},
 		], $config);
 
 		// Guzzle constructor
@@ -114,43 +94,6 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 	}
 
 
-	public function send(RequestInterface $request, array $options = [])
-	{
-		// Save a request
-		$this->request = $request;
-
-		return parent::send($request, $options);
-	}
-
-
-	/**
-	 * @param string $name
-	 * @param callable $variables
-	 * @return bool
-	 */
-	protected function addPending( $name, array $variables = [] )
-	{
-		if ( isset( $this->pendingRequest[ $name ] ) ) {
-
-			unset ( $this->pendingRequest[ $name ] );
-
-			return true;
-		}
-
-		$this->pending( $name, function () use ( $name, $variables ) { return $this->{ $name }( ...$variables ); } );
-
-		return false;
-	}
-
-	/**
-	 * @param string $name
-	 * @param callable $closure
-	 */
-	protected function pending ( $name, callable $closure )
-	{
-		$this->pendingRequest[ $name ] = $closure;
-	}
-
 	/**
 	 * @param string $authToken
 	 * @throws Exception
@@ -160,12 +103,28 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 		$this->xAuthToken = $authToken;
 	}
 
+
 	/**
 	 * @return string|null
 	 */
 	public function getAuthToken ()
 	{
 		return $this->xAuthToken;
+	}
+
+
+	/**
+	 * @param RequestInterface $request
+	 * @param array $options
+	 * @return ResponseInterface
+	 */
+	public function send (RequestInterface $request, array $options = [])
+	{
+		// Add
+		$request->withHeader( 'X-Auth-Token', $this->getAuthToken() );
+
+		// Send a request
+		return parent::send($request, $options);
 	}
 
 

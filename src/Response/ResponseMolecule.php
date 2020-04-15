@@ -20,7 +20,7 @@ class ResponseMolecule extends Response
 	/**
 	 * @return Molecule|null
 	 */
-    public function payload () {
+    public function molecule () {
     	if ( !$data = $this->data() ) {
     		return null;
 		}
@@ -56,6 +56,14 @@ class ResponseMolecule extends Response
 	 */
 	public function reason () {
 		return array_get($this->data(), 'reason', 'Invalid response from server');
+	}
+
+
+	/**
+	 * @return mixed|null
+	 */
+	public function payload () {
+		return array_get($this->data(), 'payload');
 	}
 
 

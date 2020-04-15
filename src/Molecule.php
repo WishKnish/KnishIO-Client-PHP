@@ -411,15 +411,15 @@ class Molecule
 			$metaType,
 			$metaId,
 			$meta,
-            $wallet->pubkey,
-            $wallet->characters,
+			$wallet->pubkey,
+			$wallet->characters,
 			null,
 			$this->generateIndex()
 		);
 
-        // User remainder atom
-        $this->addUserRemainderAtom ( $userRemainderWallet );
-
+		// User remainder atom
+		$this->addUserRemainderAtom($userRemainderWallet);
+	}
 
 
 	/**

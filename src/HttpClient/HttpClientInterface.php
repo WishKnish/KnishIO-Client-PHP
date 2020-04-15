@@ -22,4 +22,18 @@ interface HttpClientInterface extends ClientInterface {
 	 */
 	public function setUrl ( $url );
 
+
+	/**
+	 * @param $authToken
+	 * @return mixed
+	 */
+	public function setAuthToken ( $authToken );
+
+
+	/**
+	 * @return mixed
+	 */
+	public function getAuthToken ();
+
+
 }

@@ -20,7 +20,7 @@ class QueryAuthentication extends QueryMoleculePropose
      * @param Wallet $remainderWallet
      * @throws Exception
      */
-    public function initMolecule ( $secret, Wallet $wallet, Wallet $remainderWallet = null )
+    public function fillMolecule ( $secret, Wallet $wallet, Wallet $remainderWallet = null )
     {
 
         $this->remainderWallet = default_if_null( $remainderWallet, new Wallet( $secret ) );

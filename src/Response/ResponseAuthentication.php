@@ -9,10 +9,4 @@ namespace WishKnish\KnishIO\Client\Response;
 class ResponseAuthentication extends ResponseMolecule
 {
 
-    public function payload ()
-    {
-        $molecule = $this->data();
-
-        return $molecule[ 'status' ] === 'rejected' ? null : $molecule[ 'reason' ];
-    }
 }
