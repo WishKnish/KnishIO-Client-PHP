@@ -650,7 +650,7 @@ class Molecule
             && CheckMolecule::isotopeT( $molecule )
             && CheckMolecule::isotopeI( $molecule )
             && CheckMolecule::isotopeU( $molecule )
-            && CheckMolecule::continueId( $molecule )
+            && CheckMolecule::continuId( $molecule )
 			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 	}
 

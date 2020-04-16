@@ -22,16 +22,15 @@ class QueryAuthentication extends QueryMoleculePropose
      */
     public function fillMolecule ( $secret, Wallet $wallet, Wallet $remainderWallet = null )
     {
-
         $this->remainderWallet = default_if_null( $remainderWallet, new Wallet( $secret ) );
 
         // Create a molecule
         $this->molecule = new Molecule();
 
         $this->molecule->initAuthentication( $wallet, $this->remainderWallet );
-        // Sign a molecule
+
+        // Check & sign a molecule
         $this->molecule->sign( $secret );
-        // Check the molecule
         $this->molecule->check();
     }
 

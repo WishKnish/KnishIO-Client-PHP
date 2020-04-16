@@ -26,6 +26,9 @@ class Response
      */
 	protected $response;
 
+	/**
+	 * @var
+	 */
 	protected $payload;
 
     /**

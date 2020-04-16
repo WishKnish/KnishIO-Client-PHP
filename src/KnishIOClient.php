@@ -22,7 +22,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Query\QueryAuthentication;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
-use WishKnish\KnishIO\Client\Query\QueryContinueId;
+use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Query\QueryIdentifierCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenCreate;
 use WishKnish\KnishIO\Client\Query\QueryTokenReceive;
@@ -128,7 +128,7 @@ class KnishIOClient
 		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
-		$sourceWallet = default_if_null( $this->getContinueId( $secret )->payload(), new Wallet( $secret ) );
+		$sourceWallet = $this->getSourceWallet($secret);
 
 		// Recipient wallet
 		$recipientWallet = new Wallet( $secret, $token );
@@ -165,7 +165,7 @@ class KnishIOClient
 		$metas = default_if_null( $metas, [] );
 
 		// Source wallet
-		$sourceWallet = default_if_null( $this->getContinueId( $secret )->payload(),  new Wallet( $secret ) );
+		$sourceWallet = $this->getSourceWallet($secret);
 
 		// Meta type
 		$metaType = Wallet::isBundleHash( $to ) ? 'walletbundle' : 'wallet';
@@ -195,7 +195,7 @@ class KnishIOClient
         $this->secret = $secret;
 
 		// Create source & remainder wallets
-		$sourceWallet = default_if_null( $this->getContinueId( $secret )->payload(), new Wallet( $secret ) );
+		$sourceWallet = $this->getSourceWallet($secret);
 
 		// Create & execute a query
         /** @var QueryIdentifierCreate $query */
@@ -224,7 +224,7 @@ class KnishIOClient
         $this->secret = $secret;
 
 		// Source wallet
-		$sourceWallet = default_if_null( $sourceWallet, default_if_null( $this->getContinueId( $secret )->payload(), new Wallet( $secret ) ) );
+		$sourceWallet = default_if_null( $sourceWallet, $this->getSourceWallet($secret) );
 
 		// Shadow wallet (to get a Batch ID & balance from it)
 		$shadowWallet = default_if_null( $shadowWallet, $this->getBalance($secret, $token)->payload() );
@@ -289,17 +289,35 @@ class KnishIOClient
 	}
 
 
+	/**
+	 * @param $secret
+	 * @return Wallet|null
+	 * @throws Exception
+	 */
+	public function getSourceWallet ($secret) {
+
+		// Has a ContinuID wallet?
+		$sourceWallet = $this->getContinuId( $secret )->payload();
+		if ($sourceWallet) {
+			return $sourceWallet;
+		}
+
+		// Create a new source wallet
+		return new Wallet( $secret );
+	}
+
+
     /**
      * @param string $bundleOrSecret
      * @return Response
      * @throws Exception
      */
-	public function getContinueId ( $bundleOrSecret )
+	public function getContinuId ( $bundleOrSecret )
     {
         $this->secret = $bundleOrSecret;
 
-        /** @var  QueryContinueId $query */
-        $query = $this->createQuery(QueryContinueId::class );
+        // Create a query
+        $query = $this->createQuery(QueryContinuId::class );
 
         // Execute the query
         return $query->execute( [
@@ -319,10 +337,10 @@ class KnishIOClient
     	// Save secert
         $this->secret = $secret;
 
-        /** @var Wallet $wallet */
-        $wallet = $this->getContinueId( $secret )->payload() ?: new Wallet( $secret );
+        // Get a ContinuId wallet
+        $wallet = $this->getContinuId( $secret )->payload() ?: new Wallet( $secret );
 
-        /** @var QueryAuthentication $query */
+        // Create query & fill a molecule
         $query = $this->createQuery( QueryAuthentication::class );
         $query->fillMolecule( $secret, $wallet );
 
