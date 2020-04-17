@@ -9,7 +9,7 @@ namespace WishKnish\KnishIO\Client\Query;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use function GuzzleHttp\json_encode;
 
 /**
@@ -98,7 +98,7 @@ abstract class Query
 		);
 
 		// Make a request
-		$response = $this->client->send( $this->request, $options );
+		$response = $this->client->send( $this->request);
 
 		// Return a response
 		return $this->createResponse( $response->getBody()->getContents() );

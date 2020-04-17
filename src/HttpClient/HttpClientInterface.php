@@ -1,6 +1,6 @@
 <?php
 
-namespace WishKnish\KnishIO\HttpClient;
+namespace WishKnish\KnishIO\Client\HttpClient;
 
 use GuzzleHttp\ClientInterface;
 
@@ -14,7 +14,7 @@ interface HttpClientInterface extends ClientInterface {
 	 * @param $url
 	 * @return mixed
 	 */
-	public function url ();
+	public function getUrl ();
 
 	/**
 	 * @param $url

@@ -1,6 +1,6 @@
 <?php
 
-namespace WishKnish\KnishIO\HttpClient;
+namespace WishKnish\KnishIO\Client\HttpClient;
 
 
 use GuzzleHttp\Client;
@@ -79,7 +79,7 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 	/**
 	 * @return mixed
 	 */
-	public function url ()
+	public function getUrl ()
 	{
 		return $this->url;
 	}

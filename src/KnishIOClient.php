@@ -30,8 +30,8 @@ use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryWalletClaim;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
-use WishKnish\KnishIO\HttpClient\HttpClient;
-use WishKnish\KnishIO\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 
 
 /**
@@ -66,6 +66,15 @@ class KnishIOClient
 	{
         $this->url = $url;
         $this->client = default_if_null( $client, new HttpClient($url) );
+	}
+
+
+	/**
+	 * @return string
+	 */
+	public function url ()
+	{
+		return $this->url;
 	}
 
 

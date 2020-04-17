@@ -76,6 +76,23 @@ class Molecule
 		return ( string ) $this->toJson();
 	}
 
+
+	/**
+	 * @param Atom $atom
+	 * @return $this
+	 */
+	public function addAtom (Atom $atom) : self
+	{
+		$this->molecularHash = null;
+
+		$this->atoms[] =  $atom;
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
     /**
      * Add user remainder atom
      *

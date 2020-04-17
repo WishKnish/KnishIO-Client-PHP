@@ -89,6 +89,7 @@ class Response
 
 		// Check key & return custom data from the response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
+			// dd ($this->response);
 			throw new InvalidResponseException();
 		}
 
