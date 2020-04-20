@@ -27,6 +27,12 @@ abstract class TestCase extends TestCaseBase {
 	protected $dotenv;
 
 
+	protected $graphql_url;
+
+	// Array [secret1 => KnishIOClient object1, secret2 => KnishIOClient object2, ..]
+	protected $clients = [];
+
+
 	/**
 	 * Data filepath
 	 *
@@ -99,9 +105,36 @@ abstract class TestCase extends TestCaseBase {
 			throw new \Exception('APP_URL is empty.');
 		}
 
+		// GraphQL url
+		$this->graphql_url = $app_url.'graphql';
+
 		// Client initialization
 		$this->client = new KnishIOClient($app_url.'graphql');
 		$this->output(['Query URL: '. $this->client->url()]);
+	}
+
+
+	/**
+	 * Get a client
+	 *
+	 * @param $secret
+	 * @return mixed
+	 */
+	public function client ($secret) {
+
+		// Create new client
+		if (!array_has($this->clients, $secret) ) {
+
+			// Create a client
+			$this->clients[$secret] = new KnishIOClient($this->graphql_url);
+
+			// Auth the client
+			//$response = $this->clients[$secret]->authentication($secret);
+			//$this->checkResponse($response);
+		}
+
+		// Return the client by secret
+		return $this->clients[$secret];
 	}
 
 

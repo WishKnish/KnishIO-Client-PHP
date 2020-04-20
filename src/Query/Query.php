@@ -89,6 +89,8 @@ abstract class Query
 		// Default value of variables
 		$this->variables = default_if_null( $variables, [] );
 
+		/*
+
 		// Set a request
 		$this->request = new Request(
 			'POST',
@@ -98,7 +100,19 @@ abstract class Query
 		);
 
 		// Make a request
-		$response = $this->client->send( $this->request);
+		$response = $this->client->send( $this->request );
+
+		*/
+
+		// Make a request
+		$response = $this->client->post( $this->url, [
+			'json' => [
+				'query'     => $this->compiledQuery($fields),
+				'variables' => $this->variables,
+			]
+		] );
+
+
 
 		// Return a response
 		return $this->createResponse( $response->getBody()->getContents() );

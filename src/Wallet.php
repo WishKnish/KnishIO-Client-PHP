@@ -83,7 +83,7 @@ class Wallet
      * @return Wallet|WalletShadow
      * @throws Exception
      */
-    public static function create ($secretOrBundle, $token, $batchId = null, $characters = null) {
+    public static function create ($secretOrBundle, $token = 'USER', $batchId = null, $characters = null) {
 
     	// Shadow wallet
     	if (static::isBundleHash($secretOrBundle) ) {
