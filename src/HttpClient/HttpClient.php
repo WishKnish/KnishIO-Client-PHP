@@ -9,7 +9,6 @@ use GuzzleHttp\Handler\CurlMultiHandler;
 use GuzzleHttp\HandlerStack;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
 
 /**
  * Class HttpClient
@@ -22,33 +21,6 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 	 * @var string
 	 */
 	private $xAuthToken;
-
-
-
-	/**
-	 *
-	 */
-	/*public static function handler () {
-
-		// Create a handler
-		$handler = HandlerStack::create( new CurlMultiHandler() );
-
-		// Push RetryGuzzleMiddleware to retry request if: this is the first attempt & response = 401 Unauthorized
-		$handler->push( function ( callable $handler )
-		{
-			return new RetryGuzzleMiddleware(
-
-				// Returns TRUE if the request is to be retried
-				function ( $retries, RequestInterface $request, ResponseInterface $response = null, RequestException $exception = null ) 				{
-					return $retries === 0 && $response !== null && $response->getStatusCode() === 401;
-				},
-
-				$handler,
-
-				null
-			);
-		} );
-	}*/
 
 
 	/**
@@ -64,7 +36,6 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 			'base_uri'    => $url,
 			'verify'      => false,
 			'http_errors' => false,
-			// 'handler'     => static::handler(),
 			'headers'     => [
 				'User-Agent' => 'KnishIO/0.1',
 				'Accept'     => 'application/json',

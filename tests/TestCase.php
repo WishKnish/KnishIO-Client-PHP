@@ -129,8 +129,8 @@ abstract class TestCase extends TestCaseBase {
 			$this->clients[$secret] = new KnishIOClient($this->graphql_url);
 
 			// Auth the client
-			//$response = $this->clients[$secret]->authentication($secret);
-			//$this->checkResponse($response);
+			$response = $this->clients[$secret]->authentication($secret);
+			$this->checkResponse($response);
 		}
 
 		// Return the client by secret

@@ -61,12 +61,13 @@ class Response
 			throw new InvalidResponseException();
 		}
 
+		// Catch errors
         if ( array_has( $this->response, $this->errorKey ) ) {
 
             $error = array_get( $this->response, $this->errorKey );
 
             if ( stripos( $error, 'Unauthenticated' ) !== false ) {
-                throw new UnauthenticatedException();
+                throw new UnauthenticatedException ( $error );
             }
 
             throw new InvalidResponseException( $error );

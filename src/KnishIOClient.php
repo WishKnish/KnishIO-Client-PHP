@@ -18,6 +18,7 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
@@ -32,7 +33,6 @@ use WishKnish\KnishIO\Client\Query\QueryTokenTransfer;
 use WishKnish\KnishIO\Client\Query\QueryShadowWalletClaim;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Middleware\RetryGuzzleMiddleware;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 
@@ -431,6 +431,11 @@ class KnishIOClient
         // If the response is success - set auth token
         if ($response->success() ) {
         	$this->client->setAuthToken($response->payload() );
+		}
+
+        // Not authorized: throw an exception
+        else {
+			throw new UnauthenticatedException($response->reason());
 		}
 
         return $response;

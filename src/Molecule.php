@@ -47,8 +47,8 @@ class Molecule
 	/**
 	 * @return string
 	 */
-	public static function continuIdKey () {
-		return 'bundleContinuID';
+	public static function continuIdMetaType () {
+		return 'walletBundle';
 	}
 
 
@@ -111,7 +111,7 @@ class Molecule
 			$userRemainderWallet->token,
 			null,
 			null,
-			static::continuIdKey(),
+			static::continuIdMetaType(),
 			$userRemainderWallet->bundle,
 			null,
 			$userRemainderWallet->pubkey,
