@@ -135,7 +135,7 @@ class QueryMetaTest extends TestCase
 	{
 		$molecule = new Molecule();
 		foreach ($metas_array as $metas) {
-			$molecule->initMeta(new Wallet ($this->source_secret), $metas, $meta_type, $meta_id);
+			$molecule->initMeta(new Wallet ($this->source_secret), new Wallet ($this->source_secret), $metas, $meta_type, $meta_id);
 		}
 		$molecule->sign($this->source_secret);
 		$molecule->check();

@@ -69,7 +69,7 @@ class QueryMoleculePropose extends Query
 	public function execute ( array $variables = null, array $fields = null ) {
 		$molecule = array_get($variables, 'molecule', $this->molecule);
 		return parent::execute (
-			array_merge( default_if_null( $variables, [] ), [ 'molecule' => $this->molecule ] ),
+			array_merge( default_if_null( $variables, [] ), [ 'molecule' => $molecule ] ),
 			$fields
 		);
 	}
