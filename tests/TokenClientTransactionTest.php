@@ -137,6 +137,22 @@ class TokenClientTransactionTest extends TestCase
 			],
 		];
 
+		/*
+		\DB::unprepared(\DB::raw('
+			DELETE FROM knishio_access_tokens;
+			DELETE FROM knishio_atoms;
+			DELETE FROM knishio_bonds;
+			DELETE FROM knishio_bundles;
+			DELETE FROM knishio_cells;
+			DELETE FROM knishio_identifiers;
+			DELETE FROM knishio_metas;
+			DELETE FROM knishio_molecules;
+			DELETE FROM knishio_tokens;
+			DELETE FROM knishio_wallets;
+			DELETE FROM knishio_wallet_bundles;
+		'));
+		*/
+
 		// --- Create a non-stackable token
 		$tokenMeta = [
 			'name'			=> $this->token_slug['fungible'],

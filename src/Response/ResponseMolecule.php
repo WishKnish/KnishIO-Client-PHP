@@ -16,6 +16,21 @@ class ResponseMolecule extends Response
 {
 	protected $dataKey = 'data.ProposeMolecule';
 
+	protected $payload;
+
+
+	/**
+	 *
+	 */
+	public function init () {
+
+		// Get a json payload
+		$payload_json = array_get($this->data(), 'payload');
+
+		// Decode payload
+		$this->payload = \json_decode( $payload_json, true );
+	}
+
 
 	/**
 	 * @return Molecule|null
@@ -63,7 +78,7 @@ class ResponseMolecule extends Response
 	 * @return mixed|null
 	 */
 	public function payload () {
-		return array_get($this->data(), 'payload');
+		return $this->payload;
 	}
 
 

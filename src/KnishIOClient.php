@@ -82,6 +82,16 @@ class KnishIOClient
 
 
 	/**
+	 * @todo unify code with url & setUrl functions
+	 * @param $url
+	 */
+	public function setUrl ($url) {
+		$this->url = $url;
+		$this->client->setUrl($url);
+	}
+
+
+	/**
 	 * @return Client|mixed
 	 */
 	public function client ()
@@ -430,7 +440,7 @@ class KnishIOClient
 
         // If the response is success - set auth token
         if ($response->success() ) {
-        	$this->client->setAuthToken($response->payload() );
+        	$this->client->setAuthToken($response->token() );
 		}
 
         // Not authorized: throw an exception

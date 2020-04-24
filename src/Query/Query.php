@@ -89,7 +89,6 @@ abstract class Query
 		// Default value of variables
 		$this->variables = default_if_null( $variables, [] );
 
-		/*
 
 		// Set a request
 		$this->request = new Request(
@@ -102,7 +101,8 @@ abstract class Query
 		// Make a request
 		$response = $this->client->send( $this->request );
 
-		*/
+
+		/*
 
 		// Make a request
 		$response = $this->client->post( $this->url, [
@@ -112,6 +112,7 @@ abstract class Query
 			]
 		] );
 
+		*/
 
 
 		// Return a response

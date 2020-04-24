@@ -36,10 +36,6 @@ class Response
      */
 	protected $dataKey;
 
-    /**
-     * @var string
-     */
-	protected $errorKey = 'error';
 
 	/**
 	 * Response constructor.
@@ -61,17 +57,30 @@ class Response
 			throw new InvalidResponseException();
 		}
 
-		// Catch errors
-        if ( array_has( $this->response, $this->errorKey ) ) {
+		// Catch exceptions
+		if (array_has ($this->response, 'exception') ) {
 
-            $error = array_get( $this->response, $this->errorKey );
+			// Exception error
+			$message = array_get($this->response, 'message');
 
-            if ( stripos( $error, 'Unauthenticated' ) !== false ) {
-                throw new UnauthenticatedException ( $error );
-            }
+			// Custom exceptions
+			if ( stripos( $message, 'Unauthenticated' ) !== false ) {
+				throw new UnauthenticatedException ( $message );
+			}
 
-            throw new InvalidResponseException( $error );
-        }
+			// Default exception
+			throw new InvalidResponseException( $message );
+		}
+
+		$this->init ();
+	}
+
+
+	/**
+	 *
+	 */
+	public function init () {
+
 	}
 
 
@@ -90,7 +99,6 @@ class Response
 
 		// Check key & return custom data from the response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
-			//dd ($this->response);
 			throw new InvalidResponseException();
 		}
 
