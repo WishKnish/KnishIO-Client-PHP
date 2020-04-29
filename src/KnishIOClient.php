@@ -329,7 +329,7 @@ class KnishIOClient
 		$query = $this->createMoleculeQuery(QueryShadowWalletClaim::class);
 
 		// Fill a molecule
-		$query->fillMolecule($secret, $sourceWallet, $shadowWallets);
+		$query->fillMolecule($secret, $sourceWallet, $token, $shadowWallets);
 
 		// Return a response
 		return $query->execute();

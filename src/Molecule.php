@@ -225,14 +225,6 @@ class Molecule
 			'characters' => $newWallet->characters,
 		];
 
-		// Add data controller metas
-		if ($sourceWallet instanceof WalletDataController) {
-			$metas = array_merge($metas, [
-				'dataController'	=> true,
-				'cell'				=> $this->cellSlug,
-			]);
-		}
-
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
@@ -319,14 +311,25 @@ class Molecule
 
 
 	/**
-	 * Add user remainder atom
+	 * Init shadow wallet claim
 	 *
-	 * @param Wallet $userRemainderWallet
-	 * @return self
+	 * @param Wallet $sourceWallet
+	 * @param $token
+	 * @param $wallets array of Client objectd
 	 */
-	public function addShadowWalletClaimAtom (Wallet $sourceWallet, $token, $batchId, $address, $position) {
+	public function initShadowWalletClaimAtom (Wallet $sourceWallet, $token, array $wallets) {
 
 		$this->molecularHash = null;
+
+		// Generate a wallet metas
+		$wallet_metas = [];
+		foreach ($wallets as $wallet) {
+			$wallet_metas[] = [
+				'walletAddress'		=> $wallet->address,
+				'walletPosition'	=> $wallet->position,
+				'batchId'			=> $wallet->batchId,
+			];
+		}
 
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
@@ -335,13 +338,10 @@ class Molecule
 			'C',
 			$sourceWallet->token,
 			null,
-			$batchId,
+			null,
 			'shadowWallet',
 			$token,
-			[
-				'walletAddress' 	=> $address,
-				'walletPosition'	=> $position,
-			],
+			['wallets' => $wallet_metas],
 			$sourceWallet->pubkey,
 			$sourceWallet->characters,
 			null,
@@ -350,8 +350,6 @@ class Molecule
 
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
-
-		return $this;
 	}
 
 
