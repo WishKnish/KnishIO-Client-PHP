@@ -311,7 +311,8 @@ class KnishIOClient
 		// Source wallet
 		$sourceWallet = \default_if_null($sourceWallet, $this->getSourceWallet($secret) );
 
-		// Get shadow wallet list
+
+		// --- Get shadow wallet list
 		$query = $this->createQuery(QueryWalletList::class);
 		$response = $query->execute([
 			'bundleHash'	=> Crypto::generateBundleHash($secret),
@@ -319,10 +320,16 @@ class KnishIOClient
 		]);
 		$shadowWallets = $response->payload();
 
-		// Shadow wallet
+		// Check shadow wallets
 		if (!$shadowWallets) {
 			throw new WalletShadowException();
 		}
+		foreach ($shadowWallets as $shadowWallet) {
+			if (!$shadowWallet instanceof WalletShadow) {
+				throw new WalletShadowException();
+			}
+		}
+		// ---
 
 
 		// Create a query

@@ -63,11 +63,7 @@ class ResponseWalletList extends Response
 		// Get a list of client wallets
 		$wallets = [];
 		foreach ($list as $item) {
-			$wallet = static::toClientWallet($item);
-			if (!$wallet instanceof WalletShadow) {
-				throw new WalletShadowException();
-			}
-			$wallets[] = $wallet;
+			$wallets[] = static::toClientWallet($item);
 		}
 
 		// Return a wallets list

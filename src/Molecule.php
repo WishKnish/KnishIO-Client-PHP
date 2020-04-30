@@ -322,9 +322,9 @@ class Molecule
 		$this->molecularHash = null;
 
 		// Generate a wallet metas
-		$wallet_metas = [];
+		$wallets_metas = [];
 		foreach ($wallets as $wallet) {
-			$wallet_metas[] = [
+			$wallets_metas[] = [
 				'walletAddress'		=> $wallet->address,
 				'walletPosition'	=> $wallet->position,
 				'batchId'			=> $wallet->batchId,
@@ -341,7 +341,7 @@ class Molecule
 			null,
 			'shadowWallet',
 			$token,
-			['wallets' => $wallet_metas],
+			['wallets' => json_encode($wallets_metas)],
 			$sourceWallet->pubkey,
 			$sourceWallet->characters,
 			null,

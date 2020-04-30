@@ -10,6 +10,7 @@ use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
+use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
@@ -283,7 +284,7 @@ class TokenClientTransactionTest extends TestCase
 		$this->checkWallet($client, $receivers[3], $token, $transaction_amount * 1.0, false);
 
 		// Claim shadow wallet
-		//$this->claimShadowWallet ($token, $receivers[0], [$receivers[1]]);
+		$this->claimShadowWallet ($token, $receivers[0], [$receivers[1]]);
 
 
 
@@ -465,22 +466,53 @@ class TokenClientTransactionTest extends TestCase
 		// Recipient.2: last transaction from wallet => recipient.0 without remainder
 		$from_secret = array_get($data, 'secret.recipient')[2];
 
-		$client = $this->client($from_secret);
-
-
-		// Use a source secret to generate a recipient wallet (balance = 0)
-		// Custom recipient list
-		$recipients = [
+		// With accumulation recipients
+		$response = $this->vIsotopeCombination ($from_secret, $token, [
 			array_get($data, 'secret.fungible'),
 			array_get($data, 'secret.recipient.0'),
 			array_get($data, 'secret.recipient.1')
-		];
+		]);
+		$this->checkResponse($response);
+	}
+
+
+	/**
+	 * @param $from_secret
+	 * @param $token
+	 * @param $recipients
+	 * @return mixed
+	 * @throws \ReflectionException
+	 */
+	protected function vIsotopeCombination ($from_secret, $token, $recipients, $generate_wallets = false) {
+
+		// Client for the secret
+		$client = $this->client($from_secret);
+
 
 		// Wallets
 		$source_wallet = $client->getBalance( $from_secret, $token )->payload();
 		$recipient_wallets = [];
 		foreach ($recipients as $recipient) {
-			$recipient_wallets[] = new Wallet($recipient, $token);
+
+			// Get existing wallets
+			if (!$generate_wallets) {
+
+				// Get shadow wallet list
+				$query = $client->createQuery(QueryWalletList::class);
+				$response = $query->execute([
+					'bundleHash' => Crypto::generateBundleHash($recipient),
+					'token' => $token,
+				]);
+				$wallets = $response->payload();
+
+				// Set a recipient wallet
+				$recipient_wallets[] = $wallets ? end($wallets) : new Wallet($from_secret, $token);
+			}
+
+			// Generate a new wallet
+			else {
+				$recipient_wallets[] = new Wallet($recipient, $token);
+			}
 		}
 		$remainder_wallet = new Wallet($from_secret, $token);
 
@@ -552,13 +584,9 @@ class TokenClientTransactionTest extends TestCase
 		$molecule->check($source_wallet);
 
 		// Create & execute a query
-		$response = $client->createQuery(QueryMoleculePropose::class)
+		return $client->createQuery(QueryMoleculePropose::class)
 			->execute (['molecule' => $molecule]);
-
-		// Check the response
-		$this->checkResponse($response);
 	}
-
 
 
 

@@ -31,7 +31,7 @@ class QueryShadowWalletClaim extends QueryMoleculePropose
 		// Get new client wallets
 		$wallets = [];
 		foreach ($shadowWallets as $shadowWallet) {
-			$recipientWallet = Wallet::create( $secret, $token, $shadowWallet->batchId );
+			$wallets[] = Wallet::create( $secret, $token, $shadowWallet->batchId );
 		}
 
 		// Init shadow wallet claim
