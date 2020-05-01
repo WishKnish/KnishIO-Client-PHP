@@ -450,9 +450,10 @@ class TokenClientTransactionTest extends TestCase
 	}
 
 
-
 	/**
 	 * Test V isotope combnation (multi-recipients)
+	 *
+	 * @throws \ReflectionException
 	 */
 	public function testVIsotopeCombination () {
 		$this->beforeExecute();
@@ -462,17 +463,31 @@ class TokenClientTransactionTest extends TestCase
 		$token = $this->token_slug['fungible'];
 		$transaction_amount = array_get($data, 'amount.transaction');
 		$full_amount = array_get($data, 'amount.full');
+		$custom_transaction_amount = 1;
 
 		// Recipient.2: last transaction from wallet => recipient.0 without remainder
 		$from_secret = array_get($data, 'secret.recipient')[2];
 
-		// With accumulation recipients
-		$response = $this->vIsotopeCombination ($from_secret, $token, [
+		// Client for the secret
+		$client = $this->client($from_secret);
+
+		// Recipients
+		$recipients = [
 			array_get($data, 'secret.fungible'),
 			array_get($data, 'secret.recipient.0'),
 			array_get($data, 'secret.recipient.1')
-		]);
+		];
+
+		// With accumulation recipients
+		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, false, $custom_transaction_amount);
 		$this->checkResponse($response);
+		$this->checkWallet($client, $recipients[0], $token, 1);
+		$this->checkWallet($client, $recipients[1], $token, $transaction_amount * 2 + $custom_transaction_amount);
+		$this->checkWallet($client, $recipients[2], $token, $transaction_amount * 1 + $custom_transaction_amount);
+
+		// With new wallets
+		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, true, $custom_transaction_amount);
+		$this->assertEquals($response->status(), 'rejected');
 	}
 
 
@@ -483,7 +498,7 @@ class TokenClientTransactionTest extends TestCase
 	 * @return mixed
 	 * @throws \ReflectionException
 	 */
-	protected function vIsotopeCombination ($from_secret, $token, $recipients, $generate_wallets = false) {
+	protected function vIsotopeCombination ($from_secret, $token, $recipients, $generate_wallets = false, $transaction_amount = 1) {
 
 		// Client for the secret
 		$client = $this->client($from_secret);
@@ -517,7 +532,7 @@ class TokenClientTransactionTest extends TestCase
 		$remainder_wallet = new Wallet($from_secret, $token);
 
 		// Value
-		$value = count($recipient_wallets);
+		$value = count($recipient_wallets) * $transaction_amount;
 
 		// Create a meta molecule
 		$molecule = new \WishKnish\KnishIO\Client\Molecule();
