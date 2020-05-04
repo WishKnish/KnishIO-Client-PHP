@@ -487,6 +487,9 @@ class TokenClientTransactionTest extends TestCase
 
 		// With new wallets
 		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, true, $custom_transaction_amount);
+
+		$wallet_match_error = strpos($response->reason(), 'Wallet does not match to existing one');
+		$this->assertNotEquals($wallet_match_error, false);
 		$this->assertEquals($response->status(), 'rejected');
 	}
 
