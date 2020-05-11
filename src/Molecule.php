@@ -59,14 +59,28 @@ class Molecule
 	 */
 	public function __construct ( $cellSlug = null )
 	{
-
-		$this->molecularHash = null;
 		$this->cellSlug = $cellSlug;
+
+		$this->clear();
+	}
+
+
+	/**
+	 * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
+	 *
+	 * @return self
+	 */
+	public function clear ()
+	{
+		$this->molecularHash = null;
 		$this->bundle = null;
 		$this->status = null;
 		$this->createdAt = Strings::currentTimeMillis();
 		$this->atoms = [];
+
+		return $this;
 	}
+
 
 	/**
 	 * @return string
@@ -538,18 +552,6 @@ class Molecule
         return $this;
     }
 
-
-	/**
-	 * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
-	 *
-	 * @return self
-	 */
-	public function clear ()
-	{
-		$this->__construct( $this->cellSlug );
-
-		return $this;
-	}
 
 	/**
 	 * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
