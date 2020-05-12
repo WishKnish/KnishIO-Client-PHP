@@ -67,11 +67,15 @@ class QueryMoleculePropose extends Query
 	 * @return Response|array
 	 */
 	public function execute ( array $variables = null, array $fields = null ) {
+
+		// Custom variables
+		$variables = default_if_null( $variables, [] );
+
+		// Custom molecule
 		$molecule = array_get($variables, 'molecule', $this->molecule);
-		return parent::execute (
-			array_merge( default_if_null( $variables, [] ), [ 'molecule' => $molecule ] ),
-			$fields
-		);
+
+		// Execute
+		return parent::execute(array_merge( $variables, [ 'molecule' => $molecule ] ), $fields);
 	}
 
 

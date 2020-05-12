@@ -24,9 +24,7 @@ class QueryAuthentication extends QueryMoleculePropose
     {
         $this->remainderWallet = default_if_null( $remainderWallet, new Wallet( $secret ) );
 
-        // Create a molecule
-        $this->molecule = new Molecule();
-
+		// Fill the molecule
         $this->molecule->initAuthentication( $wallet, $this->remainderWallet );
 
         // Check & sign a molecule
