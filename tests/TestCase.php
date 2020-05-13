@@ -109,8 +109,7 @@ abstract class TestCase extends TestCaseBase {
 		$this->graphql_url = $app_url.'graphql';
 
 		// Client initialization
-		$this->client = new KnishIOClient($app_url.'graphql');
-		$this->output(['Query URL: '. $this->client->url()]);
+		$this->output(['Query URL: '. $this->graphql_url]);
 	}
 
 
@@ -120,7 +119,7 @@ abstract class TestCase extends TestCaseBase {
 	 * @param $secret
 	 * @return mixed
 	 */
-	public function client ($secret) {
+	public function client ($secret, $cell_slug = 'test') {
 
 		// Create new client
 		if (!array_has($this->clients, $secret) ) {
@@ -129,7 +128,7 @@ abstract class TestCase extends TestCaseBase {
 			$this->clients[$secret] = new KnishIOClient($this->graphql_url);
 
 			// Auth the client
-			$response = $this->clients[$secret]->authentication($secret);
+			$response = $this->clients[$secret]->authentication($secret, $cell_slug);
 			$this->checkResponse($response);
 		}
 

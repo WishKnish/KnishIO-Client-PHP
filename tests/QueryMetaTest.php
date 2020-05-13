@@ -40,7 +40,7 @@ class QueryMetaTest extends TestCase
 		$this->source_wallet = new Wallet ($this->source_secret);
 
 		// Guzzle client from the KnishIOClient object
-		$this->guzzle_client = $this->client->client();
+		$this->guzzle_client = $this->client($this->source_secret)->client();
 	}
 
 	public function sourceWallet () {

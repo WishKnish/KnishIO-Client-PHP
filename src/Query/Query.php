@@ -57,16 +57,6 @@ abstract class Query
 	{
 		$this->url = $url;
 		$this->client = $client;
-
-		// Init
-		$this->init ();
-	}
-
-	/**
-	 * Init
-	 */
-	public function init () {
-
 	}
 
 

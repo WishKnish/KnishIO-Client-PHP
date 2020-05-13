@@ -59,6 +59,11 @@ class KnishIOClient
      */
     private $secret;
 
+	/**
+	 * @var string
+	 */
+    private $cellSlug;
+
 
 	/**
 	 * KnishIOClient constructor.
@@ -117,17 +122,15 @@ class KnishIOClient
 	 */
 	public function createMoleculeQuery ($class, Molecule $molecule = null) {
 
+		// Init molecule
+		$molecule = $molecule ?? new Molecule ($this->cellSlug);
+
 		// Create base query
-		$query = $this->createQuery($class);
+		$query = new $class ( $this->client, $this->url, $molecule );
 
 		// Only instances of QueryMoleculePropose supported
 		if (!$query instanceof QueryMoleculePropose) {
 			throw new CodeException(static::class.'::createMoleculeQuery - required class instance of QueryMoleculePropose.');
-		}
-
-		// Set molecule for the current query
-		if ($molecule) {
-			$query->setMolecule($molecule);
 		}
 
 		return $query;
@@ -428,22 +431,24 @@ class KnishIOClient
      * @param string $secret
      * @throws Exception
      */
-    public function authentication ( $secret = null )
+    public function authentication ( $secret = null, $cell_slug = null )
     {
-    	$secret = default_if_null($secret, $this->secret);
+    	// Update secret if it has been passed
+		$this->secret = default_if_null($secret, $this->secret);
 
-    	// Save secert
-        $this->secret = $secret;
+		// Set a cell slug
+		$this->cellSlug = $cell_slug;
 
         // Get a ContinuId wallet
         $wallet = $this->getContinuId( $secret )->payload() ?: new Wallet( $secret );
 
         // Create query & fill a molecule
-        $query = $this->createQuery( QueryAuthentication::class );
+        $query = $this->createMoleculeQuery( QueryAuthentication::class );
         $query->fillMolecule( $secret, $wallet );
 
         // Get a response
         $response = $query->execute();
+
 
         // If the response is success - set auth token
         if ($response->success() ) {
