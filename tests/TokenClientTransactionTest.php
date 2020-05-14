@@ -538,7 +538,7 @@ class TokenClientTransactionTest extends TestCase
 		$value = count($recipient_wallets) * $transaction_amount;
 
 		// Create a meta molecule
-		$molecule = new \WishKnish\KnishIO\Client\Molecule();
+		$molecule = $client->createMolecule();
 
 		// Initializing a new Atom to remove tokens from source
 		$molecule->addAtom (new \WishKnish\KnishIO\Client\Atom(
@@ -602,8 +602,8 @@ class TokenClientTransactionTest extends TestCase
 		$molecule->check($source_wallet);
 
 		// Create & execute a query
-		return $client->createQuery(QueryMoleculePropose::class)
-			->execute (['molecule' => $molecule]);
+		return $client->createMoleculeQuery(QueryMoleculePropose::class, $molecule)
+			->execute();
 	}
 
 

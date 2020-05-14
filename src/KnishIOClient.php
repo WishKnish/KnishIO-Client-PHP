@@ -106,6 +106,15 @@ class KnishIOClient
 
 
 	/**
+	 * @return Molecule
+	 */
+	public function createMolecule ()
+	{
+		return new Molecule ($this->cellSlug);
+	}
+
+
+	/**
 	 * @param $class
 	 * @return mixed
 	 */
@@ -123,7 +132,7 @@ class KnishIOClient
 	public function createMoleculeQuery ($class, Molecule $molecule = null) {
 
 		// Init molecule
-		$molecule = $molecule ?? new Molecule ($this->cellSlug);
+		$molecule = $molecule ?? $this->createMolecule();
 
 		// Create base query
 		$query = new $class ( $this->client, $this->url, $molecule );

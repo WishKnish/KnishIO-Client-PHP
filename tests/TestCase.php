@@ -119,7 +119,7 @@ abstract class TestCase extends TestCaseBase {
 	 * @param $secret
 	 * @return mixed
 	 */
-	public function client ($secret, $cell_slug = 'test') {
+	public function client ($secret, $cell_slug = 'unit_test') {
 
 		// Create new client
 		if (!array_has($this->clients, $secret) ) {
