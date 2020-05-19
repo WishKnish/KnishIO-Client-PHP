@@ -26,6 +26,9 @@ class Response
      */
 	protected $response;
 
+	/**
+	 * @var
+	 */
 	protected $payload;
 
     /**
@@ -33,10 +36,6 @@ class Response
      */
 	protected $dataKey;
 
-    /**
-     * @var string
-     */
-	protected $errorKey = 'error';
 
 	/**
 	 * Response constructor.
@@ -47,24 +46,41 @@ class Response
 		// Set a query
 		$this->query = $query;
 
+		// Origin response
+		$this->origin_response = $json;
+
 		// Json decode
-		$this->origin_response = $this->response = json_decode( $json, true );
+		$this->response = \json_decode( $json, true );
 
 		// No-json response - error
 		if ( $this->response === null ) {
 			throw new InvalidResponseException();
 		}
 
-        if ( array_has( $this->response, $this->errorKey ) ) {
+		// Catch exceptions
+		if (array_has ($this->response, 'exception') ) {
 
-            $error = array_get( $this->response, $this->errorKey );
+			// Exception error
+			$message = array_get($this->response, 'message');
 
-            if ( stripos( $error, 'Unauthenticated' ) !== false ) {
-                throw new UnauthenticatedException();
-            }
+			// Custom exceptions
+			if ( stripos( $message, 'Unauthenticated' ) !== false ) {
+				throw new UnauthenticatedException ( $message );
+			}
 
-            throw new InvalidResponseException( $error );
-        }
+			// Default exception
+			throw new InvalidResponseException( $message );
+		}
+
+		$this->init ();
+	}
+
+
+	/**
+	 *
+	 */
+	public function init () {
+
 	}
 
 

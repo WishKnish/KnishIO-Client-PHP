@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -33,6 +34,7 @@ class KnishIO
         'claimShadowWallet',
         'transferToken',
 	];
+
 
 	/**
 	 * Get a KnishIOClient object
@@ -65,24 +67,49 @@ class KnishIO
 	/**
 	 * @param $name
 	 * @param $arguments
-	 * @return mixed|null
-	 * @throws Exception
+	 * @return mixed
+	 * @throws \Exception
 	 */
 	public static function __callStatic ( $name, $arguments )
 	{
 		// Check method
-		if ( !in_array( $name, static::$methods, true ) || !method_exists( static::client(), $name ) ) {
-			throw new Exception( 'Method KnishIOClient::' . $name . ' is not a query method.' );
+		if ( !\in_array( $name, static::$methods, true ) || !\method_exists( static::client(), $name ) ) {
+			throw new \Exception( 'Method KnishIOClient::' . $name . ' is not a query method.' );
 		}
+
+		try {
+
+			// Execute & get a response
+			return static::call($name, $arguments);
+
+		}
+		catch (UnauthenticatedException $e) {
+
+			// Authentication
+			static::client()->authentication();
+
+			// Re-call query
+			return static::call($name, $arguments);
+
+		}
+	}
+
+
+	/**
+	 * @param $name
+	 * @param $arguments
+	 * @return mixed
+	 * @throws Exception
+	 */
+	protected static function call ($name, $arguments) {
 
 		// Execute & get a response
-		$response = call_user_func_array( [ static::client(), $name ], $arguments );
+		$response = \call_user_func_array( [ static::client(), $name ], $arguments );
 		if ( !$response instanceof Response ) {
-			throw new Exception( 'Method KnishIOClient::' . $name . ' has not provide a valid response.' );
+			throw new \Exception( 'Method KnishIOClient::' . $name . ' has not provide a valid response.' );
 		}
 
-		// Get a response payload
-		return $response->payload();
+		return $response;
 	}
 
 }

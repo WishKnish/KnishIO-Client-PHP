@@ -43,20 +43,44 @@ class Molecule
 	public $createdAt;
 	public $atoms;
 
+
+	/**
+	 * @return string
+	 */
+	public static function continuIdMetaType () {
+		return 'walletBundle';
+	}
+
+
+
 	/**
 	 * Molecule constructor.
 	 * @param null|string $cellSlug
 	 */
 	public function __construct ( $cellSlug = null )
 	{
-
-		$this->molecularHash = null;
 		$this->cellSlug = $cellSlug;
+
+		$this->clear();
+	}
+
+
+	/**
+	 * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
+	 *
+	 * @return self
+	 */
+	public function clear ()
+	{
+		$this->molecularHash = null;
 		$this->bundle = null;
 		$this->status = null;
 		$this->createdAt = Strings::currentTimeMillis();
 		$this->atoms = [];
+
+		return $this;
 	}
+
 
 	/**
 	 * @return string
@@ -66,15 +90,31 @@ class Molecule
 		return ( string ) $this->toJson();
 	}
 
+
+	/**
+	 * @param Atom $atom
+	 * @return $this
+	 */
+	public function addAtom (Atom $atom) : self
+	{
+		$this->molecularHash = null;
+
+		$this->atoms[] =  $atom;
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
     /**
      * Add user remainder atom
      *
      * @param Wallet $userRemainderWallet
      * @return self
      */
-	protected function addUserRemainderAtom ( Wallet $userRemainderWallet )
+	public function addUserRemainderAtom ( Wallet $userRemainderWallet )
     {
-
         $this->molecularHash = null;
 
 		// Remainder atom
@@ -85,7 +125,7 @@ class Molecule
 			$userRemainderWallet->token,
 			null,
 			null,
-			'walletBundle',
+			static::continuIdMetaType(),
 			$userRemainderWallet->bundle,
 			null,
 			$userRemainderWallet->pubkey,
@@ -187,6 +227,18 @@ class Molecule
 	{
 		$this->molecularHash = null;
 
+		// Metas
+		$metas = [
+			'address'  => $newWallet->address,
+			'token'    => $newWallet->token,
+			'bundle'   => $newWallet->bundle,
+			'position' => $newWallet->position,
+			'amount'   => '0',
+			'batch_id' => $newWallet->batchId,
+			'pubkey'   => $newWallet->pubkey,
+			'characters' => $newWallet->characters,
+		];
+
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
 			$sourceWallet->position,
@@ -197,16 +249,7 @@ class Molecule
 			$sourceWallet->batchId,
 			'wallet',
 			$newWallet->address,
-			[
-				'address'  => $newWallet->address,
-				'token'    => $newWallet->token,
-				'bundle'   => $newWallet->bundle,
-				'position' => $newWallet->position,
-				'amount'   => '0',
-				'batch_id' => $newWallet->batchId,
-                'pubkey'   => $newWallet->pubkey,
-                'characters' => $newWallet->characters,
-			],
+			$metas,
             $sourceWallet->pubkey,
             $sourceWallet->characters,
 			null,
@@ -282,19 +325,25 @@ class Molecule
 
 
 	/**
-	 * Shadow wallet bindind
+	 * Init shadow wallet claim
 	 *
 	 * @param Wallet $sourceWallet
-	 * @param Wallet $shadowWallet
-	 * @param Wallet $userRemainderWallet
-	 * @param array $tokenMeta
-	 * @return $this
+	 * @param $token
+	 * @param $wallets array of Client objectd
 	 */
-	public function initShadowWalletClaim ( Wallet $sourceWallet, Wallet $shadowWallet, Wallet $userRemainderWallet, array $tokenMeta = null)
-	{
-		$tokenMeta = default_if_null( $tokenMeta, [] );
+	public function initShadowWalletClaimAtom (Wallet $sourceWallet, $token, array $wallets) {
 
 		$this->molecularHash = null;
+
+		// Generate a wallet metas
+		$wallets_metas = [];
+		foreach ($wallets as $wallet) {
+			$wallets_metas[] = [
+				'walletAddress'		=> $wallet->address,
+				'walletPosition'	=> $wallet->position,
+				'batchId'			=> $wallet->batchId,
+			];
+		}
 
 		// Create an 'C' atom
 		$this->atoms[] = new Atom(
@@ -303,22 +352,18 @@ class Molecule
 			'C',
 			$sourceWallet->token,
 			null,
-			$shadowWallet->batchId,
+			null,
 			'shadowWallet',
-			$shadowWallet->token,
-			$tokenMeta,
+			$token,
+			['wallets' => json_encode($wallets_metas)],
 			$sourceWallet->pubkey,
 			$sourceWallet->characters,
 			null,
 			$this->generateIndex()
 		);
 
-		// User remainder atom
-		$this->addUserRemainderAtom ( $userRemainderWallet );
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
-
-		return $this;
 	}
 
 
@@ -390,18 +435,50 @@ class Molecule
 			$metaType,
 			$metaId,
 			$meta,
-            $wallet->pubkey,
-            $wallet->characters,
+			$wallet->pubkey,
+			$wallet->characters,
 			null,
 			$this->generateIndex()
 		);
 
-        // User remainder atom
-        $this->addUserRemainderAtom ( $userRemainderWallet );
+		// User remainder atom
+		$this->addUserRemainderAtom($userRemainderWallet);
+	}
+
+
+	/**
+	 * Initialize meta append molecule
+	 *
+	 * @param Wallet $sourceWallet
+	 * @param array $meta
+	 * @param $metaType
+	 * @param $metaId
+	 * @return $this
+	 */
+	public function initMetaAppend ( Wallet $sourceWallet, array $meta, $metaType, $metaId )
+	{
+		$this->molecularHash = null;
+
+		$this->atoms[] = new Atom(
+			$sourceWallet->position,
+			$sourceWallet->address,
+			'A',
+			$sourceWallet->token,
+			null,
+			null,
+			$metaType,
+			$metaId,
+			$meta,
+			$sourceWallet->pubkey,
+			$sourceWallet->characters,
+			null,
+			$this->generateIndex()
+		);
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
+
 	}
 
     /**
@@ -475,18 +552,6 @@ class Molecule
         return $this;
     }
 
-
-	/**
-	 * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
-	 *
-	 * @return self
-	 */
-	public function clear ()
-	{
-		$this->__construct( $this->cellSlug );
-
-		return $this;
-	}
 
 	/**
 	 * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
@@ -597,7 +662,7 @@ class Molecule
             && CheckMolecule::isotopeT( $molecule )
             && CheckMolecule::isotopeI( $molecule )
             && CheckMolecule::isotopeU( $molecule )
-            && CheckMolecule::continueId( $molecule )
+            && CheckMolecule::continuId( $molecule )
 			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 	}
 

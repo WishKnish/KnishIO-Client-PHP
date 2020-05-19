@@ -27,14 +27,13 @@ class QueryTokenReceive extends QueryMoleculePropose
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
-	public function initMolecule ($secret, Wallet $sourceWallet, $token, $value, $metaType, $metaId, array $metas = null)
+	public function fillMolecule ($secret, Wallet $sourceWallet, Wallet $remainderWallet, $token, $value, $metaType, $metaId, array $metas = null)
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
-		// Create & sign a molecule
-		$this->molecule = new Molecule();
-		$this->molecule->initTokenTransfer( $sourceWallet, $token, $value, $metaType, $metaId, $metas );
+		// Fill the molecule
+		$this->molecule->initTokenTransfer( $sourceWallet, $remainderWallet, $token, $value, $metaType, $metaId, $metas );
 		$this->molecule->sign( $secret );
 
 

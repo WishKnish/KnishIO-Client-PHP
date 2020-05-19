@@ -6,34 +6,18 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\WalletShadow;
 
 /**
- * Class ResponseBalance
+ * Class ResponseMetaType
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseBalance extends Response
+class ResponseMetaType extends Response
 {
-	protected $dataKey = 'data.Balance';
+	protected $dataKey = 'data.MetaType';
 
 
-	/**
-	 * Get a payload
-	 *
-	 * @return Wallet|WalletShadow|null
-	 * @throws \Exception
-	 */
-	public function payload()
-	{
-		// Get data
-		$balance = $this->data();
-		if (!$balance) {
-			return null;
-		}
-
-		// Return a client wallet object
-		return ResponseWalletList::toClientWallet($balance);
-	}
 
 }

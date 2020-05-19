@@ -6,6 +6,8 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use GuzzleHttp\Client;
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
@@ -14,16 +16,57 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
  * Class QueryMoleculePropose
  * @package WishKnish\KnishIO\Client\Query
  */
-abstract class QueryMoleculePropose extends Query
+class QueryMoleculePropose extends Query
 {
 	// Query
-	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }';
+	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
+		@fields 
+	}';
+
+	// Fields
+	protected $fields = [
+		'molecularHash',
+		'height',
+		'depth',
+		'status',
+		'reason',
+		'payload',
+		'createdAt',
+		'receivedAt',
+		'processedAt',
+		'broadcastedAt',
+	];
 
 	// Molecule
 	protected $molecule;
 
 	// Remainder wallet
 	protected $remainderWallet;
+
+
+
+	/**
+	 * Query constructor.
+	 * @param Client $client
+	 * @param string|null $url
+	 */
+	public function __construct ( HttpClientInterface $client, $url = null, $molecule = null )
+	{
+		parent::__construct($client, $url);
+
+		// Create a molecule
+		$this->molecule = $molecule ?? new Molecule();
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function molecule () : Molecule
+	{
+		return $this->molecule;
+	}
+
 
 
 	/**
@@ -42,12 +85,16 @@ abstract class QueryMoleculePropose extends Query
 	 * @param array|null $variables
 	 * @return Response|array
 	 */
-	public function execute ( array $variables = null, $request = false )
-    {
-		return parent::execute (
-			array_merge( default_if_null( $variables, [] ), [ 'molecule' => $this->molecule ] ),
-            $request
-		);
+	public function execute ( array $variables = null, array $fields = null ) {
+
+		// Custom variables
+		$variables = default_if_null( $variables, [] );
+
+		// Custom molecule
+		$molecule = array_get($variables, 'molecule', $this->molecule);
+
+		// Execute
+		return parent::execute(array_merge( $variables, [ 'molecule' => $molecule ] ), $fields);
 	}
 
 
@@ -59,12 +106,5 @@ abstract class QueryMoleculePropose extends Query
 		return $this->remainderWallet;
 	}
 
-	/**
-	 * @return mixed
-	 */
-	public function molecule ()
-    {
-		return $this->molecule;
-	}
 
 }

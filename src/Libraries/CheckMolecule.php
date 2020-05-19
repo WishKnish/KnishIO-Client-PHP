@@ -52,7 +52,7 @@ class CheckMolecule
             'isotopeT'      => 'Isotope T verification failed - ',
             'isotopeI'      => 'Isotope I verification failed - ',
             'isotopeU'      => 'Isotope U verification failed - ',
-            'continueId'    => 'ContinueId check has failed - ',
+            'continuId'    	=> 'ContinuId check has failed - ',
             'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
         ];
 
@@ -89,7 +89,7 @@ class CheckMolecule
      * @param Molecule $molecule
      * @return bool
      */
-    public static function continueId ( Molecule $molecule )
+    public static function continuId ( Molecule $molecule )
     {
         static::missing( $molecule );
 
@@ -97,7 +97,7 @@ class CheckMolecule
         $atom = reset( $molecule->atoms );
 
         if ( $atom->token === 'USER' && count( static::isotopeFilter( 'I', $molecule->atoms ) ) < 1 ) {
-            throw new AtomsMissingException( 'Missing atom ContinueID' );
+            throw new AtomsMissingException( 'Missing atom ContinuID' );
         }
 
         return true;
