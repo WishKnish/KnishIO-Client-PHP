@@ -2,7 +2,6 @@
 
 namespace WishKnish\KnishIO\Client\Exception;
 
-use Throwable;
 
 /**
  * Interface IException
@@ -24,5 +23,5 @@ interface IException
 
 	public function __toString ();
 
-	public function __construct ( $message = null, $code = 0, Throwable $previous = null );
+	public function __construct ( $message = null, $code = 0, $previous = null );
 }

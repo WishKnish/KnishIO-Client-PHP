@@ -296,14 +296,37 @@ class CheckMolecule
 
 		static::missing( $molecule );
 
-		// Select all atoms V
-		if ( empty( static::isotopeFilter( 'V', $molecule->atoms ) ) ) {
-			return true;
-		}
+		$isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
 
-		// Grabbing the first atom
+        // Select all atoms V
+		if ( empty( $isotopeV ) ) {
+            return true;
+        }
+
+        // Grabbing the first atom
         /** @var Atom $firstAtom */
-		$firstAtom = reset( $molecule->atoms );
+        $firstAtom = reset( $molecule->atoms );
+
+		// if there are only two atoms, then this is the burning of tokens
+		if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+
+            /** @var Atom $endAtom */
+            $endAtom = end( $isotopeV );
+
+            if ( $firstAtom->token !== $endAtom->token ) {
+                throw new TransferMismatchedException();
+            }
+
+            if ( $firstAtom->metaId !== $endAtom->metaId ) {
+                throw new TransferMismatchedException( 'The meta Id of the atoms does not match' );
+            }
+
+            if ( $endAtom->value < 0 ) {
+                throw new TransferMalformedException();
+            }
+
+            return true;
+        }
 
 		// Looping through each V-isotope atom
 		$sum = 0.0;

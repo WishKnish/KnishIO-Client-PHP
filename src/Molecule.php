@@ -13,12 +13,14 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
+use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
 
 /**
  * Class Molecule
@@ -139,6 +141,70 @@ class Molecule
         return $this;
 	}
 
+    /**
+     * @param Wallet $sourceWallet
+     * @param Wallet $remainderWallet
+     * @param integer|float $value
+     * @return self
+     * @throws BalanceInsufficientException
+     */
+    public function burningTokens ( Wallet $sourceWallet, Wallet $remainderWallet, $value  )
+    {
+        if ( $value < 0.0 ) {
+            throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
+        }
+
+        if ( $sourceWallet->token !== $remainderWallet->token ) {
+            throw new TransferMismatchedException();
+        }
+
+        if ( $sourceWallet->bundle !== $remainderWallet->bundle ) {
+            throw new TransferMismatchedException( 'Wallets must belong to the same owner.' );
+        }
+
+        if ( Decimal::cmp(  0.0, $sourceWallet->balance - $value ) > 0 ) {
+            throw new BalanceInsufficientException();
+        }
+
+        $this->molecularHash = null;
+
+        // Initializing a new Atom to remove tokens from source
+        $this->atoms[] = new Atom(
+            $sourceWallet->position,
+            $sourceWallet->address,
+            'V',
+            $sourceWallet->token,
+            -$value,
+            $sourceWallet->batchId,
+            'walletBundle',
+            $sourceWallet->bundle,
+            null,
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
+            null,
+            $this->generateIndex()
+        );
+
+        $this->atoms[] = new Atom(
+            $remainderWallet->position,
+            $remainderWallet->address,
+            'V',
+            $remainderWallet->token,
+            $sourceWallet->balance - $value,
+            $remainderWallet->batchId,
+            'walletBundle',
+            $remainderWallet->bundle,
+            null,
+            $remainderWallet->pubkey,
+            $remainderWallet->characters,
+            null,
+            $this->generateIndex()
+        );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+    }
 
 	/**
 	 * Initialize a V-type molecule to transfer value from one wallet to another, with a third,
