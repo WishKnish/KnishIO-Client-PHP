@@ -407,7 +407,7 @@ class KnishIOClient
 	public function getSourceWallet ($secret) {
 
 		// Has a ContinuID wallet?
-		$sourceWallet = $this->getContinuId( $secret )->payload();
+		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $secret ) )->payload();
 		if ($sourceWallet) {
 			return $sourceWallet;
 		}
@@ -417,58 +417,98 @@ class KnishIOClient
 	}
 
 
-    /**
-     * @param string $bundleOrSecret
-     * @return Response
-     * @throws Exception
-     */
-	public function getContinuId ( $bundleOrSecret )
+	/**
+	 * @param $bundleHash
+	 * @return mixed
+	 */
+	public function getContinuId ( $bundleHash )
     {
-        $this->secret = $bundleOrSecret;
-
-        // Create a query
-        $query = $this->createQuery(QueryContinuId::class );
-
-        // Execute the query
-        return $query->execute( [
-            'bundle' => Wallet::isBundleHash( $bundleOrSecret ) ? $bundleOrSecret : Crypto::generateBundleHash( $bundleOrSecret ),
-        ] );
+        // Create & execute the query
+        return $this->createQuery(QueryContinuId::class )
+			->execute( ['bundle' => $bundleHash] );
     }
 
 
     /**
-     * @param string $secret
-     * @throws Exception
-     */
-    public function authentication ( $secret = null, $cell_slug = null )
-    {
-    	// Update secret if it has been passed
+ * @param string $secret
+ * @throws Exception
+ */
+	public function authentication ( $secret = null, $cell_slug = null )
+	{
+		// Update secret if it has been passed
 		$this->secret = default_if_null($secret, $this->secret);
 
 		// Set a cell slug
 		$this->cellSlug = $cell_slug;
 
-        // Get a ContinuId wallet
-        $wallet = $this->getContinuId( $secret )->payload() ?: new Wallet( $secret );
+		// Get a ContinuId wallet
+		$wallet = $this->getContinuId( Crypto::generateBundleHash( $secret ) )->payload() ?: new Wallet( $secret );
 
-        // Create query & fill a molecule
-        $query = $this->createMoleculeQuery( QueryAuthentication::class );
-        $query->fillMolecule( $secret, $wallet );
+		// Create query & fill a molecule
+		$query = $this->createMoleculeQuery( QueryAuthentication::class );
+		$query->fillMolecule( $secret, $wallet );
 
-        // Get a response
-        $response = $query->execute();
+		// Get a response
+		$response = $query->execute();
 
 
-        // If the response is success - set auth token
-        if ($response->success() ) {
-        	$this->client->setAuthToken($response->token() );
+		// If the response is success - set auth token
+		if ($response->success() ) {
+			$this->client->setAuthToken($response->token() );
 		}
 
-        // Not authorized: throw an exception
-        else {
+		// Not authorized: throw an exception
+		else {
 			throw new UnauthenticatedException($response->reason());
 		}
 
-        return $response;
-    }
+		return $response;
+	}
+
+
+
+	/**
+	 * @param string $secret
+	 * @throws Exception
+	 */
+	public function authenticationAsync ( $secret = null, $cell_slug = null )
+	{
+		// Update secret if it has been passed
+		$this->secret = default_if_null($secret, $this->secret);
+
+		// Set a cell slug
+		$this->cellSlug = $cell_slug;
+
+
+		// Create & execute a ContinuID query
+		$wallet = $this->createQuery(QueryContinuId::class )
+			->executeAsync( ['bundle' => Crypto::generateBundleHash( $secret )] )
+			->then( function () {
+
+			});
+
+		// Get a ContinuId wallet
+		$wallet = $wallet ? $wallet : new Wallet( $secret );
+
+		// Create query & fill a molecule
+		$query = $this->createMoleculeQuery( QueryAuthentication::class );
+		$query->fillMolecule( $secret, $wallet );
+
+		// Get a response
+		$response = $query->execute();
+
+
+		// If the response is success - set auth token
+		if ($response->success() ) {
+			$this->client->setAuthToken($response->token() );
+		}
+
+		// Not authorized: throw an exception
+		else {
+			throw new UnauthenticatedException($response->reason());
+		}
+
+		return $response;
+	}
+
 }
