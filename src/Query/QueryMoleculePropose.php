@@ -68,6 +68,22 @@ class QueryMoleculePropose extends Query
 	}
 
 
+	/**
+	 * @param array|null $variables
+	 * @return mixed
+	 */
+	public function compiledVariables ( array $variables = null )
+	{
+		// Default variabled
+		$variables = parent::compiledVariables( $variables );
+
+		// Custom molecule
+		$molecule = array_get( $variables, 'molecule', $this->molecule );
+
+		// Merge variables with a molecule key
+		return array_merge( $variables, [ 'molecule' => $molecule ] );
+	}
+
 
 	/**
 	 * Create a response
@@ -78,23 +94,6 @@ class QueryMoleculePropose extends Query
 	public function createResponse ( $response )
     {
 		return new ResponseMolecule( $this, $response );
-	}
-
-
-	/**
-	 * @param array|null $variables
-	 * @return Response|array
-	 */
-	public function execute ( array $variables = null, array $fields = null ) {
-
-		// Custom variables
-		$variables = default_if_null( $variables, [] );
-
-		// Custom molecule
-		$molecule = array_get($variables, 'molecule', $this->molecule);
-
-		// Execute
-		return parent::execute(array_merge( $variables, [ 'molecule' => $molecule ] ), $fields);
 	}
 
 

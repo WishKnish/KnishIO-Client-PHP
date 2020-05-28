@@ -86,6 +86,7 @@ abstract class Query
 	}
 
 
+
 	/**
 	 * Create new request
 	 *
@@ -96,7 +97,7 @@ abstract class Query
 	public function createRequest ( array $variables = null, array $fields = null ) : RequestInterface {
 
 		// Default value of variables
-		$this->variables = default_if_null( $variables, [] );
+		$this->variables = $this->compiledVariables( $variables );
 
 		// Create a request
 		return new Request(
@@ -187,6 +188,16 @@ abstract class Query
 			}
 		}
 		return '{'.implode(', ', $fields).'}';
+	}
+
+
+	/**
+	 * @param array|null $variables
+	 * @return mixed
+	 */
+	public function compiledVariables ( array $variables = null )
+	{
+		return default_if_null( $variables, [] );
 	}
 
 

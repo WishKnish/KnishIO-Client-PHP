@@ -97,6 +97,15 @@ class KnishIOClient
 
 
 	/**
+	 * @param $cellSlug
+	 */
+	public function setCellSlug ($cellSlug)
+	{
+		$this->cellSlug = $cellSlug;
+	}
+
+
+	/**
 	 * @return Client|mixed
 	 */
 	public function client ()
@@ -430,9 +439,9 @@ class KnishIOClient
 
 
     /**
- * @param string $secret
- * @throws Exception
- */
+	 * @param string $secret
+	 * @throws Exception
+	 */
 	public function authentication ( $secret = null, $cell_slug = null )
 	{
 		// Update secret if it has been passed
