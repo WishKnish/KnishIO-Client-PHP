@@ -97,6 +97,15 @@ class KnishIOClient
 
 
 	/**
+	 * @return string
+	 */
+	public function cellSlug ()
+	{
+		return $this->cellSlug;
+	}
+
+
+	/**
 	 * @param $cellSlug
 	 */
 	public function setCellSlug ($cellSlug)
