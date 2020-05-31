@@ -134,29 +134,6 @@ abstract class Query
 
 
 	/**
-	 * @param array|null $variables
-	 * @param boolean $request
-	 * @return mixed
-	 */
-	public function executeAsync ( array $variables = null, array $fields = null ) {
-
-		// Set a request
-		$this->request = $this->createRequest( $variables, $fields );
-
-		// Create a promise
-		return $this->client->sendAsync( $this->request )->then( function ( $response ) {
-			print_r ('<pre>executeAsync.then\'</pre>');
-
-			$this->response = $this->createResponseRaw( $response );
-		}, function ( $response ) {
-			print_r ('<pre>executeAsync.then.final</pre>');
-
-			$this->response = $this->createResponseRaw( $response );
-		});
-	}
-
-
-	/**
 	 * @param array $fields
 	 * @return mixed
 	 */
