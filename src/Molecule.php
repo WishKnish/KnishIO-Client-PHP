@@ -145,10 +145,11 @@ class Molecule
      * @param Wallet $sourceWallet
      * @param Wallet $remainderWallet
      * @param integer|float $value
+     * @param string|null $walletBundle
      * @return self
      * @throws BalanceInsufficientException
      */
-    public function burningTokens ( Wallet $sourceWallet, Wallet $remainderWallet, $value  )
+    public function burningTokens ( Wallet $sourceWallet, Wallet $remainderWallet, $value, $walletBundle = null  )
     {
         if ( $value < 0.0 ) {
             throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
@@ -156,10 +157,6 @@ class Molecule
 
         if ( $sourceWallet->token !== $remainderWallet->token ) {
             throw new TransferMismatchedException();
-        }
-
-        if ( $sourceWallet->bundle !== $remainderWallet->bundle ) {
-            throw new TransferMismatchedException( 'Wallets must belong to the same owner.' );
         }
 
         if ( Decimal::cmp(  0.0, $sourceWallet->balance - $value ) > 0 ) {
@@ -176,8 +173,8 @@ class Molecule
             $sourceWallet->token,
             -$value,
             $sourceWallet->batchId,
-            'walletBundle',
-            $sourceWallet->bundle,
+            null,
+            null,
             null,
             $sourceWallet->pubkey,
             $sourceWallet->characters,
@@ -192,8 +189,8 @@ class Molecule
             $remainderWallet->token,
             $sourceWallet->balance - $value,
             $remainderWallet->batchId,
-            'walletBundle',
-            $remainderWallet->bundle,
+            $walletBundle ? 'walletBundle' : null,
+            $walletBundle,
             null,
             $remainderWallet->pubkey,
             $remainderWallet->characters,

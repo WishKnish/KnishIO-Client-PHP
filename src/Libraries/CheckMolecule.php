@@ -317,10 +317,6 @@ class CheckMolecule
                 throw new TransferMismatchedException();
             }
 
-            if ( $firstAtom->metaId !== $endAtom->metaId ) {
-                throw new TransferMismatchedException( 'The meta Id of the atoms does not match' );
-            }
-
             if ( $endAtom->value < 0 ) {
                 throw new TransferMalformedException();
             }
