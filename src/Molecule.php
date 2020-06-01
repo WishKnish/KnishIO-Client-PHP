@@ -186,7 +186,7 @@ class Molecule
             $remainderWallet->position,
             $remainderWallet->address,
             'V',
-            $remainderWallet->token,
+            $sourceWallet->token,
             $sourceWallet->balance - $value,
             $remainderWallet->batchId,
             $walletBundle ? 'walletBundle' : null,
