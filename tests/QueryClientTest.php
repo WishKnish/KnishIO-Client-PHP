@@ -68,11 +68,34 @@ class QueryClientTest extends TestCase
 
 		// Create a meta molecule
 		$molecule = new Molecule();
-		$molecule->initMeta($this->source_wallet,
+		$molecule->initMeta($this->source_wallet, new Wallet($this->source_secret),
 			['key1' => 'value1', 'key2' => 'value2'],
 			'metaType',
 			'metaId'
 		);
+		$molecule->sign($this->source_secret);
+		$molecule->check();
+
+		// Execute query & check response
+		$this->executeProposeMolecule($molecule);
+	}
+
+
+	/**
+	 * @throws \ReflectionException
+	 */
+	public function testMetaWalletBundle () {
+
+		$this->beforeExecute();
+
+		// Create a meta molecule
+		$molecule = new Molecule();
+		$molecule->initMeta( $this->source_wallet, new Wallet( $this->source_secret ),
+			['key1' => 'value1', 'key2' => 'value2'],
+			'walletBundle',
+			Crypto::generateBundleHash( $this->source_secret )
+		);
+
 		$molecule->sign($this->source_secret);
 		$molecule->check();
 
