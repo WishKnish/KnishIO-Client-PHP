@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
+use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -140,6 +141,52 @@ class Molecule
 
         return $this;
 	}
+
+    /**
+     * @param Wallet $sourceWallet
+     * @param Wallet $userRemainderWallet
+     * @param integer|float $value
+     * @param string $token
+     * @param array $metas
+     * @return self
+     */
+    public function replenishingTokens (  Wallet $sourceWallet, Wallet $userRemainderWallet, $value, $token, array $metas )
+    {
+        $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
+        $aggregateMeta[ 'action' ] = 'add';
+
+        foreach ( [ 'address', 'position', 'batchId', ] as $key ) {
+            if ( !array_key_exists( $key, $aggregateMeta ) ) {
+                throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+            }
+        }
+
+        $this->molecularHash = null;
+
+        // Initializing a new Atom to remove tokens from source
+        $this->atoms[] = new Atom(
+            $sourceWallet->position,
+            $sourceWallet->address,
+            'C',
+            $sourceWallet->token,
+            $value,
+            $sourceWallet->batchId,
+            'token',
+            $token,
+            $aggregateMeta,
+            $sourceWallet->pubkey,
+            $sourceWallet->characters,
+            null,
+            $this->generateIndex()
+        );
+
+        // User remainder atom
+        $this->addUserRemainderAtom ( $userRemainderWallet );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+    }
 
     /**
      * @param Wallet $sourceWallet
