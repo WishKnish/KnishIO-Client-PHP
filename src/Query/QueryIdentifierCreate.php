@@ -32,12 +32,6 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 
 		// Fill the molecule
 		$this->molecule->initIdentifierCreation ($sourceWallet, $this->remainderWallet, $type, $contact, $code);
-
-		// Sign a molecule
-		$this->molecule->sign( $secret );
-
-		// Check the molecule
-		$this->molecule->check();
 	}
 
 

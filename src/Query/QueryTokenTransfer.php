@@ -19,22 +19,20 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenTransfer extends QueryMoleculePropose
 {
 
-    /**
-     * @param $fromSecret
-     * @param Wallet $fromWallet
-     * @param Wallet $toWallet
-     * @param string $token
-     * @param int|float $amount
-     * @param Wallet|null $remainderWallet
-     * @throws \ReflectionException
-     * @throws \Exception
-     */
-	public function fillMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
+	/**
+	 * @param Wallet $fromWallet
+	 * @param Wallet $toWallet
+	 * @param $token
+	 * @param $amount
+	 * @param Wallet|null $remainderWallet
+	 * @throws \Exception
+	 */
+	public function fillMolecule ( Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null )
 	{
 		// Remainder wallet
 		$this->remainderWallet = default_if_null (
 			$remainderWallet,
-			Wallet::create( $fromSecret, $token, $toWallet->batchId, $fromWallet->characters )
+			Wallet::create( $this->secret, $token, $toWallet->batchId, $fromWallet->characters )
 		);
 
 		// Save a from wallet
@@ -42,10 +40,6 @@ class QueryTokenTransfer extends QueryMoleculePropose
 
 		// Fill the molecule
 		$this->molecule->initValue( $fromWallet, $toWallet, $this->remainderWallet, $amount );
-		$this->molecule->sign( $fromSecret );
-
-		// Check the molecule
-		$this->molecule->check($fromWallet);
 	}
 
 

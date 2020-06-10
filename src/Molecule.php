@@ -331,7 +331,7 @@ class Molecule
 	 * @param $token
 	 * @param $wallets array of Client objectd
 	 */
-	public function initShadowWalletClaimAtom (Wallet $sourceWallet, $token, array $wallets) {
+	public function initShadowWalletClaimAtom ( Wallet $sourceWallet, $token, array $wallets, Wallet $remainderWallet ) {
 
 		$this->molecularHash = null;
 
@@ -362,6 +362,9 @@ class Molecule
 			$this->generateIndex()
 		);
 
+
+		// Add user remainder atom
+		$this->addUserRemainderAtom ( $remainderWallet );
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 	}

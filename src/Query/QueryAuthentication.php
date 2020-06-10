@@ -26,10 +26,6 @@ class QueryAuthentication extends QueryMoleculePropose
 
 		// Fill the molecule
         $this->molecule->initAuthentication( $wallet, $this->remainderWallet );
-
-        // Check & sign a molecule
-        $this->molecule->sign( $secret );
-        $this->molecule->check();
     }
 
     /**

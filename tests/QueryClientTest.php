@@ -68,7 +68,7 @@ class QueryClientTest extends TestCase
 
 		// Create a meta molecule
 		$molecule = new Molecule();
-		$molecule->initMeta($this->source_wallet, new Wallet($this->source_secret),
+		$molecule->initMeta($this->client($this->source_secret)->getSourceWallet(), new Wallet($this->source_secret),
 			['key1' => 'value1', 'key2' => 'value2'],
 			'metaType',
 			'metaId'

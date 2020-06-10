@@ -40,6 +40,12 @@ class QueryMoleculePropose extends Query
 	// Molecule
 	protected $molecule;
 
+	// Secret
+	protected $secret;
+
+	// Source wallet
+	protected $sourceWallet;
+
 	// Remainder wallet
 	protected $remainderWallet;
 
@@ -50,9 +56,13 @@ class QueryMoleculePropose extends Query
 	 * @param Client $client
 	 * @param string|null $url
 	 */
-	public function __construct ( HttpClientInterface $client, $url = null, $molecule = null )
+	public function __construct ( HttpClientInterface $client, $secret, $sourceWallet, $molecule = null, $url = null )
 	{
 		parent::__construct($client, $url);
+
+		// Secret & source wallet
+		$this->secret = $secret;
+		$this->sourceWallet = $sourceWallet;
 
 		// Create a molecule
 		$this->molecule = $molecule ?? new Molecule();
@@ -79,6 +89,10 @@ class QueryMoleculePropose extends Query
 
 		// Custom molecule
 		$molecule = array_get( $variables, 'molecule', $this->molecule );
+
+		// Sing & check a molecule
+		$molecule->sign( $this->secret );
+		$molecule->check();
 
 		// Merge variables with a molecule key
 		return array_merge( $variables, [ 'molecule' => $molecule ] );
