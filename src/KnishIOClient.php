@@ -149,31 +149,19 @@ class KnishIOClient
 	 */
 	public function createMoleculeQuery ( $class, Molecule $molecule = null )
 	{
-		$this->checkAuthentication();
-
 		// Init molecule
 		$molecule = $molecule ?? $this->createMolecule();
+
+		// Create base query
+		$query = new $class ( $this->client, $this->secret(), $this->getSourceWallet(), $molecule, $this->url );
 
 		// Only instances of QueryMoleculePropose supported
 		if ( !$query instanceof QueryMoleculePropose ) {
 			throw new CodeException(static::class.'::createMoleculeQuery - required class instance of QueryMoleculePropose.');
 		}
 
-		// Create base query
-		$query = new $class ( $this->client, $this->secret, $this->getSourceWallet(), $this->url, $molecule );
-
 		return $query;
 	}
-
-
-
-	/**
-     * @return string
-     */
-	public function getSecret ()
-    {
-        return $this->secret;
-    }
 
 
 	/**
@@ -184,8 +172,6 @@ class KnishIOClient
 	 */
 	public function getBalance ( $code, $token )
 	{
-		$this->checkAuthentication();
-
 		// Create a query
         /** @var QueryBalance $query */
 		$query = $this->createQuery(QueryBalance::class );
@@ -211,12 +197,10 @@ class KnishIOClient
      */
 	public function createToken ( $token, $amount, array $metas = null )
 	{
-		$this->checkAuthentication();
-
 		$metas = default_if_null( $metas, [] );
 
 		// Recipient wallet
-		$recipientWallet = new Wallet( $this->secret, $token );
+		$recipientWallet = new Wallet( $this->secret(), $token );
 
 		if ( array_get( $metas, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 			$recipientWallet->batchId = Wallet::generateBatchId();
@@ -245,12 +229,10 @@ class KnishIOClient
 	 */
 	public function receiveToken ( $token, $value, $to, array $metas = null )
 	{
-		$this->checkAuthentication();
-
 		$metas = default_if_null( $metas, [] );
 
 		// Create a user remainder wallet
-		$remainderWallet = Wallet::create( $this->secret );
+		$remainderWallet = Wallet::create( $this->secret() );
 
 		// Is a string? $to is bundle or secret
 		if ( is_string( $to ) ) {
@@ -305,7 +287,6 @@ class KnishIOClient
      */
 	public function createIdentifier ( $type, $contact, $code )
 	{
-		$this->checkAuthentication();
 
 		// Create & execute a query
         /** @var QueryIdentifierCreate $query */
@@ -329,18 +310,13 @@ class KnishIOClient
      * @return mixed
      * @throws Exception
      */
-	public function claimShadowWallet ($secret, $token, Wallet $sourceWallet = null)
+	public function claimShadowWallet ( $token, $moleculeQuery = null )
 	{
-		$this->checkAuthentication();
-
-		// Source wallet
-		$sourceWallet = \default_if_null($sourceWallet, $this->getSourceWallet( $this->secret ) );
-
 
 		// --- Get shadow wallet list
 		$query = $this->createQuery(QueryWalletList::class);
 		$response = $query->execute([
-			'bundleHash'	=> Crypto::generateBundleHash( $this->secret ),
+			'bundleHash'	=> Crypto::generateBundleHash( $this->secret() ),
 			'token'			=> $token,
 		]);
 		$shadowWallets = $response->payload();
@@ -358,13 +334,13 @@ class KnishIOClient
 
 
 		// Create a query
-		$query = $this->createMoleculeQuery( QueryShadowWalletClaim::class );
+		$moleculeQuery = $moleculeQuery ?? $this->createMoleculeQuery( QueryShadowWalletClaim::class );
 
 		// Fill a molecule
-		$query->fillMolecule( $token, $shadowWallets );
+		$moleculeQuery->fillMolecule( $token, $shadowWallets );
 
 		// Return a response
-		return $query->execute();
+		return $moleculeQuery->execute();
 	}
 
 
@@ -378,12 +354,10 @@ class KnishIOClient
 	 */
 	public function transferToken ( $to, $token, $amount, Wallet $remainderWallet = null )
 	{
-		$this->checkAuthentication();
-
 
 		// Get a from wallet
         /** @var Wallet|null $fromWallet */
-		$fromWallet = $this->getBalance( $this->secret, $token )->payload();
+		$fromWallet = $this->getBalance( $this->secret(), $token )->payload();
 
 		if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0) {
 			throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
@@ -418,19 +392,16 @@ class KnishIOClient
 	 * @return Wallet|null
 	 * @throws Exception
 	 */
-	public function getSourceWallet ( $secret = null ) {
-
-		// Use a custom secret
-		$secret = $secret ?? $this->secret;
+	public function getSourceWallet () {
 
 		// Has a ContinuID wallet?
-		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $secret ) )->payload();
+		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
 		if ($sourceWallet) {
 			return $sourceWallet;
 		}
 
 		// Create a new source wallet
-		return new Wallet( $secret );
+		return new Wallet( $this->secret() );
 	}
 
 
@@ -483,14 +454,17 @@ class KnishIOClient
 
 
 	/**
-	 * Authentication check
+	 * @return string
 	 */
-	protected function checkAuthentication ()
+	public function secret ()
 	{
-		if ( !$this->secret || !$this->client->getAuthToken() )
+		if ( !$this->secret )
 		{
 			throw new UnauthenticatedException( 'Expected '.static::class.'::authentication call before.' );
 		}
+
+		return $this->secret;
 	}
+
 
 }

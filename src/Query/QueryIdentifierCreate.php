@@ -17,21 +17,20 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryIdentifierCreate extends QueryMoleculePropose
 {
 
-    /**
-     * @param string $secret
-     * @param Wallet $sourceWallet
-     * @param string $type
-     * @param string $contact
-     * @param string $code
-     * @param Wallet|null $remainderWallet
+	/**
+	 * @param $type
+	 * @param $contact
+	 * @param $code
+	 * @param Wallet|null $remainderWallet
+	 * @throws \Exception
 	 */
-	public function fillMolecule ($secret, Wallet $sourceWallet, $type, $contact, $code, Wallet $remainderWallet = null)
+	public function fillMolecule ( $type, $contact, $code, Wallet $remainderWallet = null)
 	{
 		// Remainder wallet
-		$this->remainderWallet = \default_if_null($remainderWallet, new Wallet ( $secret ) );
+		$this->remainderWallet = \default_if_null($remainderWallet, new Wallet ( $this->secret ) );
 
 		// Fill the molecule
-		$this->molecule->initIdentifierCreation ($sourceWallet, $this->remainderWallet, $type, $contact, $code);
+		$this->molecule->initIdentifierCreation ($this->sourceWallet, $this->remainderWallet, $type, $contact, $code);
 	}
 
 

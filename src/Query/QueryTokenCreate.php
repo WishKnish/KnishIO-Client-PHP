@@ -33,7 +33,7 @@ class QueryTokenCreate extends QueryMoleculePropose
 		$metas = default_if_null( $metas, [] );
 
 		// Remainder wallet
-		$this->remainderWallet = default_if_null( $remainderWallet, new Wallet ($secret) );
+		$this->remainderWallet = default_if_null( $remainderWallet, new Wallet ($this->secret) );
 
 		// Fill the molecule
 		$this->molecule->initTokenCreation (

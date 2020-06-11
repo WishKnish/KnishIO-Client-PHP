@@ -90,7 +90,7 @@ class QueryClientTest extends TestCase
 
 		// Create a meta molecule
 		$molecule = new Molecule();
-		$molecule->initMeta( $this->source_wallet, new Wallet( $this->source_secret ),
+		$molecule->initMeta( $this->client($this->source_secret)->getSourceWallet(), new Wallet( $this->source_secret ),
 			['key1' => 'value1', 'key2' => 'value2'],
 			'walletBundle',
 			Crypto::generateBundleHash( $this->source_secret )
@@ -149,12 +149,13 @@ class QueryClientTest extends TestCase
 	/**
 	 * @param $molecule
 	 */
-	protected function executeProposeMolecule ($molecule) {
+	protected function executeProposeMolecule ( $molecule ) {
 
 		// Execute query & check response
-		$query = new QueryMoleculePropose($this->guzzle_client);
-		$response = $query->execute(['molecule' => $molecule]);
-		$this->checkResponse ($response);
+		$response = $this->client( $this->source_secret )
+			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
+			->execute();
+		$this->checkResponse ( $response );
 	}
 
 }
