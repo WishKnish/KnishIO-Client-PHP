@@ -11,6 +11,7 @@ use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class QueryMoleculePropose
@@ -40,12 +41,6 @@ class QueryMoleculePropose extends Query
 	// Molecule
 	protected $molecule;
 
-	// Secret
-	protected $secret;
-
-	// Source wallet
-	protected $sourceWallet;
-
 	// Remainder wallet
 	protected $remainderWallet;
 
@@ -56,25 +51,12 @@ class QueryMoleculePropose extends Query
 	 * @param Client $client
 	 * @param string|null $url
 	 */
-	public function __construct ( HttpClientInterface $client, $secret, $sourceWallet, $molecule = null, $url = null )
+	public function __construct ( HttpClientInterface $client, $molecule, $url = null )
 	{
 		parent::__construct($client, $url);
 
-		// Secret & source wallet
-		$this->secret = $secret;
-		$this->sourceWallet = $sourceWallet;
-
 		// Create a molecule
-		$this->molecule = $molecule ?? new Molecule();
-	}
-
-
-	/**
-	 * @return mixed
-	 */
-	public function molecule () : Molecule
-	{
-		return $this->molecule;
+		$this->molecule = $molecule;
 	}
 
 
@@ -87,15 +69,17 @@ class QueryMoleculePropose extends Query
 		// Default variabled
 		$variables = parent::compiledVariables( $variables );
 
-		// Custom molecule
-		$molecule = array_get( $variables, 'molecule', $this->molecule );
-
-		// Sing & check a molecule
-		$molecule->sign( $this->secret );
-		$molecule->check();
-
 		// Merge variables with a molecule key
-		return array_merge( $variables, [ 'molecule' => $molecule ] );
+		return array_merge( $variables, [ 'molecule' => $this->molecule ] );
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function molecule () : Molecule
+	{
+		return $this->molecule;
 	}
 
 

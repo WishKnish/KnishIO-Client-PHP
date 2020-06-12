@@ -21,16 +21,13 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 	 * @param $type
 	 * @param $contact
 	 * @param $code
-	 * @param Wallet|null $remainderWallet
 	 * @throws \Exception
 	 */
-	public function fillMolecule ( $type, $contact, $code, Wallet $remainderWallet = null)
+	public function fillMolecule ( $type, $contact, $code )
 	{
-		// Remainder wallet
-		$this->remainderWallet = \default_if_null($remainderWallet, new Wallet ( $this->secret ) );
-
-		// Fill the molecule
-		$this->molecule->initIdentifierCreation ($this->sourceWallet, $this->remainderWallet, $type, $contact, $code);
+		$this->molecule->initIdentifierCreation ( $type, $contact, $code );
+		$this->molecule->sign();
+		$this->molecule->check();
 	}
 
 

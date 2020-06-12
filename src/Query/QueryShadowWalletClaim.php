@@ -18,27 +18,23 @@ class QueryShadowWalletClaim extends QueryMoleculePropose
 {
 
 
-
-    /**
-     * @param $secret
-     * @param $token
-     * @param $amount
-     * @param array $metas
-     * @throws \ReflectionException|\Exception
-     */
-	public function fillMolecule ($token, array $shadowWallets)
+	/**
+	 * @param $token
+	 * @param array $shadowWallets
+	 * @throws \Exception
+	 */
+	public function fillMolecule ( $token, array $shadowWallets )
 	{
 		// Get new client wallets
 		$wallets = [];
 		foreach ($shadowWallets as $shadowWallet) {
-			$wallets[] = Wallet::create( $this->secret, $token, $shadowWallet->batchId );
+			$wallets[] = Wallet::create( $this->molecule->secret(), $token, $shadowWallet->batchId );
 		}
 
-		// User remainder atom
-		$this->remainderWallet = new Wallet( $this->secret );
-
 		// Init shadow wallet claim
-		$this->molecule->initShadowWalletClaimAtom ( $this->sourceWallet, $token, $wallets, $this->remainderWallet );
+		$this->molecule->initShadowWalletClaimAtom ( $token, $wallets );
+		$this->molecule->sign();
+		$this->molecule->check();
 	}
 
 

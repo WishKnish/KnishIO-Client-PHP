@@ -27,27 +27,12 @@ class QueryTokenTransfer extends QueryMoleculePropose
 	 * @param Wallet|null $remainderWallet
 	 * @throws \Exception
 	 */
-	public function fillMolecule ( Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null )
+	public function fillMolecule ( Wallet $toWallet, $amount )
 	{
-		// Remainder wallet
-		$this->remainderWallet = default_if_null (
-			$remainderWallet,
-			Wallet::create( $this->secret, $token, $toWallet->batchId, $fromWallet->characters )
-		);
-
-		// Save a from wallet
-		$this->fromWallet = $fromWallet;
-
-		// Fill the molecule
-		$this->molecule->initValue( $fromWallet, $toWallet, $this->remainderWallet, $amount );
+		$this->molecule->initValue( $toWallet, $amount );
+		$this->molecule->sign();
+		$this->molecule->check( $this->molecule->sourceWallet() );
 	}
 
-
-	/**
-	 * @return mixed
-	 */
-    public function fromWallet () {
-    	return $this->fromWallet;
-	}
 
 }

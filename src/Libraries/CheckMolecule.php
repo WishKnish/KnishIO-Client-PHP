@@ -25,6 +25,7 @@ use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -35,12 +36,12 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule
 {
 
-    /**
-     * @param Molecule $molecule
-     * @param Wallet $fromWallet
-     * @return array|null
-     */
-    public static function verify ( Molecule $molecule, Wallet $fromWallet = null )
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @param Wallet|null $fromWallet
+	 * @return array|null
+	 */
+    public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null )
     {
 
         $verification_methods = [
@@ -85,11 +86,12 @@ class CheckMolecule
         return null;
     }
 
-    /**
-     * @param Molecule $molecule
-     * @return bool
-     */
-    public static function continuId ( Molecule $molecule )
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+    public static function continuId ( MoleculeStructure $molecule )
     {
         static::missing( $molecule );
 
@@ -103,12 +105,12 @@ class CheckMolecule
         return true;
     }
 
+
 	/**
-	 * @param Molecule $molecule
+	 * @param MoleculeStructure $molecule
 	 * @return bool
-	 * @throws AtomsMissingException|AtomIndexException
 	 */
-	public static function index ( Molecule $molecule )
+	public static function index ( MoleculeStructure $molecule )
 	{
 
 		static::missing( $molecule );
@@ -123,12 +125,12 @@ class CheckMolecule
 		return true;
 	}
 
-    /**
-     * @param Molecule $molecule
-     * @return boolean
-     * @throws MetaMissingException|MolecularHashMissingException|AtomsMissingException|WrongTokenTypeException
-     */
-    public static function isotopeT ( Molecule $molecule )
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+    public static function isotopeT ( MoleculeStructure $molecule )
     {
 
         static::missing( $molecule );
@@ -170,13 +172,12 @@ class CheckMolecule
         return true;
     }
 
-    /**
-     * @param Molecule $molecule
-     * @return bool
-     * @throws WrongTokenTypeException
-     * @throws AtomIndexException
-     */
-    public static function isotopeC ( Molecule $molecule )
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+    public static function isotopeC ( MoleculeStructure $molecule )
     {
 
         static::missing( $molecule );
@@ -198,13 +199,12 @@ class CheckMolecule
         return true;
     }
 
-    /**
-     * @param Molecule $molecule
-     * @return bool
-     * @throws WrongTokenTypeException
-     * @throws AtomIndexException
-     */
-    public static function isotopeI ( Molecule $molecule )
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+    public static function isotopeI ( MoleculeStructure $molecule )
     {
 
         static::missing( $molecule );
@@ -226,13 +226,12 @@ class CheckMolecule
         return true;
     }
 
-    /**
-     * @param Molecule $molecule
-     * @return bool
-     * @throws WrongTokenTypeException
-     * @throws AtomIndexException
-     */
-    public static function isotopeU ( Molecule $molecule )
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+    public static function isotopeU ( MoleculeStructure $molecule )
     {
 
         static::missing( $molecule );
@@ -254,12 +253,12 @@ class CheckMolecule
         return true;
     }
 
+
 	/**
-	 * @param Molecule $molecule
-	 * @return bool
-     * @throws MetaMissingException|WrongTokenTypeException
+	 * @param MoleculeStructure $molecule
+	 * @return bool1
 	 */
-	public static function isotopeM ( Molecule $molecule )
+	public static function isotopeM ( MoleculeStructure $molecule )
 	{
 
 		static::missing( $molecule );
@@ -286,12 +285,12 @@ class CheckMolecule
 	 * 1. we're sending and receiving the same token
 	 * 2. we're only subtracting on the first atom
 	 *
-	 * @param Molecule $molecule
+	 * @param MoleculeStructure $molecule
 	 * @param Wallet $senderWallet
 	 * @return bool
 	 * @throws AtomsMissingException|TransferMismatchedException|TransferMalformedException|TransferToSelfException|TransferUnbalancedException|TransferBalanceException|TransferRemainderException
 	 */
-	public static function isotopeV ( Molecule $molecule, Wallet $senderWallet = null )
+	public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null )
 	{
 
 		static::missing( $molecule );
@@ -375,11 +374,11 @@ class CheckMolecule
 	/**
 	 * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
 	 *
-	 * @param Molecule $molecule
+	 * @param MoleculeStructure $molecule
 	 * @return bool
 	 * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
 	 */
-	public static function molecularHash ( Molecule $molecule )
+	public static function molecularHash ( MoleculeStructure $molecule )
 	{
 
 		static::missing( $molecule );
@@ -397,11 +396,11 @@ class CheckMolecule
 	 * of signature fragments Om and a molecular hash Hm into a single-use wallet address to be matched against
 	 * the sender’s address.
 	 *
-	 * @param Molecule $molecule
+	 * @param MoleculeStructure $molecule
 	 * @return bool
 	 * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
 	 */
-	public static function ots ( Molecule $molecule )
+	public static function ots ( MoleculeStructure $molecule )
 	{
 
 		static::missing( $molecule );
@@ -573,9 +572,9 @@ class CheckMolecule
 	}
 
 	/**
-	 * @param Molecule $molecule
+	 * @param MoleculeStructure $molecule
 	 */
-	private static function missing ( Molecule $molecule )
+	private static function missing ( MoleculeStructure $molecule )
 	{
 		// No molecular hash?
 		if ( $molecule->molecularHash === null ) {

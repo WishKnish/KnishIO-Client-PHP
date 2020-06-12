@@ -27,13 +27,15 @@ class QueryTokenReceive extends QueryMoleculePropose
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
-	public function fillMolecule (Wallet $remainderWallet, $token, $value, $metaType, $metaId, array $metas = null)
+	public function fillMolecule ( $token, $value, $metaType, $metaId, array $metas = null )
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
 		// Fill the molecule
-		$this->molecule->initTokenTransfer( $this->sourceWallet, $remainderWallet, $token, $value, $metaType, $metaId, $metas );
+		$this->molecule->initTokenTransfer( $token, $value, $metaType, $metaId, $metas );
+		$this->molecule->sign();
+		$this->molecule->check();
 	}
 
 }

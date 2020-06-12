@@ -511,6 +511,7 @@ class TokenClientTransactionTest extends TestCase
 
 		// Wallets
 		$source_wallet = $client->getBalance( $from_secret, $token )->payload();
+
 		$recipient_wallets = [];
 		foreach ($recipients as $recipient) {
 
@@ -540,7 +541,7 @@ class TokenClientTransactionTest extends TestCase
 		$value = count($recipient_wallets) * $transaction_amount;
 
 		// Create a meta molecule
-		$molecule = $client->createMolecule();
+		$molecule = $client->createMolecule( $source_wallet, $remainder_wallet );
 
 		// Initializing a new Atom to remove tokens from source
 		$molecule->addAtom (new \WishKnish\KnishIO\Client\Atom(
@@ -600,7 +601,7 @@ class TokenClientTransactionTest extends TestCase
 		));
 
 		// Sign & check the molecule
-		$molecule->sign($from_secret);
+		$molecule->sign();
 		$molecule->check($source_wallet);
 
 		// Create & execute a query
@@ -663,13 +664,10 @@ class TokenClientTransactionTest extends TestCase
 		// ---
 
 		// --- Bind a shadow wallet (with wrong bundle hash)
-		foreach ($intruders as $intruder) {
+		/* foreach ($intruders as $intruder) {
 
 			// Init recipient query
-			$client = $this->client($recipient);
-			$query = new QueryShadowWalletClaim($client->client(), $intruder, new Wallet($intruder));
-
-			$response = $this->client($intruder)->claimShadowWallet($token, $query);
+			$response = $this->client($recipient)->claimShadowWallet( $token, $this->client($intruder)->createMolecule() );
 
 			$this->assertEquals($response->status(), 'rejected');
 
@@ -678,7 +676,7 @@ class TokenClientTransactionTest extends TestCase
 				$this->debug ($response, true);
 			}
 			$this->assertEquals($continue_id_error, true);
-		}
+		} */
 
 		// --- Bind a shadow wallet (with original bundle hash)
 		$response = $this->client($recipient)->claimShadowWallet($token);
