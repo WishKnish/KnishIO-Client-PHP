@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\MoleculeStructure;
 
 /**
  * Class ResponseMolecule
@@ -40,15 +41,11 @@ class ResponseMolecule extends Response
     		return null;
 		}
 
-		// !!! @todo change to MoleculeStructure object
-    	return (object) $data;
-    	/*
-    	$molecule = new Molecule();
+    	$molecule = new MoleculeStructure();
 		$molecule->molecularHash = array_get($data, 'molecularHash');
 		$molecule->status = array_get($data, 'status');
 		$molecule->createdAt = array_get($data, 'createdAt');
         return $molecule;
-    	*/
     }
 
 

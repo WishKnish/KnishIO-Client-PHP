@@ -54,6 +54,7 @@ class Response
 
 		// No-json response - error
 		if ( $this->response === null ) {
+			dd ($this->origin_response);
 			throw new InvalidResponseException();
 		}
 

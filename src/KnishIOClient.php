@@ -60,6 +60,11 @@ class KnishIOClient
     private $secret;
 
 	/**
+	 * @var
+	 */
+    private $remainderWallet;
+
+	/**
 	 * @var string
 	 */
     private $cellSlug;
@@ -131,11 +136,25 @@ class KnishIOClient
 	 */
 	public function createMolecule ( $sourceWallet = null, $remainderWallet = null )
 	{
+
+		/*
+
+		// Source wallet (if has a remainder - use it)
+		$sourceWallet = $sourceWallet ?? $this->remainderWallet;
+
+		// Get source wallet by ContinuID query
+		if ( $sourceWallet === null ) {
+			$sourceWallet = $this->getSourceWallet();
+		}
+		*/
+
 		$sourceWallet = $sourceWallet ?? $this->getSourceWallet();
-		$remainderWallet = $remainderWallet ??
+
+		// Remainder wallet
+		$this->remainderWallet = $remainderWallet ??
 			Wallet::create( $this->secret(), $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
 
-		return new Molecule( $this->secret(), $sourceWallet, $remainderWallet, $this->cellSlug );
+		return new Molecule( $this->secret(), $sourceWallet, $this->remainderWallet, $this->cellSlug );
 	}
 
 
@@ -387,10 +406,10 @@ class KnishIOClient
 		$toWallet->initBatchId( $fromWallet, $amount );
 
 		// Remainder wallet
-		$remainderWallet = Wallet::create( $this->secret(), $token, $toWallet->batchId, $fromWallet->characters );
+		$this->remainderWallet = Wallet::create( $this->secret(), $token, $toWallet->batchId, $fromWallet->characters );
 
 		// Create a molecule with custom source wallet
-		$molecule = $this->createMolecule ( $fromWallet, $remainderWallet );
+		$molecule = $this->createMolecule ( $fromWallet, $this->remainderWallet );
 
 		// Create a query
         /** @var QueryTokenTransfer $query */
@@ -405,20 +424,29 @@ class KnishIOClient
 
 
 	/**
-	 * @param $secret
-	 * @return Wallet|null
+	 * @param bool $onlyValue
+	 * @return Wallet
 	 * @throws Exception
 	 */
-	public function getSourceWallet () {
+	public function getSourceWallet ( ) {
 
 		// Has a ContinuID wallet?
 		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
-		if ($sourceWallet) {
-			return $sourceWallet;
+		if ( !$sourceWallet ) {
+			$sourceWallet = new Wallet( $this->secret() );
 		}
 
-		// Create a new source wallet
-		return new Wallet( $this->secret() );
+		// Return final source wallet
+		return $sourceWallet;
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function getRemainderWallet ()
+	{
+		return $this->remainderWallet;
 	}
 
 
@@ -482,6 +510,15 @@ class KnishIOClient
 		}
 
 		return $this->secret;
+	}
+
+
+	/**
+	 * @param $secret
+	 */
+	public function setSecret ( $secret )
+	{
+		$this->secret = $secret;
 	}
 
 
