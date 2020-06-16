@@ -134,10 +134,10 @@ class KnishIOClient
 	 * @return Molecule
 	 * @throws Exception
 	 */
-	public function createMolecule ( $sourceWallet = null, $remainderWallet = null )
+	public function createMolecule ( $secret = null, $sourceWallet = null, $remainderWallet = null )
 	{
-
-		/*
+		// Secret
+		$secret = $secret ?? $this->secret();
 
 		// Source wallet (if has a remainder - use it)
 		$sourceWallet = $sourceWallet ?? $this->remainderWallet;
@@ -146,15 +146,12 @@ class KnishIOClient
 		if ( $sourceWallet === null ) {
 			$sourceWallet = $this->getSourceWallet();
 		}
-		*/
-
-		$sourceWallet = $sourceWallet ?? $this->getSourceWallet();
 
 		// Remainder wallet
 		$this->remainderWallet = $remainderWallet ??
-			Wallet::create( $this->secret(), $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
 
-		return new Molecule( $this->secret(), $sourceWallet, $this->remainderWallet, $this->cellSlug );
+		return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
 	}
 
 
@@ -409,7 +406,7 @@ class KnishIOClient
 		$this->remainderWallet = Wallet::create( $this->secret(), $token, $toWallet->batchId, $fromWallet->characters );
 
 		// Create a molecule with custom source wallet
-		$molecule = $this->createMolecule ( $fromWallet, $this->remainderWallet );
+		$molecule = $this->createMolecule ( null, $fromWallet, $this->remainderWallet );
 
 		// Create a query
         /** @var QueryTokenTransfer $query */
@@ -474,18 +471,15 @@ class KnishIOClient
 		// Set a cell slug
 		$this->cellSlug = $cell_slug;
 
-		// Get a ContinuId wallet
-		$wallet = $this->getSourceWallet( $secret );
-
 		// Create query & fill a molecule
 		$query = $this->createMoleculeQuery( QueryAuthentication::class );
-		$query->fillMolecule( $secret, $wallet );
+		$query->fillMolecule();
 
 		// Get a response
 		$response = $query->execute();
 
 		// If the response is success - set auth token
-		if ($response->success() ) {
+		if ( $response->success() ) {
 			$this->client->setAuthToken( $response->token() );
 		}
 
@@ -506,20 +500,13 @@ class KnishIOClient
 	{
 		if ( !$this->secret )
 		{
+			$a = $b;
 			throw new UnauthenticatedException( 'Expected '.static::class.'::authentication call before.' );
 		}
 
 		return $this->secret;
 	}
 
-
-	/**
-	 * @param $secret
-	 */
-	public function setSecret ( $secret )
-	{
-		$this->secret = $secret;
-	}
 
 
 }
