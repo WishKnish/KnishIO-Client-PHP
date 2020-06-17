@@ -56,9 +56,8 @@ class Molecule extends MoleculeStructure
 	{
 		$this->secret = $secret;
 		$this->sourceWallet = $sourceWallet;
-		$this->remainderWallet = $remainderWallet ?? new Wallet( $secret, $sourceWallet->token );
-
-		$this->cellSlug = $cellSlug;
+		$this->remainderWallet = $remainderWallet ??
+			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
 
 		$this->clear();
 	}
@@ -79,6 +78,25 @@ class Molecule extends MoleculeStructure
 	public function sourceWallet ()
 	{
 		return $this->sourceWallet;
+	}
+
+
+	/**
+	 * Encrypt message by source wallet
+	 *
+	 * @param array $data
+	 * @param array $shared_wallets
+	 */
+	public function encryptMessage ( array $data, array $shared_wallets = [] )
+	{
+		// Merge all args to the common list
+		$args = [$data, $this->sourceWallet->pubkey];
+		foreach ( $shared_wallets as $shared_wallet ) {
+			$args[] = $shared_wallet->pubkey;
+		}
+
+		// Call Wallet::encryptMyMessage function
+		return call_user_func_array ( [$this->sourceWallet, 'encryptMyMessage'], $args );
 	}
 
 
@@ -424,7 +442,6 @@ class Molecule extends MoleculeStructure
 	 */
 	public function initMeta ( array $meta, $metaType, $metaId )
 	{
-
 		$this->molecularHash = null;
 
 		$this->atoms[] = new Atom(

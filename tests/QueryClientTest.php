@@ -67,13 +67,13 @@ class QueryClientTest extends TestCase
 		$this->beforeExecute();
 
 		// Create a meta molecule
-		$molecule = new Molecule();
-		$molecule->initMeta($this->client($this->source_secret)->getSourceWallet(), new Wallet($this->source_secret),
+		$molecule = $this->client($this->source_secret)->createMolecule();
+		$molecule->initMeta(
 			['key1' => 'value1', 'key2' => 'value2'],
 			'metaType',
 			'metaId'
 		);
-		$molecule->sign($this->source_secret);
+		$molecule->sign();
 		$molecule->check();
 
 		// Execute query & check response
@@ -88,15 +88,33 @@ class QueryClientTest extends TestCase
 
 		$this->beforeExecute();
 
+		// Meta & encryption
+		$meta = ['key1' => 'value1', 'key2' => 'value2'];
+
+		$server_secret = env('SECRET_TOKEN_KNISH');
+		$server_wallet = $this->client($server_secret)
+			->getContinuId( Crypto::generateBundleHash( $server_secret ) )
+			->payload();
+
+
+		$server_wallet = new Wallet( $server_secret, 'USER' );
+
+
+		/*
+		$value = '35t2VW7lJb0E5MLWI068v9NTVq1SKvtgG8kAqLblaOpnhHElNjkruP2HGNTM4paCEGt14jdHYvNgdNVsFcQAQqeoqcLUDaVMoIHsBUW6oMKVaIp';
+		$result = $server_wallet->decryptMyMessage ($value);
+		dd ($result);
+		*/
+
+
 		// Create a meta molecule
-		$molecule = new Molecule();
-		$molecule->initMeta( $this->client($this->source_secret)->getSourceWallet(), new Wallet( $this->source_secret ),
-			['key1' => 'value1', 'key2' => 'value2'],
+		$molecule = $this->client($this->source_secret)->createMolecule();
+		$molecule->initMeta(
+			$molecule->encryptMessage( $meta, [$server_wallet] ),
 			'walletBundle',
 			Crypto::generateBundleHash( $this->source_secret )
 		);
-
-		$molecule->sign($this->source_secret);
+		$molecule->sign();
 		$molecule->check();
 
 		// Execute query & check response
