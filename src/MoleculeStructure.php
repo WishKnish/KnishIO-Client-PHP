@@ -22,12 +22,35 @@ class MoleculeStructure {
 
 	use Json;
 
+	static protected $cellSlugDelimiter = '.';
+
 	public $molecularHash;
 	public $cellSlug;
 	public $bundle;
 	public $status;
 	public $createdAt;
 	public $atoms;
+
+	protected $cellSlugOrigin;
+
+
+	/**
+	 * MoleculeStructure constructor.
+	 * @param null $cellSlug
+	 */
+	public function __construct( $cellSlug = null )
+	{
+		$this->cellSlugOrigin = $this->cellSlug = $cellSlug;
+	}
+
+
+	/**
+	 * @return string
+	 */
+	public function cellSlugBase ()
+	{
+		return explode( static::$cellSlugDelimiter, $this->cellSlug )[0];
+	}
 
 
 	/**
@@ -60,6 +83,7 @@ class MoleculeStructure {
 			&& CheckMolecule::continuId( $molecule )
 			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
 	}
+
 
 
 	/**

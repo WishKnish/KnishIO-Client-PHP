@@ -54,6 +54,8 @@ class Molecule extends MoleculeStructure
 	 */
 	public function __construct ( $secret, $sourceWallet, $remainderWallet = null, $cellSlug = null )
 	{
+		parent::__construct( $cellSlug );
+
 		$this->secret = $secret;
 		$this->sourceWallet = $sourceWallet;
 		$this->remainderWallet = $remainderWallet ??
@@ -464,6 +466,20 @@ class Molecule extends MoleculeStructure
 		$this->addUserRemainderAtom( $this->remainderWallet );
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
+	}
+
+
+	/**
+	 * @param array $meta
+	 */
+	public function initBundleMeta ( array $meta )
+	{
+
+		// Modify cell slug
+		$this->cellSlug = $this->cellSlugOrigin . MoleculeStructure::$cellSlugDelimiter . $this->sourceWallet->bundle;
+
+		// Init meta
+		$this->initMeta( $meta, 'walletBundle', $this->sourceWallet->bundle );
 	}
 
 

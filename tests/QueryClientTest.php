@@ -97,11 +97,14 @@ class QueryClientTest extends TestCase
 			->payload();
 
 
-		$server_wallet = new Wallet( $server_secret, 'USER' );
-
-
 		/*
-		$value = '35t2VW7lJb0E5MLWI068v9NTVq1SKvtgG8kAqLblaOpnhHElNjkruP2HGNTM4paCEGt14jdHYvNgdNVsFcQAQqeoqcLUDaVMoIHsBUW6oMKVaIp';
+		$server_wallet = new Wallet( $server_secret, 'USER', 'f0d565b50fd40bda4afd128f4daafe77bd6c8561dc3ab5422ecca5e5726054c4');
+
+		dump ($server_wallet->position);
+		$value = [
+			'6D10LZNmlLs' => 'AGG5pXiVQgnUXsrWopHrOaJENY4DGvQ270NenAAL3LZCW9MELVRSeHZ2aaR7YEhg5lDKvUUF8hqFHubv8CIgb8EMMkqf0ZI7G9Pe2sB3HiUudDa',
+			'6m6r0SckeEB' => 'BM1g2kMOvHCUngJcMKK9KFlKPfCTmU9CSgAlJtEGf4Td5cabTOdPGM9lp9o2Ujbgs6pjVYgHHqJTRt4llBhiof036rHWjL4JdcdjlpCTkTAhndt',
+		];
 		$result = $server_wallet->decryptMyMessage ($value);
 		dd ($result);
 		*/
@@ -109,10 +112,8 @@ class QueryClientTest extends TestCase
 
 		// Create a meta molecule
 		$molecule = $this->client($this->source_secret)->createMolecule();
-		$molecule->initMeta(
+		$molecule->initBundleMeta(
 			$molecule->encryptMessage( $meta, [$server_wallet] ),
-			'walletBundle',
-			Crypto::generateBundleHash( $this->source_secret )
 		);
 		$molecule->sign();
 		$molecule->check();
