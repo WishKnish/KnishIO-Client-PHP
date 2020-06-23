@@ -654,8 +654,8 @@ class TokenClientTransactionTest extends TestCase
 		]);
 
 		// --- Try to create identifier with WRONG code: rejected
-	//	$id_response = $this->client($recipient)->createIdentifier('email', $email, Strings::randomString(8));
-	//	$this->assertEquals($id_response->success(), false);
+		$id_response = $this->client($recipient)->createIdentifier('email', $email, Strings::randomString(8));
+		$this->assertEquals($id_response->success(), false);
 
 		// --- Bind a shadow wallet with RIGHT code
 		$id_response = $this->client($recipient)->createIdentifier('email', $email, $code);
@@ -663,14 +663,15 @@ class TokenClientTransactionTest extends TestCase
 		// ---
 
 		// --- Bind a shadow wallet (with wrong bundle hash)
-		/*foreach ($intruders as $intruder) {
+		foreach ($intruders as $intruder) {
 
 			// Client
 			$client = $this->client($recipient);
 
 			// Init recipient query
-			$response = $client->claimShadowWallet( $token, $client->createMolecule( $intruder, new Wallet( $intruder ), new Wallet( $intruder ) ) );
+			$response = $client->claimShadowWallet( $token, $client->createMolecule( $intruder, new Wallet( $intruder ) ) );
 
+			// Assert a rejected status
 			$this->assertEquals($response->status(), 'rejected');
 
 			$continue_id_error = strpos($response->reason(), 'ContinuID verification failure');
@@ -678,7 +679,7 @@ class TokenClientTransactionTest extends TestCase
 				$this->debug ($response, true);
 			}
 			$this->assertEquals($continue_id_error, true);
-		}*/
+		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
 		$response = $this->client($recipient)->claimShadowWallet($token);

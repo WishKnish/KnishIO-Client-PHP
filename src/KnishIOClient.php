@@ -64,6 +64,12 @@ class KnishIOClient
 	 */
     private $remainderWallet;
 
+
+	/**
+	 * @var
+	 */
+    private $lastMoleculeQuery;
+
 	/**
 	 * @var string
 	 */
@@ -139,8 +145,10 @@ class KnishIOClient
 		// Secret
 		$secret = $secret ?? $this->secret();
 
-		// Source wallet (if has a remainder - use it)
-		$sourceWallet = $sourceWallet ?? $this->remainderWallet;
+		// Is source wallet passed & has a last success query? Update a source wallet with a remainder one
+		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response()->success() ) {
+			$sourceWallet = $this->remainderWallet;
+		}
 
 		// Get source wallet by ContinuID query
 		if ( $sourceWallet === null ) {
@@ -182,6 +190,9 @@ class KnishIOClient
 		if ( !$query instanceof QueryMoleculePropose ) {
 			throw new CodeException(static::class.'::createMoleculeQuery - required class instance of QueryMoleculePropose.');
 		}
+
+		// Save the last molecule query
+		$this->lastMoleculeQuery = $query;
 
 		return $query;
 	}
