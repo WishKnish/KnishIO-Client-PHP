@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use WishKnish\KnishIO\Client\KnishIO;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
+use WishKnish\KnishIO\Client\KnishIOClient;
 
 /**
  * Class MoleculeTransfer
@@ -39,13 +40,62 @@ class MoleculeTransfer extends Command
      */
     public function handle ()
     {
-        KnishIO::setUrl( 'https://subbox.loc/graphql' );
+        //KnishIO::setUrl( 'https://subbox.loc/graphql' );
 
-        $token = 'FOJ';
+        /*$token = 'FOJ';
         $another = new Wallet( $this->another, $token );
         $response = KnishIO::transferToken( $this->secret, $another, $token, 15 );
-        dump($response);
+        dump($response);*/
 
+        $data = [
+            'Мама' => 'мыла раму',
+        ];
+
+        $wallet = new Wallet( $this->secret );
+        $wallet2 = new Wallet( $this->another );
+        $molecule = new Molecule();
+
+        //$encrypt = $wallet->encryptMyMessage( $data, $wallet->pubkey, $wallet2->pubkey );
+
+        //$molecule->initMeta( $wallet, $encrypt, null, null );
+        //$molecule->sign( $this->secret );
+
+        /*$client = new Client( [
+            'base_uri'    => 'https://subbox.loc',
+            'verify'      => false,
+            'http_errors' => false,
+            'headers'     => [
+                'User-Agent' => 'KnishIO/0.1',
+                'Accept'     => 'application/json',
+            ]
+        ] );
+
+        $response = $client->post( 'graphql', [
+            'json' => [
+                'query'     => 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }',
+                'variables' => [
+                    'molecule' => $molecule,
+                ],
+            ]
+        ] );
+
+        dump( $response );
+
+        $response = $client->post( 'graphql', [
+            'json' => [
+                'query'     => 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule, ) { molecularHash, height, depth, status, reason, reasonPayload, createdAt, receivedAt, processedAt, broadcastedAt } }',
+                'variables' => [
+                    'molecule' => $molecule,
+                ],
+            ]
+        ] );*/
+
+        $client = new KnishIOClient( 'https://subbox.loc/graphql' );
+        dump($client->createToken( $this->another, 'KNISHQ', 50000, [
+            'name' => 'KNISHQ token',
+            'fungibility' => 'fungible',
+            'supply' => 'replenishable',
+            'decimals' => 2
+        ]  )->payload() );
     }
-
 }

@@ -6,20 +6,20 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Response\ResponseBalance;
-use WishKnish\KnishIO\Client\Response\Response;
+
+use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 
 
 /**
  * Class QueryBalance
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryBalance extends Query
+class QueryWalletList extends Query
 {
 	// Query
-	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
+	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
 	 	@fields
-	 }';
+	}';
 
 	// Fields
 	protected $fields = [
@@ -35,16 +35,12 @@ class QueryBalance extends Query
 	];
 
 
-
 	/**
-	 * Create a response
-	 *
 	 * @param string $response
-	 * @return Response
+	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletList
 	 */
-	public function createResponse ( $response )
-    {
-		return new ResponseBalance( $this, $response );
+	public function createResponse ($response) {
+		return new ResponseWalletList($this, $response);
 	}
 
 }

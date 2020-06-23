@@ -50,14 +50,14 @@
 	},
 	"require-dev": {
 		"symfony/var-dumper": "^3.4|^4.0|^5.0",
-		"illuminate/console": "5.7.* || 5.8.* || ^6.0",
-		"illuminate/events": "5.7.* || 5.8.* || ^6.0",
+		"illuminate/console": "5.4.* || 5.8.* || ^6.0",
+		"illuminate/events": "5.4.* || 5.8.* || ^6.0",
 		"fzaninotto/faker": "^1.9"
 	},
 	"autoload": {
 		"psr-4": {
 			"WishKnish\\KnishIO\\Client\\": "src/",
-			"Console\\": "bin/"
+			"Console\\": "bin/Console/"
 		},
 		"files": [
 			"./src/Helpers/helpers.php"
