@@ -66,6 +66,17 @@ class Molecule extends MoleculeStructure
 
 
 	/**
+	 * @param MoleculeStructure $moleculeStructure
+	 */
+	public function fill (MoleculeStructure $moleculeStructure)
+	{
+		foreach ( get_object_vars($moleculeStructure) as $key => $value ) {
+			$this->$key = $value;
+		}
+	}
+
+
+	/**
 	 * @return mixed
 	 */
 	public function secret ()

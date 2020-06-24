@@ -511,7 +511,6 @@ class KnishIOClient
 	{
 		if ( !$this->secret )
 		{
-			$a = $b;
 			throw new UnauthenticatedException( 'Expected '.static::class.'::authentication call before.' );
 		}
 
