@@ -93,6 +93,10 @@ class CheckMolecule
 	 */
     public static function continuId ( MoleculeStructure $molecule )
     {
+    	// Temporarily disabling ContiunuID check (can't get a 'components.atom.continuID_enabled' config value from the client)
+		return true;
+
+
         static::missing( $molecule );
 
         /** @var Atom $atom */
