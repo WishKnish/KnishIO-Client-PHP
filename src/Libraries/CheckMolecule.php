@@ -39,51 +39,39 @@ class CheckMolecule
 	/**
 	 * @param MoleculeStructure $molecule
 	 * @param Wallet|null $fromWallet
-	 * @return array|null
 	 */
     public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null )
     {
-
-        $verification_methods = [
-            'molecularHash' => 'Hash check has failed - ', // Making sure that the molecule was hashed correctly
-            'ots'           => 'OTS check has failed - ', // Making sure that the molecule was signed correctly
-            'isotopeM'      => 'Isotope M verification failed - ', // Receive M atom with empty meta array?
-            'isotopeC'      => 'Isotope C verification failed - ',
-            'isotopeV'      => 'Value transfer failed - ', // Performing validations specific to V isotope atoms
-            'isotopeT'      => 'Isotope T verification failed - ',
-            'isotopeI'      => 'Isotope I verification failed - ',
-            'isotopeU'      => 'Isotope U verification failed - ',
-            'continuId'    	=> 'ContinuId check has failed - ',
-            'index'         => 'There is an atom without an index - ', // Make sure all atoms have an initialized index
+    	$verification_methods = [
+            'molecularHash',
+            'ots',
+            'isotopeM',
+            'isotopeC',
+            'isotopeV',
+            'isotopeT',
+            'isotopeI',
+            'isotopeU',
+            'index',
         ];
 
-        foreach ( $verification_methods as $method => $error ) {
+        foreach ( $verification_methods as $method ) {
 
-            try {
+			switch ( $method ) {
 
-                switch ( $method ) {
+				case 'isotopeV':
+				{
 
-                    case 'isotopeV': {
+					static::{$method}($molecule, $fromWallet);
 
-                        static::{ $method }( $molecule , $fromWallet );
+					break;
+				}
+				default:
+				{
+					static::{$method}($molecule);
+				}
+			}
 
-                        break;
-                    }
-                    default: {
-                        static::{ $method }( $molecule );
-                    }
-                }
-            }
-            catch ( BaseException $exception ) {
-
-                return [
-                    'status' => 'rejected',
-                    'reason' => $error . $exception->getMessage(),
-                ];
-            }
         }
-
-        return null;
     }
 
 
@@ -93,11 +81,7 @@ class CheckMolecule
 	 */
     public static function continuId ( MoleculeStructure $molecule )
     {
-    	// Temporarily disabling ContiunuID check (can't get a 'components.atom.continuID_enabled' config value from the client)
-		return true;
-
-
-        static::missing( $molecule );
+    	static::missing( $molecule );
 
         /** @var Atom $atom */
         $atom = reset( $molecule->atoms );
