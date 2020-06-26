@@ -27,25 +27,14 @@ class QueryTokenCreate extends QueryMoleculePropose
      * @throws \ReflectionException
      * @throws \Exception
      */
-	public function fillMolecule ($secret, Wallet $sourceWallet, Wallet $recipientWallet, $amount, array $metas = null, Wallet $remainderWallet = null)
+	public function fillMolecule ( Wallet $recipientWallet, $amount, array $metas = null )
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
-		// Remainder wallet
-		$this->remainderWallet = default_if_null( $remainderWallet, new Wallet ($secret) );
-
-
-
 		// Fill the molecule
-		$this->molecule->initTokenCreation (
-			$sourceWallet, $recipientWallet, $this->remainderWallet, $amount, $metas
-		);
-
-		// Sign a molecule
-		$this->molecule->sign( $secret );
-
-		// Check the molecule
+		$this->molecule->initTokenCreation ( $recipientWallet, $amount, $metas );
+		$this->molecule->sign();
 		$this->molecule->check();
 	}
 

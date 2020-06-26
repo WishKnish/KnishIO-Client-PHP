@@ -67,13 +67,55 @@ class QueryClientTest extends TestCase
 		$this->beforeExecute();
 
 		// Create a meta molecule
-		$molecule = new Molecule();
-		$molecule->initMeta($this->source_wallet,
+		$molecule = $this->client($this->source_secret)->createMolecule();
+		$molecule->initMeta(
 			['key1' => 'value1', 'key2' => 'value2'],
 			'metaType',
 			'metaId'
 		);
-		$molecule->sign($this->source_secret);
+		$molecule->sign();
+		$molecule->check();
+
+		// Execute query & check response
+		$this->executeProposeMolecule($molecule);
+	}
+
+
+	/**
+	 * @throws \ReflectionException
+	 */
+	public function testMetaWalletBundle () {
+
+		$this->beforeExecute();
+
+		// Meta & encryption
+		$meta = ['key1' => 'value1', 'key2' => 'value2'];
+
+		$server_secret = env('SECRET_TOKEN_KNISH');
+		$server_wallet = $this->client($server_secret)
+			->getContinuId( Crypto::generateBundleHash( $server_secret ) )
+			->payload();
+
+
+		/*
+		$server_wallet = new Wallet( $server_secret, 'USER', 'f0d565b50fd40bda4afd128f4daafe77bd6c8561dc3ab5422ecca5e5726054c4');
+
+		dump ($server_wallet->position);
+		$value = [
+			'6D10LZNmlLs' => 'AGG5pXiVQgnUXsrWopHrOaJENY4DGvQ270NenAAL3LZCW9MELVRSeHZ2aaR7YEhg5lDKvUUF8hqFHubv8CIgb8EMMkqf0ZI7G9Pe2sB3HiUudDa',
+			'6m6r0SckeEB' => 'BM1g2kMOvHCUngJcMKK9KFlKPfCTmU9CSgAlJtEGf4Td5cabTOdPGM9lp9o2Ujbgs6pjVYgHHqJTRt4llBhiof036rHWjL4JdcdjlpCTkTAhndt',
+		];
+		$result = $server_wallet->decryptMyMessage ($value);
+		dd ($result);
+		*/
+
+
+		// Create a meta molecule
+		$molecule = $this->client($this->source_secret)->createMolecule();
+		$molecule->initBundleMeta(
+			$molecule->encryptMessage( $meta, [$server_wallet] ),
+		);
+		$molecule->sign();
 		$molecule->check();
 
 		// Execute query & check response
@@ -126,12 +168,13 @@ class QueryClientTest extends TestCase
 	/**
 	 * @param $molecule
 	 */
-	protected function executeProposeMolecule ($molecule) {
+	protected function executeProposeMolecule ( $molecule ) {
 
 		// Execute query & check response
-		$query = new QueryMoleculePropose($this->guzzle_client);
-		$response = $query->execute(['molecule' => $molecule]);
-		$this->checkResponse ($response);
+		$response = $this->client( $this->source_secret )
+			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
+			->execute();
+		$this->checkResponse ( $response );
 	}
 
 }

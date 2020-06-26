@@ -14,22 +14,16 @@ use Exception;
  */
 class QueryAuthentication extends QueryMoleculePropose
 {
-    /**
-     * @param string $secret
-     * @param Wallet $wallet
-     * @param Wallet $remainderWallet
-     * @throws Exception
-     */
-    public function fillMolecule ( $secret, Wallet $wallet, Wallet $remainderWallet = null )
+
+
+	/**
+	 * Fill the molecule
+	 */
+    public function fillMolecule ()
     {
-        $this->remainderWallet = default_if_null( $remainderWallet, new Wallet( $secret ) );
-
-		// Fill the molecule
-        $this->molecule->initAuthentication( $wallet, $this->remainderWallet );
-
-        // Check & sign a molecule
-        $this->molecule->sign( $secret );
-        $this->molecule->check();
+        $this->molecule->initAuthentication();
+		$this->molecule->sign();
+		$this->molecule->check();
     }
 
     /**

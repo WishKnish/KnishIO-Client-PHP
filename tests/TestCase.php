@@ -132,6 +132,7 @@ abstract class TestCase extends TestCaseBase {
 			$this->checkResponse($response);
 		}
 
+
 		// Return the client by secret
 		return $this->clients[$secret];
 	}

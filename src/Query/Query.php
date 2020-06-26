@@ -8,6 +8,8 @@ namespace WishKnish\KnishIO\Client\Query;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use function GuzzleHttp\json_encode;
@@ -33,6 +35,12 @@ abstract class Query
 	 * @var Request
 	 */
 	protected $request;
+
+
+	/**
+	 * @var Response
+	 */
+	protected $response;
 
 
     /**
@@ -63,10 +71,44 @@ abstract class Query
 	/**
 	 * @return Request
 	 */
-	public function getRequest ()
+	public function request ()
 	{
 		return $this->request;
 	}
+
+
+	/**
+	 * @return Response
+	 */
+	public function response ()
+	{
+		return $this->response;
+	}
+
+
+
+	/**
+	 * Create new request
+	 *
+	 * @param array|null $variables
+	 * @param array|null $fields
+	 * @return RequestInterface
+	 */
+	public function createRequest ( array $variables = null, array $fields = null ) : RequestInterface {
+
+		// Default value of variables
+		$this->variables = $this->compiledVariables( $variables );
+
+		// Create a request
+		return new Request(
+			'POST',
+			$this->url,
+			[ 'Content-Type' => 'application/json' ],
+			json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
+		);
+
+	}
+
 
 
 	/**
@@ -76,37 +118,18 @@ abstract class Query
 	 */
 	public function execute ( array $variables = null, array $fields = null ) {
 
-		// Default value of variables
-		$this->variables = default_if_null( $variables, [] );
-
-
 		// Set a request
-		$this->request = new Request(
-			'POST',
-			$this->url,
-			[ 'Content-Type' => 'application/json' ],
-			json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
-		);
+		$this->request = $this->createRequest( $variables, $fields );
 
 		// Make a request
 		$response = $this->client->send( $this->request );
 
-
-		/*
-
-		// Make a request
-		$response = $this->client->post( $this->url, [
-			'json' => [
-				'query'     => $this->compiledQuery($fields),
-				'variables' => $this->variables,
-			]
-		] );
-
-		*/
-
+		// Create & save a response
+		$this->response = $this->createResponseRaw( $response );
 
 		// Return a response
-		return $this->createResponse( $response->getBody()->getContents() );
+		return $this->response;
+
 	}
 
 
@@ -146,6 +169,16 @@ abstract class Query
 
 
 	/**
+	 * @param array|null $variables
+	 * @return mixed
+	 */
+	public function compiledVariables ( array $variables = null )
+	{
+		return default_if_null( $variables, [] );
+	}
+
+
+	/**
 	 * Create a response
 	 *
 	 * @param string $response
@@ -155,6 +188,17 @@ abstract class Query
     {
 		return new Response( $this, $response );
 	}
+
+
+	/**
+	 * @param ResponseInterface $response
+	 * @return Response
+	 */
+	public function createResponseRaw ( ResponseInterface $response )
+	{
+		return $this->createResponse( $response->getBody()->getContents() );
+	}
+
 
 	/**
 	 * @return string|null

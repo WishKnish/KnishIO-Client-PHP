@@ -19,41 +19,20 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenTransfer extends QueryMoleculePropose
 {
 
-    /**
-     * @param $fromSecret
-     * @param Wallet $fromWallet
-     * @param Wallet $toWallet
-     * @param string $token
-     * @param int|float $amount
-     * @param Wallet|null $remainderWallet
-     * @throws \ReflectionException
-     * @throws \Exception
-     */
-	public function fillMolecule ($fromSecret, Wallet $fromWallet, Wallet $toWallet, $token, $amount, Wallet $remainderWallet = null)
-	{
-		// Remainder wallet
-		$this->remainderWallet = default_if_null (
-			$remainderWallet,
-			Wallet::create( $fromSecret, $token, $toWallet->batchId, $fromWallet->characters )
-		);
-
-		// Save a from wallet
-		$this->fromWallet = $fromWallet;
-
-		// Fill the molecule
-		$this->molecule->initValue( $fromWallet, $toWallet, $this->remainderWallet, $amount );
-		$this->molecule->sign( $fromSecret );
-
-		// Check the molecule
-		$this->molecule->check($fromWallet);
-	}
-
-
 	/**
-	 * @return mixed
+	 * @param Wallet $fromWallet
+	 * @param Wallet $toWallet
+	 * @param $token
+	 * @param $amount
+	 * @param Wallet|null $remainderWallet
+	 * @throws \Exception
 	 */
-    public function fromWallet () {
-    	return $this->fromWallet;
+	public function fillMolecule ( Wallet $toWallet, $amount )
+	{
+		$this->molecule->initValue( $toWallet, $amount );
+		$this->molecule->sign();
+		$this->molecule->check( $this->molecule->sourceWallet() );
 	}
+
 
 }
