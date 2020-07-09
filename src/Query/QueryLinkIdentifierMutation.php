@@ -17,7 +17,7 @@ use WishKnish\KnishIO\Client\Response\ResponseIdentifier;
 class QueryLinkIdentifierMutation extends Query
 {
 	// Query
-	protected static $query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content ) 
+	protected static $default_query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content ) 
 		@fields
 	}';
 

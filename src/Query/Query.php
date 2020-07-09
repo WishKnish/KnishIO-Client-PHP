@@ -18,7 +18,7 @@ use function GuzzleHttp\json_encode;
  * Class Query
  * @package WishKnish\KnishIO\Client\Query
  */
-abstract class Query
+class Query
 {
     /**
      * @var Client
@@ -52,7 +52,7 @@ abstract class Query
     /**
      * @var string
      */
-	protected static $query;
+	protected static $default_query;
 
 
 
@@ -61,10 +61,11 @@ abstract class Query
 	 * @param Client $client
 	 * @param string|null $url
 	 */
-	public function __construct ( HttpClientInterface $client, $url = null )
+	public function __construct ( HttpClientInterface $client, $url = null, string $query = null )
 	{
 		$this->url = $url;
 		$this->client = $client;
+		$this->query = $query ?? static::$default_query;
 	}
 
 
@@ -137,7 +138,7 @@ abstract class Query
 	 * @param array $fields
 	 * @return mixed
 	 */
-	public function compiledQuery (array $fields = null)
+	public function compiledQuery ( array $fields = null )
 	{
 		// Fields
 		if ($fields !== null) {
@@ -148,7 +149,7 @@ abstract class Query
 		return str_replace(
 			['@fields'],
 			[$this->compiledFields($this->fields)],
-			static::$query
+			$this->query
 		);
 	}
 

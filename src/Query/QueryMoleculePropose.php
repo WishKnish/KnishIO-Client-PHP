@@ -20,7 +20,7 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryMoleculePropose extends Query
 {
 	// Query
-	protected static $query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
+	protected static $default_query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
 		@fields 
 	}';
 
