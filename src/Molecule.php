@@ -152,9 +152,11 @@ class Molecule extends MoleculeStructure
      * @param Wallet $userRemainderWallet
      * @return self
      */
-	public function addUserRemainderAtom ( Wallet $userRemainderWallet )
+	public function addUserRemainderAtom ( Wallet $userRemainderWallet = null )
     {
         $this->molecularHash = null;
+
+		$userRemainderWallet = $userRemainderWallet ?? $this->remainderWallet;
 
 		// Remainder atom
 		$this->atoms[] = new Atom(
@@ -292,7 +294,7 @@ class Molecule extends MoleculeStructure
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
+		$this->addUserRemainderAtom ();
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -348,7 +350,7 @@ class Molecule extends MoleculeStructure
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
+		$this->addUserRemainderAtom ();
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -396,7 +398,7 @@ class Molecule extends MoleculeStructure
 
 
 		// Add user remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
+		$this->addUserRemainderAtom ();
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 	}
@@ -436,24 +438,23 @@ class Molecule extends MoleculeStructure
 		);
 
 		// User remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
+		$this->addUserRemainderAtom ();
 
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
 	}
 
+
 	/**
-	 * Initialize an M-type molecule with the given data
+	 * Add meta atom
 	 *
-	 * @param Wallet $wallet
-	 * @param Wallet $userRemainderWallet
 	 * @param array $meta
-	 * @param string $metaType
-	 * @param string|integer $metaId
-	 * @return self
+	 * @param $metaType
+	 * @param $metaId
+	 * @return $this
 	 */
-	public function initMeta ( array $meta, $metaType, $metaId )
+	public function addMetaAtom ( array $meta, $metaType, $metaId )
 	{
 		$this->molecularHash = null;
 
@@ -473,10 +474,26 @@ class Molecule extends MoleculeStructure
 			$this->generateIndex()
 		);
 
-		// User remainder atom
-		$this->addUserRemainderAtom( $this->remainderWallet );
-
 		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
+	/**
+	 * Initialize an M-type molecule with the given data
+	 *
+	 * @param Wallet $wallet
+	 * @param Wallet $userRemainderWallet
+	 * @param array $meta
+	 * @param string $metaType
+	 * @param string|integer $metaId
+	 * @return self
+	 */
+	public function initMeta ( array $meta, $metaType, $metaId )
+	{
+		$this->addMetaAtom( $meta, $metaType, $metaId )
+			->addUserRemainderAtom();
 	}
 
 
@@ -522,6 +539,9 @@ class Molecule extends MoleculeStructure
 			$this->generateIndex()
 		);
 
+		// User remainder atom
+		$this->addUserRemainderAtom();
+
 		$this->atoms = Atom::sortAtoms( $this->atoms );
 
 		return $this;
@@ -558,7 +578,7 @@ class Molecule extends MoleculeStructure
         );
 
         // User remainder atom
-        $this->addUserRemainderAtom ( $this->remainderWallet );
+        $this->addUserRemainderAtom ();
 
         $this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -590,7 +610,7 @@ class Molecule extends MoleculeStructure
         );
 
         // User remainder atom
-        $this->addUserRemainderAtom ( $this->remainderWallet );
+        $this->addUserRemainderAtom ();
 
         $this->atoms = Atom::sortAtoms( $this->atoms );
 
