@@ -22,6 +22,7 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
+use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryAuthentication;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -164,12 +165,13 @@ class KnishIOClient
 
 
 	/**
-	 * @param $class
+	 * @param null $class
 	 * @return mixed
 	 */
-	public function createQuery ( $class )
+	public function createQuery ( $class = null, $query = null )
     {
-		return new $class( $this->client, $this->url );
+		$class = $class ?? Query::class;
+		return new $class( $this->client, $this->url, $query );
 	}
 
 
