@@ -479,7 +479,7 @@ class KnishIOClient
 	public function authentication ( $secret, $cell_slug = null )
 	{
 		// Set a secret
-		$this->secret = $secret;
+		$this->setSecret( $secret );
 
 		// Set a cell slug
 		$this->cellSlug = $cell_slug;
@@ -518,6 +518,16 @@ class KnishIOClient
 
 		return $this->secret;
 	}
+
+
+	/**
+	 * @param string $secret
+	 */
+	public function setSecret( string $secret )
+	{
+		$this->secret = $secret;
+	}
+
 
 
 
