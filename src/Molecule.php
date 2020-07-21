@@ -87,10 +87,23 @@ class Molecule extends MoleculeStructure
 
 	/**
 	 * Source wallet
+	 *
+	 * @return mixed
 	 */
 	public function sourceWallet ()
 	{
 		return $this->sourceWallet;
+	}
+
+
+	/**
+	 * Remainder wallet
+	 *
+	 * @return Wallet|WalletShadow|null
+	 */
+	public function remainderWallet ()
+	{
+		return $this->remainderWallet;
 	}
 
 
