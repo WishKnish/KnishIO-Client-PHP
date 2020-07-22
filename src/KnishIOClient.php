@@ -498,7 +498,6 @@ class KnishIOClient
 
 		// Not authorized: throw an exception
 		else {
-			dd ($response);
 			throw new UnauthenticatedException($response->reason());
 		}
 
