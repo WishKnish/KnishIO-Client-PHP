@@ -18,8 +18,6 @@ class QueryTokenReceive extends QueryMoleculePropose
 {
 
     /**
-     * @param string $secret
-     * @param Wallet $sourceWallet
      * @param string $token
      * @param $value
      * @param string $metaType

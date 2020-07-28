@@ -8,7 +8,6 @@ namespace WishKnish\KnishIO\Client\Query;
 
 
 use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 
 /**
  * Class QueryWalletBundle

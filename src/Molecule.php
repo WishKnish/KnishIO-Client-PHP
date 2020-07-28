@@ -11,7 +11,6 @@ use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
-use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
@@ -46,19 +45,26 @@ class Molecule extends MoleculeStructure
 	}
 
 
-
-	/**
-	 * Molecule constructor.
-	 * @param null|string $cellSlug
-	 */
-	public function __construct ( $secret, $sourceWallet, $remainderWallet = null, $cellSlug = null )
+    /**
+     * Molecule constructor.
+     * @param $secret
+     * @param $sourceWallet
+     * @param null $remainderWallet
+     * @param null $cellSlug
+     * @throws Exception
+     */
+	public function __construct ( $secret, $sourceWallet = null, $remainderWallet = null, $cellSlug = null )
 	{
 		parent::__construct( $cellSlug );
 
 		$this->secret = $secret;
 		$this->sourceWallet = $sourceWallet;
-		$this->remainderWallet = $remainderWallet ??
-			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+
+		if ( $remainderWallet || $sourceWallet ) {
+            $this->remainderWallet = $remainderWallet ?:
+                Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+        }
+
 
 		$this->clear();
 	}
@@ -564,8 +570,6 @@ class Molecule extends MoleculeStructure
 	/**
 	 * Initialize an M-type molecule with the given data
 	 *
-	 * @param Wallet $wallet
-	 * @param Wallet $userRemainderWallet
 	 * @param array $meta
 	 * @param string $metaType
 	 * @param string|integer $metaId
@@ -649,7 +653,6 @@ class Molecule extends MoleculeStructure
 	}
 
     /**
-     * @param Wallet $userRemainderWallet,
      * @param string $token
      * @param int|float $amount
      * @param string $metaType

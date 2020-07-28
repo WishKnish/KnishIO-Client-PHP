@@ -6,9 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\WalletShadowException;
-use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 /**
  * Class ResponseMetaType
@@ -17,7 +14,6 @@ use WishKnish\KnishIO\Client\WalletShadow;
 class ResponseMetaType extends Response
 {
 	protected $dataKey = 'data.MetaType';
-
 
 
 }

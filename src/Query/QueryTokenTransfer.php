@@ -6,9 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseTokenTransfer;
 use WishKnish\KnishIO\Client\Wallet;
 
 
@@ -20,11 +17,8 @@ class QueryTokenTransfer extends QueryMoleculePropose
 {
 
 	/**
-	 * @param Wallet $fromWallet
 	 * @param Wallet $toWallet
-	 * @param $token
 	 * @param $amount
-	 * @param Wallet|null $remainderWallet
 	 * @throws \Exception
 	 */
 	public function fillMolecule ( Wallet $toWallet, $amount )
@@ -33,6 +27,5 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		$this->molecule->sign();
 		$this->molecule->check( $this->molecule->sourceWallet() );
 	}
-
 
 }

@@ -16,5 +16,4 @@ class ResponseWalletBundle extends Response
 	protected $dataKey = 'data.WalletBundle';
 
 
-
 }

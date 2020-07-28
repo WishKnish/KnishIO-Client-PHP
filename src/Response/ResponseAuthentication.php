@@ -2,6 +2,8 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+
 /**
  * Class ResponseAuthentication
  * @package WishKnish\KnishIO\Client\Response
@@ -28,7 +30,7 @@ class ResponseAuthentication extends ResponseMolecule
 	 * Token
 	 */
 	public function token () {
-		return $this->payloadKey('token');
+		return $this->payloadKey('token' );
 	}
 
 
@@ -36,7 +38,7 @@ class ResponseAuthentication extends ResponseMolecule
 	 * @return mixed
 	 */
 	public function time () {
-		return $this->payloadKey('time');
+		return $this->payloadKey( 'time' );
 	}
 
 }
