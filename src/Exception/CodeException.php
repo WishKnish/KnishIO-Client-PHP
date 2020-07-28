@@ -14,7 +14,7 @@ class CodeException extends BaseException
 	 * @param int $code
 	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'Code exception', $code = 1, \Throwable $previous = null )
+	public function __construct ( $message = 'Code exception', $code = 1, $previous = null )
 	{
 		parent::__construct( $message, $code, $previous );
 	}

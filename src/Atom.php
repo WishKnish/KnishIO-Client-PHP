@@ -28,8 +28,6 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
- * @property string|null $pubkey
- * @property string|null $characters
  * @property integer|null $index
  * @property string|null $otsFragment
  * @property integer $createdAt
@@ -48,8 +46,6 @@ class Atom
 	public $metaType;
 	public $metaId;
 	public $meta = [];
-    public $pubkey;
-    public $characters;
 	public $index;
 	public $otsFragment;
 	public $createdAt;
@@ -81,8 +77,6 @@ class Atom
         $metaType = null,
         $metaId = null,
         array $meta = null,
-        $pubkey = null,
-        $characters = null,
         $otsFragment = null,
         $index = null
     )
@@ -97,8 +91,6 @@ class Atom
 		$this->metaType = $metaType;
 		$this->metaId = $metaId;
 		$this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
-        $this->pubkey = $pubkey;
-        $this->characters = $characters;
 
 		$this->index = $index;
 		$this->otsFragment = $otsFragment;
@@ -127,7 +119,7 @@ class Atom
 					$name = $property->getName();
 
 					// Old atoms support (without batch_id field)
-					if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
+					if ( $value === null && in_array( $name, [ 'batchId', ], true ) ) {
 						 continue;
 					}
 

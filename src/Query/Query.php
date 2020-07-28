@@ -10,8 +10,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use function GuzzleHttp\json_encode;
 
 /**
@@ -25,29 +26,25 @@ abstract class Query
      */
 	protected $client;
 
-    /**
-     * @var string|null
-     */
-	protected $url;
-
-
 	/**
 	 * @var Request
 	 */
 	protected $request;
-
 
 	/**
 	 * @var Response
 	 */
 	protected $response;
 
-
     /**
      * @var array|null
      */
 	protected $variables;
 
+    /**
+     * @var KnishIOClient
+     */
+	protected $knishIO;
 
     /**
      * @var string
@@ -55,16 +52,13 @@ abstract class Query
 	protected static $query;
 
 
-
 	/**
 	 * Query constructor.
-	 * @param Client $client
-	 * @param string|null $url
+	 * @param KnishIOClient $knishIO
 	 */
-	public function __construct ( HttpClientInterface $client, $url = null )
+	public function __construct ( KnishIOClient $knishIO )
 	{
-		$this->url = $url;
-		$this->client = $client;
+	    $this->knishIO = $knishIO;
 	}
 
 
@@ -86,7 +80,6 @@ abstract class Query
 	}
 
 
-
 	/**
 	 * Create new request
 	 *
@@ -94,7 +87,7 @@ abstract class Query
 	 * @param array|null $fields
 	 * @return RequestInterface
 	 */
-	public function createRequest ( array $variables = null, array $fields = null ) : RequestInterface {
+	public function createRequest ( array $variables = null, array $fields = null ) {
 
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
@@ -102,18 +95,26 @@ abstract class Query
 		// Create a request
 		return new Request(
 			'POST',
-			$this->url,
+			$this->url(),
 			[ 'Content-Type' => 'application/json' ],
-			json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
+			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
 		);
 
 	}
 
 
+    /**
+     * @return HttpClient
+     */
+	public function client ()
+    {
+        return $this->knishIO->client();
+    }
+
 
 	/**
 	 * @param array|null $variables
-     * @param boolean $request
+     * @param array $fields
 	 * @return mixed
 	 */
 	public function execute ( array $variables = null, array $fields = null ) {
@@ -122,7 +123,12 @@ abstract class Query
 		$this->request = $this->createRequest( $variables, $fields );
 
 		// Make a request
-		$response = $this->client->send( $this->request );
+		$response = $this->client()->send( $this->request );
+
+		if ( !( $this instanceof QueryAuthentication ) && $response->getStatusCode() === 401 ) {
+            $this->knishIO->authentication();
+            $response = $this->client()->send( $this->request );
+        }
 
 		// Create & save a response
 		$this->response = $this->createResponseRaw( $response );
@@ -205,7 +211,7 @@ abstract class Query
 	 */
 	public function url ()
     {
-		return $this->url;
+		return $this->knishIO->url();
 	}
 
 	/**

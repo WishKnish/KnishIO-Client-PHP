@@ -39,6 +39,7 @@ class Response
 
 	/**
 	 * Response constructor.
+     * @param Query $query
 	 * @param string $json
 	 */
 	public function __construct ( Query $query, $json )
@@ -54,7 +55,6 @@ class Response
 
 		// No-json response - error
 		if ( $this->response === null ) {
-			dd ($this->origin_response);
 			throw new InvalidResponseException();
 		}
 

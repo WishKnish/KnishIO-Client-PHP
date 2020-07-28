@@ -93,6 +93,10 @@ class CheckMolecule
 	 */
     public static function continuId ( MoleculeStructure $molecule )
     {
+    	// Temporarily disabling ContiunuID check (can't get a 'components.atom.continuID_enabled' config value from the client)
+		return true;
+
+
         static::missing( $molecule );
 
         /** @var Atom $atom */
@@ -295,14 +299,33 @@ class CheckMolecule
 
 		static::missing( $molecule );
 
-		// Select all atoms V
-		if ( empty( static::isotopeFilter( 'V', $molecule->atoms ) ) ) {
-			return true;
-		}
+		$isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
 
-		// Grabbing the first atom
+        // Select all atoms V
+		if ( empty( $isotopeV ) ) {
+            return true;
+        }
+
+        // Grabbing the first atom
         /** @var Atom $firstAtom */
-		$firstAtom = reset( $molecule->atoms );
+        $firstAtom = reset( $molecule->atoms );
+
+		// if there are only two atoms, then this is the burning of tokens
+		if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+
+            /** @var Atom $endAtom */
+            $endAtom = end( $isotopeV );
+
+            if ( $firstAtom->token !== $endAtom->token ) {
+                throw new TransferMismatchedException();
+            }
+
+            if ( $endAtom->value < 0 ) {
+                throw new TransferMalformedException();
+            }
+
+            return true;
+        }
 
 		// Looping through each V-isotope atom
 		$sum = 0.0;

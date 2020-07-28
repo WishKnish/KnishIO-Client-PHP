@@ -6,12 +6,10 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use GuzzleHttp\Client;
-use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
-use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class QueryMoleculePropose
@@ -48,12 +46,12 @@ class QueryMoleculePropose extends Query
 
 	/**
 	 * Query constructor.
-	 * @param Client $client
-	 * @param string|null $url
+	 * @param KnishIOClient $knishIO
+	 * @param $molecule
 	 */
-	public function __construct ( HttpClientInterface $client, $molecule, $url = null )
+	public function __construct ( KnishIOClient $knishIO, Molecule $molecule )
 	{
-		parent::__construct($client, $url);
+		parent::__construct( $knishIO );
 
 		// Create a molecule
 		$this->molecule = $molecule;
@@ -75,9 +73,9 @@ class QueryMoleculePropose extends Query
 
 
 	/**
-	 * @return mixed
+	 * @return Molecule
 	 */
-	public function molecule () : Molecule
+	public function molecule ()
 	{
 		return $this->molecule;
 	}

@@ -2,7 +2,6 @@
 
 namespace WishKnish\KnishIO\Client\Exception;
 
-use Throwable;
 
 /**
  * Class MolecularHashMismatchException
@@ -19,9 +18,9 @@ class MolecularHashMismatchException extends BaseException
 	 * MolecularHashMismatchException constructor.
 	 * @param string $message
 	 * @param int $code
-	 * @param Throwable|null $previous
+	 * @param \Throwable|null $previous
 	 */
-	public function __construct ( $message = 'The molecular hash does not match', $code = 1, Throwable $previous = null )
+	public function __construct ( $message = 'The molecular hash does not match', $code = 1, $previous = null )
 	{
 		parent::__construct( $message, $code, $previous );
 	}
