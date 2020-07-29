@@ -73,6 +73,26 @@ class MoleculeStructure {
 	}
 
 
+
+
+
+	/**
+	 * @param array $data
+	 * @return static
+	 */
+	public static function toObject ( array $data )
+	{
+		$object = static::arrayToObject( $data );
+		foreach ( $object->atoms as $key => $atom_data ) {
+			$atom = new Atom( $atom_data['position'], $atom_data['walletAddress'], $atom_data['isotope'] );
+			$object->atoms[$key] = Atom::arrayToObject( $atom_data, $atom );
+		}
+		$object->atoms = Atom::sortAtoms( $object->atoms );
+		return $object;
+	}
+
+
+
 	/**
 	 * @param string $string
 	 * @return object
