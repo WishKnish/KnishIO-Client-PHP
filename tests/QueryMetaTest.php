@@ -133,11 +133,11 @@ class QueryMetaTest extends TestCase
 	 */
 	protected function createMetas ($meta_type, $meta_id, $metas_array)
 	{
-		$molecule = new Molecule();
+		$molecule = $this->client( $this->source_secret )->createMolecule();
 		foreach ($metas_array as $metas) {
-			$molecule->initMeta(new Wallet ($this->source_secret), new Wallet ($this->source_secret), $metas, $meta_type, $meta_id);
+			$molecule->initMeta( $metas, $meta_type, $meta_id );
 		}
-		$molecule->sign($this->source_secret);
+		$molecule->sign();
 		$molecule->check();
 		$this->executeProposeMolecule($molecule);
 	}
@@ -563,8 +563,8 @@ class QueryMetaTest extends TestCase
 	protected function executeProposeMolecule ($molecule) {
 
 		// Execute query & check response
-		$query = new QueryMoleculePropose($this->guzzle_client);
-		$response = $query->execute(['molecule' => $molecule]);
+		$query = new QueryMoleculePropose( $this->guzzle_client, $molecule );
+		$response = $query->execute();
 		$this->checkResponse ($response);
 	}
 

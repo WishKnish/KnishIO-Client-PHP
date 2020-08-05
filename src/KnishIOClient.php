@@ -6,7 +6,14 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use ArrayObject;
 use Exception;
+use GuzzleHttp\Client;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Handler\CurlMultiHandler;
+use Psr\Http\Message\RequestInterface;
+use GuzzleHttp\Exception\RequestException;
+use Psr\Http\Message\ResponseInterface;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
@@ -15,6 +22,7 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
+use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryAuthentication;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -38,7 +46,12 @@ class KnishIOClient
 {
 
     /**
-     * @var HttpClient
+     * @var string
+     */
+	private $url;
+
+    /**
+     * @var Client
      */
 	private $client;
 
@@ -71,7 +84,8 @@ class KnishIOClient
 	 */
 	public function __construct ( $url, HttpClientInterface $client = null )
 	{
-        $this->client = default_if_null( $client, new HttpClient( $url ) );
+        $this->url = $url;
+        $this->client = default_if_null( $client, new HttpClient($url) );
 	}
 
 
@@ -80,7 +94,7 @@ class KnishIOClient
 	 */
 	public function url ()
 	{
-		return $this->client->getUrl();
+		return $this->url;
 	}
 
 
@@ -88,14 +102,14 @@ class KnishIOClient
 	 * @todo unify code with url & setUrl functions
 	 * @param $url
 	 */
-	public function setUrl ( $url )
-    {
+	public function setUrl ($url) {
+		$this->url = $url;
 		$this->client->setUrl($url);
 	}
 
 
 	/**
-	 * @return string|null
+	 * @return string
 	 */
 	public function cellSlug ()
 	{
@@ -113,7 +127,7 @@ class KnishIOClient
 
 
 	/**
-	 * @return HttpClient
+	 * @return Client|mixed
 	 */
 	public function client ()
 	{
@@ -122,7 +136,6 @@ class KnishIOClient
 
 
 	/**
-     * @param null $secret
 	 * @param null $sourceWallet
 	 * @param null $remainderWallet
 	 * @return Molecule
@@ -131,7 +144,7 @@ class KnishIOClient
 	public function createMolecule ( $secret = null, $sourceWallet = null, $remainderWallet = null )
 	{
 		// Secret
-		$secret = $secret ?: $this->secret();
+		$secret = $secret ?? $this->secret();
 
 		// Is source wallet passed & has a last success query? Update a source wallet with a remainder one
 		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response()->success() ) {
@@ -144,7 +157,7 @@ class KnishIOClient
 		}
 
 		// Remainder wallet
-		$this->remainderWallet = $remainderWallet ?:
+		$this->remainderWallet = $remainderWallet ??
 			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
 
 		return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
@@ -152,28 +165,28 @@ class KnishIOClient
 
 
 	/**
-	 * @param $class
+	 * @param null $class
 	 * @return mixed
 	 */
-	public function createQuery ( $class )
+	public function createQuery ( $class = null, $query = null )
     {
-		return new $class( $this );
+		$class = $class ?? Query::class;
+		return new $class( $this->client, $this->url, $query );
 	}
 
 
-    /**
-     * @param $class
-     * @param Molecule|null $molecule
-     * @return mixed
-     * @throws Exception
-     */
+	/**
+	 * @param $class
+	 * @param Molecule|null $molecule
+	 * @return mixed
+	 */
 	public function createMoleculeQuery ( $class, Molecule $molecule = null )
 	{
 		// Init molecule
-		$molecule = $molecule ?: $this->createMolecule();
+		$molecule = $molecule ?? $this->createMolecule();
 
 		// Create base query
-		$query = new $class ( $this, $molecule );
+		$query = new $class ( $this->client, $molecule, $this->url );
 
 		// Only instances of QueryMoleculePropose supported
 		if ( !$query instanceof QueryMoleculePropose ) {
@@ -211,6 +224,7 @@ class KnishIOClient
 
 
     /**
+     * @param string $secret
      * @param string $token
      * @param int|float $amount
      * @param array $metas
@@ -241,6 +255,7 @@ class KnishIOClient
 
 
 	/**
+	 * @param string $secret
 	 * @param string $token
 	 * @param int|float $value
 	 * @param Wallet|string $to wallet address OR bundle
@@ -296,6 +311,7 @@ class KnishIOClient
 
 
     /**
+     * @param string $secret
      * @param $type
      * @param $contact
      * @param $code
@@ -369,6 +385,7 @@ class KnishIOClient
 
 
 	/**
+	 * @param string $fromSecret
 	 * @param string|Wallet $to
 	 * @param string $token
 	 * @param int|float $amount
@@ -421,8 +438,7 @@ class KnishIOClient
 	 * @return Wallet
 	 * @throws Exception
 	 */
-	public function getSourceWallet ( )
-    {
+	public function getSourceWallet ( ) {
 
 		// Has a ContinuID wallet?
 		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
@@ -457,17 +473,16 @@ class KnishIOClient
 
 
     /**
-     * @param string|null $secret
-     * @param string|null $cell_slug
-     * @return mixed|Response
-     */
-	public function authentication ( $secret = null, $cell_slug = null )
+	 * @param string $secret
+	 * @throws Exception
+	 */
+	public function authentication ( $secret, $cell_slug = null )
 	{
 		// Set a secret
-		$this->secret = $secret ?: $this->secret();
+		$this->setSecret( $secret );
 
 		// Set a cell slug
-		$this->cellSlug = $cell_slug ?: $this->cellSlug();
+		$this->cellSlug = $cell_slug;
 
 		// Create query & fill a molecule
 		$query = $this->createMoleculeQuery( QueryAuthentication::class );
@@ -502,5 +517,17 @@ class KnishIOClient
 
 		return $this->secret;
 	}
+
+
+	/**
+	 * @param string $secret
+	 */
+	public function setSecret( string $secret )
+	{
+		$this->secret = $secret;
+	}
+
+
+
 
 }
