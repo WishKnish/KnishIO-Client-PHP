@@ -91,4 +91,25 @@ class MoleculeStructure {
 		return $object;
 	}
 
+	/**
+	 * @param Molecule $molecule
+	 * @param Wallet $senderWallet
+	 * @return bool
+	 * @throws ReflectionException|Exception
+	 */
+	public static function verify ( MoleculeStructure $molecule, Wallet $senderWallet = null )
+	{
+
+		return CheckMolecule::molecularHash( $molecule )
+			&& CheckMolecule::ots( $molecule )
+			&& CheckMolecule::index( $molecule )
+			&& CheckMolecule::isotopeM( $molecule )
+			&& CheckMolecule::isotopeC( $molecule )
+			&& CheckMolecule::isotopeT( $molecule )
+			&& CheckMolecule::isotopeI( $molecule )
+			&& CheckMolecule::isotopeU( $molecule )
+			&& CheckMolecule::continuId( $molecule )
+			&& CheckMolecule::isotopeV( $molecule, $senderWallet );
+	}
+
 }
