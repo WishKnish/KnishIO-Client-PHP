@@ -14,7 +14,6 @@ use ReflectionException;
 use ReflectionProperty;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
-use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class Atom
@@ -169,8 +168,6 @@ class Atom
 			}
 		}
 
-		TimeLogger::begin('Atom::hashAtoms@squeeze');
-
 		switch ( $output ) {
 			case 'hex':
 			{
@@ -192,8 +189,6 @@ class Atom
 				$target = null;
 			}
 		}
-
-		TimeLogger::end('Atom::hashAtoms@squeeze');
 
 		return $target;
 	}

@@ -14,7 +14,6 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Libraries\Base58;
-use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class Wallet
@@ -114,15 +113,11 @@ class Wallet
 	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64, $characters = null )
 	{
 
-		TimeLogger::begin('ClientWallet::__construct@position');
 		$this->position = $position ?: Strings::randomString( $saltLength );
-		TimeLogger::end('ClientWallet::__construct@position');
 
 		$this->token = $token;
 
-		TimeLogger::begin('ClientWallet::__construct@characters');
         $this->characters = $characters; //defined(Base58::class . '::' . $characters ) ? $characters : null;
-		TimeLogger::end('ClientWallet::__construct@characters');
 
 		if ( $secret ) {
 
