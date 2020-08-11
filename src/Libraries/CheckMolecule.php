@@ -3,7 +3,6 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
@@ -23,6 +22,7 @@ use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
@@ -457,11 +457,7 @@ class CheckMolecule
 			$workingChunk = $otsChunk;
 
 			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $index ]; $iterationCount < $condition; $iterationCount++ ) {
-				$workingChunk = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingChunk )
-						->squeeze( 64 )
-				);
+				$workingChunk = bin2hex( Shake256::hash( $workingChunk, 64 ) );
 			}
 
 			$keyFragments .= $workingChunk;
@@ -472,9 +468,7 @@ class CheckMolecule
 		TimeLogger::begin('CheckMolecule::ots@$digest');
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
 		$digest = bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( $keyFragments )
-				->squeeze( 1024 )
+			Shake256::hash( $keyFragments, 1024 )
 		);
 		TimeLogger::end('CheckMolecule::ots@$digest');
 
@@ -482,9 +476,7 @@ class CheckMolecule
 		TimeLogger::begin('CheckMolecule::ots@$address');
 		// Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
 		$address = bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( $digest )
-				->squeeze( 32 )
+			Shake256::hash( $digest, 32 )
 		);
 		TimeLogger::end('CheckMolecule::ots@$address');
 
