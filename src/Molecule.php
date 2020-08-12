@@ -685,9 +685,7 @@ class Molecule extends MoleculeStructure
 			for ( $iterationCount = 0, $condition = 8 - $normalizedHash[ $idx ]; $iterationCount < $condition; $iterationCount++ ) {
 
 				$workingChunk = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingChunk )
-						->squeeze( 64 )
+					Crypto\Shake256::hash( $workingChunk, 64 )
 				);
 			}
 

@@ -12,6 +12,7 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -114,7 +115,7 @@ class Atom
 	public static function hashAtoms ( array $atoms, $output = 'base17' )
 	{
 		$atomList = static::sortAtoms( $atoms );
-		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
+		$molecularSponge = Shake256::init();
 		$numberOfAtoms = count( $atomList );
 
 		foreach ( $atomList as $atom ) {

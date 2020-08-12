@@ -74,7 +74,7 @@ class DesktopdSha3
 				return new self (1088, 512, 0x1f);
 		}
 
-		throw new Exception ('Invalid operation type');
+		throw new \Exception ('Invalid operation type');
 	}
 
 
@@ -84,7 +84,7 @@ class DesktopdSha3
 	public function absorb($data)
 	{
 		if (self::PHASE_INPUT != $this->phase) {
-			throw new Exception ('No more input accepted');
+			throw new \Exception ('No more input accepted');
 		}
 
 		$rateInBytes = $this->rateInBytes;
@@ -118,7 +118,7 @@ class DesktopdSha3
 	{
 		$outputLength = $this->outputLength; // fixed length output
 		if ($length && 0 < $outputLength && $outputLength != $length) {
-			throw new Exception ('Invalid length');
+			throw new \Exception ('Invalid length');
 		}
 
 		if (self::PHASE_INPUT == $this->phase) {
@@ -126,7 +126,7 @@ class DesktopdSha3
 		}
 
 		if (self::PHASE_OUTPUT != $this->phase) {
-			throw new Exception ('No more output allowed');
+			throw new \Exception ('No more output allowed');
 		}
 		if (0 < $outputLength) {
 			$this->phase = self::PHASE_DONE;
@@ -232,8 +232,14 @@ class DesktopdSha3
 	/**
 	 * 1600-bit state version of Keccak's permutation
 	 */
-	protected static function keccakF1600Permute($state)
+	public static function keccakF1600Permute($state)
 	{
+		// !!! --- Check function from the ext
+		if ( false && function_exists( 'keccakF1600Permute' ) ) {
+			return keccakF1600Permute( $state );
+		}
+		// !!! ---
+
 		$lanes = str_split($state, 8);
 		$R = 1;
 		$values = "\1\2\4\10\20\40\100\200";
