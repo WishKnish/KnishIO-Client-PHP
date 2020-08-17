@@ -22,13 +22,6 @@ class Shake256 {
 	 */
 	public static function hash ( $data, $length ) {
 
-
-		/*
-		return DesktopdSha3::init( DesktopdSha3::SHAKE256 )
-			->absorb( $data )
-			->squeeze( $length );
-		*/
-
 		if ( function_exists( 'shake256' ) ) {
 			return shake256( $data, $length * 8, true );
 		}
@@ -45,7 +38,7 @@ class Shake256 {
 	 */
 	public static function init ()
 	{
-		return SHA3::init( SHA3::SHAKE256 );
+		// return SHA3::init( SHA3::SHAKE256 );
 
 		return DesktopdSha3::init( DesktopdSha3::SHAKE256 );
 	}

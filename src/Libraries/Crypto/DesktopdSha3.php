@@ -5,6 +5,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 /* -*- coding: utf-8; indent-tabs-mode: t; tab-width: 4 -*-
 vim: ts=4 noet ai */
 
+
 /**
  * Streamable SHA-3 for PHP 5.2+, with no lib/ext dependencies!
  *
@@ -235,7 +236,7 @@ class DesktopdSha3
 	public static function keccakF1600Permute($state)
 	{
 		// !!! --- Check function from the ext
-		if ( false && function_exists( 'keccakF1600Permute' ) ) {
+		if ( function_exists( 'keccakF1600Permute' ) ) {
 			return keccakF1600Permute( $state );
 		}
 		// !!! ---
