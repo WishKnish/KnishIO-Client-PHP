@@ -11,9 +11,20 @@ use desktopd\SHA3\Sponge as SHA3;
  */
 class Shake256 {
 
+	protected static $useExt = true;
+
 
 	/**
-	 * Hash bridge
+	 * @return bool
+	 */
+	public static function usingExt() : bool
+	{
+		return static::$useExt && function_exists( 'shake256' );
+	}
+
+
+	/**
+	 * Shake256 hashing
 	 *
 	 * @param $data
 	 * @param $length
@@ -22,8 +33,9 @@ class Shake256 {
 	 */
 	public static function hash ( $data, $length ) {
 
-		if ( function_exists( 'shake256' ) ) {
-			return shake256( $data, $length * 8, true );
+		// Using sha3 php extension
+		if ( static::usingExt() ) {
+			return shake256( $data, $length, true );
 		}
 
 		return SHA3::init( SHA3::SHAKE256 )
@@ -34,13 +46,17 @@ class Shake256 {
 
 
 	/**
-	 * @return DesktopdSha3
+	 * @return SHA3|DesktopdSha3
+	 * @throws \Exception
 	 */
 	public static function init ()
 	{
-		// return SHA3::init( SHA3::SHAKE256 );
+		// Using sha3 php extension
+		if ( static::$useExt ) {
+			return DesktopdSha3::init( DesktopdSha3::SHAKE256 );
+		}
 
-		return DesktopdSha3::init( DesktopdSha3::SHAKE256 );
+		return SHA3::init(SHA3::SHAKE256);
 	}
 
 }
