@@ -170,7 +170,13 @@ class KnishIOClient
 	public function createMoleculeQuery ( $class, Molecule $molecule = null )
 	{
 		// Init molecule
-		$molecule = $molecule ?: $this->createMolecule();
+		if ( $molecule === null ) {
+
+            $molecule = ( $class === QueryAuthentication::class ) ?
+                $this->createMolecule( $this->secret(), new Wallet( $this->secret(), 'AUTH' ) ) :
+                $this->createMolecule();
+
+        }
 
 		// Create base query
 		$query = new $class ( $this, $molecule );
@@ -423,7 +429,7 @@ class KnishIOClient
 	 */
 	public function getSourceWallet ( )
     {
-
+        return new Wallet( $this->secret(), 'AUTH' );
 		// Has a ContinuID wallet?
 		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
 		if ( !$sourceWallet ) {
