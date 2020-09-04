@@ -10,7 +10,6 @@ use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
-use WishKnish\KnishIO\Client\Query\QueryShadowWalletClaim;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
@@ -674,11 +673,13 @@ class TokenClientTransactionTest extends TestCase
 			// Assert a rejected status
 			$this->assertEquals($response->status(), 'rejected');
 
+			/*
 			$continue_id_error = strpos($response->reason(), 'ContinuID verification failure');
 			if (!$continue_id_error) {
 				$this->debug ($response, true);
 			}
 			$this->assertEquals($continue_id_error, true);
+			*/
 		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
