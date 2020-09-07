@@ -134,7 +134,7 @@ class KnishIOClient
 		$secret = $secret ?: $this->secret();
 
 		// Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response()->success() ) {
+		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery->response()->success() ) {
 			$sourceWallet = $this->remainderWallet;
 		}
 
@@ -429,7 +429,6 @@ class KnishIOClient
 	 */
 	public function getSourceWallet ( )
     {
-        return new Wallet( $this->secret(), 'AUTH' );
 		// Has a ContinuID wallet?
 		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
 		if ( !$sourceWallet ) {
