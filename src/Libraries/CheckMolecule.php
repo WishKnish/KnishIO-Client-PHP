@@ -245,9 +245,9 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'U', $molecule->atoms ) as $atom ) {
 
-            if ( $atom->token !== 'AUTH' ) {
+            /* if ( $atom->token !== 'AUTH' ) {
                 throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
-            }
+            } */
 
             if ( $atom->index !== 0 ) {
                 throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
