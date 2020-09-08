@@ -12,6 +12,9 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -46,6 +49,8 @@ class Atom
 	public $metaType;
 	public $metaId;
 	public $meta = [];
+    public $pubkey;
+    public $characters;
 	public $index;
 	public $otsFragment;
 	public $createdAt;
@@ -119,7 +124,7 @@ class Atom
 					$name = $property->getName();
 
 					// Old atoms support (without batch_id field)
-					if ( $value === null && in_array( $name, [ 'batchId', ], true ) ) {
+					if ( $value === null && in_array( $name, [ 'batchId', 'characters', 'pubkey', ], true ) ) {
 						 continue;
 					}
 
@@ -138,7 +143,6 @@ class Atom
                                 $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
 
                             }
-
 						}
 
 						$property->setValue( $atom, $list );
