@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
 use WishKnish\KnishIO\Client\Wallet;
@@ -20,8 +19,7 @@ class QueryTokenCreate extends QueryMoleculePropose
 {
 
     /**
-     * @param $secret
-     * @param $token
+     * @param $recipientWallet
      * @param $amount
      * @param array $metas
      * @throws \ReflectionException

@@ -25,7 +25,6 @@ class QueryLinkIdentifierMutation extends Query
 	protected $fields = [
 		'type',
 		'bundle',
-		'type',
 		'content',
 		'set',
 		'message',

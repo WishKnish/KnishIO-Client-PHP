@@ -12,6 +12,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Traits\Json;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 
 /**
@@ -100,7 +101,16 @@ class MoleculeStructure {
 	public static function jsonToObject ( $string )
 	{
 		$serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-		$object = $serializer->deserialize( $string, static::class, 'json' );
+		$object = $serializer->deserialize(
+		    $string,
+            static::class,
+            'json',
+            [
+                AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [
+                    static::class => [ 'secret' => null, ],
+                ],
+            ]
+        );
 
 		foreach ( $object->atoms as $idx => $atom ) {
 			$object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

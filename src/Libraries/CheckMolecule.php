@@ -207,10 +207,11 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'I', $molecule->atoms ) as $atom ) {
 
+/*
             if ( $atom->token !== 'USER' ) {
                 throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
-
+*/
             if ( $atom->index === 0 ) {
                 throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
             }
@@ -234,9 +235,9 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'U', $molecule->atoms ) as $atom ) {
 
-            if ( $atom->token !== 'USER' ) {
+            /* if ( $atom->token !== 'AUTH' ) {
                 throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
-            }
+            } */
 
             if ( $atom->index !== 0 ) {
                 throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
@@ -288,14 +289,33 @@ class CheckMolecule
 
 		static::missing( $molecule );
 
-		// Select all atoms V
-		if ( empty( static::isotopeFilter( 'V', $molecule->atoms ) ) ) {
-			return true;
-		}
+		$isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
 
-		// Grabbing the first atom
+        // Select all atoms V
+		if ( empty( $isotopeV ) ) {
+            return true;
+        }
+
+        // Grabbing the first atom
         /** @var Atom $firstAtom */
-		$firstAtom = reset( $molecule->atoms );
+        $firstAtom = reset( $molecule->atoms );
+
+		// if there are only two atoms, then this is the burning of tokens
+		if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+
+            /** @var Atom $endAtom */
+            $endAtom = end( $isotopeV );
+
+            if ( $firstAtom->token !== $endAtom->token ) {
+                throw new TransferMismatchedException();
+            }
+
+            if ( $endAtom->value < 0 ) {
+                throw new TransferMalformedException();
+            }
+
+            return true;
+        }
 
 		// Looping through each V-isotope atom
 		$sum = 0.0;

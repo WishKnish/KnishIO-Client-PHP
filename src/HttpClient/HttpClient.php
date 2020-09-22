@@ -3,10 +3,6 @@
 namespace WishKnish\KnishIO\Client\HttpClient;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Handler\CurlMultiHandler;
-use GuzzleHttp\HandlerStack;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
@@ -22,14 +18,16 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 	 */
 	private $xAuthToken;
 
+	protected $url;
 
 	/**
 	 * HttpClient constructor.
+     * @param string $url
 	 * @param array $config
 	 */
-	public function __construct(string $url, array $config = [])
+	public function __construct( $url, array $config = [] )
 	{
-		$this->setUrl($url);
+		$this->setUrl( $url );
 
 		// Merge config
 		$config = array_merge ([
@@ -67,7 +65,6 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 
 	/**
 	 * @param string $authToken
-	 * @throws Exception
 	 */
 	public function setAuthToken ( $authToken )
 	{
@@ -99,6 +96,5 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 		// Send a request
 		return parent::send($request, $options);
 	}
-
 
 }

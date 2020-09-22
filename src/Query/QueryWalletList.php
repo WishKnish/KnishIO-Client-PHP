@@ -7,6 +7,7 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 
+use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 
 
@@ -37,7 +38,7 @@ class QueryWalletList extends Query
 
 	/**
 	 * @param string $response
-	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletList
+	 * @return Response|ResponseWalletList
 	 */
 	public function createResponse ($response) {
 		return new ResponseWalletList($this, $response);

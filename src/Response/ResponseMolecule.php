@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
 /**
@@ -34,7 +33,7 @@ class ResponseMolecule extends Response
 
 
 	/**
-	 * @return Molecule|null
+	 * @return MoleculeStructure|null
 	 */
     public function molecule () {
     	if ( !$data = $this->data() ) {
@@ -45,6 +44,7 @@ class ResponseMolecule extends Response
 		$molecule->molecularHash = array_get($data, 'molecularHash');
 		$molecule->status = array_get($data, 'status');
 		$molecule->createdAt = array_get($data, 'createdAt');
+
         return $molecule;
     }
 

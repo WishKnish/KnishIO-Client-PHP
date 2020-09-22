@@ -12,7 +12,10 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
-use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -29,8 +32,6 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $meta
- * @property string|null $pubkey
- * @property string|null $characters
  * @property integer|null $index
  * @property string|null $otsFragment
  * @property integer $createdAt
@@ -82,8 +83,6 @@ class Atom
         $metaType = null,
         $metaId = null,
         array $meta = null,
-        $pubkey = null,
-        $characters = null,
         $otsFragment = null,
         $index = null
     )
@@ -98,8 +97,6 @@ class Atom
 		$this->metaType = $metaType;
 		$this->metaId = $metaId;
 		$this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
-        $this->pubkey = $pubkey;
-        $this->characters = $characters;
 
 		$this->index = $index;
 		$this->otsFragment = $otsFragment;
@@ -115,7 +112,7 @@ class Atom
 	public static function hashAtoms ( array $atoms, $output = 'base17' )
 	{
 		$atomList = static::sortAtoms( $atoms );
-		$molecularSponge = Shake256::init();
+		$molecularSponge = Crypto\Shake256::init();
 		$numberOfAtoms = count( $atomList );
 
 		foreach ( $atomList as $atom ) {

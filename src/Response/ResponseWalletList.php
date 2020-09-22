@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\WalletShadow;
 
@@ -69,8 +68,5 @@ class ResponseWalletList extends Response
 		// Return a wallets list
 		return $wallets;
 	}
-
-
-
 
 }

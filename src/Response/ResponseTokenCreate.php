@@ -7,7 +7,7 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class ResponsTokenCreate
+ * Class ResponseTokenCreate
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseTokenCreate extends ResponseMolecule
