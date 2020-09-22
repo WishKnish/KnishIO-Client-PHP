@@ -1,5 +1,8 @@
 <?php
 
+use WishKnish\KnishIO\Client\Atom;
+use WishKnish\KnishIO\Client\Molecule;
+
 if ( !function_exists( 'array_unpacking' ) ) {
 
     /**
@@ -100,4 +103,15 @@ if ( !function_exists( 'array_get' ) ) {
 		}
 		return $array;
 	}
+}
+
+if ( !function_exists( 'get_signed_atom' ) ) {
+    /**
+     * @param Molecule $molecule
+     * @return Atom|null
+     */
+    function get_signed_atom ( Molecule $molecule ) {
+        return array_get( $molecule->atoms, '0' );
+    }
+
 }

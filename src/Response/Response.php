@@ -6,9 +6,11 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Exception\DecryptException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
+use WishKnish\KnishIO\Client\Query\QueryAuthentication;
 
 /**
  * Class Response
@@ -36,12 +38,18 @@ class Response
      */
 	protected $dataKey;
 
+    /**
+     * @var string
+     */
+    protected $origin_response;
 
-	/**
-	 * Response constructor.
+
+    /**
+     * Response constructor.
      * @param Query $query
-	 * @param string $json
-	 */
+     * @param string $json
+     * @throws \Exception
+     */
 	public function __construct ( Query $query, $json )
 	{
 		// Set a query
@@ -59,10 +67,10 @@ class Response
 		}
 
 		// Catch exceptions
-		if (array_has ($this->response, 'exception') ) {
+		if ( array_has( $this->response, 'exception' ) ) {
 
 			// Exception error
-			$message = array_get($this->response, 'message');
+			$message = array_get( $this->response, 'message' );
 
 			// Custom exceptions
 			if ( stripos( $message, 'Unauthenticated' ) !== false ) {
@@ -72,6 +80,20 @@ class Response
 			// Default exception
 			throw new InvalidResponseException( $message );
 		}
+
+		if ( !( $query instanceof QueryAuthentication ) ) {
+            $wallet = $query->getKnishIOClient()->getAuthorizationWallet();
+
+            if ( $wallet === null ) {
+                throw new UnauthenticatedException();
+            }
+
+            $this->response = $wallet->decryptMyMessage( $this->response );
+
+		    if ( $this->response === null ) {
+                throw new DecryptException();
+            }
+        }
 
 		$this->init ();
 	}
@@ -92,7 +114,6 @@ class Response
 	 */
 	public function data ()
     {
-
 		// For the root class
 		if ( !$this->dataKey ) {
 			return $this->response;

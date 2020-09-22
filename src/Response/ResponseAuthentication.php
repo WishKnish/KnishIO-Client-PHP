@@ -34,6 +34,15 @@ class ResponseAuthentication extends ResponseMolecule
 	}
 
 
+    /**
+     * @return string
+     */
+	public function pubkey ()
+    {
+        return $this->payloadKey('pubkey' );
+    }
+
+
 	/**
 	 * @return mixed
 	 */

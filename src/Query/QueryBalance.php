@@ -17,9 +17,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 class QueryBalance extends Query
 {
 	// Query
-	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
-	 	@fields
-	 }';
+	protected static $query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position ) @fields }';
 
 	// Fields
 	protected $fields = [
@@ -33,7 +31,6 @@ class QueryBalance extends Query
 		'pubkey',
 		'createdAt',
 	];
-
 
 
 	/**

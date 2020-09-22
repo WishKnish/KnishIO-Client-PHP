@@ -12,9 +12,6 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -67,8 +64,6 @@ class Atom
 	 * @param null|string $metaType
 	 * @param null|string $metaId
 	 * @param array $meta
-     * @param string|null $pubkey
-     * @param string|null $characters
 	 * @param null|string $otsFragment
      * @param null|integer $index
 	 */

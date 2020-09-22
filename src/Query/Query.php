@@ -10,6 +10,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use ReflectionException;
+use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -80,13 +82,14 @@ abstract class Query
 	}
 
 
-	/**
-	 * Create new request
-	 *
-	 * @param array|null $variables
-	 * @param array|null $fields
-	 * @return RequestInterface
-	 */
+    /**
+     * Create new request
+     *
+     * @param array|null $variables
+     * @param array|null $fields
+     * @return RequestInterface
+     * @throws ReflectionException
+     */
 	public function createRequest ( array $variables = null, array $fields = null ) {
 
 		// Default value of variables
@@ -97,10 +100,18 @@ abstract class Query
 			'POST',
 			$this->url(),
 			[ 'Content-Type' => 'application/json' ],
-			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
+            $this->getRequestBody( $fields, $this->variables )
 		);
 
 	}
+
+    /**
+     * @return KnishIOClient
+     */
+	public function getKnishIOClient ()
+    {
+        return $this->knishIO;
+    }
 
 
     /**
@@ -112,11 +123,12 @@ abstract class Query
     }
 
 
-	/**
-	 * @param array|null $variables
+    /**
+     * @param array|null $variables
      * @param array $fields
-	 * @return mixed
-	 */
+     * @return mixed
+     * @throws \Exception
+     */
 	public function execute ( array $variables = null, array $fields = null ) {
 
 		// Set a request
@@ -156,21 +168,6 @@ abstract class Query
 			[$this->compiledFields($this->fields)],
 			static::$query
 		);
-	}
-
-
-	/**
-	 * @param array $fields
-	 * @return string
-	 */
-	protected function compiledFields (array $fields)
-	{
-		foreach ($fields as $key => $field) {
-			if (is_array($field) ) {
-				$fields[$key] = $key .' '. $this->compiledFields($field);
-			}
-		}
-		return '{'.implode(', ', $fields).'}';
 	}
 
 
@@ -222,4 +219,41 @@ abstract class Query
 		return $this->variables;
 	}
 
+    /**
+     * @param array $fields
+     * @return string
+     */
+    protected function compiledFields (array $fields)
+    {
+        foreach ($fields as $key => $field) {
+            if (is_array($field) ) {
+                $fields[$key] = $key .' '. $this->compiledFields($field);
+            }
+        }
+        return '{'.implode(', ', $fields).'}';
+    }
+
+    /**
+     * @param array|null $fields
+     * @param array|null $variables
+     * @return string
+     * @throws ReflectionException
+     */
+    protected function getRequestBody ( array $fields = null, array $variables = null )
+    {
+        $return = [ 'query' => $this->compiledQuery( $fields ), 'variables' => $variables, ];
+
+        if ( $this instanceof QueryAuthentication ) {
+            return json_encode( $return );
+        }
+
+        $wallet = $this->knishIO->getAuthorizationWallet();
+        $privkey = $this->knishIO->getServerKey();
+
+        if ( !in_array(null, [ $wallet, $privkey, ], true ) ) {
+            return json_encode( $wallet->encryptMyMessage( $return, $privkey ) );
+        }
+
+        throw new UnauthenticatedException( 'Unauthorized query' );
+    }
 }

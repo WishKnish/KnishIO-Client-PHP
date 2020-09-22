@@ -63,6 +63,16 @@ class KnishIOClient
 	 */
     private $cellSlug;
 
+    /**
+     * @var Wallet
+     */
+    private $authorizationWallet;
+
+    /**
+     * @var string
+     */
+    private $serverKey;
+
 
 	/**
 	 * KnishIOClient constructor.
@@ -291,7 +301,7 @@ class KnishIOClient
 
 		// Create a query
         /** @var QueryTokenReceive $query */
-		$query = $this->createMoleculeQuery(QueryTokenReceive::class);
+		$query = $this->createMoleculeQuery( QueryTokenReceive::class );
 
 		// Init a molecule
 		$query->fillMolecule ( $token, $value, $metaType, $metaId, $metas );
@@ -313,7 +323,7 @@ class KnishIOClient
 
 		// Create & execute a query
         /** @var QueryIdentifierCreate $query */
-		$query = $this->createMoleculeQuery(QueryIdentifierCreate::class);
+		$query = $this->createMoleculeQuery( QueryIdentifierCreate::class );
 
 		// Init a molecule
 		$query->fillMolecule ( $type, $contact, $code );
@@ -329,11 +339,11 @@ class KnishIOClient
 	public function getShadowWallets ( $token ) {
 
 		// --- Get shadow wallet list
-		$query = $this->createQuery(QueryWalletList::class);
-		$response = $query->execute([
+		$query = $this->createQuery( QueryWalletList::class );
+		$response = $query->execute( [
 			'bundleHash'	=> Crypto::generateBundleHash( $this->secret() ),
 			'token'			=> $token,
-		]);
+		] );
 		$shadowWallets = $response->payload();
 
 		// Check shadow wallets
@@ -412,7 +422,7 @@ class KnishIOClient
 
 		// Create a query
         /** @var QueryTokenTransfer $query */
-		$query = $this->createMoleculeQuery(QueryTokenTransfer::class, $molecule);
+		$query = $this->createMoleculeQuery( QueryTokenTransfer::class, $molecule );
 
 		// Init a molecule
 		$query->fillMolecule ( $toWallet, $amount );
@@ -457,7 +467,7 @@ class KnishIOClient
     {
         // Create & execute the query
         return $this->createQuery(QueryContinuId::class )
-			->execute( ['bundle' => $bundleHash] );
+			->execute( [ 'bundle' => $bundleHash ] );
     }
 
 
@@ -465,6 +475,7 @@ class KnishIOClient
      * @param string|null $secret
      * @param string|null $cell_slug
      * @return mixed|Response
+     * @throws Exception
      */
 	public function authentication ( $secret = null, $cell_slug = null )
 	{
@@ -476,6 +487,7 @@ class KnishIOClient
 
 		// Create query & fill a molecule
 		$query = $this->createMoleculeQuery( QueryAuthentication::class );
+
 		$query->fillMolecule();
 
 		// Get a response
@@ -483,7 +495,9 @@ class KnishIOClient
 
 		// If the response is success - set auth token
 		if ( $response->success() ) {
+            $this->authorizationWallet = $this->extractingAuthorizationWallet( $query->molecule() );
 			$this->client->setAuthToken( $response->token() );
+			$this->serverKey = $response->pubkey();
 		}
 
 		// Not authorized: throw an exception
@@ -507,5 +521,33 @@ class KnishIOClient
 
 		return $this->secret;
 	}
+
+    /**
+     * @return Wallet|null
+     */
+	public function getAuthorizationWallet ()
+    {
+        return $this->authorizationWallet;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getServerKey ()
+    {
+        return $this->serverKey;
+    }
+
+    /**
+     * @param Molecule $molecule
+     * @return Wallet|null
+     * @throws Exception
+     */
+	private function extractingAuthorizationWallet ( Molecule $molecule )
+    {
+        $atom = get_signed_atom( $molecule );
+
+       return ( $atom !== null ) ? new Wallet( $this->secret(), $atom->token, $atom->position ) : null;
+    }
 
 }
