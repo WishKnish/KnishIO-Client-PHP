@@ -17,7 +17,6 @@ use WishKnish\KnishIO\Client\Wallet;
 class QueryTokenReceive extends QueryMoleculePropose
 {
 
-
     /**
      * @param string $secret
      * @param Wallet $sourceWallet
@@ -28,20 +27,15 @@ class QueryTokenReceive extends QueryMoleculePropose
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
-	public function initMolecule ($secret, Wallet $sourceWallet, $token, $value, $metaType, $metaId, array $metas = null)
+	public function fillMolecule ( $token, $value, $metaType, $metaId, array $metas = null )
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
-		// Create & sign a molecule
-		$this->molecule = new Molecule();
-		$this->molecule->initTokenTransfer( $sourceWallet, $token, $value, $metaType, $metaId, $metas );
-		$this->molecule->sign( $secret );
-
-
-		// Check the molecule
+		// Fill the molecule
+		$this->molecule->initTokenTransfer( $token, $value, $metaType, $metaId, $metas );
+		$this->molecule->sign();
 		$this->molecule->check();
 	}
-
 
 }

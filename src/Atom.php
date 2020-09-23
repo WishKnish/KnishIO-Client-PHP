@@ -12,6 +12,7 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
 
@@ -114,57 +115,57 @@ class Atom
 	public static function hashAtoms ( array $atoms, $output = 'base17' )
 	{
 		$atomList = static::sortAtoms( $atoms );
-		$molecularSponge = SHA3::init( SHA3::SHAKE256 );
+		$molecularSponge = Shake256::init();
 		$numberOfAtoms = count( $atomList );
 
 		foreach ( $atomList as $atom ) {
+
+			$atom_data = get_object_vars( $atom );
+
 			$molecularSponge->absorb( $numberOfAtoms );
 
-			foreach ( ( new ReflectionClass( $atom ) )->getProperties( ReflectionProperty::IS_PUBLIC ) as $property ) {
+			foreach ( $atom_data as $name => $value ) {
 
-				if ( $property->class === self::class && !$property->isStatic() ) {
-					$value = $property->getValue( $atom );
-					$name = $property->getName();
+				// Old atoms support (without batch_id field)
+				if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
+					 continue;
+				}
 
-					// Old atoms support (without batch_id field)
-					if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
-						 continue;
-					}
+				if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
+					continue;
+				}
 
-					if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
-						continue;
-					}
+				if ( $name === 'meta' ) {
 
-					if ( $name === 'meta' ) {
-						$list = Meta::normalizeMeta( $value );
+					$list = Meta::normalizeMeta( $value );
 
-						foreach ( $list as $meta ) {
+					foreach ( $list as $meta ) {
 
-                            if ( isset( $meta[ 'value' ] ) ) {
+						if ( isset( $meta[ 'value' ] ) ) {
 
-                                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-                                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
-
-                            }
+							$molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+							$molecularSponge->absorb( ( string ) $meta[ 'value' ] );
 
 						}
 
-						$property->setValue( $atom, $list );
-
-						continue;
 					}
 
-					if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+					$atom->$name = $list;
 
-						$molecularSponge->absorb( ( string ) $value );
-						continue;
-					}
-
-					if ( $value !== null ) {
-
-						$molecularSponge->absorb( ( string ) $value );
-					}
+					continue;
 				}
+
+				if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+
+					$molecularSponge->absorb( ( string ) $value );
+					continue;
+				}
+
+				if ( $value !== null ) {
+
+					$molecularSponge->absorb( ( string ) $value );
+				}
+
 			}
 		}
 

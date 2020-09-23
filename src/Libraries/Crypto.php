@@ -9,6 +9,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
  * Class Crypto
@@ -36,10 +37,7 @@ class Crypto
 
 		return in_array( $seed, [ null, '' ], true ) ?
 			Strings::randomString( $length ) :
-			bin2hex( SHA3::init( SHA3::SHAKE256 )
-				->absorb( $seed )
-				->squeeze( $length / 4 ) );
-
+			bin2hex( Shake256::hash( $seed, $length / 4 ) );
 	}
 
 	/**
@@ -52,9 +50,9 @@ class Crypto
 	public static function generateBundleHash ( $secret )
 	{
 
-		return bin2hex( SHA3::init( SHA3::SHAKE256 )
-			->absorb( $secret )
-			->squeeze( 32 ) );
+		return bin2hex(
+			Shake256::hash( $secret, 32 )
+		);
 
 	}
 

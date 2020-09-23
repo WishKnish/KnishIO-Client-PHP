@@ -83,7 +83,7 @@ class Wallet
      * @return Wallet|WalletShadow
      * @throws Exception
      */
-    public static function create ($secretOrBundle, $token, $batchId = null, $characters = null) {
+    public static function create ($secretOrBundle, $token = 'USER', $batchId = null, $characters = null) {
 
     	// Shadow wallet
     	if (static::isBundleHash($secretOrBundle) ) {
@@ -114,8 +114,10 @@ class Wallet
 	{
 
 		$this->position = $position ?: Strings::randomString( $saltLength );
+
 		$this->token = $token;
-        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
+
+        $this->characters = $characters; //defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		if ( $secret ) {
 
@@ -157,8 +159,9 @@ class Wallet
 	 * @param string $code
 	 * @return bool
 	 */
-	public static function isBundleHash ($code) {
-		return (mb_strlen($code) === 64);
+	public static function isBundleHash ( $code )
+    {
+		return ( mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
 	}
 
 
@@ -170,7 +173,7 @@ class Wallet
 	protected static function generateWalletAddress ( $key )
 	{
 
-		$digestSponge = SHA3::init( SHA3::SHAKE256 );
+		$digestSponge = Crypto\Shake256::init();
 
 		foreach ( Strings::chunkSubstr( $key, 128 ) as $idx => $fragment ) {
 
@@ -179,9 +182,7 @@ class Wallet
 			foreach ( range( 1, 16 ) as $_ ) {
 
 				$workingFragment = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingFragment )
-						->squeeze( 64 )
+					Crypto\Shake256::hash( $workingFragment, 64 )
 				);
 
 			}
@@ -191,9 +192,7 @@ class Wallet
 		}
 
 		return bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )
-				->squeeze( 32 )
+			Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 )
 		);
 
 	}
@@ -201,23 +200,23 @@ class Wallet
 
 	/**
 	 * Get a recipient batch ID
-	 * $this is a client sender wallet
 	 *
-	 * @param Wallet $senderWallet
-	 * @param int|float $transferAmount
+	 * @param $senderWallet
+	 * @param $transferAmount
+	 * @param bool $noSplitting
 	 */
-	public function initBatchId ($senderWallet, $transferAmount) {
+	public function initBatchId ($senderWallet, $transferAmount, $noSplitting = false) {
 
-		if ( $senderWallet->batchId ) {
+		if ($senderWallet->batchId) {
 
-			// Has a remainder value (source balance is bigger than a transfer value)
-			if ( !$this->batchId && Decimal::cmp( $senderWallet->balance, $transferAmount ) > 0 ) {
-				$batchId = static::generateBatchId();
+			// No splitting flag /* or transfer without a remainder */: use a sender's batch ID
+			if ($noSplitting /* || Decimal::equal($senderWallet->balance, $transferAmount) */) {
+				$batchId = $senderWallet->batchId;
 			}
 
-			// Has no remainder? use batch ID from the source wallet
+			// Generate new batch ID
 			else {
-				$batchId = $senderWallet->batchId;
+				$batchId = Wallet::generateBatchId();
 			}
 
 			// Set batchID to recipient wallet
@@ -344,7 +343,7 @@ class Wallet
 		$indexedKey = $bigIntSecret->add( new BigInteger( $position, 16 ) );
 
 		// Hashing the indexed key to produce the intermediate key
-		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )
+		$intermediateKeySponge = Crypto\Shake256::init()
 			->absorb( $indexedKey->toString( 16 ) );
 
 		if ( $token !== '' ) {
@@ -356,11 +355,7 @@ class Wallet
 
 		// Hashing the intermediate key to produce the private key
 		return bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex(
-					$intermediateKeySponge
-						->squeeze( 1024 )
-				) )->squeeze( 1024 )
+			Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 )
 		);
 
 	}

@@ -7,31 +7,34 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseTokenTransfer;
 use WishKnish\KnishIO\Client\Wallet;
 
 
 /**
- * Class QueryTokenTransfer
+ * Class QueryShadowWalletClaim
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryTokenTransfer extends QueryMoleculePropose
+class QueryShadowWalletClaim extends QueryMoleculePropose
 {
 
+
 	/**
-	 * @param Wallet $fromWallet
-	 * @param Wallet $toWallet
 	 * @param $token
-	 * @param $amount
-	 * @param Wallet|null $remainderWallet
+	 * @param array $shadowWallets
 	 * @throws \Exception
 	 */
-	public function fillMolecule ( Wallet $toWallet, $amount )
+	public function fillMolecule ( $token, array $shadowWallets )
 	{
-		$this->molecule->initValue( $toWallet, $amount );
+		// Get new client wallets
+		$wallets = [];
+		foreach ($shadowWallets as $shadowWallet) {
+			$wallets[] = Wallet::create( $this->molecule->secret(), $token, $shadowWallet->batchId );
+		}
+
+		// Init shadow wallet claim
+		$this->molecule->initShadowWalletClaimAtom ( $token, $wallets );
 		$this->molecule->sign();
-		$this->molecule->check( $this->molecule->sourceWallet() );
+		$this->molecule->check();
 	}
 
 

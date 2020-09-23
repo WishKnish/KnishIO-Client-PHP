@@ -6,7 +6,6 @@
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
 use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
@@ -16,10 +15,6 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
 class WalletShadow extends Wallet
 {
 
-    /**
-     * @var string|null
-     */
-    private $privkey;
 
     /**
      * WalletShadow constructor.
