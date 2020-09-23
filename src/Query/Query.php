@@ -11,6 +11,7 @@ use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
@@ -42,23 +43,19 @@ abstract class Query
 	protected $variables;
 
     /**
-     * @var KnishIOClient
-     */
-	protected $knishIO;
-
-    /**
      * @var string
      */
-	protected static $query;
+	protected static $default_query;
 
 
 	/**
 	 * Query constructor.
 	 * @param KnishIOClient $knishIO
 	 */
-	public function __construct ( KnishIOClient $knishIO )
+	public function __construct ( HttpClientInterface $client, string $query = null )
 	{
-	    $this->knishIO = $knishIO;
+	    $this->client = $client;
+		$this->query = $query ?? static::$default_query;
 	}
 
 
@@ -103,15 +100,6 @@ abstract class Query
 	}
 
 
-    /**
-     * @return HttpClient
-     */
-	public function client ()
-    {
-        return $this->knishIO->client();
-    }
-
-
 	/**
 	 * @param array|null $variables
      * @param array $fields
@@ -123,12 +111,7 @@ abstract class Query
 		$this->request = $this->createRequest( $variables, $fields );
 
 		// Make a request
-		$response = $this->client()->send( $this->request );
-
-		if ( !( $this instanceof QueryAuthentication ) && $response->getStatusCode() === 401 ) {
-            $this->knishIO->authentication();
-            $response = $this->client()->send( $this->request );
-        }
+		$response = $this->client->send( $this->request );
 
 		// Create & save a response
 		$this->response = $this->createResponseRaw( $response );
@@ -154,7 +137,7 @@ abstract class Query
 		return str_replace(
 			['@fields'],
 			[$this->compiledFields($this->fields)],
-			static::$query
+			$this->query
 		);
 	}
 
@@ -211,7 +194,7 @@ abstract class Query
 	 */
 	public function url ()
     {
-		return $this->knishIO->url();
+		return $this->client->getUrl();
 	}
 
 	/**

@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -49,9 +50,9 @@ class QueryMoleculePropose extends Query
 	 * @param KnishIOClient $knishIO
 	 * @param $molecule
 	 */
-	public function __construct ( KnishIOClient $knishIO, Molecule $molecule )
+	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null )
 	{
-		parent::__construct( $knishIO );
+		parent::__construct( $client, $query );
 
 		// Create a molecule
 		$this->molecule = $molecule;

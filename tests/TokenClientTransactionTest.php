@@ -552,8 +552,6 @@ class TokenClientTransactionTest extends TestCase
 			null,
 			null,
 			null,
-			$source_wallet->characters,
-			$source_wallet->pubkey,
 			null,
 			$molecule->generateIndex()
 		));
@@ -573,8 +571,6 @@ class TokenClientTransactionTest extends TestCase
 				'walletBundle',
 				$recipient_wallet->bundle,
 				null,
-				$recipient_wallet->pubkey,
-				$recipient_wallet->characters,
 				null,
 				$molecule->generateIndex()
 			));
@@ -592,8 +588,6 @@ class TokenClientTransactionTest extends TestCase
 			'walletBundle',
 			$source_wallet->bundle,
 			null,
-			$remainder_wallet->pubkey,
-			$remainder_wallet->characters,
 			null,
 			$molecule->generateIndex()
 		));

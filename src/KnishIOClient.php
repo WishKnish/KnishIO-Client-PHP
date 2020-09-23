@@ -145,7 +145,7 @@ class KnishIOClient
 
 		// Remainder wallet
 		$this->remainderWallet = $remainderWallet ?:
-			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+			Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters );
 
 		return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
 	}
@@ -157,7 +157,7 @@ class KnishIOClient
 	 */
 	public function createQuery ( $class )
     {
-		return new $class( $this );
+		return new $class( $this->client );
 	}
 
 
@@ -169,17 +169,12 @@ class KnishIOClient
      */
 	public function createMoleculeQuery ( $class, Molecule $molecule = null )
 	{
+
 		// Init molecule
-		if ( $molecule === null ) {
-
-            $molecule = ( $class === QueryAuthentication::class ) ?
-                $this->createMolecule( $this->secret(), new Wallet( $this->secret(), 'AUTH' ) ) :
-                $this->createMolecule();
-
-        }
+		$molecule = $molecule ?: $this->createMolecule();
 
 		// Create base query
-		$query = new $class ( $this, $molecule );
+		$query = new $class ( $this->client, $molecule );
 
 		// Only instances of QueryMoleculePropose supported
 		if ( !$query instanceof QueryMoleculePropose ) {
@@ -461,11 +456,12 @@ class KnishIOClient
     }
 
 
-    /**
-     * @param string|null $secret
-     * @param string|null $cell_slug
-     * @return mixed|Response
-     */
+	/**
+	 * @param null $secret
+	 * @param null $cell_slug
+	 * @return mixed
+	 * @throws Exception
+	 */
 	public function authentication ( $secret = null, $cell_slug = null )
 	{
 		// Set a secret
@@ -474,8 +470,12 @@ class KnishIOClient
 		// Set a cell slug
 		$this->cellSlug = $cell_slug ?: $this->cellSlug();
 
+
+		// Create an auth molecule
+		$molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
+
 		// Create query & fill a molecule
-		$query = $this->createMoleculeQuery( QueryAuthentication::class );
+		$query = $this->createMoleculeQuery( QueryAuthentication::class, $molecule );
 		$query->fillMolecule();
 
 		// Get a response
