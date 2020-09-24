@@ -6,14 +6,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
-use ArrayObject;
 use Exception;
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Handler\CurlMultiHandler;
-use Psr\Http\Message\RequestInterface;
-use GuzzleHttp\Exception\RequestException;
-use Psr\Http\Message\ResponseInterface;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
@@ -22,7 +15,6 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
-use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryAuthentication;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -46,12 +38,7 @@ class KnishIOClient
 {
 
     /**
-     * @var string
-     */
-	private $url;
-
-    /**
-     * @var Client
+     * @var HttpClient
      */
 	private $client;
 
@@ -84,8 +71,7 @@ class KnishIOClient
 	 */
 	public function __construct ( $url, HttpClientInterface $client = null )
 	{
-        $this->url = $url;
-        $this->client = default_if_null( $client, new HttpClient($url) );
+        $this->client = default_if_null( $client, new HttpClient( $url ) );
 	}
 
 
@@ -94,7 +80,7 @@ class KnishIOClient
 	 */
 	public function url ()
 	{
-		return $this->url;
+		return $this->client->getUrl();
 	}
 
 
@@ -102,14 +88,14 @@ class KnishIOClient
 	 * @todo unify code with url & setUrl functions
 	 * @param $url
 	 */
-	public function setUrl ($url) {
-		$this->url = $url;
+	public function setUrl ( $url )
+    {
 		$this->client->setUrl($url);
 	}
 
 
 	/**
-	 * @return string
+	 * @return string|null
 	 */
 	public function cellSlug ()
 	{
@@ -127,7 +113,7 @@ class KnishIOClient
 
 
 	/**
-	 * @return Client|mixed
+	 * @return HttpClient
 	 */
 	public function client ()
 	{
@@ -136,6 +122,7 @@ class KnishIOClient
 
 
 	/**
+     * @param null $secret
 	 * @param null $sourceWallet
 	 * @param null $remainderWallet
 	 * @return Molecule
@@ -144,10 +131,10 @@ class KnishIOClient
 	public function createMolecule ( $secret = null, $sourceWallet = null, $remainderWallet = null )
 	{
 		// Secret
-		$secret = $secret ?? $this->secret();
+		$secret = $secret ?: $this->secret();
 
 		// Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response()->success() ) {
+		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery->response()->success() ) {
 			$sourceWallet = $this->remainderWallet;
 		}
 
@@ -157,36 +144,37 @@ class KnishIOClient
 		}
 
 		// Remainder wallet
-		$this->remainderWallet = $remainderWallet ??
-			Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+		$this->remainderWallet = $remainderWallet ?:
+			Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters );
 
 		return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
 	}
 
 
 	/**
-	 * @param null $class
+	 * @param $class
 	 * @return mixed
 	 */
-	public function createQuery ( $class = null, $query = null )
+	public function createQuery ( $class )
     {
-		$class = $class ?? Query::class;
-		return new $class( $this->client, $this->url, $query );
+		return new $class( $this->client );
 	}
 
 
-	/**
-	 * @param $class
-	 * @param Molecule|null $molecule
-	 * @return mixed
-	 */
+    /**
+     * @param $class
+     * @param Molecule|null $molecule
+     * @return mixed
+     * @throws Exception
+     */
 	public function createMoleculeQuery ( $class, Molecule $molecule = null )
 	{
+
 		// Init molecule
-		$molecule = $molecule ?? $this->createMolecule();
+		$molecule = $molecule ?: $this->createMolecule();
 
 		// Create base query
-		$query = new $class ( $this->client, $molecule, $this->url );
+		$query = new $class ( $this->client, $molecule );
 
 		// Only instances of QueryMoleculePropose supported
 		if ( !$query instanceof QueryMoleculePropose ) {
@@ -224,7 +212,6 @@ class KnishIOClient
 
 
     /**
-     * @param string $secret
      * @param string $token
      * @param int|float $amount
      * @param array $metas
@@ -255,7 +242,6 @@ class KnishIOClient
 
 
 	/**
-	 * @param string $secret
 	 * @param string $token
 	 * @param int|float $value
 	 * @param Wallet|string $to wallet address OR bundle
@@ -311,7 +297,6 @@ class KnishIOClient
 
 
     /**
-     * @param string $secret
      * @param $type
      * @param $contact
      * @param $code
@@ -385,7 +370,6 @@ class KnishIOClient
 
 
 	/**
-	 * @param string $fromSecret
 	 * @param string|Wallet $to
 	 * @param string $token
 	 * @param int|float $amount
@@ -438,8 +422,8 @@ class KnishIOClient
 	 * @return Wallet
 	 * @throws Exception
 	 */
-	public function getSourceWallet ( ) {
-
+	public function getSourceWallet ( )
+    {
 		// Has a ContinuID wallet?
 		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
 		if ( !$sourceWallet ) {
@@ -472,20 +456,26 @@ class KnishIOClient
     }
 
 
-    /**
-	 * @param string $secret
+	/**
+	 * @param null $secret
+	 * @param null $cell_slug
+	 * @return mixed
 	 * @throws Exception
 	 */
-	public function authentication ( $secret, $cell_slug = null )
+	public function authentication ( $secret = null, $cell_slug = null )
 	{
 		// Set a secret
-		$this->setSecret( $secret );
+		$this->secret = $secret ?: $this->secret();
 
 		// Set a cell slug
-		$this->cellSlug = $cell_slug;
+		$this->cellSlug = $cell_slug ?: $this->cellSlug();
+
+
+		// Create an auth molecule
+		$molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
 
 		// Create query & fill a molecule
-		$query = $this->createMoleculeQuery( QueryAuthentication::class );
+		$query = $this->createMoleculeQuery( QueryAuthentication::class, $molecule );
 		$query->fillMolecule();
 
 		// Get a response
@@ -517,17 +507,5 @@ class KnishIOClient
 
 		return $this->secret;
 	}
-
-
-	/**
-	 * @param string $secret
-	 */
-	public function setSecret( string $secret )
-	{
-		$this->secret = $secret;
-	}
-
-
-
 
 }

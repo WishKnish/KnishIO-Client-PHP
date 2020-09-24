@@ -3,7 +3,6 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
@@ -23,10 +22,12 @@ use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
+use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class CheckMolecule
@@ -56,6 +57,8 @@ class CheckMolecule
 
         foreach ( $verification_methods as $method ) {
 
+			TimeLogger::begin('CheckMolecule::'.$method.'@total');
+
 			switch ( $method ) {
 
 				case 'isotopeV':
@@ -70,6 +73,8 @@ class CheckMolecule
 					static::{$method}($molecule);
 				}
 			}
+
+			TimeLogger::end('CheckMolecule::'.$method.'@total');
 
         }
     }
@@ -229,9 +234,9 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'U', $molecule->atoms ) as $atom ) {
 
-            if ( $atom->token !== 'USER' ) {
+            /* if ( $atom->token !== 'AUTH' ) {
                 throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
-            }
+            } */
 
             if ( $atom->index !== 0 ) {
                 throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
@@ -387,6 +392,7 @@ class CheckMolecule
 	 */
 	public static function molecularHash ( MoleculeStructure $molecule )
 	{
+		// CheckMolecule::molecularHash@total: 0.0038411617279053 sec
 
 		static::missing( $molecule );
 
@@ -410,14 +416,24 @@ class CheckMolecule
 	public static function ots ( MoleculeStructure $molecule )
 	{
 
+		// CheckMolecule::ots@$workingChunk: 0.025256872177124 sec
+		// CheckMolecule::ots@$digest: 0.0048208236694336 sec
+		// CheckMolecule::ots@$address: 0.0034449100494385 sec
+		// CheckMolecule::ots@total: 0.033905982971191 sec
+
 		static::missing( $molecule );
 
 		// Determine first atom
         /** @var Atom $firstAtom */
 		$firstAtom = reset( $molecule->atoms );
 
+
+		TimeLogger::begin('CheckMolecule::ots@normalizedHash');
 		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
 		$normalizedHash = static::normalizedHash( $molecule->molecularHash );
+		TimeLogger::end('CheckMolecule::ots@normalizedHash');
+
+
 
 		// Rebuilding OTS out of all the atoms
 		$ots = '';
@@ -427,6 +443,7 @@ class CheckMolecule
 			$ots .= $atom->otsFragment;
 		}
 
+		TimeLogger::begin('CheckMolecule::ots@base64ToHex');
 		// Wrong size? Maybe it's compressed
 		if ( mb_strlen( $ots ) !== 2048 ) {
 
@@ -438,45 +455,51 @@ class CheckMolecule
 				throw new SignatureMalformedException();
 			}
 		}
+		TimeLogger::end('CheckMolecule::ots@base64ToHex');
+
 
 		// First atom's wallet is what the molecule must be signed with
 		$walletAddress = $firstAtom->walletAddress;
 
+		TimeLogger::begin('CheckMolecule::ots@Strings::chunkSubstr');
 		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each
 		$otsChunks = Strings::chunkSubstr( $ots, 128 );
+		TimeLogger::end('CheckMolecule::ots@Strings::chunkSubstr');
 
 		$keyFragments = '';
 
+
+		TimeLogger::begin('CheckMolecule::ots@$workingChunk');
 		foreach ( $otsChunks as $index => $otsChunk ) {
 
 			// Iterate a number of times equal to 8+Hm[i]
 			$workingChunk = $otsChunk;
 
 			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $index ]; $iterationCount < $condition; $iterationCount++ ) {
-
-				$workingChunk = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingChunk )
-						->squeeze( 64 )
-				);
+				$workingChunk = bin2hex( Shake256::hash( $workingChunk, 64 ) );
 			}
 
 			$keyFragments .= $workingChunk;
 		}
+		TimeLogger::end('CheckMolecule::ots@$workingChunk');
 
+
+		TimeLogger::begin('CheckMolecule::ots@$digest');
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
 		$digest = bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( $keyFragments )
-				->squeeze( 1024 )
+			Shake256::hash( $keyFragments, 1024 )
 		);
+		TimeLogger::end('CheckMolecule::ots@$digest');
 
+
+		TimeLogger::begin('CheckMolecule::ots@$address');
 		// Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
 		$address = bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( $digest )
-				->squeeze( 32 )
+			Shake256::hash( $digest, 32 )
 		);
+		TimeLogger::end('CheckMolecule::ots@$address');
+
+
 
 		if ( $address !== $walletAddress ) {
 			throw new SignatureMismatchException();

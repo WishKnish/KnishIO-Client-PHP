@@ -25,6 +25,22 @@ trait Json
 			->serialize( $this, 'json' );
 	}
 
+
+	/**
+	 * @param array $data
+	 * @param null $object
+	 * @return static|null
+	 */
+	public static function arrayToObject ( array $data, $object = null )
+	{
+		$object = $object ?? new static;
+		foreach ( $data as $property => $value ) {
+			$object->$property = $value;
+		}
+		return $object;
+	}
+
+
 	/**
 	 * @param $string
 	 * @return object

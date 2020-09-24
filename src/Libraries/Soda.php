@@ -5,6 +5,7 @@ use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Base58Static as B58;
+use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
  * Class Soda
@@ -96,9 +97,7 @@ class Soda
 
         return $this->encode(
             sodium_crypto_box_secretkey(
-                SHA3::init( SHA3::SHAKE256 )
-                    ->absorb( $key )
-                    ->squeeze( SODIUM_CRYPTO_BOX_KEYPAIRBYTES )
+            	Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES )
             )
         );
 
@@ -125,9 +124,7 @@ class Soda
     public function shortHash ( $key )
     {
         return $this->encode(
-            SHA3::init( SHA3::SHAKE256 )
-                ->absorb( $key )
-                ->squeeze( 8 )
+			Shake256::hash( $key, 8 )
         );
     }
 

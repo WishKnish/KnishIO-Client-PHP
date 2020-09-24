@@ -12,6 +12,7 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Traits\Json;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 
 /**
@@ -73,6 +74,26 @@ class MoleculeStructure {
 	}
 
 
+
+
+
+	/**
+	 * @param array $data
+	 * @return static
+	 */
+	public static function toObject ( array $data )
+	{
+		$object = static::arrayToObject( $data );
+		foreach ( $object->atoms as $key => $atom_data ) {
+			$atom = new Atom( $atom_data['position'], $atom_data['walletAddress'], $atom_data['isotope'] );
+			$object->atoms[$key] = Atom::arrayToObject( $atom_data, $atom );
+		}
+		$object->atoms = Atom::sortAtoms( $object->atoms );
+		return $object;
+	}
+
+
+
 	/**
 	 * @param string $string
 	 * @return object
@@ -80,7 +101,16 @@ class MoleculeStructure {
 	public static function jsonToObject ( $string )
 	{
 		$serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-		$object = $serializer->deserialize( $string, static::class, 'json' );
+		$object = $serializer->deserialize(
+		    $string,
+            static::class,
+            'json',
+            [
+                AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [
+                    static::class => [ 'secret' => null, ],
+                ],
+            ]
+        );
 
 		foreach ( $object->atoms as $idx => $atom ) {
 			$object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

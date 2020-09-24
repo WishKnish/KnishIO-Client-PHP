@@ -10,44 +10,37 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
+use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
 
 /**
  * Class Query
  * @package WishKnish\KnishIO\Client\Query
  */
-class Query
+abstract class Query
 {
     /**
      * @var Client
      */
 	protected $client;
 
-    /**
-     * @var string|null
-     */
-	protected $url;
-
-
 	/**
 	 * @var Request
 	 */
 	protected $request;
-
 
 	/**
 	 * @var Response
 	 */
 	protected $response;
 
-
     /**
      * @var array|null
      */
 	protected $variables;
-
 
     /**
      * @var string
@@ -55,16 +48,13 @@ class Query
 	protected static $default_query;
 
 
-
 	/**
 	 * Query constructor.
-	 * @param Client $client
-	 * @param string|null $url
+	 * @param KnishIOClient $knishIO
 	 */
-	public function __construct ( HttpClientInterface $client, $url = null, string $query = null )
+	public function __construct ( HttpClientInterface $client, string $query = null )
 	{
-		$this->url = $url;
-		$this->client = $client;
+	    $this->client = $client;
 		$this->query = $query ?? static::$default_query;
 	}
 
@@ -87,7 +77,6 @@ class Query
 	}
 
 
-
 	/**
 	 * Create new request
 	 *
@@ -95,7 +84,7 @@ class Query
 	 * @param array|null $fields
 	 * @return RequestInterface
 	 */
-	public function createRequest ( array $variables = null, array $fields = null ) : RequestInterface {
+	public function createRequest ( array $variables = null, array $fields = null ) {
 
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
@@ -103,18 +92,17 @@ class Query
 		// Create a request
 		return new Request(
 			'POST',
-			$this->url,
+			$this->url(),
 			[ 'Content-Type' => 'application/json' ],
-			json_encode( [ 'query' => $this->compiledQuery($fields), 'variables' => $this->variables, ] )
+			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
 		);
 
 	}
 
 
-
 	/**
 	 * @param array|null $variables
-     * @param boolean $request
+     * @param array $fields
 	 * @return mixed
 	 */
 	public function execute ( array $variables = null, array $fields = null ) {
@@ -138,7 +126,7 @@ class Query
 	 * @param array $fields
 	 * @return mixed
 	 */
-	public function compiledQuery ( array $fields = null )
+	public function compiledQuery (array $fields = null)
 	{
 		// Fields
 		if ($fields !== null) {
@@ -206,7 +194,7 @@ class Query
 	 */
 	public function url ()
     {
-		return $this->url;
+		return $this->client->getUrl();
 	}
 
 	/**

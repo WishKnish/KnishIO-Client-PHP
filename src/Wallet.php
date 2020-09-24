@@ -114,8 +114,10 @@ class Wallet
 	{
 
 		$this->position = $position ?: Strings::randomString( $saltLength );
+
 		$this->token = $token;
-        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
+
+        $this->characters = $characters; //defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		if ( $secret ) {
 
@@ -171,7 +173,7 @@ class Wallet
 	protected static function generateWalletAddress ( $key )
 	{
 
-		$digestSponge = SHA3::init( SHA3::SHAKE256 );
+		$digestSponge = Crypto\Shake256::init();
 
 		foreach ( Strings::chunkSubstr( $key, 128 ) as $idx => $fragment ) {
 
@@ -180,9 +182,7 @@ class Wallet
 			foreach ( range( 1, 16 ) as $_ ) {
 
 				$workingFragment = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingFragment )
-						->squeeze( 64 )
+					Crypto\Shake256::hash( $workingFragment, 64 )
 				);
 
 			}
@@ -192,9 +192,7 @@ class Wallet
 		}
 
 		return bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex( $digestSponge->squeeze( 1024 ) ) )
-				->squeeze( 32 )
+			Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 )
 		);
 
 	}
@@ -345,7 +343,7 @@ class Wallet
 		$indexedKey = $bigIntSecret->add( new BigInteger( $position, 16 ) );
 
 		// Hashing the indexed key to produce the intermediate key
-		$intermediateKeySponge = SHA3::init( SHA3::SHAKE256 )
+		$intermediateKeySponge = Crypto\Shake256::init()
 			->absorb( $indexedKey->toString( 16 ) );
 
 		if ( $token !== '' ) {
@@ -357,11 +355,7 @@ class Wallet
 
 		// Hashing the intermediate key to produce the private key
 		return bin2hex(
-			SHA3::init( SHA3::SHAKE256 )
-				->absorb( bin2hex(
-					$intermediateKeySponge
-						->squeeze( 1024 )
-				) )->squeeze( 1024 )
+			Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 )
 		);
 
 	}

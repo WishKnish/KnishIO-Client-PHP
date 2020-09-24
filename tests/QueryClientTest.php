@@ -48,11 +48,11 @@ class QueryClientTest extends TestCase
 	 */
 	public function testClearAll () {
 
-		// Initial code
-		$this->beforeExecute();
-
 		// Call server cleanup
 		$this->callServerCleanup(\WishKnish\KnishIO\Tests\QueryServerTest::class);
+
+		// Initial code
+		$this->beforeExecute();
 
 		// Deafult assertion
 		$this->assertEquals(true, true);
@@ -63,6 +63,9 @@ class QueryClientTest extends TestCase
 	 * @throws \ReflectionException
 	 */
 	public function testMetaIsotope () {
+
+		// Call server cleanup
+		$this->callServerCleanup(\WishKnish\KnishIO\Tests\QueryServerTest::class);
 
 		$this->beforeExecute();
 
