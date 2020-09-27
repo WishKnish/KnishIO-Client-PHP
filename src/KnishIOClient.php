@@ -462,10 +462,10 @@ class KnishIOClient
 	 * @return mixed
 	 * @throws Exception
 	 */
-	public function authentication ( $secret = null, $cell_slug = null )
+	public function authentication ( $secret, $cell_slug = null )
 	{
 		// Set a secret
-		$this->secret = $secret ?: $this->secret();
+		$this->setSecret( $secret );
 
 		// Set a cell slug
 		$this->cellSlug = $cell_slug ?: $this->cellSlug();
@@ -496,6 +496,15 @@ class KnishIOClient
 
 
 	/**
+	 * @param $secret
+	 */
+	public function setSecret ( $secret )
+	{
+		$this->secret = $secret;
+	}
+
+
+	/**
 	 * @return string
 	 */
 	public function secret ()
@@ -507,5 +516,6 @@ class KnishIOClient
 
 		return $this->secret;
 	}
+
 
 }

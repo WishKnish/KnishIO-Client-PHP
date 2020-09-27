@@ -100,6 +100,15 @@ class Molecule extends MoleculeStructure
 
 
 	/**
+	 * @return Wallet|WalletShadow
+	 */
+	public function remainderWallet ()
+	{
+		return $this->remainderWallet;
+	}
+
+
+	/**
 	 * Encrypt message by source wallet
 	 *
 	 * @param array $data
