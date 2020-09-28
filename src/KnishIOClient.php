@@ -134,7 +134,11 @@ class KnishIOClient
 		$secret = $secret ?: $this->secret();
 
 		// Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-		if ( !$sourceWallet && $this->lastMoleculeQuery && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery->response()->success() ) {
+		if ( $sourceWallet === null &&
+			$this->remainderWallet->token !== 'AUTH' &&
+			$this->lastMoleculeQuery &&
+			$this->lastMoleculeQuery->response() && $this->lastMoleculeQuery->response()->success()
+		) {
 			$sourceWallet = $this->remainderWallet;
 		}
 

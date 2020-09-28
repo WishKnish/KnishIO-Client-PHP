@@ -27,7 +27,6 @@ use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class CheckMolecule
@@ -57,8 +56,6 @@ class CheckMolecule
 
         foreach ( $verification_methods as $method ) {
 
-			TimeLogger::begin('CheckMolecule::'.$method.'@total');
-
 			switch ( $method ) {
 
 				case 'isotopeV':
@@ -73,8 +70,6 @@ class CheckMolecule
 					static::{$method}($molecule);
 				}
 			}
-
-			TimeLogger::end('CheckMolecule::'.$method.'@total');
 
         }
     }
@@ -415,12 +410,6 @@ class CheckMolecule
 	 */
 	public static function ots ( MoleculeStructure $molecule )
 	{
-
-		// CheckMolecule::ots@$workingChunk: 0.025256872177124 sec
-		// CheckMolecule::ots@$digest: 0.0048208236694336 sec
-		// CheckMolecule::ots@$address: 0.0034449100494385 sec
-		// CheckMolecule::ots@total: 0.033905982971191 sec
-
 		static::missing( $molecule );
 
 		// Determine first atom
@@ -428,11 +417,8 @@ class CheckMolecule
 		$firstAtom = reset( $molecule->atoms );
 
 
-		TimeLogger::begin('CheckMolecule::ots@normalizedHash');
 		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
 		$normalizedHash = static::normalizedHash( $molecule->molecularHash );
-		TimeLogger::end('CheckMolecule::ots@normalizedHash');
-
 
 
 		// Rebuilding OTS out of all the atoms
@@ -443,7 +429,6 @@ class CheckMolecule
 			$ots .= $atom->otsFragment;
 		}
 
-		TimeLogger::begin('CheckMolecule::ots@base64ToHex');
 		// Wrong size? Maybe it's compressed
 		if ( mb_strlen( $ots ) !== 2048 ) {
 
@@ -455,21 +440,15 @@ class CheckMolecule
 				throw new SignatureMalformedException();
 			}
 		}
-		TimeLogger::end('CheckMolecule::ots@base64ToHex');
 
 
 		// First atom's wallet is what the molecule must be signed with
 		$walletAddress = $firstAtom->walletAddress;
 
-		TimeLogger::begin('CheckMolecule::ots@Strings::chunkSubstr');
 		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each
 		$otsChunks = Strings::chunkSubstr( $ots, 128 );
-		TimeLogger::end('CheckMolecule::ots@Strings::chunkSubstr');
 
 		$keyFragments = '';
-
-
-		TimeLogger::begin('CheckMolecule::ots@$workingChunk');
 		foreach ( $otsChunks as $index => $otsChunk ) {
 
 			// Iterate a number of times equal to 8+Hm[i]
@@ -481,24 +460,18 @@ class CheckMolecule
 
 			$keyFragments .= $workingChunk;
 		}
-		TimeLogger::end('CheckMolecule::ots@$workingChunk');
 
 
-		TimeLogger::begin('CheckMolecule::ots@$digest');
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
 		$digest = bin2hex(
 			Shake256::hash( $keyFragments, 1024 )
 		);
-		TimeLogger::end('CheckMolecule::ots@$digest');
 
 
-		TimeLogger::begin('CheckMolecule::ots@$address');
 		// Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
 		$address = bin2hex(
 			Shake256::hash( $digest, 32 )
 		);
-		TimeLogger::end('CheckMolecule::ots@$address');
-
 
 
 		if ( $address !== $walletAddress ) {
