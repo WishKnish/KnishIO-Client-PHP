@@ -416,11 +416,6 @@ class CheckMolecule
         /** @var Atom $firstAtom */
 		$firstAtom = reset( $molecule->atoms );
 
-
-		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
-		$normalizedHash = static::normalizedHash( $molecule->molecularHash );
-
-
 		// Rebuilding OTS out of all the atoms
 		$ots = '';
 
@@ -442,24 +437,8 @@ class CheckMolecule
 		}
 
 
-		// First atom's wallet is what the molecule must be signed with
-		$walletAddress = $firstAtom->walletAddress;
-
-		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each
-		$otsChunks = Strings::chunkSubstr( $ots, 128 );
-
-		$keyFragments = '';
-		foreach ( $otsChunks as $index => $otsChunk ) {
-
-			// Iterate a number of times equal to 8+Hm[i]
-			$workingChunk = $otsChunk;
-
-			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $index ]; $iterationCount < $condition; $iterationCount++ ) {
-				$workingChunk = bin2hex( Shake256::hash( $workingChunk, 64 ) );
-			}
-
-			$keyFragments .= $workingChunk;
-		}
+		// Key fragments
+		$keyFragments = $molecule->signatureFragments( $ots, false );
 
 
 		// Absorb the hashed Kk into the sponge to receive the digest Dk
@@ -473,8 +452,8 @@ class CheckMolecule
 			Shake256::hash( $digest, 32 )
 		);
 
-
-		if ( $address !== $walletAddress ) {
+		// Check the first atom's wallet: is what the molecule must be signed with
+		if ( $address !== $firstAtom->walletAddress ) {
 			throw new SignatureMismatchException();
 		}
 
@@ -495,84 +474,6 @@ class CheckMolecule
 		);
 	}
 
-	/**
-	 *  Convert Hm to numeric notation via EnumerateMolecule(Hm)
-	 *
-	 * @param string $hash
-	 * @return array
-	 */
-	public static function normalizedHash ( $hash )
-	{
-		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
-		return static::normalize( static::enumerate( $hash ) );
-	}
-
-	/**
-	 * This algorithm describes the function EnumerateMolecule(Hm), designed to accept a pseudo-hexadecimal string Hm, and output a collection of decimals representing each character.
-	 * Molecular hash Hm is presented as a 128 byte (64-character) pseudo-hexadecimal string featuring numbers from 0 to 9 and characters from A to F - a total of 15 unique symbols.
-	 * To ensure that Hm has an even number of symbols, convert it to Base 17 (adding G as a possible symbol).
-	 * Map each symbol to integer values as follows:
-	 * 0   1    2   3   4   5   6   7   8  9  A   B   C   D   E   F   G
-	 * -8  -7  -6  -5  -4  -3  -2  -1  0   1   2   3   4   5   6   7   8
-	 *
-	 * @param string $hash
-	 * @return array
-	 */
-	protected static function enumerate ( $hash )
-	{
-
-		$target = [];
-		$mapped = [
-			'0' => -8, '1' => -7, '2' => -6, '3' => -5, '4' => -4, '5' => -3, '6' => -2, '7' => -1,
-			'8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8,
-		];
-
-		foreach ( str_split( $hash ) as $index => $symbol ) {
-
-			$lower = strtolower( ( string ) $symbol );
-
-			if ( array_key_exists( $lower, $mapped ) ) {
-				$target[ $index ] = $mapped[ $lower ];
-			}
-		}
-
-		return $target;
-	}
-
-	/**
-	 * Normalize Hm to ensure that the total sum of all symbols is exactly zero. This ensures that exactly 50% of the WOTS+ key is leaked with each usage, ensuring predictable key safety:
-	 * The sum of each symbol within Hm shall be presented by m
-	 * While m0 iterate across that set’s integers as Im:
-	 * If m0 and Im>-8 , let Im=Im-1
-	 * If m<0 and Im<8 , let Im=Im+1
-	 * If m=0, stop the iteration
-	 *
-	 * @param array $mappedHashArray
-	 * @return array
-	 */
-	protected static function normalize ( array $mappedHashArray )
-	{
-
-		$total = array_sum( $mappedHashArray );
-		$totalCondition = $total < 0;
-
-		while ( $total < 0 || $total > 0 ) {
-
-			foreach ( $mappedHashArray as $key => $value ) {
-
-				if ( $totalCondition ? $value < 8 : $value > -8 ) {
-
-					$totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
-
-					if ( $total === 0 ) {
-						break;
-					}
-				}
-			}
-		}
-
-		return $mappedHashArray;
-	}
 
 	/**
 	 * @param MoleculeStructure $molecule

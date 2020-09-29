@@ -770,29 +770,8 @@ class Molecule extends MoleculeStructure
 		// Generate the private signing key for this molecule
 		$key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $firstAtom->position );
 
-		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each
-		$keyChunks = Strings::chunkSubstr( $key, 128 );
-
-		// Convert Hm to numeric notation via EnumerateMolecule(Hm)
-		$normalizedHash = CheckMolecule::normalizedHash( $this->molecularHash );
-
 		// Building a one-time-signature
-		$signatureFragments = '';
-
-		foreach ( $keyChunks as $idx => $keyChunk ) {
-
-			// Iterate a number of times equal to 8-Hm[i]
-			$workingChunk = $keyChunk;
-
-			for ( $iterationCount = 0, $condition = 8 - $normalizedHash[ $idx ]; $iterationCount < $condition; $iterationCount++ ) {
-
-				$workingChunk = bin2hex(
-					Crypto\Shake256::hash( $workingChunk, 64 )
-				);
-			}
-
-			$signatureFragments .= $workingChunk;
-		}
+		$signatureFragments = $this->signatureFragments( $key );
 
 		// Compressing the OTS
 		if ( $compressed ) {
