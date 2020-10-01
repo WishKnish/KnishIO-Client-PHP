@@ -179,14 +179,6 @@ class MoleculeStructure {
 
 			for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $idx ] * ($encode ? -1 : 1); $iterationCount < $condition; $iterationCount++ ) {
 
-				/*
-				$workingChunk = bin2hex(
-					SHA3::init( SHA3::SHAKE256 )
-						->absorb( $workingChunk )
-						->squeeze( 64 )
-				);
-				*/
-
 				$workingChunk = bin2hex( Crypto\Shake256::hash( $workingChunk, 64 ) );
 			}
 
