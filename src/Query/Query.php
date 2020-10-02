@@ -93,7 +93,10 @@ abstract class Query
 		return new Request(
 			'POST',
 			$this->url(),
-			[ 'Content-Type' => 'application/json' ],
+			[
+				'Content-Type' => 'application/json',
+				'x-auth-token' => $this->client->getAuthToken(),
+			],
 			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
 		);
 
