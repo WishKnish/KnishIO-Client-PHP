@@ -38,12 +38,20 @@ class Meta
 		$this->createdAt = time();
 	}
 
+
 	/**
 	 * @param array $meta
 	 * @return array
 	 */
 	public static function normalizeMeta ( array $meta )
 	{
+		$result = [];
+		foreach ( $meta as $key => $value ) {
+			$result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
+		}
+		return $result;
+
+		/*
 		$deep = array_filter( $meta, static function ( $val ) { return is_array( $val ); } );
 		$plane = array_filter( $meta, static function ( $val ) { return !is_array( $val ); } );
 		return array_replace( $deep,
@@ -53,6 +61,7 @@ class Meta
 					'value' => $val
 				];
 			}, array_keys( $plane ), array_values( $plane ) ) );
+		*/
 	}
 
 	/**

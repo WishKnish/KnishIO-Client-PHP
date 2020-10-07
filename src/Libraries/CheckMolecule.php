@@ -128,7 +128,7 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
 
-            $meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
+            $meta = Meta::aggregateMeta( $atom->meta );
             $metaType = strtolower( ( string ) $atom->metaType );
 
             if ( $metaType === 'wallet' ) {

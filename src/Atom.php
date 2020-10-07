@@ -134,7 +134,7 @@ class Atom
 
 				if ( $name === 'meta' ) {
 
-					$list = Meta::normalizeMeta( $value );
+					$list = $value;
 
 					foreach ( $list as $meta ) {
 
@@ -213,5 +213,14 @@ class Atom
 
         return $atomList;
     }
+
+
+	/**
+	 * @return array
+	 */
+    public function aggregatedMeta(): array
+	{
+		return Meta::aggregateMeta( $this->meta );
+	}
 
 }
