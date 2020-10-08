@@ -50,18 +50,6 @@ class Meta
 			$result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
 		}
 		return $result;
-
-		/*
-		$deep = array_filter( $meta, static function ( $val ) { return is_array( $val ); } );
-		$plane = array_filter( $meta, static function ( $val ) { return !is_array( $val ); } );
-		return array_replace( $deep,
-			array_map( static function ( $key, $val ) {
-				return [
-					'key'   => $key,
-					'value' => $val
-				];
-			}, array_keys( $plane ), array_values( $plane ) ) );
-		*/
 	}
 
 	/**

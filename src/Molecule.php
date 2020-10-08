@@ -165,7 +165,7 @@ class Molecule extends MoleculeStructure
 	 * @param Wallet|null $wallet
 	 * @return array
 	 */
-    protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array
+    protected function finalMetas( array $metas = [], Wallet $wallet = null ): array
     {
 		$wallet = $wallet ?: $this->sourceWallet;
 
@@ -183,11 +183,11 @@ class Molecule extends MoleculeStructure
 	 * @param string $context
 	 * @return array
 	 */
-    protected function contextMetas( $metaType, $metaId, array $metas = [], $context = 'http://www.schema.org' ): array
+    protected function contextMetas( array $metas = [], $context = 'http://www.schema.org' ): array
 	{
 		$metas[ 'context' ] = $context;
 
-		return $metas;
+		return $this->finalMetas( $metas );
 	}
 
 
@@ -250,7 +250,7 @@ class Molecule extends MoleculeStructure
             $this->sourceWallet->batchId,
             'token',
             $token,
-            $this->finalMetas( $aggregateMeta ),
+            $this->contextMetas( $aggregateMeta ),
             null,
             $this->generateIndex()
         );
@@ -412,7 +412,7 @@ class Molecule extends MoleculeStructure
 			$this->sourceWallet->batchId,
 			'wallet',
 			$newWallet->address,
-			$this->finalMetas( $metas, $newWallet ),
+			$this->contextMetas( $metas, $newWallet ),
 			null,
 			$this->generateIndex()
 		);
@@ -466,7 +466,7 @@ class Molecule extends MoleculeStructure
 			$recipientWallet->batchId,
 			'token',
 			$recipientWallet->token,
-            $this->finalMetas( $tokenMeta ),
+            $this->contextMetas( $tokenMeta ),
 			null,
 			$this->generateIndex()
 		);
@@ -513,7 +513,7 @@ class Molecule extends MoleculeStructure
 			null,
 			'shadowWallet',
 			$token,
-			$this->finalMetas( $metas ),
+			$this->contextMetas( $metas ),
 			null,
 			$this->generateIndex()
 		);
@@ -553,7 +553,7 @@ class Molecule extends MoleculeStructure
 			null,
 			'identifier',
 			$type,
-			$this->finalMetas( $metas ),
+			$this->contextMetas( $metas ),
 			null,
 			$this->generateIndex()
 		);
