@@ -14,7 +14,6 @@ class Jsonld {
 	private $id;
 
 
-
 	/**
 	 * @param $data
 	 * @return static
@@ -33,7 +32,8 @@ class Jsonld {
 		// Process graph types
 		$graph = [];
 		foreach( $json[ '@graph' ] as $item ) {
-			$graph[] = JsonldType::parse( $baseUrl, $item );
+			$jsonType = JsonldType::parse( $baseUrl, $item );
+			$graph[ $jsonType->id() ] = $jsonType;
 		}
 
 		// Create new instance
@@ -52,6 +52,47 @@ class Jsonld {
 		$this->context = $context;
 		$this->graph = $graph;
 		$this->id = $id;
+
+		// Link parents with childs
+		$this->linkingGraph();
+	}
+
+
+	/**
+	 * @param $type
+	 * @return mixed
+	 * @throws \Exception
+	 */
+	public function graphType( $type )
+	{
+		if ( !array_has( $this->graph, $type ) ) {
+			throw new \Exception( 'Graph type ' . $type . ' does not found.' );
+		}
+		return $this->graph[ $type ];
+	}
+
+
+	/**
+	 * Link graph
+	 */
+	protected function linkingGraph(): void
+	{
+		// Link parents with childs
+		foreach( $this->graph as $item ) {
+
+			// Get parent IDs by domainIncludes property
+			$parentIds = $item->parentIds();
+
+			// Link parent item to child
+			foreach( $parentIds as $parentId ) {
+
+				// Get parent from graph
+				$parent = $this->graph[ $parentId ];
+
+				// Add this field to each parent
+				$parent->addField( $item );
+			}
+		}
 	}
 
 
@@ -63,7 +104,7 @@ class Jsonld {
 		// Convert graph to json-ld
 		$graph = [];
 		foreach( $this->graph as $item ) {
-			$graph[] = $item->toJsonldArray();
+			$graph[] = $item->toJsonldSchemaArray();
 		}
 
 		return \json_encode( [

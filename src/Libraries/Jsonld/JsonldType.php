@@ -3,6 +3,8 @@
 namespace WishKnish\KnishIO\Client\Libraries\Jsonld;
 
 
+use WishKnish\KnishIO\Client\Libraries\Jsonld\Validator\Validator;
+
 /**
  * Class JsonldType
  * @package WishKnish\KnishIO\Client\Libraries\Jsonld
@@ -14,6 +16,7 @@ class JsonldType
 
 	private $id;
 	private $type;
+	private $fields = [];
 
 	private $graphProperties;
 	private $otherProperties;
@@ -26,7 +29,7 @@ class JsonldType
 	 */
 	public static function shortId( $contextUrl, $rawId )
 	{
-		return str_replace( $contextUrl.'/', '', $rawId );
+		return str_replace( $contextUrl . '/', '', $rawId );
 	}
 
 
@@ -102,6 +105,17 @@ class JsonldType
 
 
 	/**
+	 * Add field
+	 *
+	 * @param JsonldType
+	 */
+	public function addField( JsonldType $field ): void
+	{
+		$this->fields[ $field->id() ] = $field;
+	}
+
+
+	/**
 	 * @return mixed
 	 */
 	public function id()
@@ -130,9 +144,90 @@ class JsonldType
 
 
 	/**
-	 * @return false|string
+	 * @return array
 	 */
-	public function toJsonldArray(): array
+	public function fields()
+	{
+		return $this->fields;
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function parentIds()
+	{
+		return array_get( $this->graphProperties, 'domainIncludes', [] );
+	}
+
+
+	/**
+	 * Get a validator
+	 *
+	 * @return Validator
+	 */
+	public function getValidator()
+	{
+		$types = $this->graphProperties[ 'rangeIncludes' ];
+
+		// @todo: Temporarily code, need custom type, not first
+		return Validator::get( $types[ 0 ] );
+	}
+
+
+	/**
+	 * @todo: correct fn
+	 * @param array $data
+	 * @return bool
+	 */
+	public function validate( array $data ): bool
+	{
+		foreach( $data as $field => $value ) {
+
+			// Get type by field name
+			$type = array_get( $this->fields, $field );
+
+			// The last level: use custom validator
+			if ( !$type->fields() && !$type->getValidator()->validate( $value ) ) {
+				return false;
+			}
+
+			// Composite validator: send fields to next level of types
+			if ( $type->fields() && !$type->validate( $value ) ) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+
+	/**
+	 * @param $data
+	 * @return array
+	 */
+	public function toJsonldDataArray( $data )
+	{
+		$jsonldArray = [
+			'@context' => $this->contextId( $this->id ),
+		];
+
+		foreach( $data as $field => $value ) {
+
+			// Add property to the json-ld output if it exists in fields list
+			if ( array_has( $this->fields, $property ) ) {
+				$jsonldArray[ $property ] = $value;
+			}
+		}
+
+		return $jsonldArray;
+	}
+
+
+	/**
+	 * @return array
+	 */
+	public function toJsonldSchemaArray(): array
 	{
 		$jsonldArray = [
 			'@id' => $this->contextId( $this->id ),
