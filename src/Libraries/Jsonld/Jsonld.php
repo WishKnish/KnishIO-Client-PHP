@@ -12,6 +12,7 @@ class Jsonld {
 	private $context;
 	private $graph;
 	private $id;
+	private $baseUrl;
 
 
 	/**
@@ -37,7 +38,7 @@ class Jsonld {
 		}
 
 		// Create new instance
-		return new static( $json[ '@context' ], $graph, $id );
+		return new static( $baseUrl, $json[ '@context' ], $graph, $id );
 	}
 
 
@@ -47,8 +48,9 @@ class Jsonld {
 	 * @param array $graph
 	 * @param string $id
 	 */
-	public function __construct( array $context, array $graph, string $id )
+	public function __construct( string $baseUrl, array $context, array $graph, string $id )
 	{
+		$this->baseUrl = $baseUrl;
 		$this->context = $context;
 		$this->graph = $graph;
 		$this->id = $id;
@@ -96,10 +98,34 @@ class Jsonld {
 	}
 
 
+
+	/**
+	 * @param $data
+	 * @return array
+	 */
+	public function toJsonldData( $data )
+	{
+		$jsonldArray = [
+			'@context' => $this->baseUrl,
+		];
+
+		//
+		foreach( $data as $property => $value ) {
+
+			// Add property to the json-ld output if it exists in fields list
+			if ( array_has( $this->graph, $property ) ) {
+				$jsonldArray[ $property ] = $value;
+			}
+		}
+
+		return \json_encode( $jsonldArray );
+	}
+
+
 	/**
 	 * @return false|string
 	 */
-	public function toJsonld()
+	public function toJsonldSchema()
 	{
 		// Convert graph to json-ld
 		$graph = [];
@@ -107,11 +133,16 @@ class Jsonld {
 			$graph[] = $item->toJsonldSchemaArray();
 		}
 
-		return \json_encode( [
+		// Compile common structure of json data
+		$jsonldArray = [
 			'@context' => $this->context,
 			'@graph' => $graph,
 			'@id' => $this->id,
-		] );
+		];
+
+		dd ($jsonldArray);
+
+		return \json_encode( $jsonldArray );
 	}
 
 

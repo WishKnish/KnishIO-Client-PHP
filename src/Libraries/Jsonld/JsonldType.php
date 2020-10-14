@@ -130,7 +130,10 @@ class JsonldType
 	 */
 	public function contextId( $shortId )
 	{
-		return $this->contextUrl . '/' . $shortId;
+		if ( strpos( $shortId, ':' ) === false ) {
+			return $this->contextUrl . '/' . $shortId;
+		}
+		return $shortId;
 	}
 
 
