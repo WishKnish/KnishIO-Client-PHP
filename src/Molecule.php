@@ -192,7 +192,7 @@ class Molecule extends MoleculeStructure
 
 		// Add context key if it is enabled
 		if ( static::USE_META_CONTEXT ) {
-		//	$metas[ 'context' ] = $context;
+			$metas[ 'context' ] = $context;
 		}
 
 		return $this->finalMetas( $metas );
