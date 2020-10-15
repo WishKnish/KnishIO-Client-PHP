@@ -32,7 +32,7 @@ use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
 class Molecule extends MoleculeStructure
 {
 	// @todo move this consts to the config
-	private const USE_META_CONTEXT = true;
+	private const USE_META_CONTEXT = false;
 	private const DEFAULT_META_CONTEXT = 'http://www.schema.org';
 
 	private $secret;
@@ -192,7 +192,7 @@ class Molecule extends MoleculeStructure
 
 		// Add context key if it is enabled
 		if ( static::USE_META_CONTEXT ) {
-			$metas['context'] = $context;
+		//	$metas[ 'context' ] = $context;
 		}
 
 		return $this->finalMetas( $metas );
