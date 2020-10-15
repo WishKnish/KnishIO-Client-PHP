@@ -31,6 +31,9 @@ use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
  */
 class Molecule extends MoleculeStructure
 {
+	// @todo move this consts to the config
+	private const USE_META_CONTEXT = true;
+	private const DEFAULT_META_CONTEXT = 'http://www.schema.org';
 
 	private $secret;
 	private $sourceWallet;
@@ -183,9 +186,14 @@ class Molecule extends MoleculeStructure
 	 * @param string $context
 	 * @return array
 	 */
-    protected function contextMetas( array $metas = [], $context = 'http://www.schema.org' ): array
+    protected function contextMetas( array $metas = [], $context = null ): array
 	{
-		$metas[ 'context' ] = $context;
+		$context = $context ?: static::DEFAULT_META_CONTEXT;
+
+		// Add context key if it is enabled
+		if ( static::USE_META_CONTEXT ) {
+			$metas['context'] = $context;
+		}
 
 		return $this->finalMetas( $metas );
 	}

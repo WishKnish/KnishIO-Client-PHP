@@ -61,6 +61,15 @@ class Jsonld {
 
 
 	/**
+	 * @return array
+	 */
+	public function graph()
+	{
+		return $this->graph;
+	}
+
+
+	/**
 	 * @param $type
 	 * @return mixed
 	 * @throws \Exception
@@ -139,8 +148,6 @@ class Jsonld {
 			'@graph' => $graph,
 			'@id' => $this->id,
 		];
-
-		dd ($jsonldArray);
 
 		return \json_encode( $jsonldArray );
 	}

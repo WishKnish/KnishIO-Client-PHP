@@ -147,6 +147,24 @@ class JsonldType
 
 
 	/**
+	 * @return string
+	 */
+	public function title(): string
+	{
+		return array_get( $this->otherProperties, 'rdfs:label', '' );
+	}
+
+
+	/**
+	 * @return string
+	 */
+	public function description(): string
+	{
+		return array_get( $this->otherProperties, 'rdfs:comment', '' );
+	}
+
+
+	/**
 	 * @return array
 	 */
 	public function fields()
@@ -158,9 +176,42 @@ class JsonldType
 	/**
 	 * @return mixed
 	 */
-	public function parentIds()
+	public function parentIds(): array
 	{
-		return array_get( $this->graphProperties, 'domainIncludes', [] );
+		return $this->findGraphProperty( 'domainIncludes', [] );
+	}
+
+
+	/**
+	 * @return array
+	 */
+	public function types(): array
+	{
+		return $this->findGraphProperty( 'rangeIncludes', [] );
+	}
+
+
+	/**
+	 * @param string $propertyName
+	 * @param null $default
+	 * @return |null
+	 */
+	public function findGraphProperty( string $propertyName, $default = null ) {
+		foreach( $this->graphProperties as $property => $value ) {
+			if ( preg_match('#^(.*)' . $propertyName . '#Usi', $property) ) {
+				return $value;
+			}
+		}
+		return $default;
+	}
+
+
+	/**
+	 * @return string
+	 */
+	public function url(): string
+	{
+		return $this->contextUrl . '/' . $this->id;
 	}
 
 
@@ -171,10 +222,8 @@ class JsonldType
 	 */
 	public function getValidator()
 	{
-		$types = $this->graphProperties[ 'rangeIncludes' ];
-
 		// @todo: Temporarily code, need custom type, not first
-		return Validator::get( $types[ 0 ] );
+		return Validator::get( $this->types[ 0 ] );
 	}
 
 
