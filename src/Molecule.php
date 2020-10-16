@@ -188,11 +188,9 @@ class Molecule extends MoleculeStructure
 	 */
     protected function contextMetas( array $metas = [], $context = null ): array
 	{
-		$context = $context ?: static::DEFAULT_META_CONTEXT;
-
 		// Add context key if it is enabled
 		if ( static::USE_META_CONTEXT ) {
-			$metas[ 'context' ] = $context;
+			$metas[ 'context' ] = $context ?: static::DEFAULT_META_CONTEXT;
 		}
 
 		return $this->finalMetas( $metas );

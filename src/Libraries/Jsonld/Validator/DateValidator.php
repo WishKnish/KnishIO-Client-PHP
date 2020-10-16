@@ -9,13 +9,17 @@ namespace WishKnish\KnishIO\Client\Libraries\Jsonld\Validator;
  */
 class DateValidator extends Validator {
 
+	protected $format = 'Y-m-d';
+
+
 	/**
 	 * @param array $data
 	 * @return mixed|void
 	 */
-	public function validate(array $data): bool
+	public function validate( $value ): bool
 	{
-		return true;
+		$dateTime = \DateTime::createFromFormat( $this->format, $value );
+		return $dateTime && ( $dateTime->format( $this->format ) === $value );
 	}
 
 

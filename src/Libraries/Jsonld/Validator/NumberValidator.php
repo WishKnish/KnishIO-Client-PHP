@@ -14,9 +14,9 @@ class NumberValidator extends Validator {
 	 * @param array $data
 	 * @return mixed|void
 	 */
-	public function validate(array $data): bool
+	public function validate( $value ): bool
 	{
-		return true;
+		return is_numeric( $value );
 	}
 
 

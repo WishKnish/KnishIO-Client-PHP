@@ -34,6 +34,22 @@ class JsonldType
 
 
 	/**
+	 * Get clean property name without a context
+	 *
+	 * @param string $propertyName
+	 * @return string
+	 */
+	public static function cleanPropertyName( string $propertyName ): string
+	{
+		$property = explode( ':', $propertyName );
+		if ( count( $property ) > 1 ) {
+			return $property[ 1 ];
+		}
+		return $property[ 0 ];
+	}
+
+
+	/**
 	 * @param $contextUrl
 	 * @param array $rawData
 	 * @return static
@@ -198,7 +214,7 @@ class JsonldType
 	 */
 	public function findGraphProperty( string $propertyName, $default = null ) {
 		foreach( $this->graphProperties as $property => $value ) {
-			if ( preg_match('#^(.*)' . $propertyName . '#Usi', $property) ) {
+			if ( static::cleanPropertyName( $property ) === $propertyName ) {
 				return $value;
 			}
 		}
@@ -216,41 +232,51 @@ class JsonldType
 
 
 	/**
-	 * Get a validator
-	 *
-	 * @return Validator
-	 */
-	public function getValidator()
-	{
-		// @todo: Temporarily code, need custom type, not first
-		return Validator::get( $this->types[ 0 ] );
-	}
-
-
-	/**
-	 * @todo: correct fn
+	 * @param $errors
 	 * @param array $data
-	 * @return bool
+	 * @return array
 	 */
-	public function validate( array $data ): bool
+	public function validate( &$errors, array $data )
 	{
+		$response = [];
 		foreach( $data as $field => $value ) {
 
 			// Get type by field name
-			$type = array_get( $this->fields, $field );
+			$jsonldType = array_get( $this->fields, $field );
+
+			// The field does not exist in the schema: no validation
+			if ( !$jsonldType ) {
+				continue;
+			}
 
 			// The last level: use custom validator
-			if ( !$type->fields() && !$type->getValidator()->validate( $value ) ) {
-				return false;
+			if ( !$jsonldType->fields() ) {
+
+				// Validate all of the field types: if one of them is valid => return true
+				$isValid = false;
+				foreach( $jsonldType->types() as $type ) {
+
+					// Validate custom type @todo add custom errors for validators OR use external package for it
+					$isValid = Validator::get( static::cleanPropertyName( $type ) )
+						->validate( $value );
+
+					// If it is valid => stop the loop
+					if ( $isValid ) {
+						break;
+					}
+				}
+
+				// Not valid - add error to the common list @todo change error generation to use Validator class
+				if ( !$isValid ) {
+					$errors[] = 'Schema error: field "' . $jsonldType->id() .'" is not valid in "'. $this->id() . '" object. ';
+				}
 			}
 
-			// Composite validator: send fields to next level of types
-			if ( $type->fields() && !$type->validate( $value ) ) {
-				return false;
+			// Parent level: send fields to the next level of types
+			else {
+				$field->validate( $errors, $value );
 			}
 		}
-
-		return true;
 	}
 
 

@@ -12,11 +12,17 @@ abstract class Validator {
 
 	/**
 	 * Get validator by type
-	 * @param $key
+	 *
+	 * @param $type
+	 * @return mixed
+	 * @throws \RuntimeException
 	 */
 	public static function get( $type )
 	{
-		$class = $type . 'Validator';
+		$class = '\WishKnish\KnishIO\Client\Libraries\Jsonld\Validator\\' . $type . 'Validator';
+		if ( !class_exists( $class ) ) {
+			throw new \RuntimeException( 'Validator class ' . $class . ' does not exist.' );
+		}
 		return new $class;
 	}
 
@@ -24,7 +30,7 @@ abstract class Validator {
 	/**
 	 * @return mixed
 	 */
-	abstract public function validate( array $data ): bool;
+	abstract public function validate( $value ): bool;
 
 
 }
