@@ -724,9 +724,6 @@ class Molecule extends MoleculeStructure
             $this->generateIndex()
         );
 
-		// User remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
-
         $this->atoms = Atom::sortAtoms( $this->atoms );
 
         return $this;

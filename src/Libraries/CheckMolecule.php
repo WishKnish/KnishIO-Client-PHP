@@ -8,7 +8,6 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
-use WishKnish\KnishIO\Client\Exception\BaseException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
@@ -24,7 +23,6 @@ use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Meta;
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -36,10 +34,11 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule
 {
 
-	/**
-	 * @param MoleculeStructure $molecule
-	 * @param Wallet|null $fromWallet
-	 */
+    /**
+     * @param MoleculeStructure $molecule
+     * @param Wallet|null $fromWallet
+     * @return bool
+     */
     public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null )
     {
     	$verification_methods = [
@@ -72,6 +71,8 @@ class CheckMolecule
 			}
 
         }
+
+        return true;
     }
 
 
@@ -244,7 +245,7 @@ class CheckMolecule
 
 	/**
 	 * @param MoleculeStructure $molecule
-	 * @return bool1
+	 * @return bool
 	 */
 	public static function isotopeM ( MoleculeStructure $molecule )
 	{

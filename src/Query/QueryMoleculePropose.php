@@ -44,13 +44,13 @@ class QueryMoleculePropose extends Query
 	protected $remainderWallet;
 
 
-
-	/**
-	 * Query constructor.
-	 * @param KnishIOClient $knishIO
-	 * @param $molecule
-	 */
-	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null )
+    /**
+     * Query constructor.
+     * @param HttpClientInterface $client
+     * @param Molecule $molecule
+     * @param string|null $query
+     */
+    public function __construct ( HttpClientInterface $client, Molecule $molecule, $query = null )
 	{
 		parent::__construct( $client, $query );
 

@@ -10,9 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
 
@@ -43,19 +41,25 @@ abstract class Query
 	protected $variables;
 
     /**
+     * @var string|null
+     */
+    protected $query;
+
+    /**
      * @var string
      */
 	protected static $default_query;
 
 
-	/**
-	 * Query constructor.
-	 * @param KnishIOClient $knishIO
-	 */
-	public function __construct ( HttpClientInterface $client, string $query = null )
+    /**
+     * Query constructor.
+     * @param HttpClientInterface $client
+     * @param string|null $query
+     */
+	public function __construct ( HttpClientInterface $client, $query = null )
 	{
 	    $this->client = $client;
-		$this->query = $query ?? static::$default_query;
+		$this->query = $query ?: static::$default_query;
 	}
 
 
@@ -85,7 +89,8 @@ abstract class Query
 	 * @return RequestInterface
 	 */
 	public function createRequest ( array $variables = null, array $fields = null ) {
-
+        dump($variables);
+        dump($fields);
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
 
@@ -100,16 +105,17 @@ abstract class Query
 	}
 
 
-	/**
-	 * @param array|null $variables
+    /**
+     * @param array|null $variables
      * @param array $fields
-	 * @return mixed
-	 */
+     * @return mixed
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
 	public function execute ( array $variables = null, array $fields = null ) {
 
 		// Set a request
 		$this->request = $this->createRequest( $variables, $fields );
-
+        dump($this->request->getBody()->getContents());
 		// Make a request
 		$response = $this->client->send( $this->request );
 

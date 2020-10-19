@@ -7,14 +7,8 @@
 namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
-use ReflectionClass;
 use ReflectionException;
-use ReflectionProperty;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -117,14 +111,12 @@ class Atom
 
 		foreach ( $atomList as $atom ) {
 
-			$atom_data = get_object_vars( $atom );
-
 			$molecularSponge->absorb( $numberOfAtoms );
 
-			foreach ( $atom_data as $name => $value ) {
+			foreach ( get_object_vars( $atom ) as $name => $value ) {
 
 				// Old atoms support (without batch_id field)
-				if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
+				if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
 					 continue;
 				}
 
@@ -134,32 +126,25 @@ class Atom
 
 				if ( $name === 'meta' ) {
 
-					$list = Meta::normalizeMeta( $value );
+                    $atom->$name = Meta::normalizeMeta( $value );
 
-					foreach ( $list as $meta ) {
-
+					foreach ( $atom->$name as $meta ) {
 						if ( isset( $meta[ 'value' ] ) ) {
-
-							$molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-							$molecularSponge->absorb( ( string ) $meta[ 'value' ] );
-
+						    foreach ( [ 'key', 'value', ] as $key ) {
+                                $molecularSponge->absorb( ( string ) $meta[ $key ] );
+                            }
 						}
-
 					}
-
-					$atom->$name = $list;
 
 					continue;
 				}
 
 				if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
-
 					$molecularSponge->absorb( ( string ) $value );
 					continue;
 				}
 
 				if ( $value !== null ) {
-
 					$molecularSponge->absorb( ( string ) $value );
 				}
 
@@ -179,7 +164,7 @@ class Atom
 			}
 			case 'base17':
 			{
-				$target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+			    $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
 				break;
 			}
 			default:
