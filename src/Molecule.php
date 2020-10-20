@@ -612,7 +612,7 @@ class Molecule extends MoleculeStructure
 	{
 
 		// Modify cell slug
-		$this->cellSlug = $this->cellSlugOrigin . MoleculeStructure::$cellSlugDelimiter . $this->sourceWallet->bundle;
+		$this->cellSlug = static::dynamicCellSlug( $this->cellSlugOrigin, $this->sourceWallet->bundle );
 
 		// Init meta
 		$this->initMeta( $meta, 'walletBundle', $this->sourceWallet->bundle );

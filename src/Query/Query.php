@@ -171,9 +171,7 @@ abstract class Query
 
 
 	/**
-	 * Create a response
-	 *
-	 * @param string $response
+	 * @param $response
 	 * @return Response
 	 */
 	public function createResponse ( $response )

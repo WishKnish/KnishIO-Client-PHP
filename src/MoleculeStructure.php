@@ -38,6 +38,9 @@ class MoleculeStructure {
 	protected $cellSlugOrigin;
 
 
+
+
+
 	/**
 	 * This algorithm describes the function EnumerateMolecule(Hm), designed to accept a pseudo-hexadecimal string Hm, and output a collection of decimals representing each character.
 	 * Molecular hash Hm is presented as a 128 byte (64-character) pseudo-hexadecimal string featuring numbers from 0 to 9 and characters from A to F - a total of 15 unique symbols.
@@ -115,6 +118,17 @@ class MoleculeStructure {
 	public function __construct( $cellSlug = null )
 	{
 		$this->cellSlugOrigin = $this->cellSlug = $cellSlug;
+	}
+
+
+	/**
+	 * @param $cellSlug
+	 * @param $walletBundle
+	 * @return string
+	 */
+	public static function dynamicCellSlug( $cellSlug, $walletBundle )
+	{
+		return $cellSlug . static::$cellSlugDelimiter . $walletBundle;
 	}
 
 

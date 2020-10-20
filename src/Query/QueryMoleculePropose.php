@@ -7,36 +7,15 @@
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class QueryMoleculePropose
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryMoleculePropose extends Query
+class QueryMoleculePropose extends QueryMoleculeStructurePropose
 {
-	// Query
-	protected static $default_query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
-		@fields 
-	}';
-
-	// Fields
-	protected $fields = [
-		'molecularHash',
-		'height',
-		'depth',
-		'status',
-		'reason',
-		'payload',
-		'createdAt',
-		'receivedAt',
-		'processedAt',
-		'broadcastedAt',
-	];
-
 	// Molecule
 	protected $molecule;
 
@@ -44,60 +23,33 @@ class QueryMoleculePropose extends Query
 	protected $remainderWallet;
 
 
-
 	/**
-	 * Query constructor.
-	 * @param KnishIOClient $knishIO
-	 * @param $molecule
+	 * QueryMoleculePropose constructor.
+	 * @param HttpClientInterface $client
+	 * @param Molecule $molecule
+	 * @param string|null $query
 	 */
 	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null )
 	{
-		parent::__construct( $client, $query );
+		parent::__construct( $client, $molecule, $query );
 
-		// Create a molecule
 		$this->molecule = $molecule;
-	}
-
-
-	/**
-	 * @param array|null $variables
-	 * @return mixed
-	 */
-	public function compiledVariables ( array $variables = null )
-	{
-		// Default variabled
-		$variables = parent::compiledVariables( $variables );
-
-		// Merge variables with a molecule key
-		return array_merge( $variables, [ 'molecule' => $this->molecule ] );
 	}
 
 
 	/**
 	 * @return Molecule
 	 */
-	public function molecule ()
+	public function molecule(): Molecule
 	{
 		return $this->molecule;
 	}
 
 
 	/**
-	 * Create a response
-	 *
-	 * @param string $response
-	 * @return Response
-	 */
-	public function createResponse ( $response )
-    {
-		return new ResponseMolecule( $this, $response );
-	}
-
-
-	/**
 	 * @return mixed
 	 */
-	public function remainderWallet ()
+	public function remainderWallet(): Wallet
     {
 		return $this->remainderWallet;
 	}
