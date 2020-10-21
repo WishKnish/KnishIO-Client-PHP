@@ -611,9 +611,6 @@ class Molecule extends MoleculeStructure
 	public function initBundleMeta ( array $meta )
 	{
 
-		// Modify cell slug
-		$this->cellSlug = static::dynamicCellSlug( $this->cellSlugOrigin, $this->sourceWallet->bundle );
-
 		// Init meta
 		$this->initMeta( $meta, 'walletBundle', $this->sourceWallet->bundle );
 	}

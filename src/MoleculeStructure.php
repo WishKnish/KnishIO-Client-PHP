@@ -26,16 +26,12 @@ class MoleculeStructure {
 
 	use Json;
 
-	static protected $cellSlugDelimiter = '.';
-
 	public $molecularHash;
 	public $cellSlug;
 	public $bundle;
 	public $status;
 	public $createdAt;
 	public $atoms;
-
-	protected $cellSlugOrigin;
 
 
 
@@ -110,34 +106,13 @@ class MoleculeStructure {
 	}
 
 
-
 	/**
 	 * MoleculeStructure constructor.
 	 * @param null $cellSlug
 	 */
 	public function __construct( $cellSlug = null )
 	{
-		$this->cellSlugOrigin = $this->cellSlug = $cellSlug;
-	}
-
-
-	/**
-	 * @param $cellSlug
-	 * @param $walletBundle
-	 * @return string
-	 */
-	public static function dynamicCellSlug( $cellSlug, $walletBundle )
-	{
-		return $cellSlug . static::$cellSlugDelimiter . $walletBundle;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function cellSlugBase ()
-	{
-		return explode( static::$cellSlugDelimiter, $this->cellSlug )[0];
+		$this->cellSlug = $cellSlug;
 	}
 
 
