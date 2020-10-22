@@ -80,7 +80,7 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -125,7 +125,7 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -146,7 +146,7 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -167,20 +167,10 @@ class QueryClientTest extends TestCase
 		$molecule->sign();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
-	/**
-	 * @param $molecule
-	 */
-	protected function executeProposeMolecule ( $molecule ) {
 
-		// Execute query & check response
-		$response = $this->client( $this->source_secret )
-			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
-			->execute();
-		$this->checkResponse ( $response );
-	}
 
 }

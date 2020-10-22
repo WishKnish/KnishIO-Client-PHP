@@ -7,6 +7,7 @@ use Illuminate\Support\Arr;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
+use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
 
 use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
@@ -139,7 +140,8 @@ class QueryMetaTest extends TestCase
 		}
 		$molecule->sign();
 		$molecule->check();
-		$this->executeProposeMolecule($molecule);
+
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -557,16 +559,6 @@ class QueryMetaTest extends TestCase
 
 
 
-		/**
-	 * @param $molecule
-	 */
-	protected function executeProposeMolecule ($molecule) {
-
-		// Execute query & check response
-		$query = new QueryMoleculePropose( $this->guzzle_client, $molecule );
-		$response = $query->execute();
-		$this->checkResponse ($response);
-	}
 
 
 }

@@ -606,17 +606,6 @@ class Molecule extends MoleculeStructure
 
 
 	/**
-	 * @param array $meta
-	 */
-	public function initBundleMeta ( array $meta )
-	{
-
-		// Init meta
-		$this->initMeta( $meta, 'walletBundle', $this->sourceWallet->bundle );
-	}
-
-
-	/**
 	 * Initialize meta append molecule
 	 *
 	 * @param array $meta

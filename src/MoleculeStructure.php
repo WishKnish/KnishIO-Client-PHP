@@ -28,12 +28,22 @@ class MoleculeStructure {
 
 	public $molecularHash;
 	public $cellSlug;
+	public $counterparty;
 	public $bundle;
 	public $status;
 	public $createdAt;
 	public $atoms;
 
 
+	/**
+	 * @param string|null $counterparty
+	 * @return $this
+	 */
+	public function withCounterparty( ?string $counterparty ): self
+	{
+		$this->counterparty = $counterparty;
+		return $this;
+	}
 
 
 
