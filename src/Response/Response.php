@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Illuminate\Support\Facades\Log;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -100,6 +101,7 @@ class Response
 
 		// Check key & return custom data from the response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
+			Log::info( 'Response::data', [$this->response] );
 			throw new InvalidResponseException();
 		}
 
