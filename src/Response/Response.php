@@ -93,7 +93,6 @@ class Response
 	 */
 	public function data ()
     {
-
 		// For the root class
 		if ( !$this->dataKey ) {
 			return $this->response;
@@ -101,8 +100,18 @@ class Response
 
 		// Check key & return custom data from the response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
-			Log::info( 'Response::data', [$this->response] );
-			throw new InvalidResponseException();
+			// @todo tmp output full error info
+			if ( array_has( $this->response, 'errors' ) ) {
+				foreach ( array_get( $this->response, 'errors' ) as $error ) {
+					$error_output[] = str_replace( ["\r","\n"], '', array_get( $error, 'message' ) );
+				}
+				$error_output = implode( "\r\n", $error_output );
+			}
+			else {
+				$error_output = $this->origin_response;
+			}
+
+			throw new InvalidResponseException( $error_output );
 		}
 
 		return array_get( $this->response, $this->dataKey );
