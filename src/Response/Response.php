@@ -100,18 +100,7 @@ class Response
 
 		// Check key & return custom data from the response
 		if ( !array_has( $this->response, $this->dataKey ) ) {
-			// @todo tmp output full error info
-			if ( array_has( $this->response, 'errors' ) ) {
-				foreach ( array_get( $this->response, 'errors' ) as $error ) {
-					$error_output[] = str_replace( ["\r","\n"], '', array_get( $error, 'message' ) );
-				}
-				$error_output = implode( "\r\n", $error_output );
-			}
-			else {
-				$error_output = $this->origin_response;
-			}
-
-			throw new InvalidResponseException( $error_output );
+			throw new InvalidResponseException();
 		}
 
 		return array_get( $this->response, $this->dataKey );
