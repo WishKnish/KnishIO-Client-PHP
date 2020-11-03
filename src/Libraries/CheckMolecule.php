@@ -46,6 +46,7 @@ class CheckMolecule
             'molecularHash',
             'ots',
             'isotopeM',
+			'isotopeP',
             'isotopeC',
             'isotopeV',
             'isotopeT',
@@ -159,6 +160,16 @@ class CheckMolecule
 
         return true;
     }
+
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+	public static function isotopeP ( MoleculeStructure $molecule )
+	{
+		return static::isotopeC( $molecule );
+	}
 
 
 	/**

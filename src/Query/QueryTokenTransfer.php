@@ -26,6 +26,8 @@ class QueryTokenTransfer extends QueryMoleculePropose
 		$this->molecule->initValue( $toWallet, $amount );
 		$this->molecule->sign();
 		$this->molecule->check( $this->molecule->sourceWallet() );
+
+		return $this;
 	}
 
 }

@@ -180,10 +180,8 @@ class Molecule extends MoleculeStructure
 
 
 	/**
-	 * @param $metaType
-	 * @param $metaId
 	 * @param array $metas
-	 * @param string $context
+	 * @param null $context
 	 * @return array
 	 */
     protected function contextMetas( array $metas = [], $context = null ): array
@@ -193,7 +191,7 @@ class Molecule extends MoleculeStructure
 			$metas[ 'context' ] = $context ?: static::DEFAULT_META_CONTEXT;
 		}
 
-		return $this->finalMetas( $metas );
+		return $metas;
 	}
 
 
@@ -256,7 +254,7 @@ class Molecule extends MoleculeStructure
             $this->sourceWallet->batchId,
             'token',
             $token,
-            $this->contextMetas( $aggregateMeta ),
+            $this->finalMetas( $this->contextMetas( $aggregateMeta ) ),
             null,
             $this->generateIndex()
         );
@@ -418,7 +416,49 @@ class Molecule extends MoleculeStructure
 			$this->sourceWallet->batchId,
 			'wallet',
 			$newWallet->address,
-			$this->contextMetas( $metas, $newWallet ),
+			$this->finalMetas( $this->contextMetas( $metas ), $newWallet ),
+			null,
+			$this->generateIndex()
+		);
+
+		// User remainder atom
+		$this->addUserRemainderAtom ( $this->remainderWallet );
+
+		$this->atoms = Atom::sortAtoms( $this->atoms );
+
+		return $this;
+	}
+
+
+	/**
+	 * @param string $slug
+	 * @param string $host
+	 * @param string|null $name
+	 * @param array $cellSlugs
+	 * @return $this
+	 */
+	public function initPeerCreation ( string $slug, string $host, string $name = null, array $cellSlugs = [] )
+	{
+		$this->molecularHash = null;
+
+		// Metas
+		$metas = [
+			'host' 		=> $host,
+			'name'  	=> $name,
+			'cellSlugs'	=> json_encode( $cellSlugs ),
+		];
+
+		// Create an 'C' atom
+		$this->atoms[] = new Atom(
+			$this->sourceWallet->position,
+			$this->sourceWallet->address,
+			'P',
+			$this->sourceWallet->token,
+			null,
+			$this->sourceWallet->batchId,
+			'peer',
+			$slug,
+			$this->finalMetas( $metas ),
 			null,
 			$this->generateIndex()
 		);
@@ -472,7 +512,7 @@ class Molecule extends MoleculeStructure
 			$recipientWallet->batchId,
 			'token',
 			$recipientWallet->token,
-            $this->contextMetas( $tokenMeta ),
+			$this->finalMetas( $this->contextMetas( $tokenMeta ) ),
 			null,
 			$this->generateIndex()
 		);
@@ -519,7 +559,7 @@ class Molecule extends MoleculeStructure
 			null,
 			'shadowWallet',
 			$token,
-			$this->contextMetas( $metas ),
+			$this->finalMetas( $this->contextMetas( $metas ) ),
 			null,
 			$this->generateIndex()
 		);
@@ -559,7 +599,7 @@ class Molecule extends MoleculeStructure
 			null,
 			'identifier',
 			$type,
-			$this->contextMetas( $metas ),
+			$this->finalMetas( $this->contextMetas( $metas ) ),
 			null,
 			$this->generateIndex()
 		);

@@ -24,6 +24,8 @@ class QueryAuthentication extends QueryMoleculePropose
         $this->molecule->initAuthentication();
 		$this->molecule->sign();
 		$this->molecule->check();
+
+		return $this;
     }
 
     /**

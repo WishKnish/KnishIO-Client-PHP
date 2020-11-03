@@ -5,6 +5,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Query\QueryPeerCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
 use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
@@ -168,6 +169,24 @@ class QueryClientTest extends TestCase
 
 		// Execute query & check response
 		$this->executeMolecule( $this->source_secret, $molecule );
+	}
+
+
+	/**
+	 * @throws \Exception
+	 */
+	public function testPeerCreation () {
+
+		$this->beforeExecute();
+
+		// Query
+		$query = $this->client( $this->source_secret )
+			->createMoleculeQuery( QueryPeerCreate::class );
+		$query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );
+
+		$molecule = $query->execute();
+
+		dd ( $molecule );
 	}
 
 

@@ -34,6 +34,8 @@ class QueryTokenReceive extends QueryMoleculePropose
 		$this->molecule->initTokenTransfer( $token, $value, $metaType, $metaId, $metas );
 		$this->molecule->sign();
 		$this->molecule->check();
+
+		return $this;
 	}
 
 }

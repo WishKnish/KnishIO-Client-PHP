@@ -34,6 +34,8 @@ class QueryShadowWalletClaim extends QueryMoleculePropose
 		$this->molecule->initShadowWalletClaimAtom ( $token, $wallets );
 		$this->molecule->sign();
 		$this->molecule->check();
+
+		return $this;
 	}
 
 

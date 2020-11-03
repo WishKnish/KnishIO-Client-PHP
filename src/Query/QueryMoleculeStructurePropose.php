@@ -40,6 +40,23 @@ class QueryMoleculeStructurePropose extends Query
 
 
 	/**
+	 * @param string $json
+	 * @return mixed
+	 * @todo: tmp function not required to pass it to other clients
+	 */
+	public static function rawExecute( string $json ): ResponseMolecule
+	{
+		$molecule = json_decode( $json, true );
+		$molecule = \WishKnish\KnishIO\Client\MoleculeStructure::toObject( $molecule );
+		$query = new \WishKnish\KnishIO\Client\Query\QueryMoleculeStructurePropose(
+			(new \WishKnish\KnishIO\Client\KnishIOClient( url() . '/graphql') )->client(),
+			$molecule
+		);
+		return $query->execute();
+	}
+
+
+	/**
 	 * QueryMoleculeStructurePropose constructor.
 	 * @param HttpClientInterface $client
 	 * @param MoleculeStructure $moleculeStructure

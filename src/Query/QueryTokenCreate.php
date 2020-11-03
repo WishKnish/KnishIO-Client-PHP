@@ -34,6 +34,8 @@ class QueryTokenCreate extends QueryMoleculePropose
 		$this->molecule->initTokenCreation ( $recipientWallet, $amount, $metas );
 		$this->molecule->sign();
 		$this->molecule->check();
+
+		return $this;
 	}
 
     /**

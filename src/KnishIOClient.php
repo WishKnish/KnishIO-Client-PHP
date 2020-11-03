@@ -66,11 +66,12 @@ class KnishIOClient
 
 	/**
 	 * KnishIOClient constructor.
-	 * @param $url
+	 * @param null $url
 	 * @param HttpClientInterface|null $client
 	 */
-	public function __construct ( $url, HttpClientInterface $client = null )
+	public function __construct ( $url = null, HttpClientInterface $client = null )
 	{
+		$url = $url ?: url() . '/graphql';
         $this->client = default_if_null( $client, new HttpClient( $url ) );
 	}
 
