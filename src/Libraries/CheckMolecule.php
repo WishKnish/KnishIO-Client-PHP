@@ -404,8 +404,6 @@ class CheckMolecule
 	 */
 	public static function molecularHash ( MoleculeStructure $molecule )
 	{
-		// CheckMolecule::molecularHash@total: 0.0038411617279053 sec
-
 		static::missing( $molecule );
 
 		if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {

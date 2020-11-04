@@ -24,12 +24,9 @@ class ResponseMoleculeList extends Response
 	 * @return Wallet|WalletShadow
 	 * @throws \Exception
 	 */
-	public static function toClientMolecule ( array $data ): MoleculeStructure {
-
-		$molecule = new MoleculeStructure();
-		$molecule->molecularHash = array_get( $data, 'molecularHash' );
-
-		return $molecule;
+	public static function toClientMolecule ( array $data ): MoleculeStructure
+	{
+		return MoleculeStructure::toObject( $data );
 	}
 
 

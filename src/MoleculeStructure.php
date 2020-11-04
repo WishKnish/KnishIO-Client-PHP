@@ -233,4 +233,14 @@ class MoleculeStructure {
 		return $object;
 	}
 
+
+	/**
+	 * @param string $property
+	 * @return string
+	 */
+	public function findProperty( string $property ): string
+	{
+		return array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
+	}
+
 }

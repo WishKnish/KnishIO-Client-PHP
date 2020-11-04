@@ -14,12 +14,12 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  * Class QueryMoleculeList
  * @package WishKnish\KnishIO\Client\Query
  *
- * /graphql?query={Molecule(lastMolecularHash:"",limit:10){molecularHash}}
+ * /graphql?query={Molecule(lastMolecularHash:"",limit:10,order:"created_at asc"){molecularHash}}
  */
 class QueryMoleculeList extends Query
 {
 	// Query
-	protected static $default_query = 'query( $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
+	protected static $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
 	 	@fields
 	}';
 
@@ -28,20 +28,9 @@ class QueryMoleculeList extends Query
 		'molecularHash',
 		'cellSlug',
 		'bundleHash',
-		'status',
-		'height',
-		/*
-		'metas' => [
-			'molecularHash',
-			'position',
-			'metaType',
-			'metaId',
-			'key',
-			'value',
-			'createdAt',
-		],
+//		'height',
+		'createdAt',
 		'atoms' => [
-			'molecularHash',
 			'position',
 			'isotope',
 			'walletAddress',
@@ -53,9 +42,13 @@ class QueryMoleculeList extends Query
 			'metaId',
 			'otsFragment',
 			'createdAt',
+			'metas' => [
+				'key',
+				'value',
+			],
 		],
-		*/
 	];
+
 
 
 	/**

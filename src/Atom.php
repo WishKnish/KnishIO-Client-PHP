@@ -50,11 +50,10 @@ class Atom
 	public $metaType;
 	public $metaId;
 	public $meta = [];
-    public $pubkey;
-    public $characters;
 	public $index;
 	public $otsFragment;
 	public $createdAt;
+
 
 	/**
 	 * Atom constructor.
@@ -221,6 +220,16 @@ class Atom
     public function aggregatedMeta(): array
 	{
 		return Meta::aggregateMeta( $this->meta );
+	}
+
+
+	/**
+	 * @param string $property
+	 * @return string
+	 */
+	public function findProperty( string $property ): string
+	{
+		return array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
 	}
 
 }
