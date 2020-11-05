@@ -28,8 +28,12 @@ class QueryMoleculeList extends Query
 		'molecularHash',
 		'cellSlug',
 		'bundleHash',
+		'status',
 //		'height',
 		'createdAt',
+		'receivedAt',
+		'processedAt',
+		'relatedModels',
 		'atoms' => [
 			'position',
 			'isotope',

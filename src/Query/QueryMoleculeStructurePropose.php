@@ -9,6 +9,7 @@ namespace WishKnish\KnishIO\Client\Query;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver;
 
 /**
  * Class QueryMoleculeStructurePropose
@@ -49,10 +50,24 @@ class QueryMoleculeStructurePropose extends Query
 		$molecule = json_decode( $json, true );
 		$molecule = \WishKnish\KnishIO\Client\MoleculeStructure::toObject( $molecule );
 		$query = new \WishKnish\KnishIO\Client\Query\QueryMoleculeStructurePropose(
-			(new \WishKnish\KnishIO\Client\KnishIOClient( url() . '/graphql') )->client(),
+			( new \WishKnish\KnishIO\Client\KnishIOClient )->client(),
 			$molecule
 		);
 		return $query->execute();
+	}
+
+	/**
+	 * @param string $json
+	 * @return mixed
+	 * @todo: tmp function to verify json molecule by MoleculeResolver
+	 */
+	public static function rawVerify( string $json ): MoleculeResolver
+	{
+		// dd(json_decode($json, true));
+		$molecule = \WishKnish\KnishIO\Client\Response\ResponseMoleculeList::toClientMolecule(
+			json_decode($json, true)
+		);
+		return \WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver::create( $molecule );
 	}
 
 
