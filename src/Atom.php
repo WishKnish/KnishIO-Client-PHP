@@ -225,11 +225,22 @@ class Atom
 
 	/**
 	 * @param string $property
-	 * @return string
+	 * @param $value
+	 * @todo change to __set?
 	 */
-	public function findProperty( string $property ): string
+	public function setProperty( string $property, $value ): void
 	{
-		return array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+		$property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+
+		// Meta json specific logic (if meta does not initialized)
+		if ( !$this->meta && $property === 'metasJson' ) {
+			$this->meta = Meta::normalizeMeta( json_decode( $value, true ) );
+		}
+
+		// Default meta set
+		else {
+			$this->$property = $value;
+		}
 	}
 
 }

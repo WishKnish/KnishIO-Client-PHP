@@ -236,11 +236,14 @@ class MoleculeStructure {
 
 	/**
 	 * @param string $property
-	 * @return string
+	 * @param $value
+	 * @todo change to __set?
 	 */
-	public function findProperty( string $property ): string
+	public function setProperty( string $property, $value ): void
 	{
-		return array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
+		$property = array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
+
+		$this->$property = $value;
 	}
 
 }

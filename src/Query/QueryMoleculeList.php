@@ -27,13 +27,9 @@ class QueryMoleculeList extends Query
 	protected $fields = [
 		'molecularHash',
 		'cellSlug',
+		'counterparty',
 		'bundleHash',
-		'status',
-//		'height',
 		'createdAt',
-		'receivedAt',
-		'processedAt',
-		'relatedModels',
 		'atoms' => [
 			'position',
 			'isotope',
@@ -44,12 +40,9 @@ class QueryMoleculeList extends Query
 			'index',
 			'metaType',
 			'metaId',
+			'metasJson',
 			'otsFragment',
 			'createdAt',
-			'metas' => [
-				'key',
-				'value',
-			],
 		],
 	];
 

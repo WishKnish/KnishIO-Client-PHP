@@ -36,11 +36,16 @@ trait Json
 		$object = $object ?? new static;
 		foreach ( $data as $property => $value ) {
 
-			// Change property with propertyModifier related to custom object
-			$property = method_exists( $object, 'findProperty' ) ?
-				$object->findProperty( $property ) : $property;
+			// Has a setProperty customization function
+			if ( method_exists( $object, 'setProperty' ) ) {
+				$object->setProperty( $property, $value );
+			}
 
-			$object->$property = $value;
+			// Default property set
+			else {
+				$object->$property = $value;
+			}
+
 		}
 		return $object;
 	}

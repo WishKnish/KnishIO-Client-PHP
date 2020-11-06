@@ -6,10 +6,12 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use Illuminate\Support\Facades\DB;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver;
+
 
 /**
  * Class QueryMoleculeStructurePropose
@@ -54,6 +56,35 @@ class QueryMoleculeStructurePropose extends Query
 			$molecule
 		);
 		return $query->execute();
+	}
+
+
+	/**
+	 * @param string $json
+	 * @return ResponseMolecule
+	 * @todo: tmp function not required to pass it to other clients
+	 */
+	public static function rawExecuteLocal( string $json ): void
+	{
+		$resolver = static::rawVerify( $json );
+
+		try {
+
+			// Execute molecule function: Get a final molecule model from the resolver (execute call)
+			\DB::transaction( static function () use ( $resolver ) {
+				$resolver->execute();
+			} );
+
+		}
+		catch ( \Exception $e ) {
+
+			// Transaction rollback
+			\DB::rollBack();
+
+			// Throw to the final try-catch block
+			throw $e;
+		}
+
 	}
 
 	/**
