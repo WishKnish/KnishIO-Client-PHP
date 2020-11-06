@@ -234,7 +234,10 @@ class Atom
 
 		// Meta json specific logic (if meta does not initialized)
 		if ( !$this->meta && $property === 'metasJson' ) {
-			$this->meta = Meta::normalizeMeta( json_decode( $value, true ) );
+		    $metas = json_decode( $value, true );
+		    if ( $metas !== null ) {
+                $this->meta = Meta::normalizeMeta( $metas );
+            }
 		}
 
 		// Default meta set
