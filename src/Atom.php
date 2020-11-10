@@ -7,8 +7,14 @@
 namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
+use desktopd\SHA3\Sponge as SHA3;
 use Exception;
+use ReflectionClass;
 use ReflectionException;
+use ReflectionProperty;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -44,8 +50,6 @@ class Atom
 	public $metaType;
 	public $metaId;
 	public $meta = [];
-    public $pubkey;
-    public $characters;
 	public $index;
 	public $otsFragment;
 	public $createdAt;
@@ -111,9 +115,11 @@ class Atom
 
 		foreach ( $atomList as $atom ) {
 
+			$atom_data = get_object_vars( $atom );
+
 			$molecularSponge->absorb( $numberOfAtoms );
 
-			foreach ( get_object_vars( $atom ) as $name => $value ) {
+			foreach ( $atom_data as $name => $value ) {
 
 				// Old atoms support (without batch_id field)
 				if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
@@ -126,25 +132,32 @@ class Atom
 
 				if ( $name === 'meta' ) {
 
-                    $atom->$name = Meta::normalizeMeta( $value );
+					$list = $value;
 
-					foreach ( $atom->$name as $meta ) {
+					foreach ( $list as $meta ) {
+
 						if ( isset( $meta[ 'value' ] ) ) {
-						    foreach ( [ 'key', 'value', ] as $key ) {
-                                $molecularSponge->absorb( ( string ) $meta[ $key ] );
-                            }
+
+							$molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+							$molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
 						}
+
 					}
+
+					$atom->$name = $list;
 
 					continue;
 				}
 
 				if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+
 					$molecularSponge->absorb( ( string ) $value );
 					continue;
 				}
 
 				if ( $value !== null ) {
+
 					$molecularSponge->absorb( ( string ) $value );
 				}
 
@@ -164,7 +177,7 @@ class Atom
 			}
 			case 'base17':
 			{
-			    $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+				$target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
 				break;
 			}
 			default:
@@ -198,5 +211,38 @@ class Atom
 
         return $atomList;
     }
+
+
+	/**
+	 * @return array
+	 */
+    public function aggregatedMeta(): array
+	{
+		return Meta::aggregateMeta( $this->meta );
+	}
+
+
+	/**
+	 * @param string $property
+	 * @param $value
+	 * @todo change to __set?
+	 */
+	public function setProperty( string $property, $value ): void
+	{
+		$property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+
+		// Meta json specific logic (if meta does not initialized)
+		if ( !$this->meta && $property === 'metasJson' ) {
+		    $metas = json_decode( $value, true );
+		    if ( $metas !== null ) {
+                $this->meta = Meta::normalizeMeta( $metas );
+            }
+		}
+
+		// Default meta set
+		else {
+			$this->$property = $value;
+		}
+	}
 
 }

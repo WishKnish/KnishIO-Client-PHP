@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Illuminate\Support\Facades\Log;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -92,7 +93,6 @@ class Response
 	 */
 	public function data ()
     {
-
 		// For the root class
 		if ( !$this->dataKey ) {
 			return $this->response;

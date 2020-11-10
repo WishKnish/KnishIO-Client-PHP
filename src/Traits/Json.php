@@ -35,7 +35,17 @@ trait Json
 	{
 		$object = $object ?? new static;
 		foreach ( $data as $property => $value ) {
-			$object->$property = $value;
+
+			// Has a setProperty customization function
+			if ( method_exists( $object, 'setProperty' ) ) {
+				$object->setProperty( $property, $value );
+			}
+
+			// Default property set
+			else {
+				$object->$property = $value;
+			}
+
 		}
 		return $object;
 	}

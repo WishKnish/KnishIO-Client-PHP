@@ -45,6 +45,7 @@ class CheckMolecule
             'molecularHash',
             'ots',
             'isotopeM',
+			'isotopeP',
             'isotopeC',
             'isotopeV',
             'isotopeT',
@@ -129,7 +130,7 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
 
-            $meta = Meta::aggregateMeta( Meta::normalizeMeta( $atom->meta ) );
+            $meta = Meta::aggregateMeta( $atom->meta );
             $metaType = strtolower( ( string ) $atom->metaType );
 
             if ( $metaType === 'wallet' ) {
@@ -160,6 +161,16 @@ class CheckMolecule
 
         return true;
     }
+
+
+	/**
+	 * @param MoleculeStructure $molecule
+	 * @return bool
+	 */
+	public static function isotopeP ( MoleculeStructure $molecule )
+	{
+		return static::isotopeC( $molecule );
+	}
 
 
 	/**
@@ -316,6 +327,12 @@ class CheckMolecule
 		$sum = 0.0;
 		$value = 0.0;
 
+
+		// Check sender atom
+		if ( Decimal::cmp( $firstAtom->value, 0.0) >= 0 ) {
+			throw new TransferMalformedException( 'Sender can\'t send negative value.' );
+		}
+
         /** @var Atom $vAtom */
 		foreach ( $molecule->atoms as $index => $vAtom ) {
 
@@ -351,7 +368,7 @@ class CheckMolecule
 		}
 
 		// Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-		if ( !Decimal::equal($sum, $value) ) {
+		if ( !Decimal::equal( $sum, $value ) ) {
 			throw new TransferUnbalancedException();
 		}
 
@@ -388,8 +405,6 @@ class CheckMolecule
 	 */
 	public static function molecularHash ( MoleculeStructure $molecule )
 	{
-		// CheckMolecule::molecularHash@total: 0.0038411617279053 sec
-
 		static::missing( $molecule );
 
 		if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {

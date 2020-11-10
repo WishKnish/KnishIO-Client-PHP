@@ -25,16 +25,25 @@ class MoleculeStructure {
 
 	use Json;
 
-	static protected $cellSlugDelimiter = '.';
-
 	public $molecularHash;
 	public $cellSlug;
+	public $counterparty;
 	public $bundle;
 	public $status;
 	public $createdAt;
 	public $atoms;
 
-	protected $cellSlugOrigin;
+
+	/**
+	 * @param string|null $counterparty
+	 * @return $this
+	 */
+	public function withCounterparty( ?string $counterparty ): self
+	{
+		$this->counterparty = $counterparty;
+		return $this;
+	}
+
 
 
 	/**
@@ -106,23 +115,13 @@ class MoleculeStructure {
 	}
 
 
-
 	/**
 	 * MoleculeStructure constructor.
 	 * @param null $cellSlug
 	 */
 	public function __construct( $cellSlug = null )
 	{
-		$this->cellSlugOrigin = $this->cellSlug = $cellSlug;
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function cellSlugBase ()
-	{
-		return explode( static::$cellSlugDelimiter, $this->cellSlug )[0];
+		$this->cellSlug = $cellSlug;
 	}
 
 
@@ -231,6 +230,19 @@ class MoleculeStructure {
 		$object->atoms = Atom::sortAtoms( $object->atoms );
 
 		return $object;
+	}
+
+
+	/**
+	 * @param string $property
+	 * @param $value
+	 * @todo change to __set?
+	 */
+	public function setProperty( string $property, $value ): void
+	{
+		$property = array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
+
+		$this->$property = $value;
 	}
 
 }

@@ -6,28 +6,37 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
 
 /**
- * Class QueryTokenTransfer
+ * Class QueryPeerCreate
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryTokenTransfer extends QueryMoleculePropose
+class QueryPeerCreate extends QueryMoleculePropose
 {
 
 	/**
-	 * @param Wallet $toWallet
+	 * @param $recipientWallet
 	 * @param $amount
+	 * @param array $metas
+	 * @throws \ReflectionException
 	 * @throws \Exception
 	 */
-	public function fillMolecule ( Wallet $toWallet, $amount )
+	public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] )
 	{
-		$this->molecule->initValue( $toWallet, $amount );
+		// Set name as slug if it does not defined
+		$name = $name ?: $slug;
+
+		// Fill the molecule
+		$this->molecule->initPeerCreation ( $slug, $host, $name, $cellSlugs );
 		$this->molecule->sign();
-		$this->molecule->check( $this->molecule->sourceWallet() );
+		$this->molecule->check();
 
 		return $this;
 	}
+
 
 }

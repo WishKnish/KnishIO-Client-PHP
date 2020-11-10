@@ -5,6 +5,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Query\QueryPeerCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
 use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
@@ -80,7 +81,7 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -125,7 +126,7 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
@@ -133,6 +134,7 @@ class QueryClientTest extends TestCase
 	 * @throws \ReflectionException
 	 */
 	public function testAppendMetaIsotope () {
+		/*
 		$this->beforeExecute();
 
 		// Create a meta molecule
@@ -146,7 +148,8 @@ class QueryClientTest extends TestCase
 		$molecule->check();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
+		*/
 	}
 
 
@@ -167,20 +170,28 @@ class QueryClientTest extends TestCase
 		$molecule->sign();
 
 		// Execute query & check response
-		$this->executeProposeMolecule($molecule);
+		$this->executeMolecule( $this->source_secret, $molecule );
 	}
 
 
 	/**
-	 * @param $molecule
+	 * @throws \Exception
 	 */
-	protected function executeProposeMolecule ( $molecule ) {
+	public function testPeerCreation () {
 
-		// Execute query & check response
-		$response = $this->client( $this->source_secret )
-			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
-			->execute();
-		$this->checkResponse ( $response );
+		$this->beforeExecute();
+
+		// Query
+		$query = $this->client( $this->source_secret )
+			->createMoleculeQuery( QueryPeerCreate::class );
+		$query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );
+
+		$molecule = $query->execute();
+
+		dd ( $molecule );
 	}
+
+
+
 
 }

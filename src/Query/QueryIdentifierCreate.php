@@ -26,6 +26,8 @@ class QueryIdentifierCreate extends QueryMoleculePropose
 		$this->molecule->initIdentifierCreation ( $type, $contact, $code );
 		$this->molecule->sign();
 		$this->molecule->check();
+
+		return $this;
 	}
 
 

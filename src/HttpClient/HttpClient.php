@@ -81,20 +81,4 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
 	}
 
 
-	/**
-	 * @param RequestInterface $request
-	 * @param array $options
-	 * @return ResponseInterface
-	 */
-	public function send (RequestInterface $request, array $options = [])
-	{
-		// Add x-auth-token header
-		$options['headers'] = array_merge (array_get($options, 'headers', []), [
-			'X-Auth-Token' => $this->getAuthToken(),
-		]);
-
-		// Send a request
-		return parent::send($request, $options);
-	}
-
 }
