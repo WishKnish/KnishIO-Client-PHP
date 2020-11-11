@@ -81,7 +81,7 @@ class CheckMolecule
      * @param MoleculeStructure $molecule
      * @return bool
      */
-    public function isotopeR ( MoleculeStructure $molecule )
+    public static function isotopeR ( MoleculeStructure $molecule )
     {
         static::missing( $molecule );
 
