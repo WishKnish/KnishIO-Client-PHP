@@ -84,7 +84,7 @@ abstract class Query
 	 * @param array|null $fields
 	 * @return RequestInterface
 	 */
-	public function createRequest ( array $variables = null, array $fields = null ) {
+	public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ) {
 
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
@@ -93,10 +93,10 @@ abstract class Query
 		return new Request(
 			'POST',
 			$this->url(),
-			[
+			array_merge( $headers, [
 				'Content-Type' => 'application/json',
 				'x-auth-token' => $this->client->getAuthToken(),
-			],
+			] ),
 			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
 		);
 
