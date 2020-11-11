@@ -247,10 +247,7 @@ class Molecule extends MoleculeStructure
                 null,
                 $metaType,
                 $metaId,
-                static::mergeMetas( [
-                    'pubkey' => $this->sourceWallet->pubkey,
-                    'characters' => $this->sourceWallet->characters,
-                ], $meta ),
+                $this->finalMetas( $meta ),
                 null,
                 $this->generateIndex()
             )
