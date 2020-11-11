@@ -46,6 +46,7 @@ class CheckMolecule
             'ots',
             'isotopeM',
 			'isotopeP',
+            'isotopeR',
             'isotopeC',
             'isotopeV',
             'isotopeT',
@@ -71,6 +72,60 @@ class CheckMolecule
 				}
 			}
 
+        }
+
+        return true;
+    }
+
+    /**
+     * @param MoleculeStructure $molecule
+     * @return bool
+     */
+    public function isotopeR ( MoleculeStructure $molecule )
+    {
+        static::missing( $molecule );
+
+        /** @var Atom $atom */
+        foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
+
+            foreach ( [ 'callback', 'conditions', ] as $key ) {
+                if ( !array_key_exists( $key, $atom->meta ) ) {
+                    throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+                }
+            }
+
+            foreach ( $atom->meta as $meta ) {
+
+                $conditions = json_decode( $meta[ 'conditions' ], true );
+
+                if ( $conditions === null ) {
+                    throw new MetaMissingException( 'Invalid format for conditions.' );
+                }
+
+                foreach ( $conditions as $condition ) {
+                    foreach ( [ 'key', 'value', 'comparison', ] as $key ) {
+                        if ( !array_key_exists( $key, $condition ) ) {
+                            throw new MetaMissingException( 'Missing \'' . $key . '\' field in conditions.' );
+                        }
+                    }
+                }
+
+                if ( !in_array( strtolower( $meta[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
+                    $callbacks = json_decode( $meta[ 'callback' ], true );
+
+                    if ( $callbacks === null ) {
+                        throw new MetaMissingException( 'Invalid format for callback.' );
+                    }
+
+                    foreach ( $callbacks as $callback ) {
+                        foreach ( [ 'action', 'metaType', 'metaId', 'value', 'tokenSlug' ] as $key ) {
+                            if ( !array_key_exists( $key, $callback ) ) {
+                                throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return true;
