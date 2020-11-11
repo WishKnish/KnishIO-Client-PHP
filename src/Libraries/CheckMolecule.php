@@ -88,40 +88,39 @@ class CheckMolecule
         /** @var Atom $atom */
         foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
 
+            $metas = Meta::aggregateMeta( $atom->meta );
+
             foreach ( [ 'callback', 'conditions', ] as $key ) {
-                if ( !array_key_exists( $key, $atom->meta ) ) {
+                if ( !array_key_exists( $key, $metas ) ) {
                     throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
                 }
             }
 
-            foreach ( $atom->meta as $meta ) {
+            $conditions = json_decode( $metas[ 'conditions' ], true );
 
-                $conditions = json_decode( $meta[ 'conditions' ], true );
+            if ( $conditions === null ) {
+                throw new MetaMissingException( 'Invalid format for conditions.' );
+            }
 
-                if ( $conditions === null ) {
-                    throw new MetaMissingException( 'Invalid format for conditions.' );
-                }
-
-                foreach ( $conditions as $condition ) {
-                    foreach ( [ 'key', 'value', 'comparison', ] as $key ) {
-                        if ( !array_key_exists( $key, $condition ) ) {
-                            throw new MetaMissingException( 'Missing \'' . $key . '\' field in conditions.' );
-                        }
+            foreach ( $conditions as $condition ) {
+                foreach ( [ 'key', 'value', 'comparison', ] as $key ) {
+                    if ( !array_key_exists( $key, $condition ) ) {
+                        throw new MetaMissingException( 'Missing \'' . $key . '\' field in conditions.' );
                     }
                 }
+            }
 
-                if ( !in_array( strtolower( $meta[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-                    $callbacks = json_decode( $meta[ 'callback' ], true );
+            if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
+                $callbacks = json_decode( $metas[ 'callback' ], true );
 
-                    if ( $callbacks === null ) {
-                        throw new MetaMissingException( 'Invalid format for callback.' );
-                    }
+                if ( $callbacks === null ) {
+                    throw new MetaMissingException( 'Invalid format for callback.' );
+                }
 
-                    foreach ( $callbacks as $callback ) {
-                        foreach ( [ 'action', 'metaType', 'metaId', 'value', 'tokenSlug' ] as $key ) {
-                            if ( !array_key_exists( $key, $callback ) ) {
-                                throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
-                            }
+                foreach ( $callbacks as $callback ) {
+                    foreach ( [ 'action', ] as $key ) {
+                        if ( !array_key_exists( $key, $callback ) ) {
+                            throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
                         }
                     }
                 }
