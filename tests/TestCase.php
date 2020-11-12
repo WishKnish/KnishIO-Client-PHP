@@ -28,6 +28,7 @@ abstract class TestCase extends TestCaseBase {
 	protected $dotenv;
 
 
+	protected $cell_slug = 'unit_test';
 	protected $graphql_url;
 
 	// Array [secret1 => KnishIOClient object1, secret2 => KnishIOClient object2, ..]
@@ -107,7 +108,9 @@ abstract class TestCase extends TestCaseBase {
 		}
 
 		// GraphQL url
-		$this->graphql_url = $app_url.'graphql';
+		if ( $this->graphql_url === null ) {
+			$this->graphql_url = $app_url . 'graphql';
+		}
 
 		// Client initialization
 		$this->output(['Query URL: '. $this->graphql_url]);
@@ -120,7 +123,9 @@ abstract class TestCase extends TestCaseBase {
 	 * @param $secret
 	 * @return mixed
 	 */
-	public function client ($secret, $cell_slug = 'unit_test') {
+	public function client ($secret, $cell_slug = null) {
+
+		$cell_slug = $cell_slug ?: $this->cell_slug;
 
 		// Create new client
 		if (!array_has($this->clients, $secret) ) {

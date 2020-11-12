@@ -34,6 +34,9 @@ class QueryMetaTest extends TestCase
 	 */
 	public function beforeExecute()
 	{
+		// $this->cell_slug = null;
+		// $this->graphql_url = 'https://frontrow.knish.io/graphql';
+
 		parent::beforeExecute();
 
 		// Source secret & wallet
