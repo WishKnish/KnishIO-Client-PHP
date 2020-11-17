@@ -54,7 +54,6 @@ class Atom
 	public $otsFragment;
 	public $createdAt;
 
-
 	/**
 	 * Atom constructor.
 	 *
@@ -123,7 +122,7 @@ class Atom
 			foreach ( $atom_data as $name => $value ) {
 
 				// Old atoms support (without batch_id field)
-				if ( in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) && $value === null ) {
+				if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
 					 continue;
 				}
 

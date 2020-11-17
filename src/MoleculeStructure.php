@@ -7,7 +7,6 @@
 namespace WishKnish\KnishIO\Client;
 
 
-use desktopd\SHA3\Sponge as SHA3;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -129,8 +128,7 @@ class MoleculeStructure {
 	/**
 	 * @param Wallet|null $senderWallet
 	 * @return bool
-	 * @throws ReflectionException
-	 */
+     */
 	public function check ( Wallet $senderWallet = null )
 	{
 		return CheckMolecule::verify( $this, $senderWallet );
@@ -156,11 +154,12 @@ class MoleculeStructure {
 	}
 
 
-	/**
-	 * @param $key
-	 * @return string
-	 * @throws \Exception
-	 */
+    /**
+     * @param $key
+     * @param bool $encode
+     * @return string
+     * @throws \Exception
+     */
 	public function signatureFragments ( $key, $encode = true )
 	{
 		// Subdivide Kk into 16 segments of 256 bytes (128 characters) each

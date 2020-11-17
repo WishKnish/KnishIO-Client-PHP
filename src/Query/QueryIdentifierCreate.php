@@ -6,8 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Wallet;
 
 
 /**

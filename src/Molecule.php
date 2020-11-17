@@ -225,6 +225,43 @@ class Molecule extends MoleculeStructure
         return $this;
 	}
 
+	public function crateRule( $metaType, $metaId, $meta )
+    {
+        foreach ( [ 'conditions', 'callback', ] as $k ) {
+            if ( !array_key_exists( $k, $meta ) ) {
+                throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
+            }
+
+            if ( is_array( $meta[ $k ] ) ) {
+                $meta[ $k ] = json_encode( $meta[ $k ], JSON_UNESCAPED_SLASHES );
+            }
+        }
+
+        $this->addAtom(
+            new Atom(
+                $this->sourceWallet->position,
+                $this->sourceWallet->address,
+                'R',
+                $this->sourceWallet->token,
+                null,
+                null,
+                $metaType,
+                $metaId,
+                $this->finalMetas( $meta ),
+                null,
+                $this->generateIndex()
+            )
+        );
+
+        // User remainder atom
+        $this->addUserRemainderAtom ( $this->remainderWallet );
+
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+
+    }
+
     /**
      * @param integer|float $value
      * @param string $token
@@ -739,9 +776,6 @@ class Molecule extends MoleculeStructure
             null,
             $this->generateIndex()
         );
-
-		// User remainder atom
-		$this->addUserRemainderAtom ( $this->remainderWallet );
 
         $this->atoms = Atom::sortAtoms( $this->atoms );
 

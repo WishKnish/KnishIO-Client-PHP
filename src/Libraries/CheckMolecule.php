@@ -8,7 +8,6 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
-use WishKnish\KnishIO\Client\Exception\BaseException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
@@ -24,7 +23,6 @@ use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Meta;
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -36,10 +34,11 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule
 {
 
-	/**
-	 * @param MoleculeStructure $molecule
-	 * @param Wallet|null $fromWallet
-	 */
+    /**
+     * @param MoleculeStructure $molecule
+     * @param Wallet|null $fromWallet
+     * @return bool
+     */
     public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null )
     {
     	$verification_methods = [
@@ -47,6 +46,7 @@ class CheckMolecule
             'ots',
             'isotopeM',
 			'isotopeP',
+            'isotopeR',
             'isotopeC',
             'isotopeV',
             'isotopeT',
@@ -73,6 +73,61 @@ class CheckMolecule
 			}
 
         }
+
+        return true;
+    }
+
+    /**
+     * @param MoleculeStructure $molecule
+     * @return bool
+     */
+    public static function isotopeR ( MoleculeStructure $molecule )
+    {
+        static::missing( $molecule );
+
+        /** @var Atom $atom */
+        foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
+
+            $metas = Meta::aggregateMeta( $atom->meta );
+
+            foreach ( [ 'callback', 'conditions', ] as $key ) {
+                if ( !array_key_exists( $key, $metas ) ) {
+                    throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+                }
+            }
+
+            $conditions = json_decode( $metas[ 'conditions' ], true );
+
+            if ( $conditions === null ) {
+                throw new MetaMissingException( 'Invalid format for conditions.' );
+            }
+
+            foreach ( $conditions as $condition ) {
+                foreach ( [ 'key', 'value', 'comparison', ] as $key ) {
+                    if ( !array_key_exists( $key, $condition ) ) {
+                        throw new MetaMissingException( 'Missing \'' . $key . '\' field in conditions.' );
+                    }
+                }
+            }
+
+            if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
+                $callbacks = json_decode( $metas[ 'callback' ], true );
+
+                if ( $callbacks === null ) {
+                    throw new MetaMissingException( 'Invalid format for callback.' );
+                }
+
+                foreach ( $callbacks as $callback ) {
+                    foreach ( [ 'action', ] as $key ) {
+                        if ( !array_key_exists( $key, $callback ) ) {
+                            throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
     }
 
 
@@ -255,7 +310,7 @@ class CheckMolecule
 
 	/**
 	 * @param MoleculeStructure $molecule
-	 * @return bool1
+	 * @return bool
 	 */
 	public static function isotopeM ( MoleculeStructure $molecule )
 	{
