@@ -222,8 +222,6 @@ class TokenClientTransactionTest extends TestCase
 	 */
 	public function testReceiveToken () {
 
-		return;
-
 		// Initial code
 		$this->beforeExecute ();
 
@@ -441,8 +439,6 @@ class TokenClientTransactionTest extends TestCase
 	 * Bind shadow wallets
 	 */
 	public function testClaimShadowWallets () {
-
-		return;
 
 		// Initial code
 		$this->beforeExecute ();
