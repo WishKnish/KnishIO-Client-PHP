@@ -4,20 +4,20 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use Illuminate\Support\Facades\DB;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver;
 
-
 /**
- * Class QueryMoleculeStructurePropose
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationProposeMoleculeStructure
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryMoleculeStructurePropose extends Query
+class MutationProposeMoleculeStructure extends Query
 {
 	// Query
 	protected static $default_query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
@@ -51,7 +51,7 @@ class QueryMoleculeStructurePropose extends Query
 	{
 		$molecule = json_decode( $json, true );
 		$molecule = \WishKnish\KnishIO\Client\MoleculeStructure::toObject( $molecule );
-		$query = new \WishKnish\KnishIO\Client\Query\QueryMoleculeStructurePropose(
+		$query = new MutationProposeMoleculeStructure(
 			( new \WishKnish\KnishIO\Client\KnishIOClient )->client(),
 			$molecule
 		);
@@ -101,13 +101,13 @@ class QueryMoleculeStructurePropose extends Query
 		return \WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver::create( $molecule );
 	}
 
-
-	/**
-	 * QueryMoleculeStructurePropose constructor.
-	 * @param HttpClientInterface $client
-	 * @param MoleculeStructure $moleculeStructure
-	 * @param string|null $query
-	 */
+  /**
+   * MutationProposeMoleculeStructure constructor.
+   *
+   * @param HttpClientInterface $client
+   * @param MoleculeStructure $moleculeStructure
+   * @param string|null $query
+   */
 	public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null )
 	{
 		parent::__construct( $client, $query );

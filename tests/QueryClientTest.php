@@ -5,10 +5,9 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Query\QueryPeerCreate;
+use WishKnish\KnishIO\Client\Query\MutationCreatePeer;
 use WishKnish\KnishIO\Client\Wallet;
 
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
@@ -183,7 +182,7 @@ class QueryClientTest extends TestCase
 
 		// Query
 		$query = $this->client( $this->source_secret )
-			->createMoleculeQuery( QueryPeerCreate::class );
+			->createMoleculeMutation( MutationCreatePeer::class );
 		$query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );
 
 		$molecule = $query->execute();

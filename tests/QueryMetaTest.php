@@ -10,7 +10,6 @@ use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
 
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!

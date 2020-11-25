@@ -4,7 +4,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 // Supporing variety versions of PHPUnit
 use WishKnish\KnishIO\Client\KnishIOClient;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
@@ -153,7 +153,7 @@ abstract class TestCase extends TestCaseBase {
 
 		// Execute query & check response
 		$response = $this->client( $secret )
-			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
+			->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
 			->execute();
 
 		// Check the response

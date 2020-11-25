@@ -1,5 +1,5 @@
 <?php
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -7,12 +7,11 @@ use WishKnish\KnishIO\Client\Response\ResponseAuthentication;
 use WishKnish\KnishIO\Client\Wallet;
 use Exception;
 
-
 /**
- * Class QueryAuthentication
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationRequestAuthorization
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryAuthentication extends QueryMoleculePropose
+class MutationRequestAuthorization extends MutationProposeMolecule
 {
 
 

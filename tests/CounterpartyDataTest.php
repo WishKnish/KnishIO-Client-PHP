@@ -5,7 +5,6 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 use WishKnish\KnishIO\Client\Wallet;
 
 

@@ -6,26 +6,12 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-
 /**
- * Class ResponseMetaType
+ * Class ResponseMetaCreate
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaType extends Response
+class ResponseMetaCreate extends Response
 {
-	protected $dataKey = 'data.MetaType';
 
-  /**
-   * @return |null
-   */
-	public function payload () {
-    $data = $this->data();
-
-    if ( !$data ) {
-      return null;
-    }
-
-    return $data[ 0 ][ 'instances' ];
-	}
 
 }

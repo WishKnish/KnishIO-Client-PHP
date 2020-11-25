@@ -9,7 +9,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
@@ -57,7 +57,7 @@ class TokenClientTransactionTest extends TestCase
 	protected function checkWallet ($client, $bundle, $token, $amount, $hasBatchID = false) {
 
 		// Get a wallet
-		$response = $client->getBalance($bundle, $token);
+		$response = $client->queryBalance($bundle, $token);
 		if (!$wallet = $response->payload() ) {
 			$this->debug ($response, true);
 		}
@@ -509,7 +509,7 @@ class TokenClientTransactionTest extends TestCase
 		$client = $this->client($from_secret);
 
 		// Wallets
-		$source_wallet = $client->getBalance( $from_secret, $token )->payload();
+		$source_wallet = $client->queryBalance( $from_secret, $token )->payload();
 
 		$recipient_wallets = [];
 		foreach ($recipients as $recipient) {
@@ -598,7 +598,7 @@ class TokenClientTransactionTest extends TestCase
 		$molecule->check($source_wallet);
 
 		// Create & execute a query
-		return $client->createMoleculeQuery(QueryMoleculePropose::class, $molecule)
+		return $client->createMoleculeMutation(MutationProposeMolecule::class, $molecule)
 			->execute();
 	}
 

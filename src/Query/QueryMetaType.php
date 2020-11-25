@@ -75,6 +75,41 @@ class QueryMetaType extends Query
 		'createdAt',
 	];
 
+  /**
+   * @param null $metaType
+   * @param null $metaId
+   * @param null $key
+   * @param null $value
+   * @param null $latest
+   */
+	public static function createVariables( $metaType = null, $metaId = null, $key = null, $value = null, $latest = null ): array
+  {
+    $variables = [];
+
+    if ( $metaType ) {
+      $variables[ is_string( $metaType ) ? 'metaType' : 'metaTypes' ] = $metaType;
+    }
+
+    if ( $metaId ) {
+      $variables[ is_string( $metaId ) ? 'metaId' : 'metaIds' ] = $metaId;
+    }
+
+    if ( $key ) {
+      $variables[ is_string( $key ) ? 'key' : 'keys' ] = $key;
+    }
+
+    if ( $value ) {
+      $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
+    }
+
+    if( $latest ) {
+      $variables[ 'latest' ] = true;
+    }
+
+    return $variables;
+  }
+
+
 	/**
 	 * @param string $response
 	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletList
