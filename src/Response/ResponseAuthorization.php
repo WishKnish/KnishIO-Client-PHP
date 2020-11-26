@@ -5,10 +5,10 @@ namespace WishKnish\KnishIO\Client\Response;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
 /**
- * Class ResponseAuthentication
+ * Class ResponseAuthorization
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseAuthentication extends ResponseMolecule
+class ResponseAuthorization extends ResponseMolecule
 {
 
 
@@ -20,7 +20,7 @@ class ResponseAuthentication extends ResponseMolecule
 	 */
 	private function payloadKey ($key) {
 		if (!array_has($this->payload, $key) ) {
-			throw new InvalidResponseException( 'ResponseAuthentication: \''.$key.'\' key is not found in the payload.' );
+			throw new InvalidResponseException( 'ResponseAuthorization: \''.$key.'\' key is not found in the payload.' );
 		}
 		return array_get($this->payload, $key);
 	}

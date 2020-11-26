@@ -718,27 +718,27 @@ class Molecule extends MoleculeStructure
 	}
 
     /**
-     * @param string $token
-     * @param int|float $amount
+     * @param string $tokenSlug
+     * @param int|float $requestedAmount
      * @param string $metaType
      * @param string $metaId
      * @param array $meta
      * @return self
      */
-	public function initTokenTransfer ( $token, $amount, $metaType, $metaId, array $meta = [] )
+	public function initTokenTransfer ( $tokenSlug, $requestedAmount, $metaType, $metaId, array $meta = [] )
     {
         $this->molecularHash = null;
 
 
         // Set meta token
-		$meta[ 'token' ] = $token;
+		$meta[ 'token' ] = $tokenSlug;
 
         $this->atoms[] = new Atom(
 			$this->sourceWallet->position,
 			$this->sourceWallet->address,
             'T',
 			$this->sourceWallet->token,
-            $amount,
+          $requestedAmount,
             null,
             $metaType,
             $metaId,
@@ -759,7 +759,7 @@ class Molecule extends MoleculeStructure
 	/**
 	 * @return $this
 	 */
-    public function initAuthentication ( )
+    public function initAuthorization ( )
     {
         $this->molecularHash = null;
 

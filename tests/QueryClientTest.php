@@ -99,7 +99,7 @@ class QueryClientTest extends TestCase
 
 		$server_secret = env('SECRET_TOKEN_KNISH');
 		$server_wallet = $this->client($server_secret)
-			->getContinuId( Crypto::generateBundleHash( $server_secret ) )
+			->queryContinuId( Crypto::generateBundleHash( $server_secret ) )
 			->payload();
 
 

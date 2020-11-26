@@ -16,6 +16,7 @@ use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
+use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorization;
@@ -77,11 +78,52 @@ class KnishIOClient
 	 * @param null $url
 	 * @param HttpClientInterface|null $client
 	 */
-	public function __construct ( $url = null, HttpClientInterface $client = null )
+	public function __construct ( $url = null, HttpClientInterface $client = null, $serverSdkVersion = 3 )
 	{
-		$url = $url ?: url() . '/graphql';
-        $this->client = default_if_null( $client, new HttpClient( $url ) );
+		  $url = $url ?: url() . '/graphql';
+      $this->initialize( $url, $client, $serverSdkVersion );
 	}
+
+  /**
+   * @param $url
+   * @param null $client
+   * @param int $serverSdkVersion
+   */
+	public function initialize( $url, $client = null, $serverSdkVersion = 3 )
+  {
+    $this->reset();
+
+    $this->client = default_if_null( $client, new HttpClient( $url ) );
+    $this->serverSdkVersion = $serverSdkVersion;
+  }
+
+  /**
+   * Reset common properties
+   */
+  public function reset()
+  {
+    $this->secret = null;
+    $this->bundle = null;
+    $this->remainderWallet = null;
+  }
+
+
+  /**
+   * @return string|null
+   */
+  public function cellSlug ()
+  {
+    return $this->cellSlug;
+  }
+
+
+  /**
+   * @param $cellSlug
+   */
+  public function setCellSlug ($cellSlug)
+  {
+    $this->cellSlug = $cellSlug;
+  }
 
 
 	/**
@@ -94,34 +136,6 @@ class KnishIOClient
 
 
 	/**
-	 * @todo unify code with url & setUrl functions
-	 * @param $url
-	 */
-	public function setUrl ( $url )
-    {
-		$this->client->setUrl($url);
-	}
-
-
-	/**
-	 * @return string|null
-	 */
-	public function cellSlug ()
-	{
-		return $this->cellSlug;
-	}
-
-
-	/**
-	 * @param $cellSlug
-	 */
-	public function setCellSlug ($cellSlug)
-	{
-		$this->cellSlug = $cellSlug;
-	}
-
-
-	/**
 	 * @return HttpClient
 	 */
 	public function client ()
@@ -129,9 +143,55 @@ class KnishIOClient
 		return $this->client;
 	}
 
+  /**
+   * Has a secret?
+   */
+	public function hasSecret(): bool
+  {
+    return $this->secret ? true : false;
+  }
+
+
+  /**
+   * @param $secret
+   */
+  public function setSecret ( $secret )
+  {
+    $this->secret = $secret;
+    $this->bundle = Crypto::generateBundleHash( $secret );
+  }
+
+
+  /**
+   * @return string
+   */
+  public function secret ()
+  {
+    if ( !$this->secret )
+    {
+      throw new UnauthenticatedException( 'Expected '.static::class.'::authentication call before.' );
+    }
+
+    return $this->secret;
+  }
+
+
+  /**
+   * Returns the bundle hash for this session
+   *
+   * @returns {string}
+   */
+  public function bundle()
+  {
+    if ( !$this->bundle ) {
+      throw new UnauthenticatedException( 'KnishIOClient::bundle() - Unable to find a stored bundle!' );
+    }
+    return $this->bundle;
+  }
+
 
 	/**
-     * @param null $secret
+   * @param null $secret
 	 * @param null $sourceWallet
 	 * @param null $remainderWallet
 	 * @return Molecule
@@ -200,6 +260,46 @@ class KnishIOClient
 		return $query;
 	}
 
+
+  /**
+   * @param null $secret
+   * @param null $cell_slug
+   * @return mixed
+   * @throws Exception
+   */
+  public function requestAuthToken ( $secret, $cell_slug = null )
+  {
+    // Set a secret
+    $this->setSecret( $secret );
+
+    // Set a cell slug
+    $this->cellSlug = $cell_slug ?: $this->cellSlug();
+
+
+    // Create an auth molecule
+    $molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
+
+    // Create query & fill a molecule
+    $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
+    $query->fillMolecule();
+
+    // Get a response
+    $response = $query->execute();
+
+    // If the response is success - set auth token
+    if ( $response->success() ) {
+      $this->client->setAuthToken( $response->token() );
+    }
+
+    // Not authorized: throw an exception
+    else {
+      throw new UnauthenticatedException($response->reason());
+    }
+
+    return $response;
+  }
+
+
   /**
    * @param $code
    * @param $token
@@ -242,6 +342,21 @@ class KnishIOClient
     return $query->execute( $variables, $fields );
 
   }
+
+  /**
+   * @param string $tokenSlug
+   */
+  public function createWallet( string $tokenSlug )
+  {
+    $newWallet = new Wallet( $this->secret(), $tokenSlug );
+
+    $query = $this->createQuery(MutationCreateWallet::class );
+    $query->fillMolecule( $newWallet );
+
+    // Execute the query
+    return $query->execute( $variables, $fields );
+  }
+
 
   /**
    * @param $tokenSlug
@@ -316,14 +431,14 @@ class KnishIOClient
 
 
   /**
-	 * @param string $token
-	 * @param int|float $value
+	 * @param string $tokenSlug
+	 * @param int|float $requestedAmount
 	 * @param Wallet|string $to wallet address OR bundle
 	 * @param array|null $metas
 	 * @return mixed
 	 * @throws Exception
 	 */
-	public function receiveToken ( $token, $value, $to, array $metas = null )
+	public function requestTokens ( $tokenSlug, $requestedAmount, $to, array $metas = null )
 	{
 		$metas = default_if_null( $metas, [] );
 
@@ -338,7 +453,7 @@ class KnishIOClient
 
 			// Secret: create a new wallet (not shadow)
 			else {
-				$to = Wallet::create( $to, $token );
+				$to = Wallet::create( $to, $tokenSlug );
 			}
 		}
 
@@ -363,11 +478,94 @@ class KnishIOClient
 		$query = $this->createMoleculeMutation(MutationRequestTokens::class);
 
 		// Init a molecule
-		$query->fillMolecule ( $token, $value, $metaType, $metaId, $metas );
+		$query->fillMolecule ( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas );
 
 		// Return a query execution result
 		return $query->execute ();
 	}
+
+
+  /**
+   * Claim a shadow wallet
+   *
+   * @param $tokenSlug
+   * @param null $molecule
+   * @return mixed
+   * @throws Exception
+   */
+  public function claimShadowWallet ( $tokenSlug, $molecule = null )
+  {
+    // Get shadow wallet list
+    $shadowWallets = $this->queryShadowWallets( $tokenSlug );
+
+    // Check shadow wallets
+    if (!$shadowWallets) {
+      throw new WalletShadowException();
+    }
+    foreach ($shadowWallets as $shadowWallet) {
+      if (!$shadowWallet instanceof WalletShadow) {
+        throw new WalletShadowException();
+      }
+    }
+
+    // Create a query
+    $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
+
+    // Fill a molecule
+    $query->fillMolecule( $token, $shadowWallets );
+
+    // Return a response
+    return $query->execute();
+  }
+
+
+  /**
+   * @param string|Wallet $to
+   * @param string $tokenSlug
+   * @param int|float $amount
+   * @return array
+   * @throws Exception|ReflectionException|InvalidResponseException
+   */
+  public function transferToken ( $to, $tokenSlug, $amount )
+  {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $this->queryBalance( $this->secret(), $tokenSlug )->payload();
+
+    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0) {
+      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
+    }
+
+    // If this wallet is assigned, if not, try to get a valid wallet
+    /** @var Wallet $toWallet */
+    $toWallet = $to instanceof Wallet ? $to : $this->queryBalance( $to, $tokenSlug )->payload();
+
+    // Has not wallet yet - create it
+    if ($toWallet === null) {
+      $toWallet = Wallet::create( $to, $tokenSlug );
+    }
+
+    // Batch ID initialization
+    $toWallet->initBatchId( $fromWallet, $amount );
+
+    // Remainder wallet
+    $this->remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $toWallet->batchId, $fromWallet->characters );
+
+    // Create a molecule with custom source wallet
+    $molecule = $this->createMolecule ( null, $fromWallet, $this->remainderWallet );
+
+    // Create a query
+    /** @var MutationTransferTokens $query */
+    $query = $this->createMoleculeMutation(MutationTransferTokens::class, $molecule);
+
+    // Init a molecule
+    $query->fillMolecule ( $toWallet, $amount );
+
+    // Execute a query
+    return $query->execute();
+  }
+
 
   /**
    * @param string $tokenSlug
@@ -411,88 +609,6 @@ class KnishIOClient
 
 
 	/**
-	 * Claim a shadow wallet
-	 *
-	 * @param $token
-	 * @param null $molecule
-	 * @return mixed
-	 * @throws Exception
-	 */
-	public function claimShadowWallet ( $token, $molecule = null )
-	{
-		// Get shadow wallet list
-		$shadowWallets = $this->queryShadowWallets( $token );
-
-    // Check shadow wallets
-    if (!$shadowWallets) {
-      throw new WalletShadowException();
-    }
-    foreach ($shadowWallets as $shadowWallet) {
-      if (!$shadowWallet instanceof WalletShadow) {
-        throw new WalletShadowException();
-      }
-    }
-
-		// Create a query
-		$query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-
-		// Fill a molecule
-		$query->fillMolecule( $token, $shadowWallets );
-
-		// Return a response
-		return $query->execute();
-	}
-
-
-	/**
-	 * @param string|Wallet $to
-	 * @param string $token
-	 * @param int|float $amount
-	 * @return array
-	 * @throws Exception|ReflectionException|InvalidResponseException
-	 */
-	public function transferToken ( $to, $token, $amount )
-	{
-
-		// Get a from wallet
-        /** @var Wallet|null $fromWallet */
-		$fromWallet = $this->queryBalance( $this->secret(), $token )->payload();
-
-		if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0) {
-			throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
-		}
-
-		// If this wallet is assigned, if not, try to get a valid wallet
-        /** @var Wallet $toWallet */
-		$toWallet = $to instanceof Wallet ? $to : $this->queryBalance( $to, $token )->payload();
-
-		// Has not wallet yet - create it
-		if ($toWallet === null) {
-			$toWallet = Wallet::create( $to, $token );
-		}
-
-		// Batch ID initialization
-		$toWallet->initBatchId( $fromWallet, $amount );
-
-		// Remainder wallet
-		$this->remainderWallet = Wallet::create( $this->secret(), $token, $toWallet->batchId, $fromWallet->characters );
-
-		// Create a molecule with custom source wallet
-		$molecule = $this->createMolecule ( null, $fromWallet, $this->remainderWallet );
-
-		// Create a query
-    /** @var MutationTransferTokens $query */
-		$query = $this->createMoleculeMutation(MutationTransferTokens::class, $molecule);
-
-		// Init a molecule
-		$query->fillMolecule ( $toWallet, $amount );
-
-		// Execute a query
-		return $query->execute();
-	}
-
-
-	/**
 	 * @param bool $onlyValue
 	 * @return Wallet
 	 * @throws Exception
@@ -500,7 +616,7 @@ class KnishIOClient
 	public function getSourceWallet ( )
     {
 		// Has a ContinuID wallet?
-		$sourceWallet = $this->getContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
+		$sourceWallet = $this->queryContinuId( Crypto::generateBundleHash( $this->secret() ) )->payload();
 		if ( !$sourceWallet ) {
 			$sourceWallet = new Wallet( $this->secret() );
 		}
@@ -523,7 +639,7 @@ class KnishIOClient
 	 * @param $bundleHash
 	 * @return mixed
 	 */
-	public function getContinuId ( $bundleHash )
+	public function queryContinuId ( $bundleHash )
     {
         // Create & execute the query
         return $this->createQuery(QueryContinuId::class )
@@ -531,76 +647,5 @@ class KnishIOClient
     }
 
 
-	/**
-	 * @param null $secret
-	 * @param null $cell_slug
-	 * @return mixed
-	 * @throws Exception
-	 */
-	public function authentication ( $secret, $cell_slug = null )
-	{
-		// Set a secret
-		$this->setSecret( $secret );
-
-		// Set a cell slug
-		$this->cellSlug = $cell_slug ?: $this->cellSlug();
-
-
-		// Create an auth molecule
-		$molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
-
-		// Create query & fill a molecule
-		$query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-		$query->fillMolecule();
-
-		// Get a response
-		$response = $query->execute();
-
-		// If the response is success - set auth token
-		if ( $response->success() ) {
-			$this->client->setAuthToken( $response->token() );
-		}
-
-		// Not authorized: throw an exception
-		else {
-			throw new UnauthenticatedException($response->reason());
-		}
-
-		return $response;
-	}
-
-
-	/**
-	 * @param $secret
-	 */
-	public function setSecret ( $secret )
-	{
-		$this->secret = $secret;
-		$this->bundle = Crypto::generateBundleHash( $secret );
-	}
-
-
-	/**
-	 * @return string
-	 */
-	public function secret ()
-	{
-		if ( !$this->secret )
-		{
-			throw new UnauthenticatedException( 'Expected '.static::class.'::authentication call before.' );
-		}
-
-		return $this->secret;
-	}
-
-
-
-	public function bundle()
-  {
-    if ( !$this->bundle ) {
-      throw new UnauthenticatedException( 'KnishIOClient::bundle() - Unable to find a stored bundle!' );
-    }
-    return $this->bundle;
-  }
 
 }

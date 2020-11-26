@@ -20,7 +20,7 @@ class MutationRequestAuthorization extends MutationProposeMolecule
 	 */
     public function fillMolecule ()
     {
-        $this->molecule->initAuthentication();
+        $this->molecule->initAuthorization();
 		$this->molecule->sign();
 		$this->molecule->check();
 
@@ -35,6 +35,6 @@ class MutationRequestAuthorization extends MutationProposeMolecule
      */
     public function createResponse ( $response )
     {
-        return new ResponseAuthentication( $this, $response );
+        return new ResponseAuthorization( $this, $response );
     }
 }
