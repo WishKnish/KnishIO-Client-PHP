@@ -22,29 +22,53 @@ class ResponseWalletList extends Response
 	 * @param array $data
 	 * @throws \Exception
 	 */
-	public static function toClientWallet (array $data) {
+	public static function toClientWallet ( array $data, string $secret = null ) {
 
 		// Shadow wallet
 		if ($data[ 'position' ] === null) {
 			$wallet = new WalletShadow( $data['bundleHash'], $data['tokenSlug'], $data['batchId'] );
+      $wallet->remote = true;
 		}
 
 		// Regular wallet
 		else {
-			$wallet = new Wallet( null, $data[ 'tokenSlug' ] );
+			$wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ] );
 			$wallet->address = $data[ 'address' ];
-			$wallet->position = $data[ 'position' ];
 			$wallet->bundle = $data[ 'bundleHash' ];
 			$wallet->batchId = $data[ 'batchId' ];
-			$wallet->characters = $data[ 'characters' ];
-			$wallet->pubkey = $data[ 'pubkey' ];
+      $wallet->remote = false;
 		}
 
 		// Bind other data
 		$wallet->balance = $data[ 'amount' ];
+    $wallet->characters = $data[ 'characters' ];
+    $wallet->pubkey = $data[ 'pubkey' ];
+    $wallet->createdAt = $data[ 'createdAt' ];
 
 		return $wallet;
 	}
+
+
+  /**
+   * @param string $secret
+   */
+	public function getWallets( string $secret )
+  {
+    // Get data
+    $list = $this->data();
+    if (!$list) {
+      return null;
+    }
+
+    // Get a list of client wallets
+    $wallets = [];
+    foreach ($list as $item) {
+      $wallets[] = static::toClientWallet( $item, $secret );
+    }
+
+    // Return a wallets list
+    return $wallets;
+  }
 
 
 	/**

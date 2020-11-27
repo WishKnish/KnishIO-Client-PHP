@@ -190,6 +190,15 @@ class KnishIOClient
   }
 
 
+  /**
+   * @return mixed
+   */
+  public function getRemainderWallet ()
+  {
+    return $this->remainderWallet;
+  }
+
+
 	/**
    * @param null $secret
 	 * @param null $sourceWallet
@@ -307,19 +316,16 @@ class KnishIOClient
    * @return Response
    * @throws Exception
    */
-	public function queryBalance ( $code, $token ): Response {
+	public function queryBalance ( $tokenSlug, $bundleHash = null ): Response {
 
 		// Create a query
     /** @var QueryBalance $query */
 		$query = $this->createQuery(QueryBalance::class );
 
-		// If bundle hash came, we pass it, otherwise we consider it a secret
-		$bundleHash = Wallet::isBundleHash( $code ) ? $code : Crypto::generateBundleHash( $code );
-
     // Execute the query
 		return $query->execute( [
-      'bundleHash' => $bundleHash,
-      'token'      => $token,
+      'bundleHash' => $bundleHash ?: $this->bundle(),
+      'token'      => $tokenSlug,
     ] );
 	}
 
@@ -339,7 +345,7 @@ class KnishIOClient
     $variables = QueryMetaType::createVariables( $metaType, $metaId, $key, $value, $latest );
 
     // Execute the query
-    return $query->execute( $variables, $fields );
+    return $query->execute( $variables, $fields )->payload();
 
   }
 
@@ -354,7 +360,7 @@ class KnishIOClient
     $query->fillMolecule( $newWallet );
 
     // Execute the query
-    return $query->execute( $variables, $fields );
+    return $query->execute();
   }
 
 
@@ -420,13 +426,69 @@ class KnishIOClient
 
     // Create & execute a query
     /** @var MutationCreateIdentifier $query */
-    $query = $this->createMoleculeMutation(MutationCreateIdentifier::class);
+    $query = $this->createMoleculeMutation( MutationCreateIdentifier::class );
 
     // Init a molecule
     $query->fillMolecule ( $type, $contact, $code );
 
     // Execute a query
     return $query->execute();
+  }
+
+  /**
+   * @param null $bundleHash
+   * @param bool $unspent
+   */
+  public function queryWallets( string $bundleHash = null, bool $unspent = true )
+  {
+    $query = $this->createQuery( QueryWalletList::class );
+    $response = $query->execute([
+      'bundleHash' => $bundleHash ? $bundleHash : $this->bundle(),
+      'unspent' => $unspent,
+    ]);
+
+    return $response->getWallets();
+  }
+
+  /**
+   * @param string $tokenSlug
+   * @param string|null $bundleHash
+   *
+   * @return mixed
+   */
+  public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ) {
+
+    // --- Get shadow wallet list
+    $query = $this->createQuery(QueryWalletList::class);
+    $response = $query->execute([
+      'bundleHash'	=> $bundleHash ?? $this->bundle(),
+      'token'			  => $tokenSlug,
+    ]);
+
+    return $response->payload();
+  }
+
+
+  /**
+   * @param string|null $bundleHash
+   * @param string|null $key
+   * @param string|null $value
+   * @param bool $latest
+   * @param array|null $fields
+   *
+   * @return mixed
+   */
+  public function queryBundle ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true, array $fields = null ) {
+
+    // Create a query
+    /** @var QueryWalletBundle $query */
+    $query = $this->createQuery(QueryWalletBundle::class );
+    $variables = QueryWalletBundle::createVariables( $bundleHash, $key, $value, $latest );
+
+    // Execute the query
+    return $query->execute( $variables, $fields );
+
+    return $response->payload();
   }
 
 
@@ -464,10 +526,10 @@ class KnishIOClient
 			$metaType = 'wallet';
 
 			// Set wallet metas
-			$metas = array_merge($metas, [
+			$metas = array_merge( $metas, [
 				'position' => $to->position,
 				'bundle' => $to->bundle,
-			]);
+			] );
 
 			// Set metaId as an wallet address
 			$metaId = $to->address;
@@ -475,7 +537,7 @@ class KnishIOClient
 
 		// Create a query
     /** @var MutationRequestTokens $query */
-		$query = $this->createMoleculeMutation(MutationRequestTokens::class);
+		$query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
 		// Init a molecule
 		$query->fillMolecule ( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas );
@@ -502,16 +564,14 @@ class KnishIOClient
     if (!$shadowWallets) {
       throw new WalletShadowException();
     }
-    foreach ($shadowWallets as $shadowWallet) {
-      if (!$shadowWallet instanceof WalletShadow) {
+    foreach( $shadowWallets as $shadowWallet ) {
+      if ( !$shadowWallet instanceof WalletShadow ) {
         throw new WalletShadowException();
       }
     }
 
     // Create a query
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-
-    // Fill a molecule
     $query->fillMolecule( $token, $shadowWallets );
 
     // Return a response
@@ -520,13 +580,13 @@ class KnishIOClient
 
 
   /**
-   * @param string|Wallet $to
+   * @param string|Wallet $walletObjectOrBundleHash
    * @param string $tokenSlug
    * @param int|float $amount
    * @return array
    * @throws Exception|ReflectionException|InvalidResponseException
    */
-  public function transferToken ( $to, $tokenSlug, $amount )
+  public function transferToken ( $walletObjectOrBundleHash, $tokenSlug, $amount )
   {
 
     // Get a from wallet
@@ -539,11 +599,12 @@ class KnishIOClient
 
     // If this wallet is assigned, if not, try to get a valid wallet
     /** @var Wallet $toWallet */
-    $toWallet = $to instanceof Wallet ? $to : $this->queryBalance( $to, $tokenSlug )->payload();
+    $toWallet = $walletObjectOrBundleHash instanceof Wallet ?
+      $walletObjectOrBundleHash : $this->queryBalance( $walletObjectOrBundleHash, $tokenSlug )->payload();
 
     // Has not wallet yet - create it
     if ($toWallet === null) {
-      $toWallet = Wallet::create( $to, $tokenSlug );
+      $toWallet = Wallet::create( $walletObjectOrBundleHash, $tokenSlug );
     }
 
     // Batch ID initialization
@@ -567,47 +628,6 @@ class KnishIOClient
   }
 
 
-  /**
-   * @param string $tokenSlug
-   * @param string|null $bundleHash
-   *
-   * @return mixed
-   */
-	public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ) {
-
-		// --- Get shadow wallet list
-		$query = $this->createQuery(QueryWalletList::class);
-		$response = $query->execute([
-			'bundleHash'	=> $bundleHash ?? $this->bundle(),
-			'token'			  => $tokenSlug,
-		]);
-
-		return $response->payload();
-	}
-
-  /**
-   * @param string|null $bundleHash
-   * @param string|null $key
-   * @param string|null $value
-   * @param bool $latest
-   * @param array|null $fields
-   *
-   * @return mixed
-   */
-  public function queryWalletBundle ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true, array $fields = null ) {
-
-    // Create a query
-    /** @var QueryWalletBundle $query */
-    $query = $this->createQuery(QueryWalletBundle::class );
-    $variables = QueryWalletBundle::createVariables( $bundleHash, $key, $value, $latest );
-
-    // Execute the query
-    return $query->execute( $variables, $fields );
-
-    return $response->payload();
-  }
-
-
 	/**
 	 * @param bool $onlyValue
 	 * @return Wallet
@@ -627,24 +647,15 @@ class KnishIOClient
 
 
 	/**
-	 * @return mixed
-	 */
-	public function getRemainderWallet ()
-	{
-		return $this->remainderWallet;
-	}
-
-
-	/**
 	 * @param $bundleHash
 	 * @return mixed
 	 */
 	public function queryContinuId ( $bundleHash )
-    {
-        // Create & execute the query
-        return $this->createQuery(QueryContinuId::class )
-			->execute( ['bundle' => $bundleHash] );
-    }
+  {
+    // Create & execute the query
+    return $this->createQuery(QueryContinuId::class )
+      ->execute( ['bundle' => $bundleHash] );
+  }
 
 
 
