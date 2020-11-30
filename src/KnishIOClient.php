@@ -572,7 +572,7 @@ class KnishIOClient
 
     // Create a query
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-    $query->fillMolecule( $token, $shadowWallets );
+    $query->fillMolecule( $tokenSlug, $shadowWallets );
 
     // Return a response
     return $query->execute();
@@ -591,16 +591,20 @@ class KnishIOClient
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $this->queryBalance( $this->secret(), $tokenSlug )->payload();
+    $fromWallet = $this->queryBalance( $tokenSlug, $this->bundle() )->payload();
 
     if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0) {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
     }
 
+    // Get final bundle hash
+    $bundleHash = Wallet::isBundleHash( $walletObjectOrBundleHash ) ?
+        $walletObjectOrBundleHash : Crypto::generateBundleHash( $walletObjectOrBundleHash );
+
     // If this wallet is assigned, if not, try to get a valid wallet
     /** @var Wallet $toWallet */
     $toWallet = $walletObjectOrBundleHash instanceof Wallet ?
-      $walletObjectOrBundleHash : $this->queryBalance( $walletObjectOrBundleHash, $tokenSlug )->payload();
+      $walletObjectOrBundleHash : $this->queryBalance( $tokenSlug, $bundleHash )->payload();
 
     // Has not wallet yet - create it
     if ($toWallet === null) {

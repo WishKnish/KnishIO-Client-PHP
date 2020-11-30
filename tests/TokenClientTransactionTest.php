@@ -57,7 +57,7 @@ class TokenClientTransactionTest extends TestCase
 	protected function checkWallet ($client, $bundle, $token, $amount, $hasBatchID = false) {
 
 		// Get a wallet
-		$response = $client->queryBalance($bundle, $token);
+		$response = $client->queryBalance($token, $bundle);
 		if (!$wallet = $response->payload() ) {
 			$this->debug ($response, true);
 		}
@@ -283,7 +283,7 @@ class TokenClientTransactionTest extends TestCase
 		$wallet = Wallet::create($receivers[3], $token);
 		$response = $client->requestTokens($token, $transaction_amount, $wallet);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $receivers[3], $token, $transaction_amount * 1.0, false);
+		$this->checkWallet($client, Crypto::generateBundleHash($receivers[3]), $token, $transaction_amount * 1.0, false);
 
 		// Claim shadow wallet
 		$this->claimShadowWallet ( $token, $receivers[0], [$receivers[1]] );
@@ -342,32 +342,32 @@ class TokenClientTransactionTest extends TestCase
 		// --- Batch transfer (splitting)
 		$response = $client->transferToken($toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[0], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[0]), $token, $transaction_amount);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $client->transferToken($toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[0], $token, $transaction_amount * 2.0);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[0]), $token, $transaction_amount * 2.0);
 
 
 
 		// --- Batch transfer to other recipient
 		$response = $client->transferToken($toSecret[1], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[1], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[1]), $token, $transaction_amount);
 
 
 
 		// --- Batch 1-st transfer
 		$response = $client->transferToken($toSecret[2], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[2], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[2]), $token, $transaction_amount);
 
 		// --- Batch last transfer
 		$remainder_amount = $full_amount - $transaction_amount*4.0;
 		$response = $client->transferToken($toSecret[2], $token, $remainder_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[2], $token, $remainder_amount + $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[2]), $token, $remainder_amount + $transaction_amount);
 
 		// dump ('END: testBaseSplitTransaction');
 	}
@@ -483,9 +483,9 @@ class TokenClientTransactionTest extends TestCase
 		// With accumulation recipients
 		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, false, $custom_transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $recipients[0], $token, 1);
-		$this->checkWallet($client, $recipients[1], $token, $transaction_amount * 2 + $custom_transaction_amount);
-		$this->checkWallet($client, $recipients[2], $token, $transaction_amount * 1 + $custom_transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[0]), $token, 1);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[1]), $token, $transaction_amount * 2 + $custom_transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[2]), $token, $transaction_amount * 1 + $custom_transaction_amount);
 
 		// With new wallets
 		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, true, $custom_transaction_amount);
@@ -509,7 +509,7 @@ class TokenClientTransactionTest extends TestCase
 		$client = $this->client($from_secret);
 
 		// Wallets
-		$source_wallet = $client->queryBalance( $from_secret, $token )->payload();
+		$source_wallet = $client->queryBalance( $token, Crypto::generateBundleHash($from_secret) )->payload();
 
 		$recipient_wallets = [];
 		foreach ($recipients as $recipient) {

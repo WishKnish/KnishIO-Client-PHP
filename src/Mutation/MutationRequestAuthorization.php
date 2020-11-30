@@ -3,7 +3,7 @@ namespace WishKnish\KnishIO\Client\Mutation;
 
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseAuthentication;
+use WishKnish\KnishIO\Client\Response\ResponseAuthorization;
 use WishKnish\KnishIO\Client\Wallet;
 use Exception;
 
