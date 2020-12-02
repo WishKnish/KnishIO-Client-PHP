@@ -5,7 +5,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Query\MutationCreatePeer;
+use WishKnish\KnishIO\Client\Mutation\MutationCreatePeer;
 use WishKnish\KnishIO\Client\Wallet;
 
 
