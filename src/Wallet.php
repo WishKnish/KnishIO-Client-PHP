@@ -32,7 +32,7 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
  * @property string|null $characters
  *
  */
-class Wallet
+class Wallet extends WalletShadow
 {
     /**
      * @var string|null
@@ -83,8 +83,8 @@ class Wallet
      * @return Wallet|WalletShadow
      * @throws Exception
      */
-    public static function create ($secretOrBundle, $token = 'USER', $batchId = null, $characters = null) {
-
+   public static function create ($secretOrBundle, $token = 'USER', $batchId = null, $characters = null)
+   {
     	// Shadow wallet
     	if (static::isBundleHash($secretOrBundle) ) {
 			return new WalletShadow($secretOrBundle, $token, $batchId, $characters);
@@ -112,12 +112,9 @@ class Wallet
 	 */
 	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64, $characters = null )
 	{
+	    parent::__construct( $secret ? Crypto::generateBundleHash( $secret ) : null, $token, null, $characters );
 
 		$this->position = $position ?: Strings::randomString( $saltLength );
-
-		$this->token = $token;
-
-        $this->characters = $characters; //defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		if ( $secret ) {
 
@@ -134,11 +131,10 @@ class Wallet
 	public function sign ( $secret )
     {
 
-        if ( $this->key === null && $this->address === null && $this->bundle === null ) {
+        if ( $this->key === null && $this->address === null ) {
 
             $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
             $this->address = static::generateWalletAddress( $this->key );
-            $this->bundle = Crypto::generateBundleHash( $secret );
             $this->getMyEncPrivateKey();
             $this->getMyEncPublicKey();
 

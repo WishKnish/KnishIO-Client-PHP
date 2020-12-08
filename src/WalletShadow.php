@@ -12,7 +12,7 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
  * Class WalletShadow
  * @package WishKnish\KnishIO\Client
  */
-class WalletShadow extends Wallet
+class WalletShadow
 {
 
 
@@ -27,12 +27,11 @@ class WalletShadow extends Wallet
      */
 	public function __construct ( $bundleHash, $token = 'USER', $batchId = null, $characters = null )
 	{
-
-	    parent::__construct(null, $token );
-
+	    
+        $this->token = $token;
 		$this->bundle = $bundleHash;
 		$this->batchId = $batchId;
-        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
+        $this->characters = $characters; //defined(Base58::class . '::' . $characters ) ? $characters : null;
 
 		// Empty values
 		$this->position = null;
