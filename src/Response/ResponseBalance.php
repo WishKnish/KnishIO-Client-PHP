@@ -6,8 +6,6 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 /**
  * Class ResponseBalance
@@ -21,7 +19,7 @@ class ResponseBalance extends Response
 	/**
 	 * Get a payload
 	 *
-	 * @return Wallet|WalletShadow|null
+	 * @return Wallet|null
 	 * @throws \Exception
 	 */
 	public function payload()

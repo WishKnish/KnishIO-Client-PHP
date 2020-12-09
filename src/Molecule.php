@@ -103,7 +103,7 @@ class Molecule extends MoleculeStructure
 
 
 	/**
-	 * @return Wallet|WalletShadow
+	 * @return Wallet
 	 */
 	public function remainderWallet ()
 	{

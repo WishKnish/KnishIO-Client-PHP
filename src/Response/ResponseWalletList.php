@@ -7,7 +7,7 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
+
 
 /**
  * Class ResponseWalletList
@@ -26,14 +26,15 @@ class ResponseWalletList extends Response
 
 		// Shadow wallet
 		if ($data[ 'position' ] === null) {
-			$wallet = new WalletShadow( $data['bundleHash'], $data['tokenSlug'], $data['batchId'] );
-      $wallet->remote = true;
+		    $wallet = Wallet::create( $data['bundleHash'], $data['tokenSlug'], $data['batchId'] );
+            $wallet->remote = true;
 		}
 
 		// Regular wallet
 		else {
 			$wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ] );
 			$wallet->address = $data[ 'address' ];
+            $wallet->position = $data[ 'position' ];
 			$wallet->bundle = $data[ 'bundleHash' ];
 			$wallet->batchId = $data[ 'batchId' ];
       $wallet->remote = false;

@@ -20,7 +20,7 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
  * @package WishKnish\KnishIO\Client
  *
  * @property string $position
- * @property string $token
+ * @property string $tokend
  * @property string|null $key
  * @property string|null $address
  * @property int|float $balance
@@ -32,7 +32,7 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
  * @property string|null $characters
  *
  */
-class Wallet extends WalletShadow
+class Wallet
 {
     /**
      * @var string|null
@@ -80,49 +80,56 @@ class Wallet extends WalletShadow
      * @param string $token
      * @param string|null $batchId
      * @param string|null $characters
-     * @return Wallet|WalletShadow
+     * @return Wallet
      * @throws Exception
      */
-   public static function create ($secretOrBundle, $token = 'USER', $batchId = null, $characters = null)
+   public static function create( $secretOrBundle, $token = 'USER', $batchId = null, $characters = null )
    {
-    	// Shadow wallet
-    	if (static::isBundleHash($secretOrBundle) ) {
-			return new WalletShadow($secretOrBundle, $token, $batchId, $characters);
-		}
+       $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
+       $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
 
-    	// Base wallet
-		$wallet = new Wallet($secretOrBundle, $token);
-		$wallet->batchId = $batchId;
-		$wallet->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
-		return $wallet;
+       // Wallet initialization
+       $wallet = new Wallet( $secret, $token, null, $batchId, $characters );
+       $wallet->bundle = $bundle;
+       $wallet->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
+       return $wallet;
 	}
 
 
-
-
-	/**
-	 * Wallet constructor.
-	 *
-	 * @param string $secret
-	 * @param string $token
-	 * @param string|null $position
-	 * @param integer $saltLength
-     * @param string $characters
-	 * @throws Exception
-	 */
-	public function __construct ( $secret = null, $token = 'USER', $position = null, $saltLength = 64, $characters = null )
+    /**
+     * Wallet constructor.
+     *
+     * @param null $secret
+     * @param string $token
+     * @param null $position
+     * @param null $batchId
+     * @param null $characters
+     * @throws Exception
+     */
+	public function __construct ( $secret = null, $token = 'USER', $position = null, $batchId = null, $characters = null )
 	{
-	    parent::__construct( $secret ? Crypto::generateBundleHash( $secret ) : null, $token, null, $characters );
-
-		$this->position = $position ?: Strings::randomString( $saltLength );
+        $this->token = $token;
+        $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
+        $this->position = $position ?? static::generateWalletPosition();
+        $this->batchId = $batchId;
+        $this->characters = $characters;
 
 		if ( $secret ) {
 
 			$this->sign( $secret );
 
 		}
-
 	}
+
+
+    /**
+     * @return bool
+     */
+	public function isShadow(): bool
+    {
+        return !$this->position && !$this->address;
+    }
+
 
     /**
      * @param string $secret
@@ -130,7 +137,6 @@ class Wallet extends WalletShadow
      */
 	public function sign ( $secret )
     {
-
         if ( $this->key === null && $this->address === null ) {
 
             $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
@@ -139,7 +145,6 @@ class Wallet extends WalletShadow
             $this->getMyEncPublicKey();
 
         }
-
     }
 
     /**
@@ -159,6 +164,16 @@ class Wallet extends WalletShadow
     {
 		return ( mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
 	}
+
+
+    /**
+     * @param int $saltLength
+     * @return string
+     */
+	protected static function generateWalletPosition( $saltLength = 64 ): string
+    {
+        return Strings::randomString( $saltLength );
+    }
 
 
 	/**
