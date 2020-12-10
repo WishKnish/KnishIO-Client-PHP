@@ -57,6 +57,11 @@ class Wallet
     /**
      * @var string|null
      */
+    public $position;
+
+    /**
+     * @var string|null
+     */
     public $bundle;
 
     /**
@@ -76,10 +81,10 @@ class Wallet
 
 
     /**
-     * @param string $secretOrBundle
+     * @param $secretOrBundle
      * @param string $token
-     * @param string|null $batchId
-     * @param string|null $characters
+     * @param null $batchId
+     * @param null $characters
      * @return Wallet
      * @throws Exception
      */
@@ -87,18 +92,17 @@ class Wallet
    {
        $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
        $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
+       $position = $secret ? static::generateWalletPosition() : null;
 
        // Wallet initialization
-       $wallet = new Wallet( $secret, $token, null, $batchId, $characters );
+       $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
        $wallet->bundle = $bundle;
-       $wallet->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
        return $wallet;
 	}
 
 
     /**
      * Wallet constructor.
-     *
      * @param null $secret
      * @param string $token
      * @param null $position
@@ -110,11 +114,14 @@ class Wallet
 	{
         $this->token = $token;
         $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
-        $this->position = $position ?? static::generateWalletPosition();
         $this->batchId = $batchId;
-        $this->characters = $characters;
+        $this->characters = defined(Base58::class . '::' . $characters ) ? $characters : null;
+        $this->position = $position;
 
 		if ( $secret ) {
+
+		    // Generate a position for non-shadow wallet if it does not initialized
+            $this->position = $this->position ?? static::generateWalletPosition();
 
 			$this->sign( $secret );
 

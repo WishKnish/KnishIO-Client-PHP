@@ -565,7 +565,7 @@ class KnishIOClient
       throw new WalletShadowException();
     }
     foreach( $shadowWallets as $shadowWallet ) {
-      if ( !$shadowWallet instanceof WalletShadow ) {
+      if ( !$shadowWallet->isShadow() ) {
         throw new WalletShadowException();
       }
     }

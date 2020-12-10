@@ -97,7 +97,7 @@ class MutationProposeMoleculeStructure extends Query
 		// dd(json_decode($json, true));
 		$molecule = \WishKnish\KnishIO\Client\Response\ResponseMoleculeList::toClientMolecule(
 			json_decode($json, true)
-		);
+		);  
 		return \WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver::create( $molecule );
 	}
 
@@ -144,7 +144,7 @@ class MutationProposeMoleculeStructure extends Query
 	 * @param $response
 	 * @return ResponseMolecule
 	 */
-	public function createResponse ( $response )
+	public function createResponse( $response )
 	{
 		return new ResponseMolecule( $this, $response );
 	}

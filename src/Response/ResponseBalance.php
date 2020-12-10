@@ -25,13 +25,13 @@ class ResponseBalance extends Response
 	public function payload()
 	{
 		// Get data
-		$balance = $this->data();
-		if (!$balance) {
+		$walletData = $this->data();
+		if ( !$walletData ) {
 			return null;
 		}
 
 		// Return a client wallet object
-		return ResponseWalletList::toClientWallet($balance);
+		return ResponseWalletList::toClientWallet( $walletData );
 	}
 
 }

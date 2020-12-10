@@ -25,26 +25,32 @@ class ResponseWalletList extends Response
 	public static function toClientWallet ( array $data, string $secret = null ) {
 
 		// Shadow wallet
-		if ($data[ 'position' ] === null) {
-		    $wallet = Wallet::create( $data['bundleHash'], $data['tokenSlug'], $data['batchId'] );
-            $wallet->remote = true;
+		if ( $data[ 'position' ] === null ) {
+		    $wallet = Wallet::create(
+		        $data[ 'bundleHash' ],
+                $data[ 'tokenSlug' ],
+                $data[ 'batchId' ],
+                $data[ 'characters' ]
+            );
 		}
 
 		// Regular wallet
 		else {
-			$wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ] );
+			$wallet = new Wallet(
+			    $secret,
+                $data[ 'tokenSlug' ],
+                $data[ 'position' ],
+                $data[ 'batchId' ],
+                $data[ 'characters' ]
+            );
 			$wallet->address = $data[ 'address' ];
-            $wallet->position = $data[ 'position' ];
-			$wallet->bundle = $data[ 'bundleHash' ];
-			$wallet->batchId = $data[ 'batchId' ];
-      $wallet->remote = false;
+            $wallet->bundle = $data[ 'bundleHash' ];
 		}
 
 		// Bind other data
 		$wallet->balance = $data[ 'amount' ];
-    $wallet->characters = $data[ 'characters' ];
-    $wallet->pubkey = $data[ 'pubkey' ];
-    $wallet->createdAt = $data[ 'createdAt' ];
+        $wallet->pubkey = $data[ 'pubkey' ];
+        $wallet->createdAt = $data[ 'createdAt' ];
 
 		return $wallet;
 	}
@@ -53,7 +59,7 @@ class ResponseWalletList extends Response
   /**
    * @param string $secret
    */
-	public function getWallets( string $secret )
+  public function getWallets( string $secret )
   {
     // Get data
     $list = $this->data();
@@ -87,7 +93,7 @@ class ResponseWalletList extends Response
 		// Get a list of client wallets
 		$wallets = [];
 		foreach ($list as $item) {
-			$wallets[] = static::toClientWallet($item);
+			$wallets[] = static::toClientWallet( $item );
 		}
 
 		// Return a wallets list
