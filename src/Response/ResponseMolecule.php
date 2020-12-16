@@ -7,6 +7,8 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
+use WishKnish\KnishIO\Client\Query\Query;
 
 /**
  * Class ResponseMolecule
@@ -17,6 +19,22 @@ class ResponseMolecule extends Response
 	protected $dataKey = 'data.ProposeMolecule';
 
 	protected $payload;
+
+	protected $clientMolecule;
+
+
+
+    /**
+     * Response constructor.
+     * @param Query $query
+     * @param string $json
+     */
+    public function __construct ( ?MutationProposeMoleculeStructure $query, $json )
+    {
+        parent::__construct( $query, $json );
+
+        $this->clientMolecule = $query->moleculeStructure();
+    }
 
 
 	/**
@@ -30,6 +48,17 @@ class ResponseMolecule extends Response
 		// Decode payload
 		$this->payload = \json_decode( $payload_json, true );
 	}
+
+
+    /**
+     * Get a client molecule
+     *
+     * @return MoleculeStructure
+     */
+	public function clientMolecule(): MoleculeStructure
+    {
+        return $this->clientMolecule;
+    }
 
 
 	/**
