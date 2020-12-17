@@ -227,7 +227,7 @@ class Molecule extends MoleculeStructure
 
 	public function crateRule( $metaType, $metaId, $meta )
     {
-        foreach ( [ 'conditions', 'callback', ] as $k ) {
+        foreach ( [ 'conditions', 'rule', 'callback', ] as $k ) {
             if ( !array_key_exists( $k, $meta ) ) {
                 throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
             }

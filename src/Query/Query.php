@@ -89,8 +89,7 @@ abstract class Query
 	 * @return RequestInterface
 	 */
 	public function createRequest ( array $variables = null, array $fields = null ) {
-        dump($variables);
-        dump($fields);
+
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
 
@@ -118,7 +117,7 @@ abstract class Query
 
 		// Set a request
 		$this->request = $this->createRequest( $variables, $fields );
-        dump($this->request->getBody()->getContents());
+
 		// Make a request
 		$response = $this->client->send( $this->request );
 
