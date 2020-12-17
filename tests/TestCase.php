@@ -4,7 +4,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 // Supporing variety versions of PHPUnit
 use WishKnish\KnishIO\Client\KnishIOClient;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
@@ -28,6 +28,7 @@ abstract class TestCase extends TestCaseBase {
 	protected $dotenv;
 
 
+	protected $cell_slug = 'unit_test';
 	protected $graphql_url;
 
 	// Array [secret1 => KnishIOClient object1, secret2 => KnishIOClient object2, ..]
@@ -107,7 +108,9 @@ abstract class TestCase extends TestCaseBase {
 		}
 
 		// GraphQL url
-		$this->graphql_url = $app_url.'graphql';
+		if ( $this->graphql_url === null ) {
+			$this->graphql_url = $app_url . 'graphql';
+		}
 
 		// Client initialization
 		$this->output(['Query URL: '. $this->graphql_url]);
@@ -120,7 +123,9 @@ abstract class TestCase extends TestCaseBase {
 	 * @param $secret
 	 * @return mixed
 	 */
-	public function client ($secret, $cell_slug = 'unit_test') {
+	public function client ($secret, $cell_slug = null) {
+
+		$cell_slug = $cell_slug ?: $this->cell_slug;
 
 		// Create new client
 		if (!array_has($this->clients, $secret) ) {
@@ -129,7 +134,7 @@ abstract class TestCase extends TestCaseBase {
 			$this->clients[$secret] = new KnishIOClient($this->graphql_url);
 
 			// Auth the client
-			$response = $this->clients[$secret]->authentication($secret, $cell_slug);
+			$response = $this->clients[$secret]->requestAuthToken($secret, $cell_slug);
 			$this->checkResponse($response);
 		}
 
@@ -148,7 +153,7 @@ abstract class TestCase extends TestCaseBase {
 
 		// Execute query & check response
 		$response = $this->client( $secret )
-			->createMoleculeQuery( QueryMoleculePropose::class, $molecule )
+			->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
 			->execute();
 
 		// Check the response

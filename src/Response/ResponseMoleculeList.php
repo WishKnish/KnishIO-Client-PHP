@@ -21,7 +21,7 @@ class ResponseMoleculeList extends Response
 
 	/**
 	 * @param array $data
-	 * @return Wallet|WalletShadow
+	 * @return Wallet
 	 * @throws \Exception
 	 */
 	public static function toClientMolecule ( array $data ): MoleculeStructure

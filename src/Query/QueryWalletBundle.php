@@ -42,6 +42,40 @@ class QueryWalletBundle extends Query
 	];
 
 
+
+  /**
+   * Builds a GraphQL-friendly variables object based on input fields
+   *
+   * @param {string|array|null} metaType
+   * @param {string|array|null} metaId
+   * @param {string|array|null} key
+   * @param {string|array|null} value
+   * @param {boolean} latest
+   * @returns {{}}
+   */
+  public static function createVariables ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true ) {
+
+    $variables = [
+      'latest' => $latest,
+    ];
+
+    if ( $bundleHash ) {
+      $variables[ is_string( $bundleHash ) ? 'bundleHash' : 'bundleHashes' ] = $bundleHash;
+    }
+
+    if ( key ) {
+      $variables[ is_string( $key ) ? 'key' : 'keys' ] = $key;
+    }
+
+    if ( value ) {
+      $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
+    }
+
+    return $variables;
+
+}
+
+
 	/**
 	 * @param string $response
 	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletBundle
@@ -49,5 +83,7 @@ class QueryWalletBundle extends Query
 	public function createResponse ($response) {
 		return new ResponseWalletBundle($this, $response);
 	}
+
+
 
 }

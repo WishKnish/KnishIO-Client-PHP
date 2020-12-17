@@ -15,5 +15,17 @@ class ResponseMetaType extends Response
 {
 	protected $dataKey = 'data.MetaType';
 
+  /**
+   * @return |null
+   */
+	public function payload () {
+    $data = $this->data();
+
+    if ( !$data ) {
+      return null;
+    }
+
+    return $data[ 0 ][ 'instances' ];
+	}
 
 }

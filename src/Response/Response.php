@@ -43,7 +43,7 @@ class Response
      * @param Query $query
 	 * @param string $json
 	 */
-	public function __construct ( $query, $json )
+	public function __construct ( ?Query $query, $json )
 	{
 		// Set a query
 		$this->query = $query;

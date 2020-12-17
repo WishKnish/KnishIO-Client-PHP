@@ -10,7 +10,6 @@ use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
 
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
 
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
@@ -34,6 +33,9 @@ class QueryMetaTest extends TestCase
 	 */
 	public function beforeExecute()
 	{
+		// $this->cell_slug = null;
+		// $this->graphql_url = 'https://frontrow.knish.io/graphql';
+
 		parent::beforeExecute();
 
 		// Source secret & wallet

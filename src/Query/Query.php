@@ -10,7 +10,9 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
 
@@ -41,25 +43,19 @@ abstract class Query
 	protected $variables;
 
     /**
-     * @var string|null
-     */
-    protected $query;
-
-    /**
      * @var string
      */
 	protected static $default_query;
 
 
-    /**
-     * Query constructor.
-     * @param HttpClientInterface $client
-     * @param string|null $query
-     */
-	public function __construct ( HttpClientInterface $client, $query = null )
+	/**
+	 * Query constructor.
+	 * @param KnishIOClient $knishIO
+	 */
+	public function __construct ( HttpClientInterface $client, string $query = null )
 	{
 	    $this->client = $client;
-		$this->query = $query ?: static::$default_query;
+		$this->query = $query ?? static::$default_query;
 	}
 
 
@@ -88,7 +84,7 @@ abstract class Query
 	 * @param array|null $fields
 	 * @return RequestInterface
 	 */
-	public function createRequest ( array $variables = null, array $fields = null ) {
+	public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ) {
 
 		// Default value of variables
 		$this->variables = $this->compiledVariables( $variables );
@@ -97,22 +93,21 @@ abstract class Query
 		return new Request(
 			'POST',
 			$this->url(),
-			[
+			array_merge( $headers, [
 				'Content-Type' => 'application/json',
 				'x-auth-token' => $this->client->getAuthToken(),
-			],
+			] ),
 			json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] )
 		);
 
 	}
 
 
-    /**
-     * @param array|null $variables
+	/**
+	 * @param array|null $variables
      * @param array $fields
-     * @return mixed
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     */
+	 * @return mixed
+	 */
 	public function execute ( array $variables = null, array $fields = null ) {
 
 		// Set a request

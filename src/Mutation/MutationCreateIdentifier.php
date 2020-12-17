@@ -4,15 +4,13 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\Query;
-
-
+namespace WishKnish\KnishIO\Client\Mutation;
 
 /**
- * Class QueryIdentifierCreate
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationCreateIdentifier
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryIdentifierCreate extends QueryMoleculePropose
+class MutationCreateIdentifier extends MutationProposeMolecule
 {
 
 	/**

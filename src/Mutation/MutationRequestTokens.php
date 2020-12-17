@@ -4,34 +4,33 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
 
-
 /**
- * Class QueryTokenTransfer
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationRequestTokens
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryTokenReceive extends QueryMoleculePropose
+class MutationRequestTokens extends MutationProposeMolecule
 {
 
     /**
-     * @param string $token
-     * @param $value
+     * @param string $tokenSlug
+     * @param $requestedAmount
      * @param string $metaType
      * @param string $metaId
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
-	public function fillMolecule ( $token, $value, $metaType, $metaId, array $metas = null )
+	public function fillMolecule ( $tokenSlug, $requestedAmount, $metaType, $metaId, array $metas = null )
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
 		// Fill the molecule
-		$this->molecule->initTokenTransfer( $token, $value, $metaType, $metaId, $metas );
+		$this->molecule->initTokenTransfer( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas );
 		$this->molecule->sign();
 		$this->molecule->check();
 

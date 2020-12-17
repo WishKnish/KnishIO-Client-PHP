@@ -1,18 +1,17 @@
 <?php
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseAuthentication;
+use WishKnish\KnishIO\Client\Response\ResponseAuthorization;
 use WishKnish\KnishIO\Client\Wallet;
 use Exception;
 
-
 /**
- * Class QueryAuthentication
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationRequestAuthorization
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryAuthentication extends QueryMoleculePropose
+class MutationRequestAuthorization extends MutationProposeMolecule
 {
 
 
@@ -21,7 +20,7 @@ class QueryAuthentication extends QueryMoleculePropose
 	 */
     public function fillMolecule ()
     {
-        $this->molecule->initAuthentication();
+        $this->molecule->initAuthorization();
 		$this->molecule->sign();
 		$this->molecule->check();
 
@@ -36,6 +35,6 @@ class QueryAuthentication extends QueryMoleculePropose
      */
     public function createResponse ( $response )
     {
-        return new ResponseAuthentication( $this, $response );
+        return new ResponseAuthorization( $this, $response );
     }
 }

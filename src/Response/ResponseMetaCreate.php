@@ -6,32 +6,12 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
-
 /**
- * Class ResponseBalance
+ * Class ResponseMetaCreate
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseBalance extends Response
+class ResponseMetaCreate extends Response
 {
-	protected $dataKey = 'data.Balance';
 
-
-	/**
-	 * Get a payload
-	 *
-	 * @return Wallet|null
-	 * @throws \Exception
-	 */
-	public function payload()
-	{
-		// Get data
-		$walletData = $this->data();
-		if ( !$walletData ) {
-			return null;
-		}
-
-		// Return a client wallet object
-		return ResponseWalletList::toClientWallet( $walletData );
-	}
 
 }

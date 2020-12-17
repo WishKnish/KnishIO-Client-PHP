@@ -30,6 +30,7 @@ class MoleculeStructure {
 	public $counterparty;
 	public $bundle;
 	public $status;
+	public $local;
 	public $createdAt;
 	public $atoms;
 

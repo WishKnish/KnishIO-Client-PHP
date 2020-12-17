@@ -4,16 +4,15 @@
 // https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
 // This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use WishKnish\KnishIO\Client\Wallet;
 
-
 /**
- * Class QueryShadowWalletClaim
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationClaimShadowWallet
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryShadowWalletClaim extends QueryMoleculePropose
+class MutationClaimShadowWallet extends MutationProposeMolecule
 {
 
 

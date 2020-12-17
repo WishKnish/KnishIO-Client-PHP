@@ -9,7 +9,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
-use WishKnish\KnishIO\Client\Query\QueryMoleculePropose;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
@@ -39,9 +39,10 @@ class TokenClientTransactionTest extends TestCase
 
 	public function beforeExecute()
 	{
-		parent::beforeExecute();
+		// $this->cell_slug = null;
+		// $this->graphql_url = 'https://frontrow.knish.io/graphql';
 
-		//$this->client->setUrl('https://staging.knish.io/graphql');
+		parent::beforeExecute();
 	}
 
 
@@ -56,7 +57,7 @@ class TokenClientTransactionTest extends TestCase
 	protected function checkWallet ($client, $bundle, $token, $amount, $hasBatchID = false) {
 
 		// Get a wallet
-		$response = $client->getBalance($bundle, $token);
+		$response = $client->queryBalance($token, $bundle);
 		if (!$wallet = $response->payload() ) {
 			$this->debug ($response, true);
 		}
@@ -219,7 +220,7 @@ class TokenClientTransactionTest extends TestCase
 	/**
 	 * @throws \ReflectionException
 	 */
-	public function testReceiveToken () {
+	public function testRequestToken () {
 
 		// Initial code
 		$this->beforeExecute ();
@@ -252,19 +253,19 @@ class TokenClientTransactionTest extends TestCase
 
 		// --- Base receive (NOT-splitting)
 		$client = $this->client($secret['env']);
-		$response = $client->receiveToken($token, $transaction_amount, $toBundle[0]);
+		$response = $client->requestTokens($token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[0], $token, $transaction_amount * 1.0, false);
 
 		// --- Base receive (NOT-splitting)
-		$response = $client->receiveToken($token, $transaction_amount, $toBundle[0]);
+		$response = $client->requestTokens($token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[0], $token, $transaction_amount * 2.0, false);
 
 		// --- RECEIVER.1
 
 		// --- Base receive (NOT-splitting)
-		$response = $client->receiveToken($token, $transaction_amount, $toBundle[1]);
+		$response = $client->requestTokens($token, $transaction_amount, $toBundle[1]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[1], $token, $transaction_amount * 1.0, false);
 
@@ -272,7 +273,7 @@ class TokenClientTransactionTest extends TestCase
 		// --- RECEIVER.2
 
 		// --- Base receive (NOT-splitting)
-		$response = $client->receiveToken($token, $transaction_amount, $receivers[2]);
+		$response = $client->requestTokens($token, $transaction_amount, $receivers[2]);
 		$this->checkResponse($response);
 		$this->checkWallet($client, $toBundle[2], $token, $transaction_amount * 1.0, false);
 
@@ -280,9 +281,9 @@ class TokenClientTransactionTest extends TestCase
 
 		// --- Base receive (NOT-splitting)
 		$wallet = Wallet::create($receivers[3], $token);
-		$response = $client->receiveToken($token, $transaction_amount, $wallet);
+		$response = $client->requestTokens($token, $transaction_amount, $wallet);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $receivers[3], $token, $transaction_amount * 1.0, false);
+		$this->checkWallet($client, Crypto::generateBundleHash($receivers[3]), $token, $transaction_amount * 1.0, false);
 
 		// Claim shadow wallet
 		$this->claimShadowWallet ( $token, $receivers[0], [$receivers[1]] );
@@ -295,18 +296,18 @@ class TokenClientTransactionTest extends TestCase
 		$token = $this->token_slug['env.stackable'];
 
 		// --- Batch receive (splitting)
-		$response = $client->receiveToken($token, $transaction_amount, $toBundle[0]);
+		$response = $client->requestTokens($token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[0], $token, $transaction_amount * 1.0, true);
 
 		// --- Batch receive (splitting)
-		$response = $client->receiveToken($token, $transaction_amount, $toBundle[0]);
+		$response = $client->requestTokens($token, $transaction_amount, $toBundle[0]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[0], $token, $transaction_amount * 1.0, true);
 
 		// --- Batch receive (splitting) WITHOUT a remainder
 		$remainder_amount = ($full_amount - $transaction_amount * 2.0);
-		$response = $client->receiveToken($token, $remainder_amount, $toBundle[0]);
+		$response = $client->requestTokens($token, $remainder_amount, $toBundle[0]);
 		$this->checkResponse($response);
 		$this->checkWalletShadow($client, $toBundle[0], $token, $remainder_amount, true);
 	}
@@ -341,32 +342,32 @@ class TokenClientTransactionTest extends TestCase
 		// --- Batch transfer (splitting)
 		$response = $client->transferToken($toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[0], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[0]), $token, $transaction_amount);
 
 		// --- Batch transfer second transaction (the amount of shadow wallet will be incrementing with a new one)
 		$response = $client->transferToken($toSecret[0], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[0], $token, $transaction_amount * 2.0);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[0]), $token, $transaction_amount * 2.0);
 
 
 
 		// --- Batch transfer to other recipient
 		$response = $client->transferToken($toSecret[1], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[1], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[1]), $token, $transaction_amount);
 
 
 
 		// --- Batch 1-st transfer
 		$response = $client->transferToken($toSecret[2], $token, $transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[2], $token, $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[2]), $token, $transaction_amount);
 
 		// --- Batch last transfer
 		$remainder_amount = $full_amount - $transaction_amount*4.0;
 		$response = $client->transferToken($toSecret[2], $token, $remainder_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $toSecret[2], $token, $remainder_amount + $transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($toSecret[2]), $token, $remainder_amount + $transaction_amount);
 
 		// dump ('END: testBaseSplitTransaction');
 	}
@@ -482,9 +483,9 @@ class TokenClientTransactionTest extends TestCase
 		// With accumulation recipients
 		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, false, $custom_transaction_amount);
 		$this->checkResponse($response);
-		$this->checkWallet($client, $recipients[0], $token, 1);
-		$this->checkWallet($client, $recipients[1], $token, $transaction_amount * 2 + $custom_transaction_amount);
-		$this->checkWallet($client, $recipients[2], $token, $transaction_amount * 1 + $custom_transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[0]), $token, 1);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[1]), $token, $transaction_amount * 2 + $custom_transaction_amount);
+		$this->checkWallet($client, Crypto::generateBundleHash($recipients[2]), $token, $transaction_amount * 1 + $custom_transaction_amount);
 
 		// With new wallets
 		$response = $this->vIsotopeCombination ($from_secret, $token, $recipients, true, $custom_transaction_amount);
@@ -508,7 +509,7 @@ class TokenClientTransactionTest extends TestCase
 		$client = $this->client($from_secret);
 
 		// Wallets
-		$source_wallet = $client->getBalance( $from_secret, $token )->payload();
+		$source_wallet = $client->queryBalance( $token, Crypto::generateBundleHash($from_secret) )->payload();
 
 		$recipient_wallets = [];
 		foreach ($recipients as $recipient) {
@@ -597,7 +598,7 @@ class TokenClientTransactionTest extends TestCase
 		$molecule->check($source_wallet);
 
 		// Create & execute a query
-		return $client->createMoleculeQuery(QueryMoleculePropose::class, $molecule)
+		return $client->createMoleculeMutation(MutationProposeMolecule::class, $molecule)
 			->execute();
 	}
 
