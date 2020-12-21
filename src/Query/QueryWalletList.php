@@ -26,7 +26,15 @@ class QueryWalletList extends Query
 	protected $fields = [
 		'address',
 		'bundleHash',
-		'tokenSlug',
+		'token' => [
+		    'name',
+            'amount'
+        ],
+        'molecules' => [
+            'molecularHash',
+            'createdAt',
+        ],
+        'tokenSlug',
 		'batchId',
 		'position',
 		'amount',
@@ -34,7 +42,6 @@ class QueryWalletList extends Query
 		'pubkey',
 		'createdAt',
 	];
-
 
 	/**
 	 * @param string $response
