@@ -16,26 +16,23 @@ class MutationClaimShadowWallet extends MutationProposeMolecule
 {
 
 
-	/**
-	 * @param $token
-	 * @param array $shadowWallets
-	 * @throws \Exception
-	 */
-	public function fillMolecule ( $token, array $shadowWallets )
-	{
-		// Get new client wallets
-		$wallets = [];
-		foreach ($shadowWallets as $shadowWallet) {
-			$wallets[] = Wallet::create( $this->molecule->secret(), $token, $shadowWallet->batchId );
-		}
+    /**
+     * @param $token
+     * @param array $shadowWallets
+     * @throws \Exception
+     */
+    public function fillMolecule( string $tokenSlug, ?string $batchId )
+    {
+        // Create a wallet
+        $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
 
-		// Init shadow wallet claim
-		$this->molecule->initShadowWalletClaimAtom ( $token, $wallets );
-		$this->molecule->sign();
-		$this->molecule->check();
+        // Init shadow wallet claim
+        $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
+        $this->molecule->sign();
+        $this->molecule->check();
 
-		return $this;
-	}
+        return $this;
+    }
 
 
 }

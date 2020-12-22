@@ -660,13 +660,18 @@ class TokenClientTransactionTest extends TestCase
 		foreach ($intruders as $intruder) {
 
 			// Client
-			$client = $this->client($recipient);
+			$client = $this->client( $recipient );
+
+			// Get shadow wallets
+			$shadowWallets = $client->queryShadowWallets( $token );
 
 			// Init recipient query
-			$response = $client->claimShadowWallet( $token, $client->createMolecule( $intruder, new Wallet( $intruder ) ) );
+      foreach( $shadowWallets as $shadowWallet ) {
+        $response = $client->claimShadowWallet( $token, $shadowWallet->batchId, $client->createMolecule( $intruder, new Wallet( $intruder ) ) );
 
-			// Assert a rejected status
-			$this->assertEquals($response->status(), 'rejected');
+        // Assert a rejected status
+        $this->assertEquals($response->status(), 'rejected');
+      }
 
 			/*
 			$continue_id_error = strpos($response->reason(), 'ContinuID verification failure');
@@ -678,8 +683,10 @@ class TokenClientTransactionTest extends TestCase
 		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
-		$response = $this->client($recipient)->claimShadowWallet($token);
-		$this->checkResponse ($response);
+		$responses = $this->client($recipient)->claimShadowWallets($token);
+		foreach( $responses as $response ) {
+      $this->checkResponse ($response);
+    }
 		// ---
 
 	}
