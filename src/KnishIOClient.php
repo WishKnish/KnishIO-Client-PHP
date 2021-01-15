@@ -139,6 +139,7 @@ class KnishIOClient {
 
   /**
    * @return HttpClient
+   * @todo rename to HttpClient!
    */
   public function client () {
     return $this->client;
@@ -206,9 +207,9 @@ class KnishIOClient {
     $secret = $secret ?: $this->secret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response(
-      ) && $this->lastMoleculeQuery->response()
-        ->success() ) {
+    if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' &&
+      $this->lastMoleculeQuery && $this->lastMoleculeQuery->response() && $this->lastMoleculeQuery->response()->success()
+    ) {
       $sourceWallet = $this->remainderWallet;
     }
 
@@ -456,9 +457,13 @@ class KnishIOClient {
     string $metaId,
     array $metadata = null
   ) {
-    // Create & execute a query
+
+    // Create a custom molecule
+    $molecule = $this->createMolecule( $this->secret(), $this->getSourceWallet() );
+
+      // Create & execute a query
     /** @var MutationCreateMeta $query */
-    $query = $this->createMoleculeMutation( MutationCreateMeta::class );
+    $query = $this->createMoleculeMutation( MutationCreateMeta::class, $molecule );
 
     // Init a molecule
     $query->fillMolecule(

@@ -14,6 +14,34 @@ use WishKnish\KnishIO\Client\Wallet;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 
+/*
+
+Create batch metas test code.
+
+$metaType = 'batch';
+$allMetas = [
+  'first' => [],
+  'second' => [],
+  'third' => [],
+  'fourth' => [],
+  'fifth' => [],
+];
+$secret = \WishKnish\KnishIO\Client\Libraries\Crypto::generateSecret();
+$client = new \WishKnish\KnishIO\Client\KnishIOClient();
+$client->requestAuthToken($secret);
+foreach($allMetas as $metaId => $metaData) {
+  if ($metaId === 'first') {
+    continue;
+  }
+  $metaData = array_merge($metaData, [
+    'key' => $metaId,
+    'key_'.$metaId => 'value_'.$metaId,
+  ]);
+  $response = $client->createMeta($metaType, $metaId, $metaData);
+}
+die('Ok');
+
+*/
 
 /**
  * Class QueryMetaTest

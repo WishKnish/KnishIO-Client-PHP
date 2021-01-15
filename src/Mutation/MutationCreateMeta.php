@@ -21,7 +21,7 @@ class MutationCreateMeta extends MutationProposeMolecule
    * @param $code
    * @throws \Exception
    */
-  public function fillMolecule ( string $metaType, string $metaId, string $metadata )
+  public function fillMolecule ( string $metaType, string $metaId, array $metadata )
   {
     $this->molecule->initMeta( $metadata, $metaType, $metaId );
     $this->molecule->sign();
