@@ -207,9 +207,9 @@ class KnishIOClient {
     $secret = $secret ?: $this->secret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' &&
-      $this->lastMoleculeQuery && $this->lastMoleculeQuery->response() && $this->lastMoleculeQuery->response()->success()
-    ) {
+    if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response(
+      ) && $this->lastMoleculeQuery->response()
+        ->success() ) {
       $sourceWallet = $this->remainderWallet;
     }
 
@@ -412,7 +412,8 @@ class KnishIOClient {
   public function createToken (
     $tokenSlug,
     $initialAmount,
-    array $tokenMetadata = null
+    array $tokenMetadata = null,
+    string $batchId = null
   ) {
     $tokenMetadata = default_if_null(
       $tokenMetadata,
@@ -429,7 +430,7 @@ class KnishIOClient {
         $tokenMetadata,
         'fungibility'
       ) === 'stackable' ) { // For stackable token - create a batch ID
-      $recipientWallet->batchId = Wallet::generateBatchId();
+      $recipientWallet->batchId = $batchId ?? Wallet::generateBatchId();
     }
 
     // Create a query
@@ -459,11 +460,17 @@ class KnishIOClient {
   ) {
 
     // Create a custom molecule
-    $molecule = $this->createMolecule( $this->secret(), $this->getSourceWallet() );
+    $molecule = $this->createMolecule(
+      $this->secret(),
+      $this->getSourceWallet()
+    );
 
-      // Create & execute a query
+    // Create & execute a query
     /** @var MutationCreateMeta $query */
-    $query = $this->createMoleculeMutation( MutationCreateMeta::class, $molecule );
+    $query = $this->createMoleculeMutation(
+      MutationCreateMeta::class,
+      $molecule
+    );
 
     // Init a molecule
     $query->fillMolecule(
@@ -726,7 +733,8 @@ class KnishIOClient {
   public function transferToken (
     $walletObjectOrBundleHash,
     $tokenSlug,
-    $amount
+    $amount,
+    string $batchId = null
   ) {
 
     // Get a from wallet
@@ -770,6 +778,9 @@ class KnishIOClient {
       $fromWallet,
       $amount
     );
+    if ( $batchId !== null ) {
+      $toWallet->batchId = $batchId;
+    }
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create(
