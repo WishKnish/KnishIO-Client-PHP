@@ -466,7 +466,7 @@ class KnishIOClient {
       $metaId,
       $metadata
     );
-
+    //dd($query->molecule()->toJson());
     // Execute a query
     return $query->execute();
   }
