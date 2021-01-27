@@ -4,6 +4,8 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Tests\TestCase;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
+use WishKnish\KnishIO\Client\Query\QueryWalletList;
 
 /**
  * Class QueryCascadeMetaTest
@@ -63,8 +65,26 @@ class QueryCascadeMetaTest extends TestCase
         "key_$index" => "value_$index",
       ] );
 
+      // Burn tokens for the last transaction
+      /*
+      if ( $i === $this->cascadeDeep - 1 ) {
+
+        $wallets = (new QueryWalletList($client->client()))
+          ->execute([ 'bundleHash' => $client->bundle(), 'token' => $this->tokenSlug  ]);
+
+        // Burn tokens
+        $molecule = $client->createMolecule( null, $wallets->payload()[0] );
+        $molecule->burningTokens( 5 );
+        $result = (new MutationProposeMolecule($client->client(), $molecule))
+          ->execute();
+        dd($result);
+      }
+      */
+
       $transactionAmount -= 10;
     }
+
+    /*
 
     // Get metas for last batchID
     $response = (new QueryMetaType( $client->client() ))->execute([
@@ -81,6 +101,8 @@ class QueryCascadeMetaTest extends TestCase
       ],
     ]);
     dd( $response->payload() );
+
+    */
   }
 
 
@@ -90,7 +112,7 @@ class QueryCascadeMetaTest extends TestCase
    * @return string
    */
   private function getBatchId( int $index ) {
-    return $this->batchPrefix . '_' . $index;
+    return $this->batchPrefix . $index;
   }
 
 
