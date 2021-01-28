@@ -45,7 +45,7 @@ class CheckMolecule
             'molecularHash',
             'ots',
             'isotopeM',
-			'isotopeP',
+			      'isotopeP',
             'isotopeR',
             'isotopeC',
             'isotopeV',

@@ -2,8 +2,8 @@
 
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Tests\TestCase;
-use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\Query\QueryMetaType;
+use WishKnish\KnishIO\Client\Wallet as ClientWallet;
+use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 
@@ -36,9 +36,8 @@ class QueryCascadeMetaTest extends TestCase
     $this->assertEquals(true, true);
   }
 
-
   /**
-   *
+   * @throws ReflectionException
    */
   public function testCascadeMeta() {
 
@@ -65,44 +64,24 @@ class QueryCascadeMetaTest extends TestCase
         "key_$index" => "value_$index",
       ] );
 
-      // Burn tokens for the last transaction
-      /*
-      if ( $i === $this->cascadeDeep - 1 ) {
-
-        $wallets = (new QueryWalletList($client->client()))
-          ->execute([ 'bundleHash' => $client->bundle(), 'token' => $this->tokenSlug  ]);
-
-        // Burn tokens
-        $molecule = $client->createMolecule( null, $wallets->payload()[0] );
-        $molecule->burningTokens( 5 );
-        $result = (new MutationProposeMolecule($client->client(), $molecule))
-          ->execute();
-        dd($result);
-      }
-      */
-
+      // Change transaction amount for each step
       $transactionAmount -= 10;
+
+      // Burn tokens for the last transaction
+      if ( $i === $this->cascadeDeep - 1 ) {
+        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 1) );
+        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 2) );
+      }
     }
 
-    /*
 
     // Get metas for last batchID
-    $response = (new QueryMetaType( $client->client() ))->execute([
-      'metaType' => 'batch',
-      'metaId' => $batchId,
-    ], [
-      'instances' => [
-        'metaType',
-        'metaId',
-        'metas' => [
-          'key',
-          'value',
-        ],
-      ],
+    $response = (new QueryBatch( $client->client() ))->execute([
+      'batchId' => $batchId,
     ]);
-    dd( $response->payload() );
+    dd( $response->data() );
 
-    */
+
   }
 
 

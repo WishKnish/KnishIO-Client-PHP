@@ -18,6 +18,7 @@ use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
+use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorization;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
@@ -383,6 +384,20 @@ class KnishIOClient {
     )
       ->payload();
 
+  }
+
+  /**
+   * @param string $batchId
+   *
+   * @return mixed
+   * @throws Exception
+   */
+  public function queryBatch ( string $batchId ) {
+
+    $query = $this->createQuery( QueryBatch::class );
+
+    // Execute the query
+    return $query->execute( [ 'batchId' => $batchId] );
   }
 
   /**
@@ -812,6 +827,43 @@ class KnishIOClient {
 
     // Execute a query
     return $query->execute();
+  }
+
+  /**
+   * @param string $tokenSlug
+   * @param $burnAmount
+   * @param string|null $batchId
+   *
+   * @return mixed|Response
+   * @throws ReflectionException
+   */
+  public function burnToken( string $tokenSlug, $burnAmount, string $batchId = null ) {
+
+    // Get a wallet list @todo need an arg actual/latest to prevent getting full wallet list
+    $wallets = $this->createQuery( QueryWalletList::class )
+      ->execute([ 'bundleHash' => $this->bundle(), 'token' => $tokenSlug  ])
+      ->payload();
+
+    // Get a source wallet
+    $sourceWallet = end($wallets);
+
+    // Remainder wallet
+    $remainderWallet = Wallet::create(
+      $this->secret(),
+      $tokenSlug,
+      $batchId ?? Wallet::generateBatchId(),
+      $sourceWallet->characters
+    );
+
+    // Burn tokens
+    $molecule = $this->createMolecule( null, $sourceWallet, $remainderWallet );
+    $molecule->burningTokens( $burnAmount );
+    $molecule->sign();
+    $molecule->check();
+
+    return (new MutationProposeMolecule($this->client(), $molecule))
+      ->execute();
+
   }
 
   /**
