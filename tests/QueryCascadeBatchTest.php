@@ -1,5 +1,7 @@
 <?php
 
+namespace WishKnish\KnishIO\Client\Tests;
+
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Tests\TestCase;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
@@ -10,7 +12,7 @@ use WishKnish\KnishIO\Client\Query\QueryWalletList;
 /**
  * Class QueryCascadeMetaTest
  */
-class QueryCascadeMetaTest extends TestCase
+class QueryCascadeBatchTest extends TestCase
 {
   private $tokenSlug = 'UTSTACKABLE';
   private $fullAmount = 1000;
@@ -39,7 +41,7 @@ class QueryCascadeMetaTest extends TestCase
   /**
    * @throws ReflectionException
    */
-  public function testCascadeMeta() {
+  public function testCascadeBatch() {
 
     // Create a token
     $client = $this->createToken();
@@ -80,7 +82,13 @@ class QueryCascadeMetaTest extends TestCase
       'batchId' => $batchId,
     ]);
     dd( $response->data() );
+  }
 
+
+  /**
+   * @throws ReflectionException
+   */
+  public function testUnitToken() {
 
   }
 

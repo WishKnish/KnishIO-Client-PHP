@@ -411,7 +411,8 @@ class Molecule extends MoleculeStructure {
    */
   public function initValue (
     Wallet $recipientWallet,
-    $value
+    $value,
+    array $recipientUnits = []
   ) {
 
     if ( Decimal::cmp(
