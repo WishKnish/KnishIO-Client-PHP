@@ -580,12 +580,19 @@ class KnishIOClient {
   /**
    * @param string|Wallet $walletObjectOrBundleHash
    * @param string $tokenSlug
-   * @param int|float $amount
+   * @param int|float|array $amount => array - tokenUnits: [unitId1, unitId2, ...]
    *
    * @return array
    * @throws Exception|ReflectionException|InvalidResponseException
    */
-  public function transferToken ( $walletObjectOrBundleHash, $tokenSlug, $amount, array $recipientMeta = [], array $remainderMeta = [], string $batchId = null ) {
+  public function transferToken ( $walletObjectOrBundleHash, $tokenSlug, $amount, string $batchId = null ) {
+
+    // Token units initialization
+    $tokenUnits = [];
+    if ( is_array( $amount ) ) {
+      $tokenUnits = $amount;
+      $amount = count( $amount );
+    }
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -615,8 +622,23 @@ class KnishIOClient {
       $toWallet->batchId = $batchId;
     }
 
+    // Init recipient & remainder token units
+    $recipientTokenUnits = []; $remainderTokenUnits = [];
+    foreach( $fromWallet->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit[ 'id' ], $tokenUnits ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
+
+    // Set token units to the wallet
+    $toWallet->tokenUnits = $recipientTokenUnits;
+
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $toWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet->tokenUnits = $remainderTokenUnits;
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
@@ -630,17 +652,6 @@ class KnishIOClient {
 
     // Execute a query
     return $query->execute();
-  }
-
-  /**
-   * @param $walletObjectOrBundleHash
-   * @param string $tokenSlug
-   * @param array $units
-   * @param string|null $batchId
-   */
-  public function transferTokenUnits( $walletObjectOrBundleHash, string $tokenSlug, array $units, string $batchId = null )
-  {
-
   }
 
 

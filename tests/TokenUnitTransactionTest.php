@@ -19,9 +19,9 @@ class TokenUnitTransactionTest extends TestCase
 {
   private $tokenSlug = 'UTSTACKUNIT';
   private $transactionAmount = 2;
-  private $cascadeDeep = 5;
+  private $cascadeDeep = 4;
   private $batchPrefix = 'batch_';
-  private $units = [
+  private $tokenUnits = [
     [ 'unit_id_1', 'unit_name_1', 'unit_meta_1', ],
     [ 'unit_id_2', 'unit_name_2', 'unit_meta_2', ],
     [ 'unit_id_3', 'unit_name_3', 'unit_meta_3', ],
@@ -30,6 +30,8 @@ class TokenUnitTransactionTest extends TestCase
     [ 'unit_id_6', 'unit_name_6', 'unit_meta_6', ],
     [ 'unit_id_7', 'unit_name_7', 'unit_meta_7', ],
     [ 'unit_id_8', 'unit_name_8', 'unit_meta_8', ],
+    [ 'unit_id_9', 'unit_name_9', 'unit_meta_9', ],
+    [ 'unit_id_10','unit_name_10','unit_meta_10', ],
   ];
 
 
@@ -51,9 +53,9 @@ class TokenUnitTransactionTest extends TestCase
   }
 
   /**
-   * @throws ReflectionException
+   * @throws \ReflectionException
    */
-  public function testCascadeBatch() {
+  public function testUnitTransaction() {
 
     // Create a token
     $client = $this->createToken();
@@ -66,8 +68,14 @@ class TokenUnitTransactionTest extends TestCase
       $index = $i + 1;
       $batchId = $this->getBatchId( $index );
 
+      $tokenUnits = array_slice( $this->tokenUnits, $i * 2, 2 );
+      $tokenUnitIds = [];
+      foreach( $tokenUnits as $tokenUnit ) {
+        $tokenUnitIds[] = $tokenUnit[ 0 ];
+      }
+
       // Token transferring
-      $client = $this->transfetToken( $client, $transactionAmount, $batchId );
+      $client = $this->transfetToken( $client, $tokenUnitIds, $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client );
@@ -98,14 +106,6 @@ class TokenUnitTransactionTest extends TestCase
 
 
   /**
-   * @throws ReflectionException
-   */
-  public function testUnitToken() {
-
-  }
-
-
-  /**
    * @param int $index
    *
    * @return string
@@ -116,13 +116,13 @@ class TokenUnitTransactionTest extends TestCase
 
   /**
    * @param KnishIOClient $client
-   * @param array $units
+   * @param array $tokenUnits
    * @param string $batchId
    *
    * @return mixed|KnishIOClient
    * @throws \ReflectionException
    */
-  private function transfetToken( KnishIOClient $client, array $units, string $batchId ) {
+  private function transfetToken( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
 
     // Initial code
     $this->beforeExecute ();
@@ -132,7 +132,7 @@ class TokenUnitTransactionTest extends TestCase
     $toBundle = Crypto::generateBundleHash( $toSecret );
 
     // Transferring
-    $response = $client->transferToken($toBundle, $this->tokenSlug, count( $units ), $batchId);
+    $response = $client->transferToken($toBundle, $this->tokenSlug, $tokenUnitIds, $batchId);
     $this->checkResponse($response);
 
     return $this->client( $toSecret );
@@ -164,7 +164,7 @@ class TokenUnitTransactionTest extends TestCase
     $this->beforeExecute ();
 
     $client = $this->client(Crypto::generateSecret());
-    $response = $client->createUnitableToken( $this->tokenSlug, $this->units, [
+    $response = $client->createUnitableToken( $this->tokenSlug, $this->tokenUnits, [
       'name'			=> $this->tokenSlug,
       'supply'		=> 'limited',
       'icon'			=> 'icon',

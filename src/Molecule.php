@@ -179,6 +179,9 @@ class Molecule extends MoleculeStructure {
   ): array {
     $wallet = $wallet ?: $this->sourceWallet;
 
+    if ( $wallet->hasTokenUnits() ) {
+      $metas[ 'tokenUnits' ] = $wallet->tokenUnitsJson();
+    }
     $metas[ 'pubkey' ] = $wallet->pubkey;
     $metas[ 'characters' ] = $wallet->characters;
 

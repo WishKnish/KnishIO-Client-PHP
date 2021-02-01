@@ -32,6 +32,11 @@ class QueryBalance extends Query
 		'characters',
 		'pubkey',
 		'createdAt',
+    'tokenUnits' => [
+      'id',
+      'name',
+      'metas',
+    ],
 	];
 
 
