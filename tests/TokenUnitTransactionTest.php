@@ -5,6 +5,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Tests\TestCase;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
@@ -32,6 +33,7 @@ class TokenUnitTransactionTest extends TestCase
     [ 'unit_id_8', 'unit_name_8', 'unit_meta_8', ],
     [ 'unit_id_9', 'unit_name_9', 'unit_meta_9', ],
     [ 'unit_id_10','unit_name_10','unit_meta_10', ],
+    [ 'unit_id_11','unit_name_11','unit_meta_11', ],
   ];
 
 
@@ -61,6 +63,7 @@ class TokenUnitTransactionTest extends TestCase
     $client = $this->createToken();
     $transactionAmount = $this->transactionAmount;
 
+
     // Transferring through cascade
     for ( $i = 0; $i < $this->cascadeDeep; $i++ ) {
 
@@ -68,14 +71,11 @@ class TokenUnitTransactionTest extends TestCase
       $index = $i + 1;
       $batchId = $this->getBatchId( $index );
 
-      $tokenUnits = array_slice( $this->tokenUnits, $i * 2, 2 );
-      $tokenUnitIds = [];
-      foreach( $tokenUnits as $tokenUnit ) {
-        $tokenUnitIds[] = $tokenUnit[ 0 ];
-      }
+      // Get token units part for a transaction
+      $tokenUnits = array_slice( $this->tokenUnits, ($i + 1) * 2 );
 
       // Token transferring
-      $client = $this->transfetToken( $client, $tokenUnitIds, $batchId );
+      $client = $this->transfetToken( $client, $this->getTokenUnitIds( $tokenUnits ), $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client );
@@ -91,19 +91,30 @@ class TokenUnitTransactionTest extends TestCase
 
       // Burn tokens for the last transaction
       if ( $i === $this->cascadeDeep - 1 ) {
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 1) );
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 2) );
+        for($j = 0; $j < 2; $j++ ) {
+          $tokenUnits = array_slice( $this->tokenUnits, ($i + 1) * 2 + $j, 1 );
+          $client->burnToken( $this->tokenSlug, $this->getTokenUnitIds( $tokenUnits ), $this->getBatchId( $index + $j + 1) );
+        }
       }
     }
 
-
     // Get metas for last batchID
-    $response = (new QueryBatch( $client->client() ))->execute([
-      'batchId' => $batchId,
-    ]);
-    dd( $response->data() );
+    $response = $client->queryBalance( $this->tokenSlug );
+    $this->assertEquals( array_get( $response->payload()->tokenUnits, '0.id' ), array_get( $this->tokenUnits, '10.0' ) );
   }
 
+  /**
+   * @param array $tokenUnits
+   *
+   * @return array
+   */
+  private function getTokenUnitIds( array $tokenUnits ): array {
+    $tokenUnitIds = [];
+    foreach( $tokenUnits as $tokenUnit ) {
+      $tokenUnitIds[] = $tokenUnit[ 0 ];
+    }
+    return $tokenUnitIds;
+  }
 
   /**
    * @param int $index

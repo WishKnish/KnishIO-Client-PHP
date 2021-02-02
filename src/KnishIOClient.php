@@ -382,7 +382,7 @@ class KnishIOClient {
 
     // Set custom default metadata
     $metadata = array_merge( $metadata, [
-      'units' => json_encode( $units ),
+      'tokenUnits' => json_encode( $units ),
       'fungibility' => 'stackable',
       'splittable' => 1,
       'decimals' => 0,
@@ -587,17 +587,13 @@ class KnishIOClient {
    */
   public function transferToken ( $walletObjectOrBundleHash, $tokenSlug, $amount, string $batchId = null ) {
 
-    // Token units initialization
-    $tokenUnits = [];
-    if ( is_array( $amount ) ) {
-      $tokenUnits = $amount;
-      $amount = count( $amount );
-    }
-
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $this->queryBalance( $tokenSlug, $this->bundle() )
       ->payload();
+
+    // Token units splitting
+    list( $amount, $recipientTokenUnits, $remainderTokenUnits ) = $this->splitTokenUnits( $fromWallet, $amount );
 
     if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
@@ -620,17 +616,6 @@ class KnishIOClient {
     $toWallet->initBatchId( $fromWallet, $amount );
     if ( $batchId !== null ) {
       $toWallet->batchId = $batchId;
-    }
-
-    // Init recipient & remainder token units
-    $recipientTokenUnits = []; $remainderTokenUnits = [];
-    foreach( $fromWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $tokenUnits ) ) {
-        $recipientTokenUnits[] = $tokenUnit;
-      }
-      else {
-        $remainderTokenUnits[] = $tokenUnit;
-      }
     }
 
     // Set token units to the wallet
@@ -663,27 +648,56 @@ class KnishIOClient {
    * @return mixed|Response
    * @throws ReflectionException
    */
-  public function burnToken ( string $tokenSlug, $burnAmount, string $batchId = null ) {
+  public function burnToken ( string $tokenSlug, $amount, string $batchId = null ) {
 
-    // Get a wallet list @todo need an arg actual/latest to prevent getting full wallet list
-    $wallets = $this->createQuery( QueryWalletList::class )
-      ->execute( [ 'bundleHash' => $this->bundle(), 'token' => $tokenSlug ] )
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $this->queryBalance( $tokenSlug, $this->bundle() )
       ->payload();
 
-    // Get a source wallet
-    $sourceWallet = end( $wallets );
+    // Token units splitting
+    list( $amount, $recipientTokenUnits, $remainderTokenUnits ) = $this->splitTokenUnits( $fromWallet, $amount );
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $batchId ?? Wallet::generateBatchId(), $sourceWallet->characters );
+    $remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $batchId ?? Wallet::generateBatchId(), $fromWallet->characters );
+    $remainderWallet->tokenUnits = $remainderTokenUnits;
 
     // Burn tokens
-    $molecule = $this->createMolecule( null, $sourceWallet, $remainderWallet );
-    $molecule->burningTokens( $burnAmount );
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
+    $molecule->burningTokens( $amount );
     $molecule->sign();
     $molecule->check();
 
     return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
 
+  }
+
+  /**
+   * @param $amount
+   *
+   * @return array
+   */
+  private function splitTokenUnits( Wallet $sourceWallet, $amount ): array {
+
+    // Token units initialization
+    $sendTokenUnits = [];
+    if ( is_array( $amount ) ) {
+      $sendTokenUnits = $amount;
+      $amount = count( $amount );
+    }
+
+    // Init recipient & remainder token units
+    $recipientTokenUnits = []; $remainderTokenUnits = [];
+    foreach( $sourceWallet->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
+
+    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
   }
 
   /**

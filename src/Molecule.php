@@ -672,7 +672,7 @@ class Molecule extends MoleculeStructure {
       'C',
       $this->sourceWallet->token,
       null,
-      null,
+      $wallet->batchId,
       'wallet',
       $wallet->address,
       $this->finalMetas( $this->contextMetas( $metas ) ),
