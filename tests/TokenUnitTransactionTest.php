@@ -74,8 +74,11 @@ class TokenUnitTransactionTest extends TestCase
       // Get token units part for a transaction
       $tokenUnits = array_slice( $this->tokenUnits, ($i + 1) * 2 );
 
+      // Sending token unit IDs
+      $sendingTokenUnitIds = $this->getTokenUnitIds( $tokenUnits );
+
       // Token transferring
-      $client = $this->transfetToken( $client, $this->getTokenUnitIds( $tokenUnits ), $batchId );
+      $client = $this->transfetToken( $client, $sendingTokenUnitIds, $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client );

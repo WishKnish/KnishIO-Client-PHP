@@ -70,6 +70,46 @@ class KnishIOClient {
    */
   private $cellSlug;
 
+
+  /**
+   * @param $amount
+   *
+   * @return array
+   */
+  public static function splitTokenUnits( Wallet $sourceWallet, $amount ): array {
+
+    // Token units initialization
+    [ $amount, $sendTokenUnits ] = static::splitUnitAmount( $amount );
+
+    // Init recipient & remainder token units
+    $recipientTokenUnits = []; $remainderTokenUnits = [];
+    foreach( $sourceWallet->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
+
+    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
+  }
+
+  /**
+   * @param $amount
+   *
+   * @return array
+   */
+  public static function splitUnitAmount( $amount ): array {
+    $tokenUnits = [];
+    if ( is_array( $amount ) ) {
+      $tokenUnits = $amount;
+      $amount = count( $amount );
+    }
+    return [ $amount, $tokenUnits, ];
+  }
+
+
   /**
    * KnishIOClient constructor.
    *
@@ -519,6 +559,13 @@ class KnishIOClient {
       $metaId = $to->address;
     }
 
+    // --- Token units initialization
+    [ $requestedAmount, $tokenUnits ] = static::splitUnitAmount( $requestedAmount );
+    if ( $tokenUnits ) {
+      $metas[ 'tokenUnits' ] = $tokenUnits;
+    }
+    // ---
+
     // Create a query
     /** @var MutationRequestTokens $query */
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
@@ -593,7 +640,7 @@ class KnishIOClient {
       ->payload();
 
     // Token units splitting
-    list( $amount, $recipientTokenUnits, $remainderTokenUnits ) = $this->splitTokenUnits( $fromWallet, $amount );
+    [ $amount, $recipientTokenUnits, $remainderTokenUnits ] = static::splitTokenUnits( $fromWallet, $amount );
 
     if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
@@ -656,7 +703,7 @@ class KnishIOClient {
       ->payload();
 
     // Token units splitting
-    list( $amount, $recipientTokenUnits, $remainderTokenUnits ) = $this->splitTokenUnits( $fromWallet, $amount );
+    [ $amount, $recipientTokenUnits, $remainderTokenUnits ] = static::splitTokenUnits( $fromWallet, $amount );
 
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $batchId ?? Wallet::generateBatchId(), $fromWallet->characters );
@@ -672,33 +719,6 @@ class KnishIOClient {
 
   }
 
-  /**
-   * @param $amount
-   *
-   * @return array
-   */
-  private function splitTokenUnits( Wallet $sourceWallet, $amount ): array {
-
-    // Token units initialization
-    $sendTokenUnits = [];
-    if ( is_array( $amount ) ) {
-      $sendTokenUnits = $amount;
-      $amount = count( $amount );
-    }
-
-    // Init recipient & remainder token units
-    $recipientTokenUnits = []; $remainderTokenUnits = [];
-    foreach( $sourceWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
-        $recipientTokenUnits[] = $tokenUnit;
-      }
-      else {
-        $remainderTokenUnits[] = $tokenUnit;
-      }
-    }
-
-    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
-  }
 
   /**
    * @param bool $onlyValue
