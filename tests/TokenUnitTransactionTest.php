@@ -18,6 +18,7 @@ use WishKnish\KnishIO\Client\Query\QueryWalletList;
  */
 class TokenUnitTransactionTest extends TestCase
 {
+  private $serverTokenSlug = 'UTENVSTACKUNIT';
   private $tokenSlug = 'UTSTACKUNIT';
   private $transactionAmount = 2;
   private $cascadeDeep = 4;
@@ -60,7 +61,7 @@ class TokenUnitTransactionTest extends TestCase
   public function testUnitTransaction() {
 
     // Create a token
-    $client = $this->createToken();
+    $client = $this->createToken( $this->tokenSlug, $this->tokenUnits );
     $transactionAmount = $this->transactionAmount;
 
 
@@ -81,7 +82,7 @@ class TokenUnitTransactionTest extends TestCase
       $client = $this->transfetToken( $client, $sendingTokenUnitIds, $batchId );
 
       // Claim created shadow wallet
-      $this->claimShadowWallet( $client );
+      $this->claimShadowWallet( $client, $this->tokenSlug );
 
       // Create a meta to custom batchID
       $client->createMeta( 'batch', $batchId, [
@@ -105,6 +106,41 @@ class TokenUnitTransactionTest extends TestCase
     $response = $client->queryBalance( $this->tokenSlug );
     $this->assertEquals( array_get( $response->payload()->tokenUnits, '0.id' ), array_get( $this->tokenUnits, '10.0' ) );
   }
+
+  /**
+   * Test with request token with units
+   */
+  public function testUnitRequest() {
+
+    // Get a env secret
+    $envSecret = env('SECRET_TOKEN_KNISH');
+    if (!$envSecret) {
+      throw new \Exception('env.SECRET_TOKEN_KNISH is not set.');
+    }
+
+    // Create a env stackable units token
+    $client = $this->createToken( $this->serverTokenSlug, $this->tokenUnits, $envSecret );
+
+
+    // Request token & shadow wallet claim iterations
+    $sendingTokenUnitCount = 4;
+    for( $i = 0; $i < 2; $i++) {
+
+      // Get token units part for a transaction
+      $tokenUnits = array_slice( $this->tokenUnits, $i * $sendingTokenUnitCount, $sendingTokenUnitCount );
+
+      // Sending token unit IDs
+      $sendingTokenUnitIds = $this->getTokenUnitIds( $tokenUnits );
+
+      // Request tokens
+      $client = $this->requestToken( $client, $sendingTokenUnitIds, $this->getBatchId( $i + 1 ) );
+
+      // Claim created shadow wallet
+      $this->claimShadowWallet( $client, $this->serverTokenSlug );
+    }
+
+  }
+
 
   /**
    * @param array $tokenUnits
@@ -138,15 +174,12 @@ class TokenUnitTransactionTest extends TestCase
    */
   private function transfetToken( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
 
-    // Initial code
-    $this->beforeExecute ();
-
     // Data for recipient
     $toSecret = Crypto::generateSecret();
     $toBundle = Crypto::generateBundleHash( $toSecret );
 
     // Transferring
-    $response = $client->transferToken($toBundle, $this->tokenSlug, $tokenUnitIds, $batchId);
+    $response = $client->transferToken( $toBundle, $this->tokenSlug, $tokenUnitIds, $batchId );
     $this->checkResponse($response);
 
     return $this->client( $toSecret );
@@ -154,17 +187,38 @@ class TokenUnitTransactionTest extends TestCase
 
   /**
    * @param KnishIOClient $client
+   * @param array $tokenUnitIds
+   * @param string $batchId
+   *
+   * @return mixed|KnishIOClient
+   * @throws \ReflectionException
+   */
+  private function requestToken( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
+
+    // Data for recipient
+    $toSecret = Crypto::generateSecret();
+    $toBundle = Crypto::generateBundleHash( $toSecret );
+
+    // Request tokens
+    $response = $client->requestTokens( $this->serverTokenSlug, $tokenUnitIds, $toBundle, null, $batchId );
+
+    return $this->client( $toSecret );
+  }
+
+  /**
+   * @param KnishIOClient $client
+   * @param string $tokenSlug
    *
    * @throws \Exception
    */
-  private function claimShadowWallet( KnishIOClient $client ) {
+  private function claimShadowWallet( KnishIOClient $client, string $tokenSlug ) {
 
     // Get shadow wallets
-    $shadowWallets = $client->queryShadowWallets( $this->tokenSlug );
+    $shadowWallets = $client->queryShadowWallets( $tokenSlug );
 
     // Init recipient query
     foreach ( $shadowWallets as $shadowWallet ) {
-      $response = $client->claimShadowWallet( $this->tokenSlug, $shadowWallet->batchId );
+      $response = $client->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
     }
   }
 
@@ -172,14 +226,16 @@ class TokenUnitTransactionTest extends TestCase
    * @return KnishIOClient
    * @throws \ReflectionException
    */
-  private function createToken(): KnishIOClient {
+  private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null ): KnishIOClient {
 
     // Initial code
     $this->beforeExecute ();
 
-    $client = $this->client(Crypto::generateSecret());
-    $response = $client->createUnitableToken( $this->tokenSlug, $this->tokenUnits, [
-      'name'			=> $this->tokenSlug,
+    $secret = $secret ?? Crypto::generateSecret();
+
+    $client = $this->client( $secret );
+    $response = $client->createUnitableToken( $tokenSlug, $tokenUnits, [
+      'name'			=> $tokenSlug,
       'supply'		=> 'limited',
       'icon'			=> 'icon',
     ], $this->getBatchId( 0 ) );

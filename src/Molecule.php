@@ -806,20 +806,22 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param string $tokenSlug
-   * @param int|float $requestedAmount
-   * @param string $metaType
-   * @param string $metaId
+   * @param $tokenSlug
+   * @param $requestedAmount
+   * @param $metaType
+   * @param $metaId
    * @param array $meta
+   * @param string|null $batchId
    *
-   * @return self
+   * @return $this
    */
   public function initTokenTransfer (
     $tokenSlug,
     $requestedAmount,
     $metaType,
     $metaId,
-    array $meta = []
+    array $meta = [],
+    string $batchId = null
   ) {
     $this->molecularHash = null;
 
@@ -832,7 +834,7 @@ class Molecule extends MoleculeStructure {
       'T',
       $this->sourceWallet->token,
       $requestedAmount,
-      null,
+      $batchId,
       $metaType,
       $metaId,
       $this->finalMetas( $meta ),

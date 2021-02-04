@@ -79,7 +79,7 @@ class KnishIOClient {
   public static function splitTokenUnits( Wallet $sourceWallet, $amount ): array {
 
     // Token units initialization
-    [ $amount, $sendTokenUnits ] = static::splitUnitAmount( $amount );
+    [ $amount, $sendTokenUnits, ] = static::splitUnitAmount( $amount );
 
     // Init recipient & remainder token units
     $recipientTokenUnits = []; $remainderTokenUnits = [];
@@ -522,15 +522,16 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $tokenSlug
-   * @param int|float $requestedAmount
-   * @param Wallet|string $to wallet address OR bundle
+   * @param $tokenSlug
+   * @param $requestedAmount
+   * @param $to
    * @param array|null $metas
+   * @param string|null $batchId
    *
-   * @return mixed
-   * @throws Exception
+   * @return mixed|Response
+   * @throws ReflectionException
    */
-  public function requestTokens ( $tokenSlug, $requestedAmount, $to, array $metas = null ) {
+  public function requestTokens ( $tokenSlug, $requestedAmount, $to, array $metas = null, string $batchId = null ) {
     $metas = default_if_null( $metas, [] );
 
     // Is a string? $to is bundle or secret
@@ -562,7 +563,7 @@ class KnishIOClient {
     // --- Token units initialization
     [ $requestedAmount, $tokenUnits ] = static::splitUnitAmount( $requestedAmount );
     if ( $tokenUnits ) {
-      $metas[ 'tokenUnits' ] = $tokenUnits;
+      $metas[ 'tokenUnits' ] = json_encode( $tokenUnits );
     }
     // ---
 
@@ -571,7 +572,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas );
+    $query->fillMolecule( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
 
     // Return a query execution result
     return $query->execute();
