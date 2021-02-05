@@ -30,7 +30,7 @@ class MutationRequestTokens extends MutationProposeMolecule
 		$metas = default_if_null( $metas, [] );
 
 		// Fill the molecule
-		$this->molecule->initTokenTransfer( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
+		$this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
 		$this->molecule->sign();
 		$this->molecule->check();
 

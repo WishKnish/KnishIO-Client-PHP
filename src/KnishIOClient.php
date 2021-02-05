@@ -661,9 +661,11 @@ class KnishIOClient {
     }
 
     // Batch ID initialization
-    $toWallet->initBatchId( $fromWallet, $amount );
     if ( $batchId !== null ) {
       $toWallet->batchId = $batchId;
+    }
+    else {
+      $toWallet->initBatchId( $fromWallet, $amount );
     }
 
     // Set token units to the wallet
@@ -712,7 +714,7 @@ class KnishIOClient {
 
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-    $molecule->burningTokens( $amount );
+    $molecule->burnTokens( $amount );
     $molecule->sign();
     $molecule->check();
 

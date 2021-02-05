@@ -295,7 +295,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function replenishingTokens (
+  public function replenishTokens (
     $value,
     $token,
     array $metas
@@ -348,7 +348,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function burningTokens (
+  public function burnTokens (
     $value,
     $walletBundle = null
   ) {
@@ -815,7 +815,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function initTokenTransfer (
+  public function initTokenRequest (
     $tokenSlug,
     $requestedAmount,
     $metaType,

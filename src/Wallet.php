@@ -156,9 +156,9 @@ class Wallet {
   /**
    * @return string
    */
-  public function tokenUnitsJson (): string {
+  public function tokenUnitsJson (): ?string {
     if ( !$this->hasTokenUnits() ) {
-      return [];
+      return null;
     }
     $result = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
@@ -260,15 +260,6 @@ class Wallet {
       // Set batchID to recipient wallet
       $this->batchId = $batchId;
     }
-
-  }
-
-  /**
-   * Set token units with a raw data => [ [array], [array], ...]
-   *
-   * @param array $rawData
-   */
-  public function setTokenUnits ( array $rawData ) {
 
   }
 
