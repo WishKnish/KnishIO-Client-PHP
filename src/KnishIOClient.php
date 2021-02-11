@@ -714,7 +714,7 @@ class KnishIOClient {
 
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-    $molecule->burnTokens( $amount );
+    $molecule->burnToken( $amount );
     $molecule->sign();
     $molecule->check();
 

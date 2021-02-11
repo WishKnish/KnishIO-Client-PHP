@@ -2,15 +2,19 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use http\Client;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Tests\TestCase;
+use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
+
 
 /**
  * Class TokenUnitTransactionTest
@@ -23,6 +27,7 @@ class TokenUnitTransactionTest extends TestCase
   private $transactionAmount = 2;
   private $cascadeDeep = 4;
   private $batchPrefix = 'batch_';
+
   private $tokenUnits = [
     [ 'unit_id_1', 'unit_name_1', 'unit_meta_1', ],
     [ 'unit_id_2', 'unit_name_2', 'unit_meta_2', ],
@@ -55,16 +60,24 @@ class TokenUnitTransactionTest extends TestCase
     $this->assertEquals(true, true);
   }
 
+
   /**
    * @throws \ReflectionException
    */
   public function testUnitTransaction() {
+    $this->beforeExecute();
+
+    $secret = Crypto::generateSecret();
 
     // Create a token
-    $client = $this->createToken( $this->tokenSlug, $this->tokenUnits );
+    $client = $this->createToken( $this->tokenSlug, $this->tokenUnits, $secret );
     $transactionAmount = $this->transactionAmount;
 
 
+    // Previously test the transfer errors
+    $this->testUnitsErrorTransaction( $secret );
+
+    
     // Transferring through cascade
     for ( $i = 0; $i < $this->cascadeDeep; $i++ ) {
 
@@ -111,6 +124,7 @@ class TokenUnitTransactionTest extends TestCase
    * Test with request token with units
    */
   public function testUnitRequest() {
+    $this->beforeExecute();
 
     // Get a env secret
     $envSecret = env('SECRET_TOKEN_KNISH');
@@ -141,6 +155,104 @@ class TokenUnitTransactionTest extends TestCase
 
   }
 
+  /**
+   * @param string $secret
+   *
+   * @throws \ReflectionException
+   */
+  private function testUnitsErrorTransaction( string $secret ) {
+
+    $client = $this->client( $secret );
+    $toSecret = Crypto::generateSecret();
+
+
+    // From & to wallets
+    $fromWallet = $client->queryBalance( $this->tokenSlug )
+      ->payload();
+    $toWallet = ClientWallet::create( $toSecret, $this->tokenSlug );
+
+
+    // --- 1
+    $response = $this->rawTokenTransfer( $client, $fromWallet, $toWallet,
+      1, [ ['undefined_unit_id','undefined_unit_name'] ], []
+    );
+    $this->assertEquals( $response->status(), 'rejected' );
+    print_r($response->reason() . "\r\n");
+
+    // --- 2
+    $response = $this->rawTokenTransfer( $client, $fromWallet, $toWallet,
+      1, [ 0 ], []
+    );
+    $this->assertEquals( $response->status(), 'rejected' );
+    print_r($response->reason() . "\r\n");
+
+    // --- 3
+    $response = $this->rawTokenTransfer( $client, $fromWallet, $toWallet,
+      2, [ 0 ], [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+    );
+    $this->assertEquals( $response->status(), 'rejected' );
+    print_r($response->reason() . "\r\n");
+
+    // --- 3
+    $response = $this->rawTokenTransfer( $client, $fromWallet, $toWallet,
+      1, [ 0 ], [ 1, 2, 3, 4, ['undefined_unit_id','undefined_unit_name'], 6, 7, 8, 9, 10 ]
+    );
+    $this->assertEquals( $response->status(), 'rejected' );
+    print_r($response->reason() . "\r\n");
+
+  }
+
+  /**
+   * @param $client
+   * @param ClientWallet $fromWallet
+   * @param ClientWallet $toWallet
+   * @param $amount
+   * @param array $recipientTokenUnits
+   * @param array $remainderTokenUnits
+   *
+   * @return mixed|\WishKnish\KnishIO\Client\Response\Response
+   * @throws \Exception
+   */
+  private function rawTokenTransfer( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
+
+    // Convering token units indexes to the related rows
+    $recipientTokenUnits = $this->convertToWalletUnits( $recipientTokenUnits );
+    $remainderTokenUnits = $this->convertToWalletUnits( $remainderTokenUnits );
+
+    // Set recipient token units
+    $toWallet->tokenUnits = $recipientTokenUnits;
+
+    // Remainder wallet
+    $remainderWallet = ClientWallet::create( Crypto::generateSecret(), $this->tokenSlug, $toWallet->batchId );
+    $remainderWallet->tokenUnits = $remainderTokenUnits;
+
+    // Create a molecule with custom source wallet
+    $molecule = $client->createMolecule( null, $fromWallet, $remainderWallet );
+
+    // Create a query
+    /** @var MutationTransferTokens $query */
+    $query = $client->createMoleculeMutation( MutationTransferTokens::class, $molecule );
+
+    // Init a molecule
+    $query->fillMolecule( $toWallet, $amount );
+
+    // Execute a query
+    return $query->execute();
+  }
+
+  /**
+   * @param array $data
+   *
+   * @return array
+   */
+  private function convertToWalletUnits( array $data ): array {
+    foreach( $data as $key => $index) {
+      if ( !is_array( $index ) ) {
+        $data[ $key ] = array_get( $this->tokenUnits, $index, $index );
+      }
+    }
+    return ClientWallet::getTokenUnits( $data );
+  }
 
   /**
    * @param array $tokenUnits

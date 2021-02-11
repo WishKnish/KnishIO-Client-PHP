@@ -348,7 +348,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function burnTokens (
+  public function burnToken (
     $value,
     $walletBundle = null
   ) {

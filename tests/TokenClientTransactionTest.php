@@ -8,6 +8,7 @@ use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Query\QueryLinkIdentifierMutation;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
@@ -131,6 +132,7 @@ class TokenClientTransactionTest extends TestCase
 				Crypto::generateSecret(),
 				Crypto::generateSecret(),
 				Crypto::generateSecret(),
+        Crypto::generateSecret(),
 			],
 			'receivers' => [
 				Crypto::generateSecret(),
@@ -272,14 +274,14 @@ class TokenClientTransactionTest extends TestCase
 
 		// --- RECEIVER.2
 
-		// --- Base receive (NOT-splitting)
+		// --- Base receive (NOT-splitting) NON SHADOW WALLET: Testing to work with a secret instead of bundle
 		$response = $client->requestTokens($token, $transaction_amount, $receivers[2]);
 		$this->checkResponse($response);
 		$this->checkWallet($client, $toBundle[2], $token, $transaction_amount * 1.0, false);
 
 		// --- RECEIVER.3
 
-		// --- Base receive (NOT-splitting)
+		// --- Base receive (NOT-splitting) NON SHADOW WALLET: Testing to work with a wallet instead of bundle
 		$wallet = Wallet::create($receivers[3], $token);
 		$response = $client->requestTokens($token, $transaction_amount, $wallet);
 		$this->checkResponse($response);
@@ -448,7 +450,7 @@ class TokenClientTransactionTest extends TestCase
 		$token		= $this->token_slug['stackable'];
 
 		// Claim shadow wallet
-		$this->claimShadowWallet ( $token, $recipients[0], [$recipients[1]] );
+		$this->claimShadowWallet ( $token, $recipients[0], [$recipients[4]] );
 	}
 
 
@@ -667,19 +669,31 @@ class TokenClientTransactionTest extends TestCase
 
 			// Init recipient query
       foreach( $shadowWallets as $shadowWallet ) {
-        $response = $client->claimShadowWallet( $token, $shadowWallet->batchId, $client->createMolecule( $intruder, new Wallet( $intruder ) ) );
+
+        // Create an intruder molecule
+        $molecule = $client->createMolecule( $intruder, new Wallet( $intruder ) );
+        $molecule->initShadowWalletClaim( $token, Wallet::create( $intruder, $token, $shadowWallet->batchId ) );
+        $molecule->sign();
+        $molecule->check();
+        // Replace a bundle to a recipient one
+        $molecule->bundle = Crypto::generateBundleHash( $recipient );
+
+        // Create & execute a query
+        $query = $client->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
+        $response = $query->execute();
 
         // Assert a rejected status
         $this->assertEquals($response->status(), 'rejected');
       }
 
-			/*
+
+      // Check error response
+      // dump( $response->reason() );
 			$continue_id_error = strpos($response->reason(), 'ContinuID verification failure');
 			if (!$continue_id_error) {
 				$this->debug ($response, true);
 			}
 			$this->assertEquals($continue_id_error, true);
-			*/
 		}
 
 		// --- Bind a shadow wallet (with original bundle hash)
