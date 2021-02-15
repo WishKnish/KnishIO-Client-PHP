@@ -53,7 +53,7 @@ class Response
 
 		// Json decode
 		$this->response = \json_decode( $json, true );
-
+    dd($this->response);
 		// No-json response - error
 		if ( $this->response === null ) {
 			throw new InvalidResponseException();
