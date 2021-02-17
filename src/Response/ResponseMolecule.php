@@ -33,7 +33,9 @@ class ResponseMolecule extends Response
     {
         parent::__construct( $query, $json );
 
-        $this->clientMolecule = $query->moleculeStructure();
+        if ( $query !== null ) {
+          $this->clientMolecule = $query->moleculeStructure();
+        }
     }
 
 
