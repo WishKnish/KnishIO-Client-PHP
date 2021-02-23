@@ -55,7 +55,7 @@ abstract class Query
 	public function __construct ( HttpClientInterface $client, string $query = null )
 	{
 	    $this->client = $client;
-		$this->query = $query ?? static::$default_query;
+		  $this->query = $query ?? static::$default_query;
 	}
 
 
@@ -124,6 +124,35 @@ abstract class Query
 
 	}
 
+  /**
+   * Debug info => get an url to execute GraphQL directly from it
+   *
+   * @param array|null $variables
+   * @param array|null $fields
+   *
+   * @return string
+   */
+	public function getQueryUrl( string $name, $variables = null, array $fields = null ): string {
+
+    // Compile variables
+    if ( is_string( $variables ) ) {
+      $variables = json_decode( trim( $variables ), true );
+    }
+    $variables = $this->compiledVariables( $variables );
+    $variables = preg_replace( '#\"([^\"]+)\"\:#Usi', '$1:', json_encode($variables) );
+    $variables = substr( $variables, 1, -1 );
+
+    // Compile fields
+    $fields = str_replace([', ', ' {'], [',', '{'], $this->compiledFields( $fields ));
+
+
+    return $this->url(). str_replace([
+        '@name', '@vars', '@fields',
+      ],[
+        $name, $variables, $fields,
+      ], '?query={@name(@vars)@fields}');
+  }
+
 
 	/**
 	 * @param array $fields
@@ -175,7 +204,7 @@ abstract class Query
 	 * @return Response
 	 */
 	public function createResponse ( $response )
-    {
+  {
 		return new Response( $this, $response );
 	}
 
