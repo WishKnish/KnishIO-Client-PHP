@@ -143,6 +143,7 @@ abstract class Query
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
+    $fields = $fields ?? $this->fields;
     $fields = str_replace([', ', ' {'], [',', '{'], $this->compiledFields( $fields ));
 
 
@@ -222,7 +223,7 @@ abstract class Query
 	/**
 	 * @return string|null
 	 */
-	public function url ()
+	public function url()
     {
 		return $this->client->getUrl();
 	}
@@ -230,9 +231,17 @@ abstract class Query
 	/**
 	 * @return mixed
 	 */
-	public function variables ()
-    {
+	public function variables (): array
+  {
 		return $this->variables;
 	}
+
+  /**
+   * @return mixed
+   */
+	public function fields(): array
+  {
+	  return $this->fields;
+  }
 
 }
