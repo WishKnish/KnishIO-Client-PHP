@@ -137,7 +137,7 @@ class QueryMetaTest extends TestCase
         'status' => 'archived',
         'objectId' => 'id1',
     ]);
-    // metaId2
+    // product2
     $createMetasClosure ('ProductEdit', 'product2', [
       'amount' => '1.111',
       'status' => 'archived',
@@ -152,6 +152,22 @@ class QueryMetaTest extends TestCase
       'amount' => '1.555',
       'status' => 'active',
       'objectId' => 'id2',
+    ]);
+    // product3
+    $createMetasClosure ('ProductEdit', 'product3', [
+      'amount' => '3.999',
+      'status' => 'active',
+      'objectId' => 'id3',
+    ]);
+    $createMetasClosure ('ProductEdit', 'product3', [
+      'amount' => '3.222',
+      'status' => 'inactive',
+      'objectId' => 'id3',
+    ]);
+    $createMetasClosure ('ProductEdit', 'product3', [
+      'amount' => '0.999',
+      'status' => 'active',
+      'objectId' => 'id3',
     ]);
 
 
@@ -248,10 +264,17 @@ class QueryMetaTest extends TestCase
 		// Execute query & check response
 		$query = new QueryMetaType($this->guzzle_client);
 
+		// Closure to use new query every time
+		$guzzle_client = $this->guzzle_client;
+		$newQuery = static function () use ( $guzzle_client ) {
+		  return new QueryMetaType( $guzzle_client );
+    };
+
+
 
 
 		// status=ACTIVE | ALL
-		$response = $query->execute(['metaType' => 'ProductEdit',
+		$response = $newQuery()->execute(['metaType' => 'ProductEdit',
         'latestMetas' => false,
         'filter' => [
           [
@@ -264,13 +287,14 @@ class QueryMetaTest extends TestCase
 			[
 				'metaType' => 'ProductEdit',
 				'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
 					['metaType' => 'ProductEdit', 'metaId' => 'product2'],
           ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
 				],
 			],
 		]);
     // status=ACTIVE | LATEST
-    $response = $query->execute(['metaType' => 'ProductEdit',
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
       'latestMetas' => true,
       'filter' => [
         [
@@ -283,6 +307,7 @@ class QueryMetaTest extends TestCase
       [
         'metaType' => 'ProductEdit',
         'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
           ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
         ],
       ],
@@ -291,8 +316,7 @@ class QueryMetaTest extends TestCase
 
     // ORDER BY
     // -- desc
-    $response = $query->execute(['metaType' => 'ProductEdit',
-      'latestMetas' => true,
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
       'queryArgs' => [
         'orderBy' => 'amount',
         'order' => 'desc',
@@ -304,12 +328,12 @@ class QueryMetaTest extends TestCase
         'instances' => [
           ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
           ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
         ],
       ],
     ]);
     // -- asc
-    $response = $query->execute(['metaType' => 'ProductEdit',
-      'latestMetas' => true,
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
       'queryArgs' => [
         'orderBy' => 'amount',
         'order' => 'asc',
@@ -319,6 +343,7 @@ class QueryMetaTest extends TestCase
       [
         'metaType' => 'ProductEdit',
         'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
           ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
           ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
         ],
@@ -327,8 +352,161 @@ class QueryMetaTest extends TestCase
 
 
 
+    // -- AND WHERE
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => 'id3',
+          'comparison' => '=',
+        ],
+      ],
+    ]);
+    $this->assertEquals($this->getLimitedResult($response), [
+      [
+        'metaType' => 'ProductEdit',
+        'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+        ],
+      ],
+    ]);
+
+
+    // -- WHERE LIKE
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => '2',
+          'comparison' => '=~',
+          'criterion' => 'OR',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => '1',
+          'comparison' => '=~',
+          'criterion' => 'OR',
+        ],
+      ],
+    ]);
+    $this->assertEquals($this->getLimitedResult($response), [
+      [
+        'metaType' => 'ProductEdit',
+        'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+        ],
+      ],
+    ]);
+
+
+
+    // Pagination 1
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 1,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ], [
+      'metaType', 'instances' => ['metaType', 'metaId'], 'paginatorInfo' => ['currentPage', 'total'],
+    ]);
+    $this->assertEquals($response->data(), [
+      [
+        'metaType' => 'ProductEdit',
+        'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+        ],
+        'paginatorInfo' => [
+          'currentPage' => 1, 'total' => 2,
+        ],
+      ],
+    ]);
+    // Pagination 2
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 2,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ],[
+      'metaType', 'instances' => ['metaType', 'metaId'], 'paginatorInfo' => ['currentPage', 'total'],
+    ]);
+    $this->assertEquals($response->data(), [
+      [
+        'metaType' => 'ProductEdit',
+        'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+        ],
+        'paginatorInfo' => [
+          'currentPage' => 2, 'total' => 2,
+        ],
+      ],
+    ]);
+    // Pagination 3
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 2,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'asc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ],[
+      'metaType', 'instances' => ['metaType', 'metaId'], 'paginatorInfo' => ['currentPage', 'total'],
+    ]);
+    $this->assertEquals($response->data(), [
+      [
+        'metaType' => 'ProductEdit',
+        'instances' => [
+          ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+        ],
+        'paginatorInfo' => [
+          'currentPage' => 2, 'total' => 2,
+        ],
+      ],
+    ]);
+
+
+
     // Count => EDIT
-    $response = $query->execute(['metaType' => 'ProductEdit',
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
       'count' => true,
     ], [
       'metaType',
@@ -338,12 +516,12 @@ class QueryMetaTest extends TestCase
       [
         'metaType' => 'ProductEdit',
         'instanceCount' => [
-          ['key' => '*', 'value' => 2]
+          ['key' => '*', 'value' => 3]
         ],
       ],
     ]);
     // Count => Fave
-    $response = $query->execute(['metaType' => 'ProductFave',
+    $response = $newQuery()->execute(['metaType' => 'ProductFave',
       'count' => true,
     ], [
       'metaType',
@@ -360,40 +538,7 @@ class QueryMetaTest extends TestCase
 
 
     // CountBy objectId with filter, order & pagination
-    $response = $query->execute(['metaType' => 'ProductFave',
-      'countBy' => 'objectId',
-      'latestMetas' => true,
-      'queryArgs' => [
-         'offset' => 1,
-         'limit' => 10,
-         'orderBy' => 'objectId',
-         'order' => 'desc',
-      ],
-      'filter' => [
-        [
-          "key" => "status",
-          "value" => "active"
-        ],
-        [
-          "key" => "objectId",
-          "value" => "id1",
-          "comparison" => "=",
-          "criterion" => "OR"
-        ],
-        [
-          "key" => "objectId",
-          "value" => "id2",
-          "comparison" => "=",
-          "criterion" => "OR"
-        ],
-      ],
-    ],[
-      'metaType',
-      'instanceCount' => ['key', 'value'],
-    ]);
-
-    /*
-    $url = $query->getQueryUrl('MetaType', ['metaType' => 'ProductFave',
+    $response = $newQuery()->execute(['metaType' => 'ProductFave',
       'countBy' => 'objectId',
       'latestMetas' => true,
       'filter' => [
@@ -418,9 +563,6 @@ class QueryMetaTest extends TestCase
       'metaType',
       'instanceCount' => ['key', 'value'],
     ]);
-    dd($url);
-    */
-
     $this->assertEquals($response->data(), [
       [
         'metaType' => 'ProductFave',
@@ -430,6 +572,25 @@ class QueryMetaTest extends TestCase
         ],
       ],
     ]);
+
+
+
+
+
+
+    /*
+    $url = $query->getQueryUrl('MetaType', ['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+    ],[
+      'metaType',
+      'instances' => ['metaId', 'metas' => ['key', 'value']],
+    ]);
+    dd($url);
+    */
 
 
 
@@ -452,15 +613,15 @@ class QueryMetaTest extends TestCase
 			if ($depth >= 2) {
 				$item['instances'] = [];
 				foreach ($meta_type['instances'] as $instance) {
-					$metas = $instance['metas'];
+					$metas = array_get( $instance, 'metas' );
 					$instance = Arr::only($instance, ['metaType', 'metaId']);
 
-					if ($depth >= 3) {
-						$instance['metas'] = [];
-						foreach ($metas as $meta) {
-							$instance['metas'][] = Arr::only($meta, ['key', 'value']);
-						}
-					}
+					if ( $metas && $depth >= 3 ) {
+            $instance['metas'] = [];
+            foreach ($metas as $meta) {
+              $instance['metas'][] = Arr::only($meta, ['key', 'value']);
+            }
+          }
 
 					$item['instances'][] = $instance;
 				}

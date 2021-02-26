@@ -72,6 +72,7 @@ class QueryMetaType extends Query
 			'value',
 			'createdAt',
     ],
+    'paginatorInfo' => ['currentPage', 'total'],
 		'createdAt',
 	];
 
