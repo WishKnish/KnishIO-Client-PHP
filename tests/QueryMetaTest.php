@@ -6,6 +6,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 use Illuminate\Support\Arr;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Query\QueryMetaInstance;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
@@ -261,8 +262,7 @@ class QueryMetaTest extends TestCase
 
 		$this->beforeExecute();
 
-		// Execute query & check response
-		$query = new QueryMetaType($this->guzzle_client);
+
 
 		// Closure to use new query every time
 		$guzzle_client = $this->guzzle_client;
@@ -507,7 +507,7 @@ class QueryMetaTest extends TestCase
 
     // Count => EDIT
     $response = $newQuery()->execute(['metaType' => 'ProductEdit',
-      'count' => true,
+      'countBy' => '*',
     ], [
       'metaType',
       'instanceCount' => ['key', 'value'],
@@ -522,7 +522,7 @@ class QueryMetaTest extends TestCase
     ]);
     // Count => Fave
     $response = $newQuery()->execute(['metaType' => 'ProductFave',
-      'count' => true,
+      'countBy' => '*',
     ], [
       'metaType',
       'instanceCount' => ['key', 'value'],
@@ -596,6 +596,297 @@ class QueryMetaTest extends TestCase
 
 	}
 
+
+
+
+  /**
+   * @param \Closure $newQuery
+   * @param array $fields
+   */
+  public function testMetaInstanceQuery () {
+    $this->beforeExecute();
+
+    // Fields
+    $instanceFields = [
+      'nodes' => [
+        'metaType',
+        'metaId',
+      ],
+    ];
+    $instancePaginatorFields = array_merge($instanceFields, [
+      'paginator' => [
+        'offset',
+        'total'
+      ],
+    ]);
+    $countFields = [
+      'counts' => [
+        'key',
+        'value',
+      ],
+    ];
+
+    // Closure to use new query every time
+    $guzzle_client = $this->guzzle_client;
+    $newQuery = static function () use ( $guzzle_client ) {
+      return new QueryMetaInstance( $guzzle_client );
+    };
+
+
+    // status=ACTIVE | ALL
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => false,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+        ],
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
+      ],
+    ]);
+    // status=ACTIVE | LATEST
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+        ],
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+      ],
+    ]);
+
+
+
+
+    // ORDER BY
+    // -- desc
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'queryArgs' => [
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+      ],
+    ]);
+    // -- asc
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'queryArgs' => [
+        'orderBy' => 'amount',
+        'order' => 'asc',
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product1'],
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+      ],
+    ]);
+
+
+
+
+    // -- AND WHERE
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => 'id3',
+          'comparison' => '=',
+        ],
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+      ],
+    ]);
+
+
+    // -- WHERE LIKE
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => '2',
+          'comparison' => '=~',
+          'criterion' => 'OR',
+        ],
+        [
+          'key' => 'objectId',
+          'value' => '1',
+          'comparison' => '=~',
+          'criterion' => 'OR',
+        ],
+      ],
+    ], $instanceFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+      ],
+    ]);
+
+
+
+    // Pagination 1
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 1,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ], $instancePaginatorFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+      ],
+      'paginator' => [
+        'offset' => 1, 'total' => 2,
+      ],
+    ]);
+    // Pagination 2
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 2,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'desc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ], $instancePaginatorFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product3'],
+      ],
+      'paginator' => [
+        'offset' => 2, 'total' => 2,
+      ],
+    ]);
+    // Pagination 3
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'latestMetas' => true,
+      'queryArgs' => [
+        'offset' => 2,
+        'limit' => 1,
+        'orderBy' => 'amount',
+        'order' => 'asc',
+      ],
+      'filter' => [
+        [
+          'key' => 'status',
+          'value' => 'active',
+          'comparison' => '=',
+        ],
+      ],
+    ], $instancePaginatorFields);
+    $this->assertEquals($response->data(), [
+      'nodes' => [
+        ['metaType' => 'ProductEdit', 'metaId' => 'product2'],
+      ],
+      'paginator' => [
+        'offset' => 2, 'total' => 2,
+      ],
+    ]);
+
+
+
+    // Count => EDIT
+    $response = $newQuery()->execute(['metaType' => 'ProductEdit',
+      'countBy' => '*',
+    ], $countFields);
+    $this->assertEquals($response->data(), [
+      'counts' => [
+        ['key' => '*', 'value' => 3]
+      ],
+    ]);
+    // Count => Fave
+    $response = $newQuery()->execute(['metaType' => 'ProductFave',
+      'countBy' => '*',
+    ], $countFields);
+    $this->assertEquals($response->data(), [
+      'counts' => [
+        ['key' => '*', 'value' => 9]
+      ],
+    ]);
+
+
+    // CountBy objectId with filter, order & pagination
+    $response = $newQuery()->execute(['metaType' => 'ProductFave',
+      'countBy' => 'objectId',
+      'latestMetas' => true,
+      'filter' => [
+        [
+          "key" => "status",
+          "value" => "active"
+        ],
+        [
+          "key" => "objectId",
+          "value" => "id1",
+          "comparison" => "=",
+          "criterion" => "OR"
+        ],
+        [
+          "key" => "objectId",
+          "value" => "id2",
+          "comparison" => "=",
+          "criterion" => "OR"
+        ],
+      ],
+    ], $countFields);
+    $this->assertEquals($response->data(), [
+      'counts' => [
+        ['key' => 'id2', 'value' => 1],
+        ['key' => 'id1', 'value' => 3],
+      ],
+    ]);
+
+
+  }
 
 
 
