@@ -99,6 +99,19 @@ class Wallet {
   }
 
   /**
+   * @param array $unitsData
+   *
+   * @return array
+   */
+  public static function getTokenUnits ( array $unitsData ): array {
+    $result = [];
+    foreach ( $unitsData as $unitData ) {
+      $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
+    }
+    return $result;
+  }
+
+  /**
    * Wallet constructor.
    *
    * @param null $secret
@@ -131,6 +144,27 @@ class Wallet {
    */
   public function isShadow (): bool {
     return !$this->position && !$this->address;
+  }
+
+  /**
+   * @return bool
+   */
+  public function hasTokenUnits (): bool {
+    return property_exists( $this, 'tokenUnits' );
+  }
+
+  /**
+   * @return string
+   */
+  public function tokenUnitsJson (): ?string {
+    if ( !$this->hasTokenUnits() ) {
+      return null;
+    }
+    $result = [];
+    foreach ( $this->tokenUnits as $tokenUnit ) {
+      $result[] = array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+    }
+    return json_encode( $result );
   }
 
   /**

@@ -17,7 +17,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaType;
 class QueryMetaType extends Query
 {
 	// Query
-	protected static $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $count: String ) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, count: $count )
+	protected static $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas )
 		@fields
 	}';
 
@@ -63,7 +63,7 @@ class QueryMetaType extends Query
 				'broadcastedAt',
 			],
 		],
-    	'metas' => [
+    'metas' => [
 			'molecularHash',
 			'position',
 			'metaType',
@@ -71,7 +71,8 @@ class QueryMetaType extends Query
 			'key',
 			'value',
 			'createdAt',
-    	],
+    ],
+    'paginatorInfo' => ['currentPage', 'total'],
 		'createdAt',
 	];
 

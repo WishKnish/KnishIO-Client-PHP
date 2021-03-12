@@ -43,7 +43,7 @@ class Response
      * @param Query $query
 	 * @param string $json
 	 */
-	public function __construct ( ?Query $query, $json )
+	public function __construct ( ?Query $query, string $json, string $dataKey = null )
 	{
 		// Set a query
 		$this->query = $query;
@@ -53,6 +53,11 @@ class Response
 
 		// Json decode
 		$this->response = \json_decode( $json, true );
+
+		// Set datakey from
+		if ( $dataKey !== null ) {
+		  $this->dataKey = $dataKey;
+    }
 
 		// No-json response - error
 		if ( $this->response === null ) {

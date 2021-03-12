@@ -154,6 +154,9 @@ class Molecule extends MoleculeStructure {
   protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
     $wallet = $wallet ?: $this->sourceWallet;
 
+    if ( $wallet->hasTokenUnits() ) {
+      $metas[ 'tokenUnits' ] = $wallet->tokenUnitsJson();
+    }
     $metas[ 'pubkey' ] = $wallet->pubkey;
     $metas[ 'characters' ] = $wallet->characters;
 
@@ -251,7 +254,11 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function replenishingTokens ( $value, $token, array $metas ) {
+  public function replenishTokens (
+    $value,
+    $token,
+    array $metas
+  ) {
     $aggregateMeta = $metas;
     $aggregateMeta[ 'action' ] = 'add';
 
@@ -293,7 +300,10 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function burningTokens ( $value, $walletBundle = null ) {
+  public function burnToken (
+    $value,
+    $walletBundle = null
+  ) {
     if ( $value < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
     }
@@ -351,7 +361,11 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function initValue ( Wallet $recipientWallet, $value ) {
+  public function initValue (
+    Wallet $recipientWallet,
+    $value,
+    array $recipientUnits = []
+  ) {
 
     if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
@@ -574,7 +588,7 @@ class Molecule extends MoleculeStructure {
       'C',
       $this->sourceWallet->token,
       null,
-      null,
+      $wallet->batchId,
       'wallet',
       $wallet->address,
       $this->finalMetas( $this->contextMetas( $metas ) ),
@@ -704,7 +718,14 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function initTokenTransfer ( $tokenSlug, $requestedAmount, $metaType, $metaId, array $meta = [] ) {
+  public function initTokenRequest (
+    $tokenSlug,
+    $requestedAmount,
+    $metaType,
+    $metaId,
+    array $meta = [],
+    string $batchId = null
+  ) {
     $this->molecularHash = null;
 
     // Set meta token
@@ -716,7 +737,7 @@ class Molecule extends MoleculeStructure {
       'T',
       $this->sourceWallet->token,
       $requestedAmount,
-      null,
+      $batchId,
       $metaType,
       $metaId,
       $this->finalMetas( $meta ),

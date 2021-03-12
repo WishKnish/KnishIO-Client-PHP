@@ -7,11 +7,12 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class ResponseMetaCreate
+ * Class ResponseBatch
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaCreate extends ResponseMolecule
+class ResponseBatch extends Response
 {
+  protected $dataKey = 'data.Batch';
 
 
 }

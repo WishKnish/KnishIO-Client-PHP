@@ -24,13 +24,13 @@ class MutationRequestTokens extends MutationProposeMolecule
      * @param array|null $metas
      * @throws \ReflectionException|\Exception
      */
-	public function fillMolecule ( $tokenSlug, $requestedAmount, $metaType, $metaId, array $metas = null )
+	public function fillMolecule ( $tokenSlug, $requestedAmount, $metaType, $metaId, array $metas = null, string $batchId = null )
 	{
 		// Default metas value
 		$metas = default_if_null( $metas, [] );
 
 		// Fill the molecule
-		$this->molecule->initTokenTransfer( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas );
+		$this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
 		$this->molecule->sign();
 		$this->molecule->check();
 

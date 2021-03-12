@@ -6,12 +6,14 @@
 
 namespace WishKnish\KnishIO\Client\Response;
 
+
 /**
- * Class ResponseMetaCreate
+ * Class ResponseMeta
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaCreate extends ResponseMolecule
+class ResponseMeta extends Response
 {
-
+  protected $dataKey = 'data.Meta';
+  
 
 }
