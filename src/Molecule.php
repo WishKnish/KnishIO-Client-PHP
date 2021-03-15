@@ -55,24 +55,14 @@ class Molecule extends MoleculeStructure {
    *
    * @throws Exception
    */
-  public function __construct (
-    $secret,
-    $sourceWallet = null,
-    $remainderWallet = null,
-    $cellSlug = null
-  ) {
+  public function __construct ( $secret, $sourceWallet = null, $remainderWallet = null, $cellSlug = null ) {
     parent::__construct( $cellSlug );
 
     $this->secret = $secret;
     $this->sourceWallet = $sourceWallet;
 
     if ( $remainderWallet || $sourceWallet ) {
-      $this->remainderWallet = $remainderWallet ?: Wallet::create(
-        $secret,
-        $sourceWallet->token,
-        $sourceWallet->batchId,
-        $sourceWallet->characters
-      );
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
     }
 
     $this->clear();
@@ -114,27 +104,15 @@ class Molecule extends MoleculeStructure {
    * @param array $data
    * @param array $shared_wallets
    */
-  public function encryptMessage (
-    array $data,
-    array $shared_wallets = []
-  ) {
+  public function encryptMessage ( array $data, array $shared_wallets = [] ) {
     // Merge all args to the common list
-    $args = [
-      $data,
-      $this->sourceWallet->pubkey
-    ];
+    $args = [ $data, $this->sourceWallet->pubkey ];
     foreach ( $shared_wallets as $shared_wallet ) {
       $args[] = $shared_wallet->pubkey;
     }
 
     // Call Wallet::encryptMyMessage function
-    return call_user_func_array(
-      [
-        $this->sourceWallet,
-        'encryptMyMessage'
-      ],
-      $args
-    );
+    return call_user_func_array( [ $this->sourceWallet, 'encryptMyMessage' ], $args );
   }
 
   /**
@@ -173,10 +151,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return array
    */
-  protected function finalMetas (
-    array $metas = [],
-    Wallet $wallet = null
-  ): array {
+  protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
     $wallet = $wallet ?: $this->sourceWallet;
 
     if ( $wallet->hasTokenUnits() ) {
@@ -194,10 +169,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return array
    */
-  protected function contextMetas (
-    array $metas = [],
-    $context = null
-  ): array {
+  protected function contextMetas ( array $metas = [], $context = null ): array {
     // Add context key if it is enabled
     if ( static::USE_META_CONTEXT ) {
       $metas[ 'context' ] = $context ?: static::DEFAULT_META_CONTEXT;
@@ -213,7 +185,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function addUserRemainderAtom ( Wallet $userRemainderWallet ) {
+  public function addUserRemainderAtom ( Wallet $userRemainderWallet ): Molecule {
     $this->molecularHash = null;
 
     // Remainder atom
@@ -239,27 +211,14 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  public function crateRule (
-    $metaType,
-    $metaId,
-    $meta
-  ) {
-    foreach ( [
-      'conditions',
-      'callback',
-    ] as $k ) {
-      if ( !array_key_exists(
-        $k,
-        $meta
-      ) ) {
+  public function crateRule ( $metaType, $metaId, $meta ): Molecule {
+    foreach ( [ 'conditions', 'callback', 'rule', ] as $k ) {
+      if ( !array_key_exists( $k, $meta ) ) {
         throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
       }
 
       if ( is_array( $meta[ $k ] ) ) {
-        $meta[ $k ] = json_encode(
-          $meta[ $k ],
-          JSON_UNESCAPED_SLASHES
-        );
+        $meta[ $k ] = json_encode( $meta[ $k ], JSON_UNESCAPED_SLASHES );
       }
     }
 
@@ -303,15 +262,8 @@ class Molecule extends MoleculeStructure {
     $aggregateMeta = $metas;
     $aggregateMeta[ 'action' ] = 'add';
 
-    foreach ( [
-      'address',
-      'position',
-      'batchId',
-    ] as $key ) {
-      if ( !array_key_exists(
-        $key,
-        $aggregateMeta
-      ) ) {
+    foreach ( [ 'address', 'position', 'batchId', ] as $key ) {
+      if ( !array_key_exists( $key, $aggregateMeta ) ) {
         throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
     }
@@ -356,10 +308,7 @@ class Molecule extends MoleculeStructure {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
     }
 
-    if ( Decimal::cmp(
-        0.0,
-        $this->sourceWallet->balance - $value
-      ) > 0 ) {
+    if ( Decimal::cmp( 0.0, $this->sourceWallet->balance - $value ) > 0 ) {
       throw new BalanceInsufficientException();
     }
 
@@ -418,10 +367,7 @@ class Molecule extends MoleculeStructure {
     array $recipientUnits = []
   ) {
 
-    if ( Decimal::cmp(
-        $value,
-        $this->sourceWallet->balance
-      ) > 0 ) {
+    if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
     }
 
@@ -535,12 +481,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function initPeerCreation (
-    string $slug,
-    string $host,
-    string $name = null,
-    array $cellSlugs = []
-  ) {
+  public function initPeerCreation ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): Molecule {
     $this->molecularHash = null;
 
     // Metas
@@ -582,43 +523,21 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function initTokenCreation (
-    Wallet $recipientWallet,
-    $amount,
-    array $tokenMeta
-  ) {
+  public function initTokenCreation ( Wallet $recipientWallet, $amount, array $tokenMeta ) {
 
     $this->molecularHash = null;
 
-    foreach ( [
-      'walletAddress',
-      'walletPosition',
-    ] as $walletKey ) {
+    foreach ( [ 'walletAddress', 'walletPosition', ] as $walletKey ) {
 
-      $has = array_filter(
-        $tokenMeta,
-        static function ( $token ) use
-        (
-          $walletKey
-        ) {
+      $has = array_filter( $tokenMeta, static function ( $token ) use (
+        $walletKey
+      ) {
 
-          return is_array( $token ) && array_key_exists(
-              'key',
-              $token
-            ) && $walletKey === $token[ 'key' ];
-        }
-      );
+        return is_array( $token ) && array_key_exists( 'key', $token ) && $walletKey === $token[ 'key' ];
+      } );
 
-      if ( empty( $has ) && !array_key_exists(
-          $walletKey,
-          $tokenMeta
-        ) ) {
-        $tokenMeta[ $walletKey ] = $recipientWallet->{strtolower(
-            substr(
-              $walletKey,
-              6
-            )
-          )};
+      if ( empty( $has ) && !array_key_exists( $walletKey, $tokenMeta ) ) {
+        $tokenMeta[ $walletKey ] = $recipientWallet->{strtolower( substr( $walletKey, 6 ) )};
       }
     }
 
@@ -651,10 +570,7 @@ class Molecule extends MoleculeStructure {
    * @param $token string
    * @param $wallet ClientWallet object
    */
-  public function initShadowWalletClaim (
-    string $tokenSlug,
-    Wallet $wallet
-  ) {
+  public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ) {
 
     $this->molecularHash = null;
 
@@ -696,11 +612,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws Exception
    */
-  public function initIdentifierCreation (
-    $type,
-    $contact,
-    $code
-  ) {
+  public function initIdentifierCreation ( $type, $contact, $code ) {
     $this->molecularHash = null;
 
     $metas = [
@@ -739,11 +651,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function initMeta (
-    array $meta,
-    $metaType,
-    $metaId
-  ) {
+  public function initMeta ( array $meta, $metaType, $metaId ) {
     $this->molecularHash = null;
 
     $this->atoms[] = new Atom(
@@ -775,11 +683,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function initMetaAppend (
-    array $meta,
-    $metaType,
-    $metaId
-  ) {
+  public function initMetaAppend ( array $meta, $metaType, $metaId ) {
     $this->molecularHash = null;
 
     $this->atoms[] = new Atom(
@@ -806,14 +710,13 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param $tokenSlug
-   * @param $requestedAmount
-   * @param $metaType
-   * @param $metaId
+   * @param string $tokenSlug
+   * @param int|float $requestedAmount
+   * @param string $metaType
+   * @param string $metaId
    * @param array $meta
-   * @param string|null $batchId
    *
-   * @return $this
+   * @return self
    */
   public function initTokenRequest (
     $tokenSlug,
@@ -888,20 +791,12 @@ class Molecule extends MoleculeStructure {
    * @return string
    * @throws Exception|ReflectionException|AtomsMissingException
    */
-  public function sign (
-    $anonymous = false,
-    $compressed = true
-  ) {
-    if ( empty( $this->atoms ) || !empty(
-      array_filter(
-        $this->atoms,
-        static function ( $atom ) {
+  public function sign ( $anonymous = false, $compressed = true ) {
+    if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
 
-          return !( $atom instanceof Atom );
+        return !( $atom instanceof Atom );
 
-        }
-      )
-      ) ) {
+      } ) ) ) {
       throw new AtomsMissingException();
     }
 
@@ -917,11 +812,7 @@ class Molecule extends MoleculeStructure {
     $firstAtom = reset( $this->atoms );
 
     // Generate the private signing key for this molecule
-    $key = Wallet::generateWalletKey(
-      $this->secret,
-      $firstAtom->token,
-      $firstAtom->position
-    );
+    $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $firstAtom->position );
 
     // Building a one-time-signature
     $signatureFragments = $this->signatureFragments( $key );

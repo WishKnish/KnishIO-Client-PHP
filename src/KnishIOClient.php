@@ -15,6 +15,7 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
+use WishKnish\KnishIO\Client\Mutation\MutationAccessToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
@@ -281,28 +282,38 @@ class KnishIOClient {
   }
 
   /**
-   * @param null $secret
-   * @param null $cell_slug
+   * @param string|null $secret
+   * @param string|null $cell_slug
    *
    * @return mixed
    * @throws Exception
    */
-  public function requestAuthToken ( $secret, $cell_slug = null ) {
-    // Set a secret
-    $this->setSecret( $secret );
-
+  public function requestAuthToken ( $secret = null, $cell_slug = null ) {
     // Set a cell slug
     $this->cellSlug = $cell_slug ?: $this->cellSlug();
+    $response = null;
 
-    // Create an auth molecule
-    $molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
+    if ( $secret !== null ) {
+      // Set a secret
+      $this->setSecret( $secret );
+      // Create an auth molecule
+      $molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
 
-    // Create query & fill a molecule
-    $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-    $query->fillMolecule();
+      // Create query & fill a molecule
+      $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
+      $query->fillMolecule();
 
-    // Get a response
-    $response = $query->execute();
+      // Get a response
+      $response = $query->execute();
+    }
+    else {
+      $query = $this->createQuery( MutationAccessToken::class );
+      // Get a response
+      $response = $query->execute( [
+        'cellSlug' => $this->cellSlug,
+      ] );
+    }
+
 
     // If the response is success - set auth token
     if ( $response->success() ) {
@@ -339,7 +350,7 @@ class KnishIOClient {
    * @return Response
    * @throws Exception
    */
-  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): Response {
+  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ) {
 
     // Create a query
     /** @var QueryMetaType $query */

@@ -17,61 +17,58 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property array $meta
  * @property $snapshotMolecule
  * @property integer $createdAt
- *
  */
-class Meta
-{
-	use Json;
+class Meta {
+  use Json;
 
-	public $modelType;
-	public $modelId;
-	public $meta;
-	public $snapshotMolecule;
-	public $createdAt;
+  public $modelType;
+  public $modelId;
+  public $meta;
+  public $snapshotMolecule;
+  public $createdAt;
 
-	public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null )
-	{
-		$this->modelType = $modelType;
-		$this->modelId = $modelId;
-		$this->meta = $meta;
-		$this->snapshotMolecule = $snapshotMolecule;
-		$this->createdAt = time();
-	}
+  public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null ) {
+    $this->modelType = $modelType;
+    $this->modelId = $modelId;
+    $this->meta = $meta;
+    $this->snapshotMolecule = $snapshotMolecule;
+    $this->createdAt = time();
+  }
 
+  /**
+   * @param array $meta
+   *
+   * @return array
+   */
+  public static function normalizeMeta ( array $meta ) {
+    $result = [];
+    foreach ( $meta as $key => $value ) {
+      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
+    }
+    return $result;
+  }
 
-	/**
-	 * @param array $meta
-	 * @return array
-	 */
-	public static function normalizeMeta ( array $meta )
-	{
-		$result = [];
-		foreach ( $meta as $key => $value ) {
-			$result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
-		}
-		return $result;
-	}
+  /**
+   * @param array|object $meta
+   *
+   * @return array
+   */
+  public static function aggregateMeta ( $meta ) {
+    $aggregate = [];
+    if ( count( $meta ) ) {
+      foreach ( $meta as $metaEntry ) {
+        if ( is_object( $metaEntry ) ) {
+          $metaKey = $metaEntry->key;
+          $metaValue = $metaEntry->value;
+        }
+        else {
+          $metaKey = $metaEntry[ 'key' ];
+          $metaValue = $metaEntry[ 'value' ];
+        }
 
-	/**
-	 * @param array|object $meta
-	 * @return array
-	 */
-	public static function aggregateMeta ( $meta )
-	{
-		$aggregate = [];
-		if ( count( $meta ) ) {
-			foreach ( $meta as $metaEntry ) {
-				if ( is_object( $metaEntry ) ) {
-					$metaKey = $metaEntry->key;
-					$metaValue = $metaEntry->value;
-				} else {
-					$metaKey = $metaEntry[ 'key' ];
-					$metaValue = $metaEntry[ 'value' ];
-				}
-
-				$aggregate[ $metaKey ] = $metaValue;
-			}
-		}
-		return $aggregate;
-	}
+        $aggregate[ $metaKey ] = $metaValue;
+      }
+    }
+    return $aggregate;
+  }
 }

@@ -90,7 +90,7 @@ class CheckMolecule
 
             $metas = Meta::aggregateMeta( $atom->meta );
 
-            foreach ( [ 'callback', 'conditions', ] as $key ) {
+            foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
                 if ( !array_key_exists( $key, $metas ) ) {
                     throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
                 }
@@ -103,10 +103,11 @@ class CheckMolecule
             }
 
             foreach ( $conditions as $condition ) {
-                foreach ( [ 'key', 'value', 'comparison', ] as $key ) {
-                    if ( !array_key_exists( $key, $condition ) ) {
-                        throw new MetaMissingException( 'Missing \'' . $key . '\' field in conditions.' );
-                    }
+                $keys = array_keys( $condition );
+
+                if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 &&
+                    count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+                    throw new MetaMissingException( 'Missing field in conditions.' );
                 }
             }
 
