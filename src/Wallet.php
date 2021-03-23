@@ -105,8 +105,26 @@ class Wallet {
    */
   public static function getTokenUnits ( array $unitsData ): array {
     $result = [];
+
     foreach ( $unitsData as $unitData ) {
-      $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
+
+      // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
+      if ( !is_array($unitData) ) {
+        $items = [
+            'id' => $unitData,
+            'name' => null,
+            'metas' => [],
+        ];
+      }
+
+      // Standart token unit format
+      else {
+        $result[] = [
+            'id' => array_shift( $unitData ),
+            'name' => array_shift( $unitData ),
+            'metas' => $unitData,
+        ];
+      }
     }
     return $result;
   }
