@@ -7,6 +7,9 @@
 namespace WishKnish\KnishIO\Client\Response;
 
 
+use Exception;
+use WishKnish\KnishIO\Client\Wallet;
+
 /**
  * Class ResponseBalance
  * @package WishKnish\KnishIO\Client\Response
@@ -19,11 +22,10 @@ class ResponseBalance extends Response
 	/**
 	 * Get a payload
 	 *
-	 * @return Wallet|null
-	 * @throws \Exception
+	 * @return Wallet
+   * @throws Exception
 	 */
-	public function payload()
-	{
+	public function payload(): ?Wallet {
 		// Get data
 		$walletData = $this->data();
 		if ( !$walletData ) {

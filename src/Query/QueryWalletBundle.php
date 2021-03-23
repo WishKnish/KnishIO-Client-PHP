@@ -46,14 +46,14 @@ class QueryWalletBundle extends Query
   /**
    * Builds a GraphQL-friendly variables object based on input fields
    *
-   * @param {string|array|null} metaType
-   * @param {string|array|null} metaId
-   * @param {string|array|null} key
-   * @param {string|array|null} value
-   * @param {boolean} latest
-   * @returns {{}}
+   * @param string|null|array $bundleHash
+   * @param string|null|array $key
+   * @param string|null|array $value
+   * @param bool $latest
+   *
+   * @return array
    */
-  public static function createVariables ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true ) {
+  public static function createVariables ( $bundleHash = null, $key = null, $value = null, bool $latest = true ) {
 
     $variables = [
       'latest' => $latest,
@@ -63,11 +63,11 @@ class QueryWalletBundle extends Query
       $variables[ is_string( $bundleHash ) ? 'bundleHash' : 'bundleHashes' ] = $bundleHash;
     }
 
-    if ( key ) {
+    if ( $key ) {
       $variables[ is_string( $key ) ? 'key' : 'keys' ] = $key;
     }
 
-    if ( value ) {
+    if ( $value ) {
       $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
     }
 
