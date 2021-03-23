@@ -485,12 +485,15 @@ class KnishIOClient {
   }
 
   /**
-   * @param null $bundleHash
+   * @param string|null $bundleHash
+   * @param string|null $token
    * @param bool $unspent
+   *
+   * @return mixed
    */
-  public function queryWallets ( string $bundleHash = null, bool $unspent = true ) {
+  public function queryWallets ( ?string $bundleHash = null, ?string $token = null, bool $unspent = true ) {
     $query = $this->createQuery( QueryWalletList::class );
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ? $bundleHash : $this->bundle(), 'unspent' => $unspent, ] );
+    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->bundle(), 'token' => $token, 'unspent' => $unspent, ] );
 
     return $response->getWallets();
   }
@@ -528,8 +531,6 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute( $variables, $fields );
-
-    return $response->payload();
   }
 
   /**
@@ -640,15 +641,17 @@ class KnishIOClient {
    * @param string|Wallet $walletObjectOrBundleHash
    * @param string $tokenSlug
    * @param int|float|array $amount => array - tokenUnits: [unitId1, unitId2, ...]
+   * @param string|null $batchId
+   * @param Wallet|null $source
    *
    * @return array
-   * @throws Exception|ReflectionException|InvalidResponseException
+   * @throws Exception
    */
-  public function transferToken ( $walletObjectOrBundleHash, $tokenSlug, $amount, string $batchId = null ) {
+  public function transferToken ( $walletObjectOrBundleHash, string $tokenSlug, $amount, ?string $batchId = null, ?Wallet $source = null) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $this->queryBalance( $tokenSlug, $this->bundle() )
+    $fromWallet = $source ?? $this->queryBalance( $tokenSlug, $this->bundle() )
       ->payload();
 
     // Token units splitting
@@ -658,17 +661,20 @@ class KnishIOClient {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
     }
 
-    // Get final bundle hash
-    $bundleHash = Wallet::isBundleHash( $walletObjectOrBundleHash ) ? $walletObjectOrBundleHash : Crypto::generateBundleHash( $walletObjectOrBundleHash );
+    $toWallet = $walletObjectOrBundleHash;
 
-    // If this wallet is assigned, if not, try to get a valid wallet
-    /** @var Wallet $toWallet */
-    $toWallet = $walletObjectOrBundleHash instanceof Wallet ? $walletObjectOrBundleHash : $this->queryBalance( $tokenSlug, $bundleHash )
-      ->payload();
+    if ( !( $toWallet instanceof Wallet ) ) {
+      // Get final bundle hash
+      $bundleHash = Wallet::isBundleHash( $walletObjectOrBundleHash ) ? $walletObjectOrBundleHash : Crypto::generateBundleHash( $walletObjectOrBundleHash );
 
-    // Has not wallet yet - create it
-    if ( $toWallet === null ) {
-      $toWallet = Wallet::create( $walletObjectOrBundleHash, $tokenSlug );
+      // try to get a valid wallet
+      $toWallet = $this->queryBalance( $tokenSlug, $bundleHash )
+        ->payload();
+
+      // Has not wallet yet - create it
+      if ( $toWallet === null ) {
+        $toWallet = Wallet::create( $walletObjectOrBundleHash, $tokenSlug );
+      }
     }
 
     // Batch ID initialization
@@ -686,7 +692,7 @@ class KnishIOClient {
     $toWallet->tokenUnits = $recipientTokenUnits;
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $toWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet = Wallet::create( $this->secret(), $tokenSlug, null, $fromWallet->characters );
     $this->remainderWallet->tokenUnits = $remainderTokenUnits;
 
     // Create a molecule with custom source wallet
@@ -703,20 +709,19 @@ class KnishIOClient {
     return $query->execute();
   }
 
-
   /**
    * @param string $tokenSlug
-   * @param $burnAmount
+   * @param $amount
    * @param string|null $batchId
    *
    * @return mixed|Response
    * @throws ReflectionException
    */
-  public function burnToken ( string $tokenSlug, $amount, string $batchId = null ) {
+  public function burnToken ( string $tokenSlug, $amount, ?string $batchId = null, ?Wallet $source = null ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $this->queryBalance( $tokenSlug, $this->bundle() )
+    $fromWallet = $source ?? $this->queryBalance( $tokenSlug, $this->bundle() )
       ->payload();
 
     // Token units splitting

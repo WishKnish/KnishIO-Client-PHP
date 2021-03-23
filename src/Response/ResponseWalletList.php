@@ -52,9 +52,12 @@ class ResponseWalletList extends Response {
   }
 
   /**
-   * @param string $secret
+   * @param string|null $secret
+   *
+   * @return array|null
+   * @throws \Exception
    */
-  public function getWallets ( string $secret ) {
+  public function getWallets ( ?string $secret = null ) {
     // Get data
     $list = $this->data();
     if ( !$list ) {

@@ -209,12 +209,12 @@ class Wallet {
   }
 
   /**
-   * @param string $code
+   * @param mixed $code
    *
    * @return bool
    */
   public static function isBundleHash ( $code ) {
-    return ( mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
+    return ( !is_object( $code ) && mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
   }
 
   /**

@@ -69,7 +69,7 @@ if ( !function_exists( 'array_has' ) ) {
 			$_keys = explode( '.', $key );
 			$_array = $array;
 			foreach ( $_keys as $_key ) {
-				if ( !isset( $_array[ $_key ] ) ) {
+				if ( !array_key_exists( $_key, $_array ) ) {
 					return false;
 				}
 				$_array = $_array[ $_key ];
