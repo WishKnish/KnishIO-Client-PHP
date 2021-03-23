@@ -668,7 +668,10 @@ class KnishIOClient {
       $toWallet->initBatchId( $fromWallet, $amount );
     }
 
+    // Set token units to
+
     // Set token units to the wallet
+    $fromWallet->tokenUnits = $recipientTokenUnits;
     $toWallet->tokenUnits = $recipientTokenUnits;
 
     // Remainder wallet
@@ -707,6 +710,9 @@ class KnishIOClient {
 
     // Token units splitting
     [ $amount, $recipientTokenUnits, $remainderTokenUnits ] = static::splitTokenUnits( $fromWallet, $amount );
+
+    // Set sender's token units
+    $fromWallet->tokenUnits = $recipientTokenUnits;
 
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $batchId ?? Wallet::generateBatchId(), $fromWallet->characters );
