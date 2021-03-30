@@ -170,7 +170,7 @@ class TokenUnitTransactionTest extends TestCase
     }
 
     // Create a env stackable units token
-    $client = $this->createToken( $this->serverTokenSlug, $this->tokenUnits, $envSecret );
+    $client = $this->createToken( $this->serverTokenSlug, $this->tokenUnits, $envSecret, 'request_' . $this->getBatchId( 0 ) );
 
 
     // Request token & shadow wallet claim iterations
@@ -395,7 +395,7 @@ class TokenUnitTransactionTest extends TestCase
    * @return KnishIOClient
    * @throws \ReflectionException
    */
-  private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null ): KnishIOClient {
+  private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null, string $batchId = null ): KnishIOClient {
 
     $secret = $secret ?? Crypto::generateSecret();
 
@@ -404,7 +404,7 @@ class TokenUnitTransactionTest extends TestCase
       'name'			=> $tokenSlug,
       'supply'		=> 'limited',
       'icon'			=> 'icon',
-    ], $this->getBatchId( 0 ) );
+    ], $batchId ?? $this->getBatchId( 0 ) );
     $this->checkResponse($response);
 
     return $client;
