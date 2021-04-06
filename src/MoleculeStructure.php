@@ -32,7 +32,7 @@ class MoleculeStructure {
 	public $status;
 	public $local;
 	public $createdAt;
-	public $atoms;
+	public $atoms = [];
 
 
 	/**

@@ -14,7 +14,7 @@ use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
-
+use function Symfony\Component\String\u;
 
 /**
  * Class TokenUnitTransactionTest
@@ -77,7 +77,7 @@ class TokenUnitTransactionTest extends TestCase
     // Previously test the transfer errors
     $this->testUnitsErrorTransaction( $secret );
 
-    
+
     // Transferring through cascade
     for ( $i = 0; $i < $this->cascadeDeep; $i++ ) {
 
@@ -118,6 +118,43 @@ class TokenUnitTransactionTest extends TestCase
     // Get metas for last batchID
     $response = $client->queryBalance( $this->tokenSlug );
     $this->assertEquals( array_get( $response->payload()->tokenUnits, '0.id' ), array_get( $this->tokenUnits, '10.0' ) );
+
+
+
+
+    // Check wrong token units format
+
+    $secret = Crypto::generateSecret();
+    $tokenSlug = 'wrongToken';
+    $batchId = $this->getBatchId( 0 );
+
+    // --- Token create
+    $response = $this->client( $secret )->createUnitableToken( $tokenSlug, [ 'unit1', 'unit2', 'unit3' ], [
+      'name'			=> $tokenSlug,
+      'supply'		=> 'limited',
+      'icon'			=> 'icon',
+    ], $batchId );
+    $this->assertEquals( $response->reason(), 'TokenResolver: Wrong token units format.' );
+
+
+    // --- Token transfer
+    // From & to wallets
+    $fromWallet = $client->queryBalance( $this->tokenSlug )
+      ->payload();
+    $toWallet = ClientWallet::create( $secret, $this->tokenSlug );
+
+    $query = $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet,
+      1, [ 10 ], [ ]
+    );
+
+    // Get molecule & override token unit value
+    $molecule = $query->molecule();
+    $molecule->atoms[ 0 ]->meta[ 0 ][ 'value' ] = '["unit_id_11"]';
+    $molecule->sign();
+
+    $response = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
+      ->execute();
+    $this->assertEquals( $response->reason(), 'AtomValueResolver: Wrong token units format.' );
   }
 
   /**
@@ -146,14 +183,19 @@ class TokenUnitTransactionTest extends TestCase
       // Sending token unit IDs
       $sendingTokenUnitIds = $this->getTokenUnitIds( $tokenUnits );
 
+      // New batch ID
+      $batchId = 'request_' . $this->getBatchId( $i + 1 );
+
       // Request tokens
-      $client = $this->requestToken( $client, $sendingTokenUnitIds, $this->getBatchId( $i + 1 ) );
+      $client = $this->requestToken( $client, $sendingTokenUnitIds, $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client, $this->serverTokenSlug );
     }
 
   }
+
+
 
   /**
    * @param string $secret
@@ -214,6 +256,19 @@ class TokenUnitTransactionTest extends TestCase
    * @throws \Exception
    */
   private function rawTokenTransfer( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
+    return $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, $amount, $recipientTokenUnits, $remainderTokenUnits )
+      ->execute();
+  }
+
+  /**
+   * @param $client
+   * @param ClientWallet $fromWallet
+   * @param ClientWallet $toWallet
+   * @param $amount
+   * @param array $recipientTokenUnits
+   * @param array $remainderTokenUnits
+   */
+  private function getRawTokenTransferQuery( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
 
     // Convering token units indexes to the related rows
     $recipientTokenUnits = $this->convertToWalletUnits( $recipientTokenUnits );
@@ -236,8 +291,7 @@ class TokenUnitTransactionTest extends TestCase
     // Init a molecule
     $query->fillMolecule( $toWallet, $amount );
 
-    // Execute a query
-    return $query->execute();
+    return $query;
   }
 
   /**
@@ -313,6 +367,9 @@ class TokenUnitTransactionTest extends TestCase
 
     // Request tokens
     $response = $client->requestTokens( $this->serverTokenSlug, $tokenUnitIds, $toBundle, null, $batchId );
+    if ( !$response->success() ) {
+      dd($response->response());
+    }
 
     return $this->client( $toSecret );
   }
@@ -339,9 +396,6 @@ class TokenUnitTransactionTest extends TestCase
    * @throws \ReflectionException
    */
   private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null ): KnishIOClient {
-
-    // Initial code
-    $this->beforeExecute ();
 
     $secret = $secret ?? Crypto::generateSecret();
 

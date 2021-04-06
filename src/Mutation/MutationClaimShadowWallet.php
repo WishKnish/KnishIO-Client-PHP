@@ -15,13 +15,14 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationClaimShadowWallet extends MutationProposeMolecule
 {
 
-
-    /**
-     * @param $token
-     * @param array $shadowWallets
-     * @throws \Exception
-     */
-    public function fillMolecule( string $tokenSlug, ?string $batchId )
+  /**
+   * @param string $tokenSlug
+   * @param string|null $batchId
+   *
+   * @return MutationClaimShadowWallet
+   * @throws \ReflectionException
+   */
+    public function fillMolecule( string $tokenSlug, ?string $batchId = null )
     {
         // Create a wallet
         $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );

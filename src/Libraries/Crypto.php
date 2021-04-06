@@ -40,6 +40,22 @@ class Crypto
 			bin2hex( Shake256::hash( $seed, $length / 4 ) );
 	}
 
+  /**
+   * @param string|null $molecularHash
+   * @param int|null $index
+   *
+   * @return string
+   * @throws Exception
+   */
+  public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ) {
+
+    if ( !in_array( null, [ $molecularHash, $index ], true ) ) {
+      return static::generateBundleHash ( $molecularHash . $index );
+    }
+
+    return Strings::randomString( 64 );
+  }
+
 	/**
 	 * Hashes the user secret to produce a bundle hash
 	 *
