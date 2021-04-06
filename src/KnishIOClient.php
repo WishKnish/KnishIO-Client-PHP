@@ -10,7 +10,10 @@ use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
+use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -391,55 +394,48 @@ class KnishIOClient {
   }
 
   /**
-   * @param $tokenSlug
-   * @param $initialAmount
-   * @param array|null $tokenMetadata
+   * @param $token
+   * @param $amount
+   * @param array|null $meta
+   * @param array $units
    *
    * @return mixed
    * @throws ReflectionException
    */
-  public function createToken ( $tokenSlug, $initialAmount, array $tokenMetadata = null, string $batchId = null ) {
-    $tokenMetadata = default_if_null( $tokenMetadata, [] );
+  public function createToken ( $token, $amount, array $meta = null, array $units = [] ) {
+    $meta = default_if_null( $meta, [] );
+
+    if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
+
+      if ( count( $units ) > 0 ) {
+        $meta = Meta::aggregateMeta( $meta );
+
+        if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
+          throw new StackableUnitDecimalsException();
+        }
+
+        if ( $amount > 0 ) {
+          throw new StackableUnitAmountException();
+        }
+
+        $amount = count( $amount );
+        $meta[ 'splittable' ] = 1;
+        $meta[ 'tokenUnits' ] = json_encode( $units );
+      }
+    }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->secret(), $tokenSlug );
-
-    if ( array_get( $tokenMetadata, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
-      $recipientWallet->batchId = $batchId ?? Wallet::generateBatchId();
-    }
+    $recipientWallet = new Wallet( $this->secret(), $token );
 
     // Create a query
     /** @var MutationCreateToken $query */
     $query = $this->createMoleculeMutation( MutationCreateToken::class );
 
     // Init a molecule
-    $query->fillMolecule( $recipientWallet, $initialAmount, $tokenMetadata );
+    $query->fillMolecule( $recipientWallet, $amount, $meta );
 
     // Return a query execution result
     return $query->execute();
-  }
-
-  /**
-   * @param string $slug
-   * @param array $units
-   * @param array|null $metadata
-   * @param string|null $batchId
-   *
-   * @return mixed
-   * @throws ReflectionException
-   */
-  public function createUnitableToken( string $slug, array $units, array $metadata = null, string $batchId = null )  {
-    $batchId = $batchId ?? Wallet::generateBatchId();
-
-    // Set custom default metadata
-    $metadata = array_merge( $metadata, [
-      'tokenUnits' => json_encode( $units ),
-      'fungibility' => 'stackable',
-      'splittable' => 1,
-      'decimals' => 0,
-    ] );
-
-    return $this->createToken( $slug, count( $units ), $metadata, $batchId );
   }
 
   /**
@@ -534,57 +530,67 @@ class KnishIOClient {
   }
 
   /**
-   * @param $tokenSlug
-   * @param $requestedAmount
+   * @param $token
+   * @param $amount
    * @param $to
-   * @param array|null $metas
-   * @param string|null $batchId
+   * @param array|null $meta
+   * @param array $units
    *
    * @return mixed|Response
    * @throws ReflectionException
    */
-  public function requestTokens ( $tokenSlug, $requestedAmount, $to, array $metas = null, string $batchId = null ) {
-    $metas = default_if_null( $metas, [] );
+  public function requestTokens ( $token, $amount, $to = null, array $meta = null, array $units = [] ) {
+    $meta = default_if_null( $meta, [] );
 
-    // Is a string? $to is bundle or secret
-    if ( is_string( $to ) ) {
+    if ( count( $units ) > 0 ) {
+      if ( $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
 
-      // Bundle: set metaType
-      if ( Wallet::isBundleHash( $to ) ) {
-        $metaType = 'walletbundle';
-        $metaId = $to;
-      } // Secret: create a new wallet (not shadow)
-      else {
-        $to = Wallet::create( $to, $tokenSlug );
+      $amount = count( $amount );
+      $meta = Meta::aggregateMeta( $meta );
+      $meta[ 'tokenUnits' ] = json_encode( $units );
+    }
+
+    if ( $to !== null ) {
+      // Is a string? $to is bundle or secret
+      if ( is_string( $to ) ) {
+
+        // Bundle: set metaType
+        if ( Wallet::isBundleHash( $to ) ) {
+          $metaType = 'walletbundle';
+          $metaId = $to;
+        } // Secret: create a new wallet (not shadow)
+        else {
+          $to = Wallet::create( $to, $token );
+        }
+      }
+
+      // Is a wallet object?
+      if ( $to instanceof Wallet ) {
+
+        // Meta type: wallet
+        $metaType = 'wallet';
+
+        // Set wallet metas
+        $meta = array_merge( $meta, [ 'position' => $to->position, 'bundle' => $to->bundle, ] );
+
+        // Set metaId as an wallet address
+        $metaId = $to->address;
       }
     }
-
-    // Is a wallet object?
-    if ( $to instanceof Wallet ) {
-
-      // Meta type: wallet
-      $metaType = 'wallet';
-
-      // Set wallet metas
-      $metas = array_merge( $metas, [ 'position' => $to->position, 'bundle' => $to->bundle, ] );
-
-      // Set metaId as an wallet address
-      $metaId = $to->address;
+    else {
+      $metaType = 'walletBundle';
+      $metaId = $this->bundle();
     }
 
-    // --- Token units initialization
-    [ $requestedAmount, $tokenUnits ] = static::splitUnitAmount( $requestedAmount );
-    if ( $tokenUnits ) {
-      $metas[ 'tokenUnits' ] = json_encode( $tokenUnits );
-    }
-    // ---
 
     // Create a query
     /** @var MutationRequestTokens $query */
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
+    $query->fillMolecule( $token, $amount, $metaType, $metaId, $meta );
 
     // Return a query execution result
     return $query->execute();
@@ -593,31 +599,30 @@ class KnishIOClient {
   /**
    * Claim a shadow wallet
    *
-   * @param string $tokenSlug
-   * @param string $batchId | for fungible tokens batchId = null
+   * @param string $token
    * @param null $molecule
    *
    * @return mixed|Response
    * @throws Exception
    */
-  public function claimShadowWallet ( string $tokenSlug, ?string $batchId, $molecule = null ) {
+  public function claimShadowWallet ( string $token, $molecule = null ) {
     // Create a query
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-    $query->fillMolecule( $tokenSlug, $batchId );
+    $query->fillMolecule( $token );
 
     // Return a response
     return $query->execute();
   }
 
   /**
-   * @param string $tokenSlug
+   * @param string $token
    *
    * @return array
    * @throws Exception
    */
-  public function claimShadowWallets ( string $tokenSlug ): array {
+  public function claimShadowWallets ( string $token ): array {
     // Get shadow wallet list
-    $shadowWallets = $this->queryShadowWallets( $tokenSlug );
+    $shadowWallets = $this->queryShadowWallets( $token );
 
     // Check shadow wallets
     if ( !$shadowWallets ) {
@@ -632,69 +637,62 @@ class KnishIOClient {
     // Claim shadow wallet list
     $responses = [];
     foreach ( $shadowWallets as $shadowWallet ) {
-      $responses[] = $this->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
+      $responses[] = $this->claimShadowWallet( $token );
     }
     return $responses;
   }
 
   /**
-   * @param string|Wallet $walletObjectOrBundleHash
-   * @param string $tokenSlug
-   * @param int|float|array $amount => array - tokenUnits: [unitId1, unitId2, ...]
-   * @param string|null $batchId
-   * @param Wallet|null $source
+   * @param string|Wallet $recipient
+   * @param string $token
+   * @param int|float $amount
+   * @param array $units
+   * @param Wallet|null $sourceWallet
    *
    * @return array
    * @throws Exception
    */
-  public function transferToken ( $walletObjectOrBundleHash, string $tokenSlug, $amount, ?string $batchId = null, ?Wallet $source = null) {
+  public function transferToken ( $recipient, string $token, $amount = 0, array $units = [], ?Wallet $sourceWallet = null) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $source ?? $this->queryBalance( $tokenSlug, $this->bundle() )
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
       ->payload();
 
-    // Token units splitting
-    [ $amount, $recipientTokenUnits, $remainderTokenUnits ] = static::splitTokenUnits( $fromWallet, $amount );
+    // Calculate amount & set meta key
+    if ( count( $units ) > 0 ) {
+      // Can't move stackable units AND provide amount
+      if ( $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
+
+      $amount = count( $units );
+    }
 
     if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
     }
 
-    $toWallet = $walletObjectOrBundleHash;
+    $recipientWallet = $recipient;
 
-    if ( !( $toWallet instanceof Wallet ) ) {
+    if ( !( $recipientWallet instanceof Wallet ) ) {
       // Get final bundle hash
-      $bundleHash = Wallet::isBundleHash( $walletObjectOrBundleHash ) ? $walletObjectOrBundleHash : Crypto::generateBundleHash( $walletObjectOrBundleHash );
+      $bundleHash = Wallet::isBundleHash( $recipient ) ? $recipient : Crypto::generateBundleHash( $recipient );
 
       // try to get a valid wallet
-      $toWallet = $this->queryBalance( $tokenSlug, $bundleHash )
+      $recipientWallet = $this->queryBalance( $token, $bundleHash )
         ->payload();
 
       // Has not wallet yet - create it
-      if ( $toWallet === null ) {
-        $toWallet = Wallet::create( $walletObjectOrBundleHash, $tokenSlug );
+      if ( $recipientWallet === null ) {
+        $recipientWallet = Wallet::create( $recipient, $token );
       }
     }
 
-    // Batch ID initialization
-    if ( $batchId !== null ) {
-      $toWallet->batchId = $batchId;
-    }
-    else {
-      $toWallet->initBatchId( $fromWallet, $amount );
-    }
-
-    // Set token units to
-
-    // Set token units to the wallet
-    $fromWallet->tokenUnits = $recipientTokenUnits;
-    $toWallet->tokenUnits = $recipientTokenUnits;
-
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->secret(), $tokenSlug, null, $fromWallet->characters );
-    $this->remainderWallet->initBatchId( $fromWallet, $amount );
-    $this->remainderWallet->tokenUnits = $remainderTokenUnits;
+    $this->remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
+
+    $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
@@ -704,36 +702,49 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationTransferTokens::class, $molecule );
 
     // Init a molecule
-    $query->fillMolecule( $toWallet, $amount );
+    $query->fillMolecule( $recipientWallet, $amount );
 
     // Execute a query
     return $query->execute();
   }
 
   /**
-   * @param string $tokenSlug
+   * @param string $token
    * @param $amount
    * @param string|null $batchId
+   * @param array $units
+   * @param Wallet|null $sourceWallet
    *
    * @return mixed|Response
    * @throws ReflectionException
    */
-  public function burnToken ( string $tokenSlug, $amount, ?string $batchId = null, ?Wallet $source = null ) {
+  public function burnToken ( string $token, $amount, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $source ?? $this->queryBalance( $tokenSlug, $this->bundle() )
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
       ->payload();
 
-    // Token units splitting
-    [ $amount, $recipientTokenUnits, $remainderTokenUnits ] = static::splitTokenUnits( $fromWallet, $amount );
-
-    // Set sender's token units
-    $fromWallet->tokenUnits = $recipientTokenUnits;
+    if ( $fromWallet === null ) {
+      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
+    }
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->secret(), $tokenSlug, $batchId ?? Wallet::generateBatchId(), $fromWallet->characters );
-    $remainderWallet->tokenUnits = $remainderTokenUnits;
+    $remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
+
+    // Calculate amount & set meta key
+    if ( count( $units ) > 0 ) {
+      // Can't burn stackable units AND provide amount
+      if ( $amount > 0) {
+        throw new StackableUnitAmountException();
+      }
+
+      // Calculating amount based on Unit IDs
+      $amount = count( $units );
+
+      // --- Token units splitting
+      $fromWallet->splitUnits( $units, $remainderWallet );
+    }
 
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
