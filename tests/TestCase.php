@@ -260,7 +260,7 @@ abstract class TestCase extends TestCaseBase {
 			$response = $command->run([
 				'phpunit',
 				'--configuration',
-				__DIR__.'/../' .'\phpunit.xml',
+				__DIR__.'/../' .'phpunit.xml',
 				'--filter',
 				'/(::'.$test.')( .*)?$/',
 				$class,

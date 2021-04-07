@@ -405,23 +405,26 @@ class KnishIOClient {
   public function createToken ( $token, $amount, array $meta = null, array $units = [] ) {
     $meta = default_if_null( $meta, [] );
 
-    if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
+    // Token units passed
+    if ( count( $units ) > 0 ) {
 
-      if ( count( $units ) > 0 ) {
-        $meta = Meta::aggregateMeta( $meta );
-
-        if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
-          throw new StackableUnitDecimalsException();
-        }
-
-        if ( $amount > 0 ) {
-          throw new StackableUnitAmountException();
-        }
-
-        $amount = count( $amount );
-        $meta[ 'splittable' ] = 1;
-        $meta[ 'tokenUnits' ] = json_encode( $units );
+      if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
+        throw new StackableUnitDecimalsException();
       }
+
+      if ( $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
+
+      $amount = count( $units );
+
+      // Set custom default metadata
+      $meta = array_merge( $meta, [
+        'splittable' => 1,
+        'fungibility' => 'stackable',
+        'decimals' => 0,
+        'tokenUnits' => json_encode( $units ),
+      ] );
     }
 
     // Recipient wallet

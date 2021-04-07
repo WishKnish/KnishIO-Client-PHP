@@ -205,10 +205,10 @@ class Wallet {
    * @param Wallet $remainderWallet
    * @param Wallet|null $recipientWallet
    */
-  public function splitUnits ( array $units = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
+  public function splitUnits ( array $sendTokenUnits = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
 
     // No units supplied, nothing to split
-    if ( count( $units ) === 0 ) {
+    if ( count( $sendTokenUnits ) === 0 ) {
       return;
     }
 
@@ -216,12 +216,25 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
 
+    // Init recipient & remainder token units
+    $recipientTokenUnits = []; $remainderTokenUnits = [];
+    foreach( $this->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
+
+    /*
     array_walk( $this->tokenUnits, static function ( $tokenUnit ) use ( $units, $recipientTokenUnits, $remainderTokenUnits ) {
       array_push(
         in_array( $tokenUnit[ 'id' ], $units, true ) ? $recipientTokenUnits : $remainderTokenUnits,
         $tokenUnit
       );
     } );
+    */
 
     // Reset token units to the sending value
     $this->tokenUnits = $recipientTokenUnits;

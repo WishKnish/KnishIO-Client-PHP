@@ -26,7 +26,6 @@ class TokenUnitTransactionTest extends TestCase
   private $tokenSlug = 'UTSTACKUNIT';
   private $transactionAmount = 2;
   private $cascadeDeep = 4;
-  private $batchPrefix = 'batch_';
 
   private $tokenUnits = [
     [ 'unit_id_1', 'unit_name_1', 'unit_meta_1', ],
@@ -83,7 +82,6 @@ class TokenUnitTransactionTest extends TestCase
 
       // Create batchID
       $index = $i + 1;
-      $batchId = $this->getBatchId( $index );
 
       // Get token units part for a transaction
       $tokenUnits = array_slice( $this->tokenUnits, ($i + 1) * 2 );
@@ -92,7 +90,7 @@ class TokenUnitTransactionTest extends TestCase
       $sendingTokenUnitIds = $this->getTokenUnitIds( $tokenUnits );
 
       // Token transferring
-      $client = $this->transfetToken( $client, $sendingTokenUnitIds, $batchId );
+      $client = $this->transfetToken( $client, $sendingTokenUnitIds );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client, $this->tokenSlug );
@@ -129,11 +127,12 @@ class TokenUnitTransactionTest extends TestCase
     $batchId = $this->getBatchId( 0 );
 
     // --- Token create
-    $response = $this->client( $secret )->createUnitableToken( $tokenSlug, [ 'unit1', 'unit2', 'unit3' ], [
+    $tokenUnits = [ 'unit1', 'unit2', 'unit3' ];
+    $response = $this->client( $secret )->createToken( $tokenSlug, 0, [
       'name'			=> $tokenSlug,
       'supply'		=> 'limited',
       'icon'			=> 'icon',
-    ], $batchId );
+    ], $tokenUnits );
     $this->assertEquals( $response->reason(), 'TokenResolver: Wrong token units format.' );
 
 
@@ -170,7 +169,7 @@ class TokenUnitTransactionTest extends TestCase
     }
 
     // Create a env stackable units token
-    $client = $this->createToken( $this->serverTokenSlug, $this->tokenUnits, $envSecret, 'request_' . $this->getBatchId( 0 ) );
+    $client = $this->createToken( $this->serverTokenSlug, $this->tokenUnits, $envSecret );
 
 
     // Request token & shadow wallet claim iterations
@@ -338,14 +337,14 @@ class TokenUnitTransactionTest extends TestCase
    * @return mixed|KnishIOClient
    * @throws \ReflectionException
    */
-  private function transfetToken( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
+  private function transfetToken( KnishIOClient $client, array $tokenUnitIds ) {
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
     $toBundle = Crypto::generateBundleHash( $toSecret );
 
     // Transferring
-    $response = $client->transferToken( $toBundle, $this->tokenSlug, $tokenUnitIds, $batchId );
+    $response = $client->transferToken( $toBundle, $this->tokenSlug, 0, $tokenUnitIds );
     $this->checkResponse($response);
 
     return $this->client( $toSecret );
@@ -395,16 +394,16 @@ class TokenUnitTransactionTest extends TestCase
    * @return KnishIOClient
    * @throws \ReflectionException
    */
-  private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null, string $batchId = null ): KnishIOClient {
+  private function createToken( string $tokenSlug, array $tokenUnits, string $secret = null ): KnishIOClient {
 
     $secret = $secret ?? Crypto::generateSecret();
 
     $client = $this->client( $secret );
-    $response = $client->createUnitableToken( $tokenSlug, $tokenUnits, [
+    $response = $client->createToken( $tokenSlug, 0, [
       'name'			=> $tokenSlug,
       'supply'		=> 'limited',
       'icon'			=> 'icon',
-    ], $batchId ?? $this->getBatchId( 0 ) );
+    ], $tokenUnits );
     $this->checkResponse($response);
 
     return $client;
