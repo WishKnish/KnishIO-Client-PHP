@@ -6,12 +6,10 @@
 
 namespace WishKnish\KnishIO\Client;
 
-use desktopd\SHA3\Sponge as SHA3;
 use BI\BigInteger;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Libraries\Base58;
 
@@ -20,7 +18,7 @@ use WishKnish\KnishIO\Client\Libraries\Base58;
  * @package WishKnish\KnishIO\Client
  *
  * @property string $position
- * @property string $tokend
+ * @property string $token
  * @property string|null $key
  * @property string|null $address
  * @property int|float $balance
@@ -44,6 +42,11 @@ class Wallet {
   public $molecules = [];
 
   /**
+   * @var array
+   */
+  public $tokenUnits = [];
+
+  /**
    * @var int|float
    */
   public $balance = 0;
@@ -64,6 +67,11 @@ class Wallet {
   public $bundle;
 
   /**
+   * @var string
+   */
+  public $token;
+
+  /**
    * @var string|null
    */
   public $key;
@@ -79,15 +87,43 @@ class Wallet {
   private $privkey;
 
   /**
-   * @param $secretOrBundle
+   * Wallet constructor.
+   *
+   * @param null $secret
    * @param string $token
+   * @param null $position
    * @param null $batchId
    * @param null $characters
+   *
+   * @throws Exception
+   */
+  public function __construct ( $secret = null, $token = 'USER', $position = null, $batchId = null, $characters = null ) {
+    $this->token = $token;
+    $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
+    $this->batchId = $batchId;
+    $this->characters = defined( Base58::class . '::' . $characters ) ? $characters : null;
+    $this->position = $position;
+
+    if ( $secret ) {
+
+      // Generate a position for non-shadow wallet if it does not initialized
+      $this->position = $this->position ?? static::generateWalletPosition();
+
+      $this->prepareKeys( $secret );
+
+    }
+  }
+
+  /**
+   * @param string $secretOrBundle
+   * @param string $token
+   * @param string|null $batchId
+   * @param string|null $characters
    *
    * @return Wallet
    * @throws Exception
    */
-  public static function create ( $secretOrBundle, $token = 'USER', $batchId = null, $characters = null ) {
+  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ) {
     $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
     $position = $secret ? static::generateWalletPosition() : null;
@@ -130,34 +166,6 @@ class Wallet {
   }
 
   /**
-   * Wallet constructor.
-   *
-   * @param null $secret
-   * @param string $token
-   * @param null $position
-   * @param null $batchId
-   * @param null $characters
-   *
-   * @throws Exception
-   */
-  public function __construct ( $secret = null, $token = 'USER', $position = null, $batchId = null, $characters = null ) {
-    $this->token = $token;
-    $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
-    $this->batchId = $batchId;
-    $this->characters = defined( Base58::class . '::' . $characters ) ? $characters : null;
-    $this->position = $position;
-
-    if ( $secret ) {
-
-      // Generate a position for non-shadow wallet if it does not initialized
-      $this->position = $this->position ?? static::generateWalletPosition();
-
-      $this->sign( $secret );
-
-    }
-  }
-
-  /**
    * @return bool
    */
   public function isShadow (): bool {
@@ -168,21 +176,62 @@ class Wallet {
    * @return bool
    */
   public function hasTokenUnits (): bool {
-    return property_exists( $this, 'tokenUnits' );
+    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
   }
 
   /**
    * @return string
    */
   public function tokenUnitsJson (): ?string {
-    if ( !$this->hasTokenUnits() ) {
-      return null;
+
+    if ( $this->hasTokenUnits() ) {
+
+      $result = array_map(
+        static function( $tokenUnit, $_ ) {
+          return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+        },
+        $this->tokenUnits,
+        []
+      );
+
+      return json_encode( $result );
     }
-    $result = [];
-    foreach ( $this->tokenUnits as $tokenUnit ) {
-      $result[] = array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+
+    return null;
+  }
+
+  /**
+   * @param array $units
+   * @param Wallet $remainderWallet
+   * @param Wallet|null $recipientWallet
+   */
+  public function splitUnits ( array $units = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
+
+    // No units supplied, nothing to split
+    if ( count( $units ) === 0 ) {
+      return;
     }
-    return json_encode( $result );
+
+    // Init recipient & remainder token units
+    $recipientTokenUnits = [];
+    $remainderTokenUnits = [];
+
+    array_walk( $this->tokenUnits, static function ( $tokenUnit ) use ( $units, $recipientTokenUnits, $remainderTokenUnits ) {
+      array_push(
+        in_array( $tokenUnit[ 'id' ], $units, true ) ? $recipientTokenUnits : $remainderTokenUnits,
+        $tokenUnit
+      );
+    } );
+
+    // Reset token units to the sending value
+    $this->tokenUnits = $recipientTokenUnits;
+
+    // Set token units to recipient & remainder
+    if ( $recipientWallet !== null ) {
+      $recipientWallet->tokenUnits = $recipientTokenUnits;
+    }
+
+    $remainderWallet->tokenUnits = $remainderTokenUnits;
   }
 
   /**
@@ -190,7 +239,7 @@ class Wallet {
    *
    * @throws Exception
    */
-  public function sign ( $secret ) {
+  public function prepareKeys ( string $secret ) {
     if ( $this->key === null && $this->address === null ) {
 
       $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
@@ -201,20 +250,15 @@ class Wallet {
     }
   }
 
-  /**
-   * @return string
-   */
-  public static function generateBatchId () {
-    return Strings::randomString( 64 );
-  }
 
   /**
    * @param mixed $code
    *
    * @return bool
    */
-  public static function isBundleHash ( $code ) {
-    return ( !is_object( $code ) && mb_strlen( $code ) === 64 && ctype_xdigit( $code ) );
+  public static function isBundleHash ( $code ): bool {
+
+    return is_string( $code ) && mb_strlen( $code ) === 64 && ctype_xdigit( $code );
   }
 
   /**
@@ -232,7 +276,7 @@ class Wallet {
    * @return string
    * @throws Exception
    */
-  protected static function generateWalletAddress ( $key ) {
+  protected static function generateWalletAddress ( $key ): string {
 
     $digestSponge = Crypto\Shake256::init();
 
@@ -258,25 +302,13 @@ class Wallet {
    * Get a recipient batch ID
    *
    * @param $senderWallet
-   * @param $transferAmount
-   * @param bool $noSplitting
+   *
+   * @throws Exception
    */
-  public function initBatchId ( $senderWallet, $transferAmount, $noSplitting = false ) {
+  public function initBatchId ( $senderWallet ) {
 
     if ( $senderWallet->batchId ) {
-
-      // No splitting flag /* or transfer without a remainder */: use a sender's batch ID
-      if ( $noSplitting /* || Decimal::equal($senderWallet->balance, $transferAmount) */ ) {
-        $batchId = $senderWallet->batchId;
-      }
-
-      // Generate new batch ID
-      else {
-        $batchId = Wallet::generateBatchId();
-      }
-
-      // Set batchID to recipient wallet
-      $this->batchId = $batchId;
+      $this->batchId = Crypto::generateBatchId();
     }
 
   }

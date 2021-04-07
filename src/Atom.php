@@ -102,11 +102,11 @@ class Atom {
       foreach ( $atom_data as $name => $value ) {
 
         // Old atoms support (without batch_id field)
-        if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
+        if ( $value === null && in_array( $name, [ 'pubkey', 'characters', ], true ) ) {
           continue;
         }
 
-        if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
+        if ( in_array( $name, [ 'batchId', 'otsFragment', 'index', ], true ) ) {
           continue;
         }
 

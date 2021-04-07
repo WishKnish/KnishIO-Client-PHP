@@ -8,6 +8,7 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\BatchIdException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
@@ -53,6 +54,7 @@ class CheckMolecule
             'isotopeI',
             'isotopeU',
             'index',
+            'batchId',
         ];
 
         foreach ( $verification_methods as $method ) {
@@ -75,6 +77,23 @@ class CheckMolecule
         }
 
         return true;
+    }
+
+  /**
+   * @param MoleculeStructure $molecule
+   *
+   * @return bool
+   * @throws Exception
+   */
+    public static function batchId ( MoleculeStructure $molecule ) {
+
+      array_walk( $molecule->atoms, static function( Atom $atom ) {
+        if (  $atom->batchId !== null ) {
+          throw new BatchIdException();
+        }
+      } );
+
+      return true;
     }
 
     /**

@@ -6,6 +6,7 @@
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use ReflectionException;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
 use WishKnish\KnishIO\Client\Wallet;
@@ -17,20 +18,21 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationCreateToken extends MutationProposeMolecule
 {
 
-    /**
-     * @param $recipientWallet
-     * @param $amount
-     * @param array $metas
-     * @throws \ReflectionException
-     * @throws \Exception
-     */
-	public function fillMolecule ( Wallet $recipientWallet, $amount, array $metas = null )
+  /**
+   * @param Wallet $recipientWallet
+   * @param $amount
+   * @param array|null $meta
+   *
+   * @return MutationCreateToken
+   * @throws ReflectionException
+   */
+	public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = null )
 	{
 		// Default metas value
-		$metas = default_if_null( $metas, [] );
+    $meta = default_if_null( $meta, [] );
 
 		// Fill the molecule
-		$this->molecule->initTokenCreation ( $recipientWallet, $amount, $metas );
+		$this->molecule->initTokenCreation ( $recipientWallet, $amount, $meta );
 		$this->molecule->sign();
 		$this->molecule->check();
 
