@@ -43,40 +43,34 @@ class CheckMolecule
     public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null )
     {
     	$verification_methods = [
-            'molecularHash',
-            'ots',
-            'isotopeM',
-			      'isotopeP',
-            'isotopeR',
-            'isotopeC',
-            'isotopeV',
-            'isotopeT',
-            'isotopeI',
-            'isotopeU',
-            'index',
-            'batchId',
-        ];
+    	  'molecularHash',
+        'ots',
+        'isotopeM',
+        'isotopeP',
+        'isotopeR',
+        'isotopeC',
+        'isotopeV',
+        'isotopeT',
+        'isotopeI',
+        'isotopeU',
+        'index',
+        'batchId',
+      ];
 
-        foreach ( $verification_methods as $method ) {
+    	foreach ( $verification_methods as $method ) {
 
-			switch ( $method ) {
-
-				case 'isotopeV':
-				{
-
-					static::{$method}($molecule, $fromWallet);
-
-					break;
-				}
-				default:
-				{
-					static::{$method}($molecule);
-				}
-			}
-
+        switch ( $method ) {
+          case 'isotopeV': {
+            static::{ $method }( $molecule, $fromWallet );
+            break;
+          }
+          default: {
+            static::{ $method }( $molecule );
+          }
         }
+    	}
 
-        return true;
+    	return true;
     }
 
   /**
@@ -85,15 +79,34 @@ class CheckMolecule
    * @return bool
    * @throws Exception
    */
-    public static function batchId ( MoleculeStructure $molecule ) {
+    public static function batchId ( MoleculeStructure $molecule ): bool {
 
-      array_walk( $molecule->atoms, static function( Atom $atom ) {
-        if (  $atom->batchId !== null ) {
-          throw new BatchIdException();
+      if ( count( $molecule->atoms ) > 0 ) {
+
+        /** @var Atom $subscription */
+        $subscription = $molecule->atoms[0];
+
+        if ( $subscription->isotope === 'V' && $subscription->batchId !== null ) {
+
+          /** @var Atom[] $atoms */
+          $atoms = static::isotopeFilter( 'V', $molecule->atoms );
+          $remainder = $atoms[ count( $atoms ) - 1 ];
+
+          if ( $subscription->batchId !== $remainder->batchId ) {
+            throw new BatchIdException();
+          }
+
+          array_walk( $atoms, static function( Atom $atom ) {
+            if (  $atom->batchId === null ) {
+              throw new BatchIdException();
+            }
+          } );
         }
-      } );
 
-      return true;
+        return true;
+      }
+
+      throw new BatchIdException();
     }
 
     /**

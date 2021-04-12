@@ -9,7 +9,6 @@ namespace WishKnish\KnishIO\Client;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
@@ -74,8 +73,8 @@ class KnishIOClient {
    */
   private $cellSlug;
 
-
   /**
+   * @param Wallet $sourceWallet
    * @param $amount
    *
    * @return array
@@ -121,7 +120,7 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    */
   public function __construct ( $url = null, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
-    $url = $url ?: url() . '/graphql';
+    $url = $url ?: $this->url() . '/graphql';
     $this->initialize( $url, $client, $serverSdkVersion );
   }
 
@@ -184,6 +183,8 @@ class KnishIOClient {
 
   /**
    * @param $secret
+   *
+   * @throws Exception
    */
   public function setSecret ( $secret ) {
     $this->secret = $secret;
@@ -330,11 +331,10 @@ class KnishIOClient {
   }
 
   /**
-   * @param $code
-   * @param $token
+   * @param $tokenSlug
+   * @param null $bundleHash
    *
    * @return Response
-   * @throws Exception
    */
   public function queryBalance ( $tokenSlug, $bundleHash = null ): Response {
 
@@ -347,11 +347,14 @@ class KnishIOClient {
   }
 
   /**
-   * @param $code
-   * @param $token
+   * @param $metaType
+   * @param null $metaId
+   * @param null $key
+   * @param null $value
+   * @param null $latest
+   * @param null $fields
    *
    * @return Response
-   * @throws Exception
    */
   public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ) {
 
@@ -382,6 +385,8 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
+   *
+   * @throws Exception
    */
   public function createWallet ( string $tokenSlug ) {
     $newWallet = new Wallet( $this->secret(), $tokenSlug );
@@ -397,18 +402,26 @@ class KnishIOClient {
    * @param $token
    * @param $amount
    * @param array|null $meta
+   * @param string|null $batchId
    * @param array $units
    *
    * @return mixed
    * @throws ReflectionException
    */
-  public function createToken ( $token, $amount, array $meta = null, array $units = [] ) {
+  public function createToken ( $token, $amount, array $meta = null, ?string $batchId = null, array $units = [] ) {
     $meta = default_if_null( $meta, [] );
+
+    $meta = Meta::aggregateMeta( $meta );
 
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
+      if ( $batchId === null ) {
+        $batchId = Crypto::generateBatchId();
+      }
+
+      $meta[ 'batchId' ] = $batchId;
+
       if ( count( $units ) > 0 ) {
-        $meta = Meta::aggregateMeta( $meta );
 
         if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
           throw new StackableUnitDecimalsException();
@@ -425,7 +438,7 @@ class KnishIOClient {
     }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->secret(), $token );
+    $recipientWallet = new Wallet( $this->secret(), $token, null, $batchId );
 
     // Create a query
     /** @var MutationCreateToken $query */
@@ -442,6 +455,9 @@ class KnishIOClient {
    * @param string $metaType
    * @param string $metaId
    * @param array|null $metadata
+   *
+   * @return mixed|Response
+   * @throws Exception
    */
   public function createMeta ( string $metaType, string $metaId, array $metadata = null ) {
 
@@ -532,14 +548,15 @@ class KnishIOClient {
   /**
    * @param $token
    * @param $amount
-   * @param $to
+   * @param null $to
    * @param array|null $meta
+   * @param string|null $batchId
    * @param array $units
    *
    * @return mixed|Response
    * @throws ReflectionException
    */
-  public function requestTokens ( $token, $amount, $to = null, array $meta = null, array $units = [] ) {
+  public function requestTokens ( $token, $amount, $to = null, array $meta = null, ?string $batchId = null, array $units = [] ) {
     $meta = default_if_null( $meta, [] );
 
     if ( count( $units ) > 0 ) {
@@ -590,7 +607,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $token, $amount, $metaType, $metaId, $meta );
+    $query->fillMolecule( $token, $amount, $metaType, $metaId, $meta, $batchId );
 
     // Return a query execution result
     return $query->execute();
@@ -600,15 +617,16 @@ class KnishIOClient {
    * Claim a shadow wallet
    *
    * @param string $token
+   * @param string|null $batchId
    * @param null $molecule
    *
    * @return mixed|Response
    * @throws Exception
    */
-  public function claimShadowWallet ( string $token, $molecule = null ) {
+  public function claimShadowWallet ( string $token, ?string $batchId = null, $molecule = null ) {
     // Create a query
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-    $query->fillMolecule( $token );
+    $query->fillMolecule( $token, $batchId );
 
     // Return a response
     return $query->execute();
@@ -637,7 +655,7 @@ class KnishIOClient {
     // Claim shadow wallet list
     $responses = [];
     foreach ( $shadowWallets as $shadowWallet ) {
-      $responses[] = $this->claimShadowWallet( $token );
+      $responses[] = $this->claimShadowWallet( $token, $shadowWallet->batchId );
     }
     return $responses;
   }
@@ -646,13 +664,14 @@ class KnishIOClient {
    * @param string|Wallet $recipient
    * @param string $token
    * @param int|float $amount
+   * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
    *
    * @return array
    * @throws Exception
    */
-  public function transferToken ( $recipient, string $token, $amount = 0, array $units = [], ?Wallet $sourceWallet = null) {
+  public function transferToken ( $recipient, string $token, $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -689,8 +708,18 @@ class KnishIOClient {
       }
     }
 
+    if ( $batchId !== null ) {
+      $recipientWallet->batchId = $batchId;
+    }
+    else {
+      $recipientWallet->initBatchId( $fromWallet );
+    }
+
+
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
+
+    $this->remainderWallet->initBatchId( $fromWallet, true );
 
     $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
 
@@ -711,14 +740,14 @@ class KnishIOClient {
   /**
    * @param string $token
    * @param $amount
-   * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
    *
    * @return mixed|Response
    * @throws ReflectionException
+   * @throws Exception
    */
-  public function burnToken ( string $token, $amount, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ) {
+  public function burnToken ( string $token, $amount, array $units = [], ?Wallet $sourceWallet = null ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -731,6 +760,7 @@ class KnishIOClient {
 
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
+    $remainderWallet->initBatchId( $fromWallet, true );
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {

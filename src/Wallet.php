@@ -302,13 +302,14 @@ class Wallet {
    * Get a recipient batch ID
    *
    * @param $senderWallet
+   * @param bool $remainder
    *
    * @throws Exception
    */
-  public function initBatchId ( $senderWallet ) {
+  public function initBatchId ( $senderWallet, bool $remainder = false ) {
 
     if ( $senderWallet->batchId ) {
-      $this->batchId = Crypto::generateBatchId();
+      $this->batchId = $remainder ? $senderWallet->batchId : Crypto::generateBatchId();
     }
 
   }
