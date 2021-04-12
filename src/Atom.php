@@ -84,11 +84,12 @@ class Atom {
   /**
    * @param array $atoms
    * @param string $output
+   * @param array $excludeFields
    *
-   * @return array[]|string|string[]|null
-   * @throws ReflectionException|Exception
+   * @return array|string|null
+   * @throws Exception
    */
-  public static function hashAtoms ( array $atoms, $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, $output = 'base17', $excludeFields = [] ) {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
@@ -106,7 +107,9 @@ class Atom {
           continue;
         }
 
-        if ( in_array( $name, [ 'batchId', 'otsFragment', 'index', ], true ) ) {
+        // Exclude fields
+        $excludeFields = array_merge( $excludeFields, [ 'otsFragment', 'index', ] );
+        if ( in_array( $name, $excludeFields, true ) ) {
           continue;
         }
 

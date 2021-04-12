@@ -89,7 +89,7 @@ class CheckMolecule
 
       array_walk( $molecule->atoms, static function( Atom $atom ) {
         if (  $atom->batchId !== null ) {
-          throw new BatchIdException();
+          // throw new BatchIdException();
         }
       } );
 
