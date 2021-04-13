@@ -15,11 +15,13 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationTransferTokens extends MutationProposeMolecule
 {
 
-	/**
-	 * @param Wallet $toWallet
-	 * @param $amount
-	 * @throws \Exception
-	 */
+  /**
+   * @param Wallet $toWallet
+   * @param $amount
+   *
+   * @return MutationTransferTokens
+   * @throws \ReflectionException
+   */
 	public function fillMolecule ( Wallet $toWallet, $amount )
 	{
 		$this->molecule->initValue( $toWallet, $amount );

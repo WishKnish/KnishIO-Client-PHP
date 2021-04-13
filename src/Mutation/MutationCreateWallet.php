@@ -17,10 +17,9 @@ class MutationCreateWallet extends MutationProposeMolecule
 {
 
   /**
-   * @param $type
-   * @param $contact
-   * @param $code
-   * @throws \Exception
+   * @param Wallet $newWallet
+   *
+   * @throws \ReflectionException
    */
   public function fillMolecule ( Wallet $newWallet )
   {
