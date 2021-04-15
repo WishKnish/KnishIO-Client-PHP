@@ -227,15 +227,6 @@ class Wallet {
       }
     }
 
-    /*
-    array_walk( $this->tokenUnits, static function ( $tokenUnit ) use ( $units, $recipientTokenUnits, $remainderTokenUnits ) {
-      array_push(
-        in_array( $tokenUnit[ 'id' ], $units, true ) ? $recipientTokenUnits : $remainderTokenUnits,
-        $tokenUnit
-      );
-    } );
-    */
-
     // Reset token units to the sending value
     $this->tokenUnits = $recipientTokenUnits;
 
@@ -310,22 +301,7 @@ class Wallet {
     return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
 
   }
-
-  /**
-   * Get a recipient batch ID
-   *
-   * @param $senderWallet
-   * @param bool $remainder
-   *
-   * @throws Exception
-   */
-  public function initBatchId ( $senderWallet, bool $remainder = false ) {
-
-    if ( $senderWallet->batchId ) {
-      $this->batchId = $remainder ? $senderWallet->batchId : Crypto::generateBatchId();
-    }
-
-  }
+  
 
   /**
    * Derives a private key for encrypting data with this wallet's key

@@ -411,16 +411,12 @@ class KnishIOClient {
   public function createToken ( $token, $amount, array $meta = null, ?string $batchId = null, array $units = [] ) {
     $meta = default_if_null( $meta, [] );
 
-    $meta = Meta::aggregateMeta( $meta );
-
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
-      if ( $batchId === null ) {
-        $batchId = Crypto::generateBatchId();
-      }
+      // Generate batch ID if it does not pass
+      $batchId = $batchId ?? Crypto::generateBatchId();
 
-      $meta[ 'batchId' ] = $batchId;
-
+      // Special logic for token unit initializatiob
       if ( count( $units ) > 0 ) {
 
         if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
@@ -431,9 +427,14 @@ class KnishIOClient {
           throw new StackableUnitAmountException();
         }
 
-        $amount = count( $amount );
-        $meta[ 'splittable' ] = 1;
-        $meta[ 'tokenUnits' ] = json_encode( $units );
+        $amount = count( $units );
+
+        // Set custom default metadata
+        $meta = array_merge( $meta, [
+          'splittable' => 1,
+          'decimals' => 0,
+          'tokenUnits' => json_encode( $units ),
+        ] );
       }
     }
 
@@ -564,7 +565,7 @@ class KnishIOClient {
         throw new StackableUnitAmountException();
       }
 
-      $amount = count( $amount );
+      $amount = count( $units );
       $meta = Meta::aggregateMeta( $meta );
       $meta[ 'tokenUnits' ] = json_encode( $units );
     }
@@ -694,7 +695,8 @@ class KnishIOClient {
 
     $recipientWallet = $recipient;
 
-    if ( !( $recipientWallet instanceof Wallet ) ) {
+    if ( !$recipientWallet instanceof Wallet ) {
+
       // Get final bundle hash
       $bundleHash = Wallet::isBundleHash( $recipient ) ? $recipient : Crypto::generateBundleHash( $recipient );
 
@@ -707,19 +709,11 @@ class KnishIOClient {
         $recipientWallet = Wallet::create( $recipient, $token );
       }
     }
-
-    if ( $batchId !== null ) {
-      $recipientWallet->batchId = $batchId;
-    }
-    else {
-      $recipientWallet->initBatchId( $fromWallet );
-    }
-
+    // Set recipient batch ID
+    $recipientWallet->batchId = $batchId ?? Crypto::generateBatchId();
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
-
-    $this->remainderWallet->initBatchId( $fromWallet, true );
+    $this->remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
 
     $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
 
@@ -759,11 +753,11 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->secret(), $token, null, $fromWallet->characters );
-    $remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
+
       // Can't burn stackable units AND provide amount
       if ( $amount > 0) {
         throw new StackableUnitAmountException();

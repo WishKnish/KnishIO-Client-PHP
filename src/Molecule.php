@@ -62,7 +62,7 @@ class Molecule extends MoleculeStructure {
     $this->sourceWallet = $sourceWallet;
 
     if ( $remainderWallet || $sourceWallet ) {
-      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, null, $sourceWallet->characters );
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
     }
 
     $this->clear();
