@@ -17,9 +17,9 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
-use WishKnish\KnishIO\Client\Mutation\MutationAccessToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
+use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -72,6 +72,11 @@ class KnishIOClient {
    * @var string
    */
   private $cellSlug;
+
+  /**
+   * @var int
+   */
+  private $serverSdkVersion;
 
   /**
    * @param Wallet $sourceWallet
@@ -192,6 +197,21 @@ class KnishIOClient {
   }
 
   /**
+   * @return bool
+   */
+  public function hasEncryption (): bool {
+    return $this->client()->hasEncryption();
+  }
+
+  public function enableEncryption (): void {
+    $this->client()->enableEncryption();
+  }
+
+  public function disableEncryption (): void {
+    $this->client()->disableEncryption();
+  }
+
+  /**
    * @return string
    */
   public function secret () {
@@ -287,41 +307,74 @@ class KnishIOClient {
 
   /**
    * @param string|null $secret
+   * @param string|null $seed
    * @param string|null $cell_slug
+   * @param bool|null $encrypt
    *
    * @return mixed
-   * @throws Exception
+   * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function requestAuthToken ( $secret = null, $cell_slug = null ) {
+  public function requestAuthToken (
+    ?string $secret = null,
+    ?string $seed = null,
+    ?string $cell_slug = null,
+    ?bool $encrypt = null
+  ) {
     // Set a cell slug
     $this->cellSlug = $cell_slug ?: $this->cellSlug();
-    $response = null;
+    $guestMode = false;
 
-    if ( $secret !== null ) {
-      // Set a secret
+    if ( $seed ) {
+      $this->setSecret( Libraries\Crypto::generateSecret( $seed ) );
+    }
+    else if ( $secret ) {
       $this->setSecret( $secret );
-      // Create an auth molecule
-      $molecule = $this->createMolecule( $this->secret, new Wallet( $this->secret, 'AUTH' ) );
+    }
+    else {
+      $guestMode = true;
+    }
 
+    if ( $encrypt === null ) {
+      $encrypt = $this->hasEncryption();
+    }
+
+    if ( $guestMode ) {
+      /** @var MutationRequestAuthorizationGuest $query */
+      $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
+
+      $authorizationWallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
+
+      $query->setAuthorizationWallet( $authorizationWallet );
+
+      $response = $query->execute( [
+        'cellSlug' => $this->cellSlug,
+        'pubkey' => $authorizationWallet->pubkey,
+        'encrypt' => $encrypt
+      ] );
+
+    }
+    else {
+      // Create an auth molecule
+      $molecule = $this->createMolecule( $this->secret(), new Wallet( $this->secret, 'AUTH' ) );
       // Create query & fill a molecule
       $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-      $query->fillMolecule();
+      $query->fillMolecule( [ 'encrypt' => (string) $encrypt ] );
 
       // Get a response
       $response = $query->execute();
     }
-    else {
-      $query = $this->createQuery( MutationAccessToken::class );
-      // Get a response
-      $response = $query->execute( [
-        'cellSlug' => $this->cellSlug,
-      ] );
-    }
-
 
     // If the response is success - set auth token
     if ( $response->success() ) {
-      $this->client->setAuthToken( $response->token() );
+
+      $this->client()->setAuthToken( $response->token() );
+      $this->client()->setPubKey( $response->pubKey() );
+      $this->client()->setWallet( $response->wallet() );
+
+      if ( $this->hasEncryption() !== $response->encrypt() ) {
+        ( $response->encrypt() ) ? $this->enableEncryption() : $this->disableEncryption();
+      }
+
     } // Not authorized: throw an exception
     else {
       throw new UnauthenticatedException( $response->reason() );
@@ -335,6 +388,7 @@ class KnishIOClient {
    * @param null $bundleHash
    *
    * @return Response
+   * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function queryBalance ( $tokenSlug, $bundleHash = null ): Response {
 
@@ -355,6 +409,7 @@ class KnishIOClient {
    * @param null $fields
    *
    * @return Response
+   * @throws \GuzzleHttp\Exception\GuzzleException
    */
   public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ) {
 

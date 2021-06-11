@@ -10,9 +10,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
 
@@ -47,11 +45,12 @@ abstract class Query
      */
 	protected static $default_query;
 
-
-	/**
-	 * Query constructor.
-	 * @param KnishIOClient $knishIO
-	 */
+  /**
+   * Query constructor.
+   *
+   * @param HttpClientInterface $client
+   * @param string|null $query
+   */
 	public function __construct ( HttpClientInterface $client, string $query = null )
 	{
 	    $this->client = $client;
@@ -102,12 +101,13 @@ abstract class Query
 
 	}
 
-
-	/**
-	 * @param array|null $variables
-     * @param array $fields
-	 * @return mixed
-	 */
+  /**
+   * @param array|null $variables
+   * @param array $fields
+   *
+   * @return mixed
+   * @throws \GuzzleHttp\Exception\GuzzleException
+   */
 	public function execute ( array $variables = null, array $fields = null ) {
 
 		// Set a request
@@ -127,6 +127,7 @@ abstract class Query
   /**
    * Debug info => get an url to execute GraphQL directly from it
    *
+   * @param string $name
    * @param array|null $variables
    * @param array|null $fields
    *
@@ -225,7 +226,7 @@ abstract class Query
 	 */
 	public function url()
     {
-		return $this->client->getUrl();
+		return $this->client()->getUrl();
 	}
 
 	/**
@@ -235,6 +236,10 @@ abstract class Query
   {
 		return $this->variables;
 	}
+
+	public function client(): HttpClientInterface {
+	  return $this->client;
+  }
 
   /**
    * @return mixed

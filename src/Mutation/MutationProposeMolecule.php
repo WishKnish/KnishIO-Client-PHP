@@ -29,8 +29,7 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure
    * @param Molecule $molecule
    * @param string|null $query
    */
-	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null )
-	{
+	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null ) {
 		parent::__construct( $client, $molecule, $query );
 
 		$this->molecule = $molecule;
@@ -40,8 +39,7 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure
 	/**
 	 * @return Molecule
 	 */
-	public function molecule(): Molecule
-	{
+	public function molecule(): Molecule {
 		return $this->molecule;
 	}
 
@@ -49,8 +47,7 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure
 	/**
 	 * @return mixed
 	 */
-	public function remainderWallet(): Wallet
-    {
+	public function remainderWallet(): Wallet {
 		return $this->remainderWallet;
 	}
 

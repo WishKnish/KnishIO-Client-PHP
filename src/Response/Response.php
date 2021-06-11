@@ -37,12 +37,13 @@ class Response
      */
 	protected $dataKey;
 
-
-	/**
-	 * Response constructor.
-     * @param Query $query
-	 * @param string $json
-	 */
+  /**
+   * Response constructor.
+   *
+   * @param Query|null $query
+   * @param string $json
+   * @param string|null $dataKey
+   */
 	public function __construct ( ?Query $query, string $json, string $dataKey = null )
 	{
 		// Set a query
@@ -52,31 +53,31 @@ class Response
 		$this->origin_response = $json;
 
 		// Json decode
-		$this->response = \json_decode( $json, true );
+		$this->response = json_decode( $json, true );
 
 		// Set datakey from
 		if ( $dataKey !== null ) {
 		  $this->dataKey = $dataKey;
     }
 
+    // Catch exceptions
+    if (array_has ($this->response, 'exception') ) {
+
+      // Exception error
+      $message = array_get($this->response, 'message');
+
+      // Custom exceptions
+      if ( stripos( $message, 'Unauthenticated' ) !== false ) {
+        throw new UnauthenticatedException ( $message );
+      }
+
+      // Default exception
+      throw new InvalidResponseException( $message );
+    }
+
 		// No-json response - error
 		if ( $this->response === null ) {
 			throw new InvalidResponseException();
-		}
-
-		// Catch exceptions
-		if (array_has ($this->response, 'exception') ) {
-
-			// Exception error
-			$message = array_get($this->response, 'message');
-
-			// Custom exceptions
-			if ( stripos( $message, 'Unauthenticated' ) !== false ) {
-				throw new UnauthenticatedException ( $message );
-			}
-
-			// Default exception
-			throw new InvalidResponseException( $message );
 		}
 
 		$this->init ();
