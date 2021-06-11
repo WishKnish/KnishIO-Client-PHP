@@ -205,10 +205,10 @@ class Wallet {
    * @param Wallet $remainderWallet
    * @param Wallet|null $recipientWallet
    */
-  public function splitUnits ( array $units = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
+  public function splitUnits ( array $sendTokenUnits = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
 
     // No units supplied, nothing to split
-    if ( count( $units ) === 0 ) {
+    if ( count( $sendTokenUnits ) === 0 ) {
       return;
     }
 
@@ -216,12 +216,16 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
 
-    array_walk( $this->tokenUnits, static function ( $tokenUnit ) use ( $units, $recipientTokenUnits, $remainderTokenUnits ) {
-      array_push(
-        in_array( $tokenUnit[ 'id' ], $units, true ) ? $recipientTokenUnits : $remainderTokenUnits,
-        $tokenUnit
-      );
-    } );
+    // Init recipient & remainder token units
+    $recipientTokenUnits = []; $remainderTokenUnits = [];
+    foreach( $this->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
 
     // Reset token units to the sending value
     $this->tokenUnits = $recipientTokenUnits;
@@ -297,22 +301,7 @@ class Wallet {
     return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
 
   }
-
-  /**
-   * Get a recipient batch ID
-   *
-   * @param $senderWallet
-   * @param bool $remainder
-   *
-   * @throws Exception
-   */
-  public function initBatchId ( $senderWallet, bool $remainder = false ) {
-
-    if ( $senderWallet->batchId ) {
-      $this->batchId = $remainder ? $senderWallet->batchId : Crypto::generateBatchId();
-    }
-
-  }
+  
 
   /**
    * Derives a private key for encrypting data with this wallet's key

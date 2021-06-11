@@ -45,6 +45,16 @@ class MoleculeStructure {
 		return $this;
 	}
 
+  /**
+   * @param int $index
+   *
+   * @return string
+   * @throws Exception
+   */
+  public function getBatchId( int $index ): string {
+    $molecularHash = Atom::hashAtoms( $this->atoms, 'base17', [ 'batchId' ] );
+    return Crypto::generateBatchId( $molecularHash, $index );
+  }
 
 
 	/**
