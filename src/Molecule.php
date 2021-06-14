@@ -103,6 +103,8 @@ class Molecule extends MoleculeStructure {
    *
    * @param array $data
    * @param array $shared_wallets
+   *
+   * @return false|mixed
    */
   public function encryptMessage ( array $data, array $shared_wallets = [] ) {
     // Merge all args to the common list
@@ -736,9 +738,11 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
+   * @param array $meta
+   *
    * @return $this
    */
-  public function initAuthorization () {
+  public function initAuthorization ( array $meta = [] ) {
     $this->molecularHash = null;
 
     $this->atoms[] = new Atom(
@@ -750,7 +754,7 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->batchId,
       null,
       null,
-      $this->finalMetas(),
+      $this->finalMetas( $meta ),
       null,
       $this->generateIndex()
     );

@@ -37,7 +37,7 @@
 		"docs": "https://docs.knish.io"
 	},
 	"require": {
-		"php": ">=7.2",
+		"php": ">=7.4",
 		"ext-json": "*",
 		"desktopd/php-sha3-streamable": "@dev",
 		"simplito/bigint-wrapper-php": "^1.0",
@@ -46,7 +46,8 @@
 		"symfony/polyfill-mbstring": "^1.11",
 		"symfony/polyfill-php70": "^1.11",
 		"guzzlehttp/guzzle": "^6.5",
-		"tuupola/base58": "1.0"
+		"tuupola/base58": "1.0",
+		"webonyx/graphql-php": "^14.5"
 	},
 	"require-dev": {
 		"symfony/var-dumper": "^3.4|^4.0|^5.0",

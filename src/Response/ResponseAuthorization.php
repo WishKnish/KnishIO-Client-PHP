@@ -3,6 +3,7 @@ namespace WishKnish\KnishIO\Client\Response;
 
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class ResponseAuthorization
@@ -40,5 +41,20 @@ class ResponseAuthorization extends ResponseMolecule
 	public function time () {
 		return $this->payloadKey( 'time' );
 	}
+
+  /**
+   * @return mixed
+   */
+  public function pubKey () {
+    return $this->payloadKey( 'key' );
+  }
+
+  public function wallet (): Wallet {
+    return $this->clientMolecule()->sourceWallet();
+  }
+
+  public function encrypt () {
+    return $this->payloadKey( 'encrypt' );
+  }
 
 }
