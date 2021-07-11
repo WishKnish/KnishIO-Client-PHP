@@ -1,8 +1,51 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Query;
 
@@ -17,7 +60,7 @@ use WishKnish\KnishIO\Client\Response\ResponseIdentifier;
 class QueryLinkIdentifierMutation extends Query
 {
 	// Query
-	protected static $default_query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content ) 
+	protected static $default_query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content )
 		@fields
 	}';
 

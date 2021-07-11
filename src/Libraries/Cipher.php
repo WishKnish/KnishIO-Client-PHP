@@ -1,6 +1,53 @@
 <?php
-namespace WishKnish\KnishIO\Client\Libraries;
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
 
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
+
+namespace WishKnish\KnishIO\Client\Libraries;
 
 use Closure;
 use GraphQL\Error\SyntaxError;
@@ -18,8 +65,6 @@ use WishKnish\KnishIO\Client\Exception\InvalidRequestException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Wallet;
 use function GuzzleHttp\json_encode;
-
-
 
 class Cipher {
 

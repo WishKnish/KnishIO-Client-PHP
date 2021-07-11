@@ -1,4 +1,52 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
+
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Response\Response;
@@ -15,8 +63,8 @@ class QueryContinuId extends Query
     /**
      * @var string
      */
-    protected static $default_query = 'query ($bundle: String!) { ContinuId(bundle: $bundle) 
-    	@fields 
+    protected static $default_query = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
+    	@fields
     }';
 
 
