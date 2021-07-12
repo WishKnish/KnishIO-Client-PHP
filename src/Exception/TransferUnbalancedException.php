@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class TransferUnbalancedException
  * @package WishKnish\KnishIO\Client\Exception
@@ -64,7 +66,7 @@ class TransferUnbalancedException extends BaseException {
    *
    * @param string $message
    * @param int $code
-   * @param \Throwable|null $previous
+   * @param Throwable|null $previous
    */
   public function __construct ( $message = 'Token transfer atoms are unbalanced', $code = 1, $previous = null ) {
     parent::__construct( $message, $code, $previous );

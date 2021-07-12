@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class BatchIdException
  * @package WishKnish\KnishIO\Client\Exception
@@ -59,7 +61,7 @@ class BatchIdException extends BaseException {
    *
    * @param string $message
    * @param int $code
-   * @param \Throwable|null $previous
+   * @param Throwable|null $previous
    */
   public function __construct ( $message = 'Incorrect BatchId', $code = 1, $previous = null ) {
     parent::__construct( $message, $code, $previous );

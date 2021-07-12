@@ -50,16 +50,23 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 // Supporing variety versions of PHPUnit
+use Dotenv\Dotenv;
+use Exception;
+use PHPUnit\TextUI\Command;
+use PHPUnit_Framework_TestCase;
+use ReflectionException;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use function default_if_null;
+use function json_encode;
 
 if ( !class_exists( '\PHPUnit_Framework_TestCase' ) ) {
   abstract class TestCaseBase extends \PHPUnit\Framework\TestCase { }
 }
 else {
-  abstract class TestCaseBase extends \PHPUnit_Framework_TestCase { }
+  abstract class TestCaseBase extends PHPUnit_Framework_TestCase { }
 }
 
 /**
@@ -92,15 +99,15 @@ abstract class TestCase extends TestCaseBase {
    * @param array $data
    */
   protected function saveData ( array $data, $filepath = null ) {
-    $filepath = \default_if_null( $filepath, $this->dataFilepath() );
-    file_put_contents( $filepath, \json_encode( $data ) );
+    $filepath = default_if_null( $filepath, $this->dataFilepath() );
+    file_put_contents( $filepath, json_encode( $data ) );
   }
 
   /**
    * @return mixed
    */
   protected function getData ( $filepath = null ) {
-    $filepath = \default_if_null( $filepath, $this->dataFilepath() );
+    $filepath = default_if_null( $filepath, $this->dataFilepath() );
     return json_decode( file_get_contents( $filepath ), true );
   }
 
@@ -108,7 +115,7 @@ abstract class TestCase extends TestCaseBase {
    * @param string|null $filepath
    */
   protected function clearData ( string $filepath = null ) {
-    $filepath = \default_if_null( $filepath, $this->dataFilepath() );
+    $filepath = default_if_null( $filepath, $this->dataFilepath() );
     if ( file_exists( $filepath ) ) {
       unlink( $filepath );
     }
@@ -117,7 +124,7 @@ abstract class TestCase extends TestCaseBase {
   /**
    * Before execute
    *
-   * @throws \Exception
+   * @throws Exception
    */
   protected function beforeExecute () {
 
@@ -128,10 +135,10 @@ abstract class TestCase extends TestCaseBase {
 
       // Switch between dotenv versions
       if ( method_exists( '\Dotenv\Dotenv', 'createImmutable' ) ) {
-        $this->dotenv = \Dotenv\Dotenv::createImmutable( $env_path, $env_file );
+        $this->dotenv = Dotenv::createImmutable( $env_path, $env_file );
       }
       else {
-        $this->dotenv = \Dotenv\Dotenv::create( $env_path, $env_file );
+        $this->dotenv = Dotenv::create( $env_path, $env_file );
       }
 
       $this->dotenv->load();
@@ -142,7 +149,7 @@ abstract class TestCase extends TestCaseBase {
 
     // Check app url
     if ( !$app_url ) {
-      throw new \Exception( 'APP_URL is empty.' );
+      throw new Exception( 'APP_URL is empty.' );
     }
 
     // GraphQL url
@@ -213,10 +220,8 @@ abstract class TestCase extends TestCaseBase {
     }
 
     // Default response
-    else {
-      if ( !$response->data() ) {
-        $this->debug( $response, true );
-      }
+    else if ( !$response->data() ) {
+      $this->debug( $response, true );
     }
   }
 
@@ -258,7 +263,7 @@ abstract class TestCase extends TestCaseBase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   protected function callThirdPartyTest ( $class, $test, $test_dir ) {
 
@@ -267,7 +272,7 @@ abstract class TestCase extends TestCaseBase {
 
     // PHP version comparing
     if ( version_compare( PHP_VERSION, '7.0.0' ) <= 0 ) {
-      $this->output( [ "PHP version is less than 7.0.0. Skip '{$test}' test.", "  -- DB must be cleaned manually", "  -- OR should call {$class}::{$test} server unit test instead.", ] );
+      $this->output( [ "PHP version is less than 7.0.0. Skip '$test' test.", "  -- DB must be cleaned manually", "  -- OR should call $class::$test server unit test instead.", ] );
       return;
     }
 
@@ -281,14 +286,14 @@ abstract class TestCase extends TestCaseBase {
     else {
 
       // Create & run a unit test command
-      $command = new \PHPUnit\TextUI\Command();
+      $command = new Command();
       $response = $command->run( [ 'phpunit', '--configuration', __DIR__ . '/../' . 'phpunit.xml', '--filter', '/(::' . $test . ')( .*)?$/', $class, $server_test_filepath, '--teamcity', ], false );
     }
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   protected function callServerCleanup ( $class ) {
     $this->callThirdPartyTest( $class, 'testClearAll', getenv( 'SERVER_TEST_PATH' ) );

@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
 use desktopd\SHA3\Sponge as SHA3;
+use Exception;
 
 /*
 
@@ -97,7 +98,7 @@ class Shake256 {
    * @param $length
    *
    * @return string
-   * @throws \Exception
+   * @throws Exception
    */
   public static function hash ( $data, $length ) {
 
@@ -114,7 +115,7 @@ class Shake256 {
 
   /**
    * @return SHA3|DesktopdSha3
-   * @throws \Exception
+   * @throws Exception
    */
   public static function init () {
     // Using sha3 php extension

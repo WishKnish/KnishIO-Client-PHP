@@ -49,7 +49,10 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use Closure;
+use Exception;
 use Illuminate\Support\Arr;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Query\QueryMetaInstance;
@@ -57,6 +60,7 @@ use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
+use WishKnish\KnishIO\Tests\QueryServerTest;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 
@@ -101,7 +105,7 @@ class QueryMetaTest extends TestCase {
   protected $guzzle_client;
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function beforeExecute () {
     // $this->cell_slug = null;
@@ -120,7 +124,7 @@ class QueryMetaTest extends TestCase {
 
   /**
    * @return Wallet
-   * @throws \Exception
+   * @throws Exception
    */
   public function sourceWallet () {
     return new Wallet ( $this->source_secret );
@@ -129,7 +133,7 @@ class QueryMetaTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testClearAll () {
 
@@ -137,14 +141,14 @@ class QueryMetaTest extends TestCase {
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\QueryServerTest::class );
+    $this->callServerCleanup( QueryServerTest::class );
 
     // Deafult assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testCreateMetas () {
 
@@ -205,7 +209,7 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testMetaTypeQuery () {
 
@@ -278,7 +282,7 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @param \Closure $newQuery
+   * @param Closure $newQuery
    * @param array $fields
    */
   public function testMetaInstanceQuery () {

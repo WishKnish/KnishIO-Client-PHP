@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
@@ -136,7 +137,7 @@ class KnishIOClient {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {
@@ -226,7 +227,7 @@ class KnishIOClient {
    * Has a secret?
    */
   public function hasSecret (): bool {
-    return $this->secret ? true : false;
+    return (bool) $this->secret;
   }
 
   /**
@@ -358,7 +359,7 @@ class KnishIOClient {
    * @param bool|null $encrypt
    *
    * @return mixed
-   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws GuzzleException
    */
   public function requestAuthToken ( ?string $secret = null, ?string $seed = null, ?string $cell_slug = null, ?bool $encrypt = null ) {
     // Set a cell slug
@@ -368,13 +369,11 @@ class KnishIOClient {
     if ( $seed ) {
       $this->setSecret( Libraries\Crypto::generateSecret( $seed ) );
     }
+    else if ( $secret ) {
+      $this->setSecret( $secret );
+    }
     else {
-      if ( $secret ) {
-        $this->setSecret( $secret );
-      }
-      else {
-        $guestMode = true;
-      }
+      $guestMode = true;
     }
 
     if ( $encrypt === null ) {
@@ -430,7 +429,7 @@ class KnishIOClient {
    * @param null $bundleHash
    *
    * @return Response
-   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws GuzzleException
    */
   public function queryBalance ( $tokenSlug, $bundleHash = null ): Response {
 
@@ -451,7 +450,7 @@ class KnishIOClient {
    * @param null $fields
    *
    * @return Response
-   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws GuzzleException
    */
   public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ) {
 

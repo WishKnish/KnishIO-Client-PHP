@@ -49,12 +49,14 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Tests\TestCase;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
+use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
 
 /**
  * Class QueryCascadeMetaTest
@@ -69,7 +71,7 @@ class QueryCascadeBatchTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testClearAll () {
 
@@ -77,7 +79,7 @@ class QueryCascadeBatchTest extends TestCase {
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class );
+    $this->callServerCleanup( TokenServerTransactionTest::class );
 
     // Deafult assertion
     $this->assertEquals( true, true );

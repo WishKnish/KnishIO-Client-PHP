@@ -84,13 +84,11 @@ class Base58 extends Base {
     if ( extension_loaded( 'gmp' ) ) {
       $this->encoder = new GmpEncoder( $this->options );
     }
+    else if ( extension_loaded( 'bcmath' ) ) {
+      $this->encoder = new BcmathEncoder( $this->options );
+    }
     else {
-      if ( extension_loaded( 'bcmath' ) ) {
-        $this->encoder = new BcmathEncoder( $this->options );
-      }
-      else {
-        $this->encoder = new PhpEncoder( $this->options );
-      }
+      $this->encoder = new PhpEncoder( $this->options );
     }
 
   }

@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Exception;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
@@ -63,7 +64,7 @@ class ResponseMoleculeList extends Response {
    * @param array $data
    *
    * @return Wallet
-   * @throws \Exception
+   * @throws Exception
    */
   public static function toClientMolecule ( array $data ): MoleculeStructure {
     return MoleculeStructure::toObject( $data );
@@ -71,7 +72,7 @@ class ResponseMoleculeList extends Response {
 
   /**
    * @return array|null
-   * @throws \Exception
+   * @throws Exception
    */
   public function payload () {
     // Get data

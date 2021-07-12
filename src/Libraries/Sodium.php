@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
+use Exception;
 use ReflectionException;
 use ReflectionExtension;
 use ReflectionFunction;
@@ -61,7 +62,7 @@ class Sodium {
 
   /**
    * @throws ReflectionException
-   * @throws \Exception
+   * @throws Exception
    */
   public static function libsodium2sodium () {
 
@@ -97,7 +98,7 @@ class Sodium {
 
     }
     else {
-      throw new \Exception( 'Sodium extension is required.' );
+      throw new Exception( 'Sodium extension is required.' );
     }
 
   }
@@ -117,7 +118,7 @@ class Sodium {
 
       $functionName = $functionReflection->getName();
 
-      if ( stripos( $functionName, '\\' ) !== 0 ) {
+      if ( strpos( $functionName, '\\' ) !== 0 ) {
 
         $functionName = '\\' . $functionName;
 
@@ -153,26 +154,20 @@ class Sodium {
           $function .= ' = ' . $val;
 
         }
-        else {
-          if ( in_array( $functionName, [ '\Sodium\hex2bin', '\Sodium\memzero', ], true ) ) {
+        else if ( in_array( $functionName, [ '\Sodium\hex2bin', '\Sodium\memzero', ], true ) && $param->getPosition() === 1 ) {
 
-            if ( $param->getPosition() === 1 ) {
+          if ( '\Sodium\memzero' === $functionName ) {
 
-              if ( '\Sodium\memzero' === $functionName ) {
-
-                $function .= " = null";
-
-              }
-
-              if ( '\Sodium\hex2bin' === $functionName ) {
-
-                $function .= " = ''";
-
-              }
-
-            }
+            $function .= " = null";
 
           }
+
+          if ( '\Sodium\hex2bin' === $functionName ) {
+
+            $function .= " = ''";
+
+          }
+
         }
 
         $needComma = true;

@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
+use Exception;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -66,7 +67,7 @@ class CounterpartyDataTest extends TestCase {
   private $couterparty_secret;
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function beforeExecute () {
     parent::beforeExecute();
@@ -86,7 +87,7 @@ class CounterpartyDataTest extends TestCase {
   }
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function testCounterpartyData () {
     $this->beforeExecute();
@@ -99,7 +100,7 @@ class CounterpartyDataTest extends TestCase {
   }
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   protected function createCounterpartyMeta ( $secret, $counterparty, $metaType, $metaId, $metas ) {
     // Create a meta molecule with a counterparty

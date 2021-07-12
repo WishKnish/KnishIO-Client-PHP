@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Exception;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -61,7 +62,7 @@ class ResponseWalletList extends Response {
   /**
    * @param array $data
    *
-   * @throws \Exception
+   * @throws Exception
    */
   public static function toClientWallet ( array $data, string $secret = null ) {
 
@@ -98,7 +99,7 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return array|null
-   * @throws \Exception
+   * @throws Exception
    */
   public function getWallets ( ?string $secret = null ) {
     // Get data
@@ -119,7 +120,7 @@ class ResponseWalletList extends Response {
 
   /**
    * @return array|null
-   * @throws \Exception
+   * @throws Exception
    */
   public function payload () {
     // Get data

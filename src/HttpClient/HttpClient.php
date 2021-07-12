@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\HttpClient;
 
 use ArrayObject;
+use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -62,7 +63,7 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class HttpClient
  * @package WishKnish\KnishIO\HttpClient
  */
-class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
+class HttpClient extends Client implements HttpClientInterface {
 
   /**
    * @var string|null

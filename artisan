@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-require \implode( DIRECTORY_SEPARATOR, [ __DIR__, 'vendor', 'autoload.php' ] );
+require implode( DIRECTORY_SEPARATOR, [ __DIR__, 'vendor', 'autoload.php' ] );
 
 use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;
@@ -18,5 +18,5 @@ $container = new Container();
 $events    = new Dispatcher( $container );
 $artisan   = new Application( $container, $events, '0.0.0.1' );
 $artisan->setName( 'Console KnishIO Client PHP' );
-\array_walk($commands, static function ( $command ) use ( $artisan ) { $artisan->resolve( $command ); });
+array_walk($commands, static function ( $command ) use ( $artisan ) { $artisan->resolve( $command ); });
 $artisan->run();

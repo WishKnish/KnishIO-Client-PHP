@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Exception;
 
 use LogicException;
+use Throwable;
 
 /**
  * Class BaseException
@@ -71,7 +72,7 @@ abstract class BaseException extends LogicException implements IException {
    *
    * @param null $message
    * @param int $code
-   * @param \Throwable|null $previous
+   * @param Throwable|null $previous
    */
   public function __construct ( $message = null, $code = 0, $previous = null ) {
     if ( !$message ) {

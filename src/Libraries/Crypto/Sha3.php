@@ -49,6 +49,13 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
+use Exception;
+use function function_exists;
+use function mb_strlen;
+use function mb_substr;
+use function strlen;
+use function substr;
+
 class Sha3 {
   const KECCAK_ROUNDS = 24;
   private static $keccakf_rotc = [ 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44 ];
@@ -258,7 +265,7 @@ class Sha3 {
     }
 
     if ( self::$test_state === 3 ) {
-      throw new \Exception( 'Sha3 previous self test failed!' );
+      throw new Exception( 'Sha3 previous self test failed!' );
     }
 
     $in = '';
@@ -274,7 +281,7 @@ class Sha3 {
     }
 
     self::$test_state = 3;
-    throw new \Exception( 'Sha3 self test failed!' );
+    throw new Exception( 'Sha3 self test failed!' );
   }
 
   private static function keccak ( $in_raw, $capacity, $outputlength, $suffix, $raw_output ) {
@@ -289,7 +296,7 @@ class Sha3 {
 
   public static function hash ( $in, $mdlen, $raw_output = false ) {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
-      throw new \Exception( 'Unsupported Sha3 Hash output size.' );
+      throw new Exception( 'Unsupported Sha3 Hash output size.' );
     }
 
     return self::keccak( $in, $mdlen, $mdlen, 0x06, $raw_output );
@@ -297,7 +304,7 @@ class Sha3 {
 
   public static function shake ( $in, $security_level, $outlen, $raw_output = false ) {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
-      throw new \Exception( 'Unsupported Sha3 Shake security level.' );
+      throw new Exception( 'Unsupported Sha3 Shake security level.' );
     }
 
     return self::keccak( $in, $security_level, $outlen, 0x1f, $raw_output );
@@ -318,18 +325,18 @@ class Sha3 {
     // Premature optimization: cache the function_exists() result
     static $exists = null;
     if ( $exists === null ) {
-      $exists = \function_exists( '\\mb_strlen' );
+      $exists = function_exists( '\\mb_strlen' );
     }
     // If it exists, we need to make sure we're using 8bit mode
     if ( $exists ) {
-      $length = \mb_strlen( $str, '8bit' );
+      $length = mb_strlen( $str, '8bit' );
       if ( $length === false ) {
-        throw new \Exception( 'mb_strlen() failed.' );
+        throw new Exception( 'mb_strlen() failed.' );
       }
       return $length;
     }
 
-    return \strlen( $str );
+    return strlen( $str );
   }
 
   /**
@@ -345,17 +352,17 @@ class Sha3 {
     // Premature optimization: cache the function_exists() result
     static $exists = null;
     if ( $exists === null ) {
-      $exists = \function_exists( '\\mb_substr' );
+      $exists = function_exists( '\\mb_substr' );
     }
     // If it exists, we need to make sure we're using 8bit mode
     if ( $exists ) {
-      return \mb_substr( $str, $start, $length, '8bit' );
+      return mb_substr( $str, $start, $length, '8bit' );
     }
-    else {
-      if ( $length !== null ) {
-        return \substr( $str, $start, $length );
-      }
+
+    if ( $length !== null ) {
+      return substr( $str, $start, $length );
     }
-    return \substr( $str, $start );
+
+    return substr( $str, $start );
   }
 }

@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
+use Exception;
+
 class Keccak {
   private const KECCAK_ROUNDS = 24;
   private const LFSR = 0x01;
@@ -220,7 +222,7 @@ class Keccak {
 
     for ( $in_t = 0; $inlen >= $rsiz; $inlen -= $rsiz, $in_t += $rsiz ) {
       for ( $i = 0; $i < $rsizw; $i++ ) {
-        $t = unpack( 'v*', mb_substr( $in_raw, intval( $i * 8 + $in_t ), 8, self::ENCODING ) );
+        $t = unpack( 'v*', mb_substr( $in_raw, (int) ( $i * 8 + $in_t ), 8, self::ENCODING ) );
 
         $st[ $i ] = [ $st[ $i ][ 0 ] ^ $t[ 4 ], $st[ $i ][ 1 ] ^ $t[ 3 ], $st[ $i ][ 2 ] ^ $t[ 2 ], $st[ $i ][ 3 ] ^ $t[ 1 ] ];
       }
@@ -231,7 +233,7 @@ class Keccak {
     $temp = mb_substr( $in_raw, (int) $in_t, (int) $inlen, self::ENCODING );
     $temp = str_pad( $temp, (int) $rsiz, "\x0", STR_PAD_RIGHT );
     $temp = substr_replace( $temp, chr( $suffix ), $inlen, 1 );
-    $temp = substr_replace( $temp, chr( (int) $temp[ intval( $rsiz - 1 ) ] | 0x80 ), $rsiz - 1, 1 );
+    $temp = substr_replace( $temp, chr( (int) $temp[ (int) ( $rsiz - 1 ) ] | 0x80 ), $rsiz - 1, 1 );
 
     for ( $i = 0; $i < $rsizw; $i++ ) {
       $t = unpack( 'v*', mb_substr( $temp, $i * 8, 8, self::ENCODING ) );
@@ -245,7 +247,7 @@ class Keccak {
     for ( $i = 0; $i < 25; $i++ ) {
       $out .= $t = pack( 'v*', $st[ $i ][ 3 ], $st[ $i ][ 2 ], $st[ $i ][ 1 ], $st[ $i ][ 0 ] );
     }
-    $r = mb_substr( $out, 0, intval( $outputlength / 8 ), self::ENCODING );
+    $r = mb_substr( $out, 0, (int) ( $outputlength / 8 ), self::ENCODING );
 
     return $raw_output ? $r : bin2hex( $r );
   }
@@ -256,7 +258,7 @@ class Keccak {
 
   public static function hash ( $in, int $mdlen, bool $raw_output = false ): string {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
-      throw new \Exception( 'Unsupported Keccak Hash output size.' );
+      throw new Exception( 'Unsupported Keccak Hash output size.' );
     }
 
     return self::keccak_base( $in, $mdlen, $mdlen, self::LFSR, $raw_output );
@@ -264,7 +266,7 @@ class Keccak {
 
   public static function shake ( $in, int $security_level, int $outlen, bool $raw_output = false ): string {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
-      throw new \Exception( 'Unsupported Keccak Shake security level.' );
+      throw new Exception( 'Unsupported Keccak Shake security level.' );
     }
 
     return self::keccak_base( $in, $security_level, $outlen, 0x1f, $raw_output );

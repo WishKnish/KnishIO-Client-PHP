@@ -499,10 +499,8 @@ class CheckMolecule {
       }
 
     } // No senderWallet, but have a remainder?
-    else {
-      if ( !Decimal::equal( $value, 0.0 ) ) {
-        throw new TransferWalletException();
-      }
+    else if ( !Decimal::equal( $value, 0.0 ) ) {
+      throw new TransferWalletException();
     }
 
     // Looks like we passed all the tests!

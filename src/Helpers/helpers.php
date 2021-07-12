@@ -71,7 +71,7 @@ if ( !function_exists( 'array_unpacking' ) ) {
 
     return array_map( static function ( $item ) use ( $new ) {
 
-      return array_key_exists( $item, $new ) ? $new[ $item ] : null;
+      return $new[ $item ] ?? null;
 
     }, $args );
 
@@ -90,10 +90,7 @@ if ( !function_exists( 'default_if_null' ) ) {
    * @return mixed
    */
   function default_if_null ( $value, $default ) {
-    if ( $value === null ) {
-      return $default;
-    }
-    return $value;
+    return $value ?? $default;
   }
 
 }

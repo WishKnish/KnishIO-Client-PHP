@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class AtomsMissingException
  * @package WishKnish\KnishIO\Client\Exception
@@ -64,7 +66,7 @@ class AtomsMissingException extends BaseException {
    *
    * @param string $message
    * @param int $code
-   * @param \Throwable|null $previous
+   * @param Throwable|null $previous
    */
   public function __construct ( $message = 'The molecule does not contain atoms', $code = 1, $previous = null ) {
     parent::__construct( $message, $code, $previous );

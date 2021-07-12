@@ -49,18 +49,22 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use Exception;
 use http\Client;
+use ReflectionException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
+use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Tests\TestCase;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
+use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
 use function Symfony\Component\String\u;
 
 /**
@@ -79,7 +83,7 @@ class TokenUnitTransactionTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testClearAll () {
 
@@ -87,14 +91,14 @@ class TokenUnitTransactionTest extends TestCase {
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class );
+    $this->callServerCleanup( TokenServerTransactionTest::class );
 
     // Deafult assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testUnitTransaction () {
     $this->beforeExecute();
@@ -182,7 +186,7 @@ class TokenUnitTransactionTest extends TestCase {
     // Get a env secret
     $envSecret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$envSecret ) {
-      throw new \Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Create a env stackable units token
@@ -213,7 +217,7 @@ class TokenUnitTransactionTest extends TestCase {
   /**
    * @param string $secret
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   private function testUnitsErrorTransaction ( string $secret ) {
 
@@ -255,8 +259,8 @@ class TokenUnitTransactionTest extends TestCase {
    * @param array $recipientTokenUnits
    * @param array $remainderTokenUnits
    *
-   * @return mixed|\WishKnish\KnishIO\Client\Response\Response
-   * @throws \Exception
+   * @return mixed|Response
+   * @throws Exception
    */
   private function rawTokenTransfer ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
     return $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, $amount, $recipientTokenUnits, $remainderTokenUnits )
@@ -341,7 +345,7 @@ class TokenUnitTransactionTest extends TestCase {
    * @param string $batchId
    *
    * @return mixed|KnishIOClient
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   private function transfetToken ( KnishIOClient $client, string $batchId, array $tokenUnitIds ) {
 
@@ -362,7 +366,7 @@ class TokenUnitTransactionTest extends TestCase {
    * @param string $batchId
    *
    * @return mixed|KnishIOClient
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   private function requestToken ( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
 
@@ -383,7 +387,7 @@ class TokenUnitTransactionTest extends TestCase {
    * @param KnishIOClient $client
    * @param string $tokenSlug
    *
-   * @throws \Exception
+   * @throws Exception
    */
   private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ) {
 
@@ -398,7 +402,7 @@ class TokenUnitTransactionTest extends TestCase {
 
   /**
    * @return KnishIOClient
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   private function createToken ( string $tokenSlug, string $batchId, array $tokenUnits, string $secret = null ): KnishIOClient {
 

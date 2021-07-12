@@ -49,10 +49,13 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreatePeer;
 use WishKnish\KnishIO\Client\Wallet;
+use WishKnish\KnishIO\Tests\QueryServerTest;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 
@@ -67,7 +70,7 @@ class QueryClientTest extends TestCase {
   protected $guzzle_client;
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function beforeExecute () {
     parent::beforeExecute();
@@ -84,12 +87,12 @@ class QueryClientTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testClearAll () {
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\QueryServerTest::class );
+    $this->callServerCleanup( QueryServerTest::class );
 
     // Initial code
     $this->beforeExecute();
@@ -99,12 +102,12 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testMetaIsotope () {
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\QueryServerTest::class );
+    $this->callServerCleanup( QueryServerTest::class );
 
     $this->beforeExecute();
 
@@ -120,7 +123,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testMetaWalletBundle () {
 
@@ -152,7 +155,7 @@ class QueryClientTest extends TestCase {
     // Create a meta molecule
     $molecule = $this->client( $this->source_secret )
         ->createMolecule();
-    $molecule->initBundleMeta( $molecule->encryptMessage( $meta, [ $server_wallet ] ), );
+    $molecule->initBundleMeta( $molecule->encryptMessage( $meta, [ $server_wallet ] ) );
     $molecule->sign();
     $molecule->check();
 
@@ -161,7 +164,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testAppendMetaIsotope () {
     /*
@@ -183,7 +186,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testWalletCreation () {
 
@@ -204,7 +207,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function testPeerCreation () {
 

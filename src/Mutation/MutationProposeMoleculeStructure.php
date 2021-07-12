@@ -49,11 +49,14 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use Exception;
 use Illuminate\Support\Facades\DB;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
 use WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver;
 
 /**
@@ -79,9 +82,9 @@ class MutationProposeMoleculeStructure extends Query {
    * @todo: tmp function not required to pass it to other clients
    */
   public static function rawExecute ( string $json, $client = null ): ResponseMolecule {
-    $client = $client ?? ( new \WishKnish\KnishIO\Client\KnishIOClient() )->client();
+    $client = $client ?? ( new KnishIOClient() )->client();
     $molecule = json_decode( $json, true );
-    $molecule = \WishKnish\KnishIO\Client\MoleculeStructure::toObject( $molecule );
+    $molecule = MoleculeStructure::toObject( $molecule );
     $query = new MutationProposeMoleculeStructure( $client, $molecule );
     return $query->execute();
   }
@@ -103,7 +106,7 @@ class MutationProposeMoleculeStructure extends Query {
       } );
 
     }
-    catch ( \Exception $e ) {
+    catch ( Exception $e ) {
 
       // Transaction rollback
       \DB::rollBack();
@@ -121,8 +124,8 @@ class MutationProposeMoleculeStructure extends Query {
    * @todo: tmp function to verify json molecule by MoleculeResolver
    */
   public static function rawVerify ( string $json ): MoleculeResolver {
-    $molecule = \WishKnish\KnishIO\Client\Response\ResponseMoleculeList::toClientMolecule( json_decode( $json, true ) );
-    return \WishKnish\KnishIO\Models\Resolvers\Molecule\MoleculeResolver::create( $molecule );
+    $molecule = ResponseMoleculeList::toClientMolecule( json_decode( $json, true ) );
+    return MoleculeResolver::create( $molecule );
   }
 
   /**

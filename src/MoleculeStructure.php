@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -198,7 +199,7 @@ class MoleculeStructure {
    * @param bool $encode
    *
    * @return string
-   * @throws \Exception
+   * @throws Exception
    */
   public function signatureFragments ( $key, $encode = true ) {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each

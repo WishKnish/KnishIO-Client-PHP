@@ -52,6 +52,8 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 /* -*- coding: utf-8; indent-tabs-mode: t; tab-width: 4 -*-
 vim: ts=4 noet ai */
 
+use Exception;
+
 /**
  * Streamable SHA-3 for PHP 5.2+, with no lib/ext dependencies!
  *
@@ -111,15 +113,15 @@ class DesktopdSha3 {
         return new self ( 1088, 512, 0x1f );
     }
 
-    throw new \Exception ( 'Invalid operation type' );
+    throw new Exception ( 'Invalid operation type' );
   }
 
   /**
    * Feed input to SHA-3 "sponge"
    */
   public function absorb ( $data ) {
-    if ( self::PHASE_INPUT != $this->phase ) {
-      throw new \Exception ( 'No more input accepted' );
+    if ( self::PHASE_INPUT !== $this->phase ) {
+      throw new Exception ( 'No more input accepted' );
     }
 
     $rateInBytes = $this->rateInBytes;
@@ -151,16 +153,16 @@ class DesktopdSha3 {
    */
   public function squeeze ( $length = null ) {
     $outputLength = $this->outputLength; // fixed length output
-    if ( $length && 0 < $outputLength && $outputLength != $length ) {
-      throw new \Exception ( 'Invalid length' );
+    if ( $length && 0 < $outputLength && $outputLength !== $length ) {
+      throw new Exception ( 'Invalid length' );
     }
 
-    if ( self::PHASE_INPUT == $this->phase ) {
+    if ( self::PHASE_INPUT === $this->phase ) {
       $this->finalizeInput();
     }
 
-    if ( self::PHASE_OUTPUT != $this->phase ) {
-      throw new \Exception ( 'No more output allowed' );
+    if ( self::PHASE_OUTPUT !== $this->phase ) {
+      throw new Exception ( 'No more output allowed' );
     }
     if ( 0 < $outputLength ) {
       $this->phase = self::PHASE_DONE;
@@ -198,10 +200,10 @@ class DesktopdSha3 {
   private $outputBuffer = '';
 
   public function __construct ( $rate, $capacity, $suffix, $length = 0 ) {
-    if ( 1600 != ( $rate + $capacity ) ) {
+    if ( 1600 !== ( $rate + $capacity ) ) {
       throw new Error ( 'Invalid parameters' );
     }
-    if ( 0 != ( $rate % 8 ) ) {
+    if ( 0 !== ( $rate % 8 ) ) {
       throw new Error ( 'Invalid rate' );
     }
 
@@ -212,7 +214,6 @@ class DesktopdSha3 {
     $this->rateInBytes = $rate / 8;
     $this->outputLength = $length;
     $this->phase = self::PHASE_INPUT;
-    return;
   }
 
   protected function finalizeInput () {
@@ -232,10 +233,10 @@ class DesktopdSha3 {
     // Padding
     $rateInBytes = $this->rateInBytes;
     $this->state[ $this->blockSize ] = $this->state[ $this->blockSize ] ^ chr( $this->suffix );
-    if ( ( $this->suffix & 0x80 ) != 0 && $this->blockSize == ( $rateInBytes - 1 ) ) {
+    if ( ( $this->suffix & 0x80 ) !== 0 && $this->blockSize === ( $rateInBytes - 1 ) ) {
       $this->state = self::keccakF1600Permute( $this->state );
     }
-    $this->state[ $rateInBytes - 1 ] = $this->state[ $rateInBytes - 1 ] ^ "\x80";
+    $this->state[ $rateInBytes - 1 ] ^= "\x80";
     $this->state = self::keccakF1600Permute( $this->state );
   }
 
@@ -296,7 +297,7 @@ class DesktopdSha3 {
         $D = $C[ ( $x + 4 ) % 5 ] ^ self::rotL64One( $C[ ( $x + 1 ) % 5 ] );
         for ( $y = 0; $y < 5; $y++ ) {
           $idx = static::$idxs[ $x ][ $y ]; // x, y
-          $lanes[ $idx ] = $lanes[ $idx ] ^ $D;
+          $lanes[ $idx ] ^= $D;
         }
       }
       unset ( $C, $D );
@@ -335,7 +336,7 @@ class DesktopdSha3 {
           $n = "\0\0\0\0\0\0\0\0";
           $n[ $octetShift ] = $values[ $shift ];
 
-          $lanes[ 0 ] = $lanes[ 0 ] ^ $n;
+          $lanes[ 0 ] ^= $n;
           //^ self::rotL64 ("\1\0\0\0\0\0\0\0", (1 << $j) - 1);
         }
       }

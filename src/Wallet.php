@@ -251,7 +251,7 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
+      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {

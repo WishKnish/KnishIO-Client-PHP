@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Exception;
 
+use Throwable;
+
 /**
  * Class CodeException
  * @package WishKnish\KnishIO\Client\Exception
@@ -59,7 +61,7 @@ class CodeException extends BaseException {
    *
    * @param string $message
    * @param int $code
-   * @param \Throwable|null $previous
+   * @param Throwable|null $previous
    */
   public function __construct ( $message = 'Code exception', $code = 1, $previous = null ) {
     parent::__construct( $message, $code, $previous );

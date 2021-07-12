@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
 
 /**
@@ -100,7 +101,7 @@ class QueryWalletBundle extends Query {
   /**
    * @param string $response
    *
-   * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletBundle
+   * @return Response|ResponseWalletBundle
    */
   public function createResponse ( $response ) {
     return new ResponseWalletBundle( $this, $response );

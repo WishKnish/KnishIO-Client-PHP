@@ -50,6 +50,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 use Dotenv\Dotenv;
+use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -63,6 +65,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Molecule;
 use WishKnish\KnishIO\Client\Molecule as ClientMolecule;
+use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
 
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
 
@@ -90,7 +93,7 @@ class TokenClientTransactionTest extends TestCase {
    * @param $amount
    * @param bool $hasBatchID
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   protected function checkWallet ( $client, $bundle, $token, $amount, $hasBatchID = false ) {
 
@@ -118,7 +121,7 @@ class TokenClientTransactionTest extends TestCase {
    * @param string $bundle
    * @param int $amount
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   protected function checkWalletShadow ( $client, $bundle, $token, $amount, $hasBatchId ) {
     $this->checkWallet( $client, $bundle, $token, $amount, $hasBatchId );
@@ -127,7 +130,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testClearAll () {
 
@@ -135,14 +138,14 @@ class TokenClientTransactionTest extends TestCase {
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup( \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class );
+    $this->callServerCleanup( TokenServerTransactionTest::class );
 
     // Deafult assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws \Exception
+   * @throws Exception
    */
   public function testCreateToken () {
 
@@ -154,7 +157,7 @@ class TokenClientTransactionTest extends TestCase {
 
     $env_secret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$env_secret ) {
-      throw new \Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Secret array
@@ -206,7 +209,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testRequestToken () {
 
@@ -296,7 +299,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testBaseTransaction () {
 
@@ -350,7 +353,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test token transfering
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testBatchTransaction () {
 
@@ -421,7 +424,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test V isotope combnation (multi-recipients)
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   public function testVIsotopeCombination () {
     $this->beforeExecute();
@@ -463,7 +466,7 @@ class TokenClientTransactionTest extends TestCase {
    * @param $recipients
    *
    * @return mixed
-   * @throws \ReflectionException
+   * @throws ReflectionException
    */
   protected function vIsotopeCombination ( $from_secret, $token, $recipients, $generate_wallets = false, $transaction_amount = 1 ) {
 
@@ -530,12 +533,12 @@ class TokenClientTransactionTest extends TestCase {
    *
    * @param array $recipients : 0-indexed recipient is original recipient (right), > 0-indexed recipient is wrong
    *
-   * @throws \Exception
+   * @throws Exception
    */
   protected function claimShadowWallet ( $token, $recipient, array $intruders ) {
     // Check
     if ( !is_dir( getenv( 'SERVER_LOG_PATH' ) ) ) {
-      throw new \Exception( "
+      throw new Exception( "
 				SERVER_LOG_PATH is required in .env file.\r\n
 				The path must be to the SERVER storage log and SERVER must have this env: MAIL_DRIVER=log
 			" );
@@ -630,12 +633,12 @@ class TokenClientTransactionTest extends TestCase {
     $log_file = key( $log_files );
 
     if ( !file_exists( $log_file ) ) {
-      throw new \Exception( 'Log file does not exist.' );
+      throw new Exception( 'Log file does not exist.' );
     }
     $logs = file_get_contents( $log_file );
     if ( !preg_match( '#<p>Your verification code: <b>([A-Za-z0-9]+)</b></p>#Usi', $logs, $matches ) ) {
 
-      throw new \Exception( 'Identifier code does not exist.' );
+      throw new Exception( 'Identifier code does not exist.' );
     }
 
     // Remove log file

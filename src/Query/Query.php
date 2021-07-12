@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -135,7 +136,7 @@ abstract class Query {
    * @param array $fields
    *
    * @return mixed
-   * @throws \GuzzleHttp\Exception\GuzzleException
+   * @throws GuzzleException
    */
   public function execute ( array $variables = null, array $fields = null ) {
 
@@ -169,7 +170,7 @@ abstract class Query {
       $variables = json_decode( trim( $variables ), true );
     }
     $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\"\:#Usi', '$1:', json_encode( $variables ) );
+    $variables = preg_replace( '#\"([^\"]+)\":#Usi', '$1:', json_encode( $variables ) );
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
