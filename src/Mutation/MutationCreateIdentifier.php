@@ -53,23 +53,21 @@ namespace WishKnish\KnishIO\Client\Mutation;
  * Class MutationCreateIdentifier
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationCreateIdentifier extends MutationProposeMolecule
-{
+class MutationCreateIdentifier extends MutationProposeMolecule {
 
-	/**
-	 * @param $type
-	 * @param $contact
-	 * @param $code
-	 * @throws \Exception
-	 */
-	public function fillMolecule ( $type, $contact, $code )
-	{
-		$this->molecule->initIdentifierCreation ( $type, $contact, $code );
-		$this->molecule->sign();
-		$this->molecule->check();
+  /**
+   * @param $type
+   * @param $contact
+   * @param $code
+   *
+   * @throws \Exception
+   */
+  public function fillMolecule ( $type, $contact, $code ) {
+    $this->molecule->initIdentifierCreation( $type, $contact, $code );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-		return $this;
-	}
-
+    return $this;
+  }
 
 }

@@ -58,8 +58,7 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationCreateToken
  * @package WishKnish\KnishIO\Client\Query
  */
-class MutationCreateToken extends MutationProposeMolecule
-{
+class MutationCreateToken extends MutationProposeMolecule {
 
   /**
    * @param Wallet $recipientWallet
@@ -69,28 +68,27 @@ class MutationCreateToken extends MutationProposeMolecule
    * @return MutationCreateToken
    * @throws ReflectionException
    */
-	public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = null )
-	{
-		// Default metas value
+  public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = null ) {
+    // Default metas value
     $meta = default_if_null( $meta, [] );
 
-		// Fill the molecule
-		$this->molecule->initTokenCreation ( $recipientWallet, $amount, $meta );
-		$this->molecule->sign();
-		$this->molecule->check();
+    // Fill the molecule
+    $this->molecule->initTokenCreation( $recipientWallet, $amount, $meta );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-		return $this;
-	}
+    return $this;
+  }
 
-    /**
-     * Create a response
-     *
-     * @param string $response
-     * @return Response
-     */
-    public function createResponse ( $response )
-    {
-        return new ResponseTokenCreate( $this, $response );
-    }
+  /**
+   * Create a response
+   *
+   * @param string $response
+   *
+   * @return Response
+   */
+  public function createResponse ( $response ) {
+    return new ResponseTokenCreate( $this, $response );
+  }
 
 }

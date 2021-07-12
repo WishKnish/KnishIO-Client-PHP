@@ -55,28 +55,14 @@ use WishKnish\KnishIO\Client\Response\ResponseBatch;
  * Class QueryMetaBatch
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryBatch extends Query
-{
+class QueryBatch extends Query {
   // Query
   protected static $default_query = 'query( $batchId: String ) { Batch( batchId: $batchId )
 		@fields
 	}';
 
   // Fields
-  protected $fields = [
-    'batchId',
-    'type',
-    'createdAt',
-    'wallet' => [
-      'address',
-      'bundleHash',
-      'amount',
-    ],
-    'metas' => [
-      'key',
-      'value',
-    ],
-  ];
+  protected $fields = [ 'batchId', 'type', 'createdAt', 'wallet' => [ 'address', 'bundleHash', 'amount', ], 'metas' => [ 'key', 'value', ], ];
 
   /**
    * @param $response
@@ -86,6 +72,5 @@ class QueryBatch extends Query
   public function createResponse ( $response ) {
     return new ResponseBatch( $this, $response );
   }
-
 
 }

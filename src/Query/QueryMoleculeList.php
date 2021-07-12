@@ -49,9 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
-
 use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
-
 
 /**
  * Class QueryMoleculeList
@@ -59,44 +57,22 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  *
  * /graphql?query={Molecule(lastMolecularHash:"",limit:10,order:"created_at asc"){molecularHash}}
  */
-class QueryMoleculeList extends Query
-{
-	// Query
-	protected static $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
+class QueryMoleculeList extends Query {
+  // Query
+  protected static $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
 	 	@fields
 	}';
 
-	// Fields
-	protected $fields = [
-		'molecularHash',
-		'cellSlug',
-		'counterparty',
-		'bundleHash',
-		'createdAt',
-		'atoms' => [
-			'position',
-			'isotope',
-			'walletAddress',
-			'tokenSlug',
-			'batchId',
-			'value',
-			'index',
-			'metaType',
-			'metaId',
-			'metasJson',
-			'otsFragment',
-			'createdAt',
-		],
-	];
+  // Fields
+  protected $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
 
-
-
-	/**
-	 * @param $response
-	 * @return Response|ResponseMoleculeList
-	 */
-	public function createResponse ( $response ) {
-		return new ResponseMoleculeList( $this, $response);
-	}
+  /**
+   * @param $response
+   *
+   * @return Response|ResponseMoleculeList
+   */
+  public function createResponse ( $response ) {
+    return new ResponseMoleculeList( $this, $response );
+  }
 
 }

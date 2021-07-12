@@ -59,12 +59,7 @@ class MutationRequestAuthorizationGuest extends Mutation {
   protected Wallet $wallet;
 
   // Fields
-  protected $fields = [
-    'token',
-    'time',
-    'key',
-    'encrypt'
-  ];
+  protected $fields = [ 'token', 'time', 'key', 'encrypt' ];
 
   /**
    * @param Wallet $wallet

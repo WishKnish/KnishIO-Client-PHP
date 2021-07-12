@@ -56,16 +56,14 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationCreateWallet
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationCreateWallet extends MutationProposeMolecule
-{
+class MutationCreateWallet extends MutationProposeMolecule {
 
   /**
    * @param Wallet $newWallet
    *
    * @throws \ReflectionException
    */
-  public function fillMolecule ( Wallet $newWallet )
-  {
+  public function fillMolecule ( Wallet $newWallet ) {
     $this->molecule->initWalletCreation( $newWallet );
     $this->molecule->sign();
     $this->molecule->check();

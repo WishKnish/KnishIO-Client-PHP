@@ -61,6 +61,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 class InvalidRequestException extends BaseException {
   /**
    * InvalidResponseException constructor.
+   *
    * @param string $message
    * @param int $code
    * @param \Throwable|null $previous

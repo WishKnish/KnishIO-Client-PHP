@@ -53,9 +53,7 @@ namespace WishKnish\KnishIO\Client\Response;
  * Class ResponseBatch
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseBatch extends Response
-{
+class ResponseBatch extends Response {
   protected $dataKey = 'data.Batch';
-
 
 }

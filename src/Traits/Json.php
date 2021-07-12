@@ -57,50 +57,44 @@ use Symfony\Component\Serializer\Serializer;
  * Trait Json
  * @package WishKnish\KnishIO\Client\Traits
  */
-trait Json
-{
-	/**
-	 * @return mixed
-	 */
-	public function toJson ()
-	{
-		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )
-			->serialize( $this, 'json' );
-	}
+trait Json {
+  /**
+   * @return mixed
+   */
+  public function toJson () {
+    return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
+  }
 
+  /**
+   * @param array $data
+   * @param null $object
+   *
+   * @return static|null
+   */
+  public static function arrayToObject ( array $data, $object = null ) {
+    $object = $object ?? new static();
+    foreach ( $data as $property => $value ) {
 
-	/**
-	 * @param array $data
-	 * @param null $object
-	 * @return static|null
-	 */
-	public static function arrayToObject ( array $data, $object = null )
-	{
-		$object = $object ?? new static;
-		foreach ( $data as $property => $value ) {
+      // Has a setProperty customization function
+      if ( method_exists( $object, 'setProperty' ) ) {
+        $object->setProperty( $property, $value );
+      }
 
-			// Has a setProperty customization function
-			if ( method_exists( $object, 'setProperty' ) ) {
-				$object->setProperty( $property, $value );
-			}
+      // Default property set
+      else {
+        $object->$property = $value;
+      }
 
-			// Default property set
-			else {
-				$object->$property = $value;
-			}
+    }
+    return $object;
+  }
 
-		}
-		return $object;
-	}
-
-
-	/**
-	 * @param $string
-	 * @return object
-	 */
-	public static function jsonToObject ( $string )
-	{
-		return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )
-			->deserialize( $string, static::class, 'json' );
-	}
+  /**
+   * @param $string
+   *
+   * @return object
+   */
+  public static function jsonToObject ( $string ) {
+    return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );
+  }
 }

@@ -53,7 +53,6 @@ namespace WishKnish\KnishIO\Client\Response;
  * Class ResponseTokenCreate
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseTokenCreate extends ResponseMolecule
-{
+class ResponseTokenCreate extends ResponseMolecule {
 
 }

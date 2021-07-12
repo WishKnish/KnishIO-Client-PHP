@@ -55,35 +55,17 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
  * Class QueryWalletBundle
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryWalletBundle extends Query
-{
+class QueryWalletBundle extends Query {
 
-	// Query
-	protected static $default_query = 'query( $bundleHash: String, $bundleHashes: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $keys_values: [ MetaInput ], $latest: Boolean, $limit: Int, $order: String ) { WalletBundle( bundleHash: $bundleHash, bundleHashes: $bundleHashes, key: $key, keys: $keys, value: $value, values: $values, keys_values: $keys_values, latest: $latest, limit: $limit, order: $order )
+  // Query
+  protected static $default_query = 'query( $bundleHash: String, $bundleHashes: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $keys_values: [ MetaInput ], $latest: Boolean, $limit: Int, $order: String ) { WalletBundle( bundleHash: $bundleHash, bundleHashes: $bundleHashes, key: $key, keys: $keys, value: $value, values: $values, keys_values: $keys_values, latest: $latest, limit: $limit, order: $order )
 	 	@fields
 	}';
 
-
-
-	// Fields
-	protected $fields = [
-		'bundleHash',
-		'slug',
-		'metas' => [
-			'molecularHash',
-			'position',
-			'metaType',
-			'metaId',
-			'key',
-			'value',
-			'createdAt',
-		],
-	//	'molecules',
-	//	'wallets',
-		'createdAt',
-	];
-
-
+  // Fields
+  protected $fields = [ 'bundleHash', 'slug', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], //	'molecules',
+    //	'wallets',
+      'createdAt', ];
 
   /**
    * Builds a GraphQL-friendly variables object based on input fields
@@ -97,9 +79,7 @@ class QueryWalletBundle extends Query
    */
   public static function createVariables ( $bundleHash = null, $key = null, $value = null, bool $latest = true ) {
 
-    $variables = [
-      'latest' => $latest,
-    ];
+    $variables = [ 'latest' => $latest, ];
 
     if ( $bundleHash ) {
       $variables[ is_string( $bundleHash ) ? 'bundleHash' : 'bundleHashes' ] = $bundleHash;
@@ -115,17 +95,15 @@ class QueryWalletBundle extends Query
 
     return $variables;
 
-}
+  }
 
-
-	/**
-	 * @param string $response
-	 * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletBundle
-	 */
-	public function createResponse ($response) {
-		return new ResponseWalletBundle($this, $response);
-	}
-
-
+  /**
+   * @param string $response
+   *
+   * @return \WishKnish\KnishIO\Client\Response\Response|ResponseWalletBundle
+   */
+  public function createResponse ( $response ) {
+    return new ResponseWalletBundle( $this, $response );
+  }
 
 }

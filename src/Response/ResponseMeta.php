@@ -49,14 +49,11 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-
 /**
  * Class ResponseMeta
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMeta extends Response
-{
+class ResponseMeta extends Response {
   protected $dataKey = 'data.Meta';
-
 
 }

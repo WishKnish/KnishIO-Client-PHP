@@ -49,14 +49,11 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-
 /**
  * Class ResponseWalletBundle
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseWalletBundle extends Response
-{
-	protected $dataKey = 'data.WalletBundle';
-
+class ResponseWalletBundle extends Response {
+  protected $dataKey = 'data.WalletBundle';
 
 }

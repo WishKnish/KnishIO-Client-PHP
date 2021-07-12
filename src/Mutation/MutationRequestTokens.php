@@ -56,8 +56,7 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationRequestTokens
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationRequestTokens extends MutationProposeMolecule
-{
+class MutationRequestTokens extends MutationProposeMolecule {
 
   /**
    * @param string $tokenSlug
@@ -70,17 +69,16 @@ class MutationRequestTokens extends MutationProposeMolecule
    * @return MutationRequestTokens
    * @throws \ReflectionException
    */
-	public function fillMolecule ( string $tokenSlug, $requestedAmount, string $metaType, string $metaId, array $metas = null, ?string $batchId = null )
-	{
-		// Default metas value
-		$metas = default_if_null( $metas, [] );
+  public function fillMolecule ( string $tokenSlug, $requestedAmount, string $metaType, string $metaId, array $metas = null, ?string $batchId = null ) {
+    // Default metas value
+    $metas = default_if_null( $metas, [] );
 
-		// Fill the molecule
-		$this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
-		$this->molecule->sign();
-		$this->molecule->check();
+    // Fill the molecule
+    $this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $metaType, $metaId, $metas, $batchId );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-		return $this;
-	}
+    return $this;
+  }
 
 }

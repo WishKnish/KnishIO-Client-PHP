@@ -188,21 +188,13 @@ class Wallet {
     foreach ( $unitsData as $unitData ) {
 
       // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
-      if ( !is_array($unitData) ) {
-        $items = [
-            'id' => $unitData,
-            'name' => null,
-            'metas' => [],
-        ];
+      if ( !is_array( $unitData ) ) {
+        $items = [ 'id' => $unitData, 'name' => null, 'metas' => [], ];
       }
 
       // Standart token unit format
       else {
-        $result[] = [
-            'id' => array_shift( $unitData ),
-            'name' => array_shift( $unitData ),
-            'metas' => $unitData,
-        ];
+        $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
       }
     }
     return $result;
@@ -229,13 +221,9 @@ class Wallet {
 
     if ( $this->hasTokenUnits() ) {
 
-      $result = array_map(
-        static function( $tokenUnit, $_ ) {
-          return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
-        },
-        $this->tokenUnits,
-        []
-      );
+      $result = array_map( static function ( $tokenUnit, $_ ) {
+        return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+      }, $this->tokenUnits, [] );
 
       return json_encode( $result );
     }
@@ -260,8 +248,9 @@ class Wallet {
     $remainderTokenUnits = [];
 
     // Init recipient & remainder token units
-    $recipientTokenUnits = []; $remainderTokenUnits = [];
-    foreach( $this->tokenUnits as $tokenUnit ) {
+    $recipientTokenUnits = [];
+    $remainderTokenUnits = [];
+    foreach ( $this->tokenUnits as $tokenUnit ) {
       if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
@@ -296,7 +285,6 @@ class Wallet {
 
     }
   }
-
 
   /**
    * @param mixed $code
@@ -344,7 +332,6 @@ class Wallet {
     return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
 
   }
-
 
   /**
    * Derives a private key for encrypting data with this wallet's key
@@ -461,7 +448,7 @@ class Wallet {
 
     // Hashing the indexed key to produce the intermediate key
     $intermediateKeySponge = Crypto\Shake256::init()
-      ->absorb( $indexedKey->toString( 16 ) );
+        ->absorb( $indexedKey->toString( 16 ) );
 
     if ( $token !== '' ) {
 

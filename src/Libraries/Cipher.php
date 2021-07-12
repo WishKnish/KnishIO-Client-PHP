@@ -135,35 +135,25 @@ class Cipher {
 
         if ( array_get( $options, 'encrypt', false ) ) {
 
-          $requestContent = $request->getBody()->getContents();
+          $requestContent = $request->getBody()
+              ->getContents();
           $original = json_decode( $requestContent, true, 512, JSON_THROW_ON_ERROR );
 
           if ( array_key_exists( 'query', $original ) ) {
 
-            $requestName = static::graphqlParse( $original['query'], 'name' );
-            $requestType = static::graphqlParse( $original['query'] );
+            $requestName = static::graphqlParse( $original[ 'query' ], 'name' );
+            $requestType = static::graphqlParse( $original[ 'query' ] );
             $isMoleculeMutation = ( $requestType === 'mutation' && $requestName === 'ProposeMolecule' );
-            $conditions = [
-              ( $requestType === 'query' && in_array( $requestName, [ '__schema', 'ContinuId' ] ) ),
-              ( $requestType === 'mutation' && $requestName === 'AccessToken' ),
-              ( $isMoleculeMutation && array_get( $original, 'variables.molecule.atoms.0.isotope' ) === 'U' )
-            ];
+            $conditions = [ ( $requestType === 'query' && in_array( $requestName, [ '__schema', 'ContinuId' ] ) ), ( $requestType === 'mutation' && $requestName === 'AccessToken' ), ( $isMoleculeMutation && array_get( $original, 'variables.molecule.atoms.0.isotope' ) === 'U' ) ];
 
             if ( in_array( true, $conditions, true ) ) {
               return $handler( $request, $options );
             }
 
-            $content = [
-              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
-              'variables' => [
-                'Hash' => json_encode( $this->wallet()->encryptMyMessage( $original, $this->pubKey() ), JSON_THROW_ON_ERROR )
-              ]
-            ];
+            $content = [ 'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }', 'variables' => [ 'Hash' => json_encode( $this->wallet()
+                ->encryptMyMessage( $original, $this->pubKey() ), JSON_THROW_ON_ERROR ) ] ];
 
-            $promise = $handler(
-              $request->withBody( Utils::streamFor( json_encode( $content ) ) ),
-              $options
-            );
+            $promise = $handler( $request->withBody( Utils::streamFor( json_encode( $content ) ) ), $options );
 
             return $promise->then( $this->response( $options ) );
           }
@@ -181,22 +171,16 @@ class Cipher {
    *
    * @return Closure
    */
-  protected function response( array $options ): Closure {
+  protected function response ( array $options ): Closure {
 
     return function ( ResponseInterface $response ) use ( $options ) {
 
       if ( array_get( $options, 'encrypt', false ) ) {
 
-        $original = json_decode(
-          $response->getBody()->getContents(),
-          true,
-          512,
-          JSON_THROW_ON_ERROR
-        );
+        $original = json_decode( $response->getBody()
+            ->getContents(), true, 512, JSON_THROW_ON_ERROR );
 
-        $data = array_has( $original,'data.data') ?
-          array_get( $original, 'data.data' ) :
-          array_get( $original, 'data' );
+        $data = array_has( $original, 'data.data' ) ? array_get( $original, 'data.data' ) : array_get( $original, 'data' );
 
         if ( $data ) {
           if ( array_has( $data, 'CipherHash' ) ) {
@@ -206,7 +190,7 @@ class Cipher {
             if ( $encrypted ) {
 
               $decryption = $this->wallet()
-                ->decryptMyMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
+                  ->decryptMyMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
 
               if ( $decryption === null ) {
                 throw new InvalidResponseException( 'Error decoding response.' );
@@ -259,11 +243,7 @@ class Cipher {
         $node = $item->selectionSet->selections[ 0 ];
 
         // Type & name initialization
-        if ( in_array( $item->operation, [
-          'query',
-          'mutation',
-          'subscription'
-        ] ) ) {
+        if ( in_array( $item->operation, [ 'query', 'mutation', 'subscription' ] ) ) {
           return $operation === 'type' ? $item->operation : $node->name->value;
         }
       }

@@ -57,28 +57,26 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationCreatePeer
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationCreatePeer extends MutationProposeMolecule
-{
+class MutationCreatePeer extends MutationProposeMolecule {
 
-	/**
-	 * @param $recipientWallet
-	 * @param $amount
-	 * @param array $metas
-	 * @throws \ReflectionException
-	 * @throws \Exception
-	 */
-	public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] )
-	{
-		// Set name as slug if it does not defined
-		$name = $name ?: $slug;
+  /**
+   * @param $recipientWallet
+   * @param $amount
+   * @param array $metas
+   *
+   * @throws \ReflectionException
+   * @throws \Exception
+   */
+  public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] ) {
+    // Set name as slug if it does not defined
+    $name = $name ?: $slug;
 
-		// Fill the molecule
-		$this->molecule->initPeerCreation ( $slug, $host, $name, $cellSlugs );
-		$this->molecule->sign();
-		$this->molecule->check();
+    // Fill the molecule
+    $this->molecule->initPeerCreation( $slug, $host, $name, $cellSlugs );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-		return $this;
-	}
-
+    return $this;
+  }
 
 }

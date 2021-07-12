@@ -55,8 +55,7 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationTransferTokens
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationTransferTokens extends MutationProposeMolecule
-{
+class MutationTransferTokens extends MutationProposeMolecule {
 
   /**
    * @param Wallet $toWallet
@@ -65,13 +64,12 @@ class MutationTransferTokens extends MutationProposeMolecule
    * @return MutationTransferTokens
    * @throws \ReflectionException
    */
-	public function fillMolecule ( Wallet $toWallet, $amount )
-	{
-		$this->molecule->initValue( $toWallet, $amount );
-		$this->molecule->sign();
-		$this->molecule->check( $this->molecule->sourceWallet() );
+  public function fillMolecule ( Wallet $toWallet, $amount ) {
+    $this->molecule->initValue( $toWallet, $amount );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
 
-		return $this;
-	}
+    return $this;
+  }
 
 }

@@ -57,13 +57,12 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationProposeMolecule
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationProposeMolecule extends MutationProposeMoleculeStructure
-{
-	// Molecule
-	protected $molecule;
+class MutationProposeMolecule extends MutationProposeMoleculeStructure {
+  // Molecule
+  protected $molecule;
 
-	// Remainder wallet
-	protected $remainderWallet;
+  // Remainder wallet
+  protected $remainderWallet;
 
   /**
    * MutationProposeMolecule constructor.
@@ -72,27 +71,24 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure
    * @param Molecule $molecule
    * @param string|null $query
    */
-	public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null ) {
-		parent::__construct( $client, $molecule, $query );
+  public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null ) {
+    parent::__construct( $client, $molecule, $query );
 
-		$this->molecule = $molecule;
-	}
+    $this->molecule = $molecule;
+  }
 
+  /**
+   * @return Molecule
+   */
+  public function molecule (): Molecule {
+    return $this->molecule;
+  }
 
-	/**
-	 * @return Molecule
-	 */
-	public function molecule(): Molecule {
-		return $this->molecule;
-	}
-
-
-	/**
-	 * @return mixed
-	 */
-	public function remainderWallet(): Wallet {
-		return $this->remainderWallet;
-	}
-
+  /**
+   * @return mixed
+   */
+  public function remainderWallet (): Wallet {
+    return $this->remainderWallet;
+  }
 
 }

@@ -55,17 +55,16 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaCreate;
  * Class MutationCreateMeta
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationCreateMeta extends MutationProposeMolecule
-{
+class MutationCreateMeta extends MutationProposeMolecule {
 
   /**
    * @param $type
    * @param $contact
    * @param $code
+   *
    * @throws \Exception
    */
-  public function fillMolecule ( string $metaType, string $metaId, array $metadata )
-  {
+  public function fillMolecule ( string $metaType, string $metaId, array $metadata ) {
     $this->molecule->initMeta( $metadata, $metaType, $metaId );
     $this->molecule->sign();
     $this->molecule->check();
@@ -79,6 +78,5 @@ class MutationCreateMeta extends MutationProposeMolecule
   public function createResponse ( $response ) {
     return new ResponseMetaCreate( $this, $response );
   }
-
 
 }

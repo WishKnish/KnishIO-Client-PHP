@@ -53,8 +53,6 @@ namespace WishKnish\KnishIO\Client\Response;
  * Class ResponseMetaCreate
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaCreate extends ResponseMolecule
-{
-
+class ResponseMetaCreate extends ResponseMolecule {
 
 }

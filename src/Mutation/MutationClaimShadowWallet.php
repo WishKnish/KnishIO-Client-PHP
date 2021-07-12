@@ -55,8 +55,7 @@ use WishKnish\KnishIO\Client\Wallet;
  * Class MutationClaimShadowWallet
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationClaimShadowWallet extends MutationProposeMolecule
-{
+class MutationClaimShadowWallet extends MutationProposeMolecule {
 
   /**
    * @param string $tokenSlug
@@ -65,18 +64,16 @@ class MutationClaimShadowWallet extends MutationProposeMolecule
    * @return MutationClaimShadowWallet
    * @throws \ReflectionException
    */
-    public function fillMolecule( string $tokenSlug, ?string $batchId = null )
-    {
-        // Create a wallet
-        $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
+  public function fillMolecule ( string $tokenSlug, ?string $batchId = null ) {
+    // Create a wallet
+    $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
 
-        // Init shadow wallet claim
-        $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
-        $this->molecule->sign();
-        $this->molecule->check();
+    // Init shadow wallet claim
+    $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-        return $this;
-    }
-
+    return $this;
+  }
 
 }

@@ -127,14 +127,15 @@ class KnishIOClient {
    *
    * @return array
    */
-  public static function splitTokenUnits( Wallet $sourceWallet, $amount ): array {
+  public static function splitTokenUnits ( Wallet $sourceWallet, $amount ): array {
 
     // Token units initialization
     [ $amount, $sendTokenUnits, ] = static::splitUnitAmount( $amount );
 
     // Init recipient & remainder token units
-    $recipientTokenUnits = []; $remainderTokenUnits = [];
-    foreach( $sourceWallet->tokenUnits as $tokenUnit ) {
+    $recipientTokenUnits = [];
+    $remainderTokenUnits = [];
+    foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
       if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
@@ -151,7 +152,7 @@ class KnishIOClient {
    *
    * @return array
    */
-  public static function splitUnitAmount( $amount ): array {
+  public static function splitUnitAmount ( $amount ): array {
     $tokenUnits = [];
     if ( is_array( $amount ) ) {
       $tokenUnits = $amount;
@@ -159,7 +160,6 @@ class KnishIOClient {
     }
     return [ $amount, $tokenUnits, ];
   }
-
 
   /**
    * KnishIOClient constructor.
@@ -243,15 +243,18 @@ class KnishIOClient {
    * @return bool
    */
   public function hasEncryption (): bool {
-    return $this->client()->hasEncryption();
+    return $this->client()
+        ->hasEncryption();
   }
 
   public function enableEncryption (): void {
-    $this->client()->enableEncryption();
+    $this->client()
+        ->enableEncryption();
   }
 
   public function disableEncryption (): void {
-    $this->client()->disableEncryption();
+    $this->client()
+        ->disableEncryption();
   }
 
   /**
@@ -298,7 +301,7 @@ class KnishIOClient {
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
     if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery && $this->lastMoleculeQuery->response() && $this->lastMoleculeQuery->response()
-        ->success() ) {
+            ->success() ) {
       $sourceWallet = $this->remainderWallet;
     }
 
@@ -357,12 +360,7 @@ class KnishIOClient {
    * @return mixed
    * @throws \GuzzleHttp\Exception\GuzzleException
    */
-  public function requestAuthToken (
-    ?string $secret = null,
-    ?string $seed = null,
-    ?string $cell_slug = null,
-    ?bool $encrypt = null
-  ) {
+  public function requestAuthToken ( ?string $secret = null, ?string $seed = null, ?string $cell_slug = null, ?bool $encrypt = null ) {
     // Set a cell slug
     $this->cellSlug = $cell_slug ?: $this->cellSlug();
     $guestMode = false;
@@ -370,11 +368,13 @@ class KnishIOClient {
     if ( $seed ) {
       $this->setSecret( Libraries\Crypto::generateSecret( $seed ) );
     }
-    else if ( $secret ) {
-      $this->setSecret( $secret );
-    }
     else {
-      $guestMode = true;
+      if ( $secret ) {
+        $this->setSecret( $secret );
+      }
+      else {
+        $guestMode = true;
+      }
     }
 
     if ( $encrypt === null ) {
@@ -389,11 +389,7 @@ class KnishIOClient {
 
       $query->setAuthorizationWallet( $authorizationWallet );
 
-      $response = $query->execute( [
-        'cellSlug' => $this->cellSlug,
-        'pubkey' => $authorizationWallet->pubkey,
-        'encrypt' => $encrypt
-      ] );
+      $response = $query->execute( [ 'cellSlug' => $this->cellSlug, 'pubkey' => $authorizationWallet->pubkey, 'encrypt' => $encrypt ] );
 
     }
     else {
@@ -410,9 +406,12 @@ class KnishIOClient {
     // If the response is success - set auth token
     if ( $response->success() ) {
 
-      $this->client()->setAuthToken( $response->token() );
-      $this->client()->setPubKey( $response->pubKey() );
-      $this->client()->setWallet( $response->wallet() );
+      $this->client()
+          ->setAuthToken( $response->token() );
+      $this->client()
+          ->setPubKey( $response->pubKey() );
+      $this->client()
+          ->setWallet( $response->wallet() );
 
       if ( $this->hasEncryption() !== $response->encrypt() ) {
         ( $response->encrypt() ) ? $this->enableEncryption() : $this->disableEncryption();
@@ -463,7 +462,7 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute( $variables, $fields )
-      ->payload();
+        ->payload();
 
   }
 
@@ -528,11 +527,7 @@ class KnishIOClient {
         $amount = count( $units );
 
         // Set custom default metadata
-        $meta = array_merge( $meta, [
-          'splittable' => 1,
-          'decimals' => 0,
-          'tokenUnits' => json_encode( $units ),
-        ] );
+        $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
       }
     }
 
@@ -700,7 +695,6 @@ class KnishIOClient {
       $metaId = $this->bundle();
     }
 
-
     // Create a query
     /** @var MutationRequestTokens $query */
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
@@ -770,12 +764,12 @@ class KnishIOClient {
    * @return array
    * @throws Exception
    */
-  public function transferToken ( $recipient, string $token, $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null) {
+  public function transferToken ( $recipient, string $token, $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
-      ->payload();
+            ->payload();
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
@@ -800,7 +794,7 @@ class KnishIOClient {
 
       // try to get a valid wallet
       $recipientWallet = $this->queryBalance( $token, $bundleHash )
-        ->payload();
+          ->payload();
 
       // Has not wallet yet - create it
       if ( $recipientWallet === null ) {
@@ -844,7 +838,7 @@ class KnishIOClient {
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
-      ->payload();
+            ->payload();
 
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
@@ -857,7 +851,7 @@ class KnishIOClient {
     if ( count( $units ) > 0 ) {
 
       // Can't burn stackable units AND provide amount
-      if ( $amount > 0) {
+      if ( $amount > 0 ) {
         throw new StackableUnitAmountException();
       }
 
@@ -878,7 +872,6 @@ class KnishIOClient {
 
   }
 
-
   /**
    * @param bool $onlyValue
    *
@@ -888,7 +881,7 @@ class KnishIOClient {
   public function getSourceWallet () {
     // Has a ContinuID wallet?
     $sourceWallet = $this->queryContinuId( Crypto::generateBundleHash( $this->secret() ) )
-      ->payload();
+        ->payload();
     if ( !$sourceWallet ) {
       $sourceWallet = new Wallet( $this->secret() );
     }
@@ -905,7 +898,7 @@ class KnishIOClient {
   public function queryContinuId ( $bundleHash ) {
     // Create & execute the query
     return $this->createQuery( QueryContinuId::class )
-      ->execute( [ 'bundle' => $bundleHash ] );
+        ->execute( [ 'bundle' => $bundleHash ] );
   }
 
 }

@@ -236,14 +236,14 @@ class Atom {
     return Meta::aggregateMeta( $this->meta );
   }
 
-	/**
-	 * @param string $property
-	 * @param $value
-	 * @todo change to __set?
-	 */
-	public function setProperty( string $property, $value ): void
-	{
-		$property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+  /**
+   * @param string $property
+   * @param $value
+   *
+   * @todo change to __set?
+   */
+  public function setProperty ( string $property, $value ): void {
+    $property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {

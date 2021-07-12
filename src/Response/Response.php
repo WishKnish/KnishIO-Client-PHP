@@ -58,27 +58,26 @@ use WishKnish\KnishIO\Client\Query\Query;
  * Class Response
  * @package WishKnish\KnishIO\Client\Query
  */
-class Response
-{
-    /**
-     * @var Query
-     */
-	protected $query;
+class Response {
+  /**
+   * @var Query
+   */
+  protected $query;
 
-    /**
-     * @var array|null
-     */
-	protected $response;
+  /**
+   * @var array|null
+   */
+  protected $response;
 
-	/**
-	 * @var
-	 */
-	protected $payload;
+  /**
+   * @var
+   */
+  protected $payload;
 
-    /**
-     * @var string
-     */
-	protected $dataKey;
+  /**
+   * @var string
+   */
+  protected $dataKey;
 
   /**
    * Response constructor.
@@ -87,27 +86,26 @@ class Response
    * @param string $json
    * @param string|null $dataKey
    */
-	public function __construct ( ?Query $query, string $json, string $dataKey = null )
-	{
-		// Set a query
-		$this->query = $query;
+  public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
+    // Set a query
+    $this->query = $query;
 
-		// Origin response
-		$this->origin_response = $json;
+    // Origin response
+    $this->origin_response = $json;
 
-		// Json decode
-		$this->response = json_decode( $json, true );
+    // Json decode
+    $this->response = json_decode( $json, true );
 
-		// Set datakey from
-		if ( $dataKey !== null ) {
-		  $this->dataKey = $dataKey;
+    // Set datakey from
+    if ( $dataKey !== null ) {
+      $this->dataKey = $dataKey;
     }
 
     // Catch exceptions
-    if (array_has ($this->response, 'exception') ) {
+    if ( array_has( $this->response, 'exception' ) ) {
 
       // Exception error
-      $message = array_get($this->response, 'message');
+      $message = array_get( $this->response, 'message' );
 
       // Custom exceptions
       if ( stripos( $message, 'Unauthenticated' ) !== false ) {
@@ -118,70 +116,61 @@ class Response
       throw new InvalidResponseException( $message );
     }
 
-		// No-json response - error
-		if ( $this->response === null ) {
-			throw new InvalidResponseException();
-		}
+    // No-json response - error
+    if ( $this->response === null ) {
+      throw new InvalidResponseException();
+    }
 
-		$this->init ();
-	}
+    $this->init();
+  }
 
+  /**
+   *
+   */
+  public function init () {
 
-	/**
-	 *
-	 */
-	public function init () {
+  }
 
-	}
+  /**
+   * Get a response
+   *
+   * @return mixed
+   */
+  public function data () {
+    // For the root class
+    if ( !$this->dataKey ) {
+      return $this->response;
+    }
 
+    // Check key & return custom data from the response
+    if ( !array_has( $this->response, $this->dataKey ) ) {
+      throw new InvalidResponseException();
+    }
 
-	/**
-	 * Get a response
-	 *
-	 * @return mixed
-	 */
-	public function data ()
-    {
-		// For the root class
-		if ( !$this->dataKey ) {
-			return $this->response;
-		}
+    return array_get( $this->response, $this->dataKey );
+  }
 
-		// Check key & return custom data from the response
-		if ( !array_has( $this->response, $this->dataKey ) ) {
-			throw new InvalidResponseException();
-		}
+  /**
+   * @return mixed
+   */
+  public function response () {
+    return $this->response;
+  }
 
-		return array_get( $this->response, $this->dataKey );
-	}
+  /**
+   * Get a payload
+   *
+   * @return
+   */
+  public function payload () {
+    return null;
+  }
 
-
-	/**
-	 * @return mixed
-	 */
-	public function response ()
-    {
-		return $this->response;
-	}
-
-
-	/**
-	 * Get a payload
-	 *
-	 * @return
-	 */
-	public function payload ()
-    {
-		return null;
-	}
-
-
-	/**
-	 * @return Query
-	 */
-	public function query ()
-    {
-		return $this->query;
-	}
+  /**
+   * @return Query
+   */
+  public function query () {
+    return $this->query;
+  }
 
 }

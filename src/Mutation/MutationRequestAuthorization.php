@@ -58,25 +58,25 @@ use WishKnish\KnishIO\Client\Response\ResponseAuthorization;
  */
 class MutationRequestAuthorization extends MutationProposeMolecule {
 
+  /**
+   * Fill the molecule
+   */
+  public function fillMolecule ( array $meta ) {
+    $this->molecule->initAuthorization( $meta );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-	/**
-	 * Fill the molecule
-	 */
-    public function fillMolecule ( array $meta ) {
-      $this->molecule->initAuthorization( $meta );
-		  $this->molecule->sign();
-		  $this->molecule->check();
+    return $this;
+  }
 
-		  return $this;
-    }
-
-    /**
-     * Create a response
-     *
-     * @param string $response
-     * @return Response
-     */
-    public function createResponse ( $response ) {
-        return new ResponseAuthorization( $this, $response );
-    }
+  /**
+   * Create a response
+   *
+   * @param string $response
+   *
+   * @return Response
+   */
+  public function createResponse ( $response ) {
+    return new ResponseAuthorization( $this, $response );
+  }
 }

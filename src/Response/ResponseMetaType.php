@@ -49,19 +49,17 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-
 /**
  * Class ResponseMetaType
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaType extends Response
-{
-	protected $dataKey = 'data.MetaType';
+class ResponseMetaType extends Response {
+  protected $dataKey = 'data.MetaType';
 
   /**
    * @return |null
    */
-	public function payload () {
+  public function payload () {
     $data = $this->data();
 
     if ( !$data ) {
@@ -69,6 +67,6 @@ class ResponseMetaType extends Response
     }
 
     return $data[ 0 ][ 'instances' ];
-	}
+  }
 
 }
