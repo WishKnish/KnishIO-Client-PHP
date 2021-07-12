@@ -59,14 +59,12 @@ use WishKnish\KnishIO\Client\Query\QueryWalletList;
 /**
  * Class QueryCascadeMetaTest
  */
-class QueryCascadeBatchTest extends TestCase
-{
+class QueryCascadeBatchTest extends TestCase {
   private $tokenSlug = 'UTSTACKABLE';
   private $fullAmount = 1000;
   private $transactionAmount = 100;
   private $cascadeDeep = 5;
   private $batchPrefix = 'batch_';
-
 
   /**
    * Clear data test
@@ -79,16 +77,16 @@ class QueryCascadeBatchTest extends TestCase
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup(\WishKnish\KnishIO\Tests\TokenServerTransactionTest::class);
+    $this->callServerCleanup( \WishKnish\KnishIO\Tests\TokenServerTransactionTest::class );
 
     // Deafult assertion
-    $this->assertEquals(true, true);
+    $this->assertEquals( true, true );
   }
 
   /**
    * @throws ReflectionException
    */
-  public function testCascadeBatch() {
+  public function testCascadeBatch () {
 
     // Create a token
     $client = $this->createToken();
@@ -108,72 +106,62 @@ class QueryCascadeBatchTest extends TestCase
       $this->claimShadowWallet( $client );
 
       // Create a meta to custom batchID
-      $client->createMeta( 'batch', $batchId, [
-        'key_shared' => 'value_shared',
-        "key_$index" => "value_$index",
-      ] );
+      $client->createMeta( 'batch', $batchId, [ 'key_shared' => 'value_shared', "key_$index" => "value_$index", ] );
 
       // Change transaction amount for each step
       $transactionAmount -= 10;
 
       // Burn tokens for the last transaction
       if ( $i === $this->cascadeDeep - 1 ) {
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 1) );
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 2) );
+        $client->burnToken( $this->tokenSlug, 5, $this->getBatchId( $index + 1 ) );
+        $client->burnToken( $this->tokenSlug, 5, $this->getBatchId( $index + 2 ) );
       }
     }
 
-
     // Get metas for last batchID
-    $response = (new QueryBatch( $client->client() ))->execute([
-      'batchId' => $batchId,
-    ]);
+    $response = ( new QueryBatch( $client->client() ) )->execute( [ 'batchId' => $batchId, ] );
     dd( $response->data() );
   }
-
 
   /**
    * @throws ReflectionException
    */
-  public function testUnitToken() {
+  public function testUnitToken () {
 
   }
-
 
   /**
    * @param int $index
    *
    * @return string
    */
-  private function getBatchId( int $index ) {
+  private function getBatchId ( int $index ) {
     return $this->batchPrefix . $index;
   }
-
 
   /**
    * @throws ReflectionException
    */
-  private function transfetToken( $client, $transactionAmount, $batchId ) {
+  private function transfetToken ( $client, $transactionAmount, $batchId ) {
 
     // Initial code
-    $this->beforeExecute ();
+    $this->beforeExecute();
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
     $toBundle = Crypto::generateBundleHash( $toSecret );
 
     // Transferring
-    $response = $client->transferToken($toBundle, $this->tokenSlug, $transactionAmount, $batchId);
-    $this->checkResponse($response);
+    $response = $client->transferToken( $toBundle, $this->tokenSlug, $transactionAmount, $batchId );
+    $this->checkResponse( $response );
 
     return $this->client( $toSecret );
   }
 
-
   /**
    * @throws Exception
    */
-  private function claimShadowWallet( $client ) {
+  private function claimShadowWallet ( $client ) {
 
     // Get shadow wallets
     $shadowWallets = $client->queryShadowWallets( $this->tokenSlug );
@@ -184,25 +172,17 @@ class QueryCascadeBatchTest extends TestCase
     }
   }
 
-
   /**
    * @throws ReflectionException
    */
-  private function createToken() {
+  private function createToken () {
 
     // Initial code
-    $this->beforeExecute ();
+    $this->beforeExecute();
 
-    $client = $this->client(Crypto::generateSecret());
-    $response = $client->createToken($this->tokenSlug, $this->fullAmount, [
-      'name'			=> $this->tokenSlug,
-      'fungibility'	=> 'stackable',
-      'splittable'	=> 1,
-      'supply'		=> 'limited',
-      'decimals'		=> 0,
-      'icon'			=> 'icon',
-    ], $this->getBatchId( 0 ) );
-    $this->checkResponse($response);
+    $client = $this->client( Crypto::generateSecret() );
+    $response = $client->createToken( $this->tokenSlug, $this->fullAmount, [ 'name' => $this->tokenSlug, 'fungibility' => 'stackable', 'splittable' => 1, 'supply' => 'limited', 'decimals' => 0, 'icon' => 'icon', ], $this->getBatchId( 0 ) );
+    $this->checkResponse( $response );
 
     return $client;
   }

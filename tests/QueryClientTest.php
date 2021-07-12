@@ -49,195 +49,175 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreatePeer;
 use WishKnish\KnishIO\Client\Wallet;
 
-
-
 // !!! @todo: this unit test must to be separated from any server side (it should work as an independent part) !!!
-
 
 /**
  * Class QueryClientTest
  * @package WishKnish\KnishIO\Client\Tests
  */
-class QueryClientTest extends TestCase
-{
-	protected $source_secret;
-	protected $source_wallet;
+class QueryClientTest extends TestCase {
+  protected $source_secret;
+  protected $source_wallet;
 
-	protected $guzzle_client;
+  protected $guzzle_client;
 
+  /**
+   * @throws \Exception
+   */
+  public function beforeExecute () {
+    parent::beforeExecute();
 
-	/**
-	 * @throws \Exception
-	 */
-	public function beforeExecute()
-	{
-		parent::beforeExecute();
+    // Source secret & wallet
+    $this->source_secret = Crypto::generateSecret();
+    $this->source_wallet = new Wallet ( $this->source_secret );
 
-		// Source secret & wallet
-		$this->source_secret = Crypto::generateSecret();
-		$this->source_wallet = new Wallet ($this->source_secret);
+    // Guzzle client from the KnishIOClient object
+    $this->guzzle_client = $this->client( $this->source_secret )
+        ->client();
+  }
 
-		// Guzzle client from the KnishIOClient object
-		$this->guzzle_client = $this->client($this->source_secret)->client();
-	}
+  /**
+   * Clear data test
+   *
+   * @throws \ReflectionException
+   */
+  public function testClearAll () {
 
+    // Call server cleanup
+    $this->callServerCleanup( \WishKnish\KnishIO\Tests\QueryServerTest::class );
 
-	/**
-	 * Clear data test
-	 *
-	 * @throws \ReflectionException
-	 */
-	public function testClearAll () {
+    // Initial code
+    $this->beforeExecute();
 
-		// Call server cleanup
-		$this->callServerCleanup(\WishKnish\KnishIO\Tests\QueryServerTest::class);
+    // Deafult assertion
+    $this->assertEquals( true, true );
+  }
 
-		// Initial code
-		$this->beforeExecute();
+  /**
+   * @throws \ReflectionException
+   */
+  public function testMetaIsotope () {
 
-		// Deafult assertion
-		$this->assertEquals(true, true);
-	}
+    // Call server cleanup
+    $this->callServerCleanup( \WishKnish\KnishIO\Tests\QueryServerTest::class );
 
+    $this->beforeExecute();
 
-	/**
-	 * @throws \ReflectionException
-	 */
-	public function testMetaIsotope () {
+    // Create a meta molecule
+    $molecule = $this->client( $this->source_secret )
+        ->createMolecule();
+    $molecule->initMeta( [ 'key1' => 'value1', 'key2' => 'value2' ], 'metaType', 'metaId' );
+    $molecule->sign();
+    $molecule->check();
 
-		// Call server cleanup
-		$this->callServerCleanup(\WishKnish\KnishIO\Tests\QueryServerTest::class);
+    // Execute query & check response
+    $this->executeMolecule( $this->source_secret, $molecule );
+  }
 
-		$this->beforeExecute();
+  /**
+   * @throws \ReflectionException
+   */
+  public function testMetaWalletBundle () {
 
-		// Create a meta molecule
-		$molecule = $this->client($this->source_secret)->createMolecule();
-		$molecule->initMeta(
-			['key1' => 'value1', 'key2' => 'value2'],
-			'metaType',
-			'metaId'
-		);
-		$molecule->sign();
-		$molecule->check();
+    $this->assertEquals( true, true );
+    return;
 
-		// Execute query & check response
-		$this->executeMolecule( $this->source_secret, $molecule );
-	}
+    $this->beforeExecute();
 
+    // Meta & encryption
+    $meta = [ 'key1' => 'value1', 'key2' => 'value2' ];
 
-	/**
-	 * @throws \ReflectionException
-	 */
-	public function testMetaWalletBundle () {
+    $server_secret = env( 'SECRET_TOKEN_KNISH' );
+    $server_wallet = $this->client( $server_secret )
+        ->queryContinuId( Crypto::generateBundleHash( $server_secret ) )
+        ->payload();
 
-		$this->assertEquals( true, true );
-		return;
+    /*
+    $server_wallet = new Wallet( $server_secret, 'USER', 'f0d565b50fd40bda4afd128f4daafe77bd6c8561dc3ab5422ecca5e5726054c4');
 
-		$this->beforeExecute();
+    dump ($server_wallet->position);
+    $value = [
+      '6D10LZNmlLs' => 'AGG5pXiVQgnUXsrWopHrOaJENY4DGvQ270NenAAL3LZCW9MELVRSeHZ2aaR7YEhg5lDKvUUF8hqFHubv8CIgb8EMMkqf0ZI7G9Pe2sB3HiUudDa',
+      '6m6r0SckeEB' => 'BM1g2kMOvHCUngJcMKK9KFlKPfCTmU9CSgAlJtEGf4Td5cabTOdPGM9lp9o2Ujbgs6pjVYgHHqJTRt4llBhiof036rHWjL4JdcdjlpCTkTAhndt',
+    ];
+    $result = $server_wallet->decryptMyMessage ($value);
+    dd ($result);
+    */
 
-		// Meta & encryption
-		$meta = ['key1' => 'value1', 'key2' => 'value2'];
+    // Create a meta molecule
+    $molecule = $this->client( $this->source_secret )
+        ->createMolecule();
+    $molecule->initBundleMeta( $molecule->encryptMessage( $meta, [ $server_wallet ] ), );
+    $molecule->sign();
+    $molecule->check();
 
-		$server_secret = env('SECRET_TOKEN_KNISH');
-		$server_wallet = $this->client($server_secret)
-			->queryContinuId( Crypto::generateBundleHash( $server_secret ) )
-			->payload();
+    // Execute query & check response
+    $this->executeMolecule( $this->source_secret, $molecule );
+  }
 
+  /**
+   * @throws \ReflectionException
+   */
+  public function testAppendMetaIsotope () {
+    /*
+    $this->beforeExecute();
 
-		/*
-		$server_wallet = new Wallet( $server_secret, 'USER', 'f0d565b50fd40bda4afd128f4daafe77bd6c8561dc3ab5422ecca5e5726054c4');
+    // Create a meta molecule
+    $molecule = $this->client($this->source_secret)->createMolecule();
+    $molecule->initMetaAppend(
+      ['key2' => 'value2', 'key3' => 'value3'],
+      'metaType',
+      'metaId'
+    );
+    $molecule->sign();
+    $molecule->check();
 
-		dump ($server_wallet->position);
-		$value = [
-			'6D10LZNmlLs' => 'AGG5pXiVQgnUXsrWopHrOaJENY4DGvQ270NenAAL3LZCW9MELVRSeHZ2aaR7YEhg5lDKvUUF8hqFHubv8CIgb8EMMkqf0ZI7G9Pe2sB3HiUudDa',
-			'6m6r0SckeEB' => 'BM1g2kMOvHCUngJcMKK9KFlKPfCTmU9CSgAlJtEGf4Td5cabTOdPGM9lp9o2Ujbgs6pjVYgHHqJTRt4llBhiof036rHWjL4JdcdjlpCTkTAhndt',
-		];
-		$result = $server_wallet->decryptMyMessage ($value);
-		dd ($result);
-		*/
+    // Execute query & check response
+    $this->executeMolecule( $this->source_secret, $molecule );
+    */
+  }
 
+  /**
+   * @throws \ReflectionException
+   */
+  public function testWalletCreation () {
 
-		// Create a meta molecule
-		$molecule = $this->client($this->source_secret)->createMolecule();
-		$molecule->initBundleMeta(
-			$molecule->encryptMessage( $meta, [$server_wallet] ),
-		);
-		$molecule->sign();
-		$molecule->check();
+    $this->beforeExecute();
 
-		// Execute query & check response
-		$this->executeMolecule( $this->source_secret, $molecule );
-	}
+    // New wallet
+    $new_wallet_secret = Crypto::generateSecret();
+    $newWallet = new Wallet( $new_wallet_secret, 'UTINITWALLET' );
 
+    // Create a molecule
+    $molecule = $this->client( $this->source_secret )
+        ->createMolecule();
+    $molecule->initWalletCreation( $newWallet, new Wallet( $this->source_secret ) );
+    $molecule->sign();
 
-	/**
-	 * @throws \ReflectionException
-	 */
-	public function testAppendMetaIsotope () {
-		/*
-		$this->beforeExecute();
+    // Execute query & check response
+    $this->executeMolecule( $this->source_secret, $molecule );
+  }
 
-		// Create a meta molecule
-		$molecule = $this->client($this->source_secret)->createMolecule();
-		$molecule->initMetaAppend(
-			['key2' => 'value2', 'key3' => 'value3'],
-			'metaType',
-			'metaId'
-		);
-		$molecule->sign();
-		$molecule->check();
+  /**
+   * @throws \Exception
+   */
+  public function testPeerCreation () {
 
-		// Execute query & check response
-		$this->executeMolecule( $this->source_secret, $molecule );
-		*/
-	}
+    $this->beforeExecute();
 
+    // Query
+    $query = $this->client( $this->source_secret )
+        ->createMoleculeMutation( MutationCreatePeer::class );
+    $query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );
 
-	/**
-	 * @throws \ReflectionException
-	 */
-	public function testWalletCreation () {
+    $molecule = $query->execute();
 
-		$this->beforeExecute();
-
-		// New wallet
-		$new_wallet_secret = Crypto::generateSecret();
-		$newWallet = new Wallet($new_wallet_secret, 'UTINITWALLET');
-
-		// Create a molecule
-		$molecule = $this->client( $this->source_secret )->createMolecule();
-		$molecule->initWalletCreation( $newWallet, new Wallet($this->source_secret) );
-		$molecule->sign();
-
-		// Execute query & check response
-		$this->executeMolecule( $this->source_secret, $molecule );
-	}
-
-
-	/**
-	 * @throws \Exception
-	 */
-	public function testPeerCreation () {
-
-		$this->beforeExecute();
-
-		// Query
-		$query = $this->client( $this->source_secret )
-			->createMoleculeMutation( MutationCreatePeer::class );
-		$query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );
-
-		$molecule = $query->execute();
-
-		dd ( $molecule );
-	}
-
-
-
+    dd( $molecule );
+  }
 
 }
