@@ -64,6 +64,7 @@ use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
+use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -90,37 +91,37 @@ class KnishIOClient {
   /**
    * @var HttpClient
    */
-  private $client;
+  private HttpClient $client;
 
   /**
-   * @var string
+   * @var string|null
    */
-  private $secret;
+  private ?string $secret;
 
   /**
-   * @var string
+   * @var string|null
    */
-  private $bundle;
+  private ?string $bundle;
 
   /**
-   * @var
+   * @var Wallet|null
    */
-  private $remainderWallet;
+  private ?Wallet $remainderWallet;
 
   /**
-   * @var
+   * @var Query
    */
-  private $lastMoleculeQuery;
+  private Query $lastMoleculeQuery;
 
   /**
-   * @var string
+   * @var string|null
    */
-  private $cellSlug;
+  private ?string $cellSlug;
 
   /**
    * @var int
    */
-  private $serverSdkVersion;
+  private int $serverSdkVersion;
 
   /**
    * @param Wallet $sourceWallet
@@ -174,11 +175,11 @@ class KnishIOClient {
   }
 
   /**
-   * @param $url
+   * @param string $url
    * @param null $client
    * @param int $serverSdkVersion
    */
-  public function initialize ( $url, $client = null, $serverSdkVersion = 3 ) {
+  public function initialize ( string $url, $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
 
     $this->client = default_if_null( $client, new HttpClient( $url ) );
@@ -188,7 +189,7 @@ class KnishIOClient {
   /**
    * Reset common properties
    */
-  public function reset () {
+  public function reset (): void {
     $this->secret = null;
     $this->bundle = null;
     $this->remainderWallet = null;
@@ -197,21 +198,21 @@ class KnishIOClient {
   /**
    * @return string|null
    */
-  public function cellSlug () {
+  public function cellSlug (): ?string {
     return $this->cellSlug;
   }
 
   /**
-   * @param $cellSlug
+   * @param string $cellSlug
    */
-  public function setCellSlug ( $cellSlug ) {
+  public function setCellSlug ( string $cellSlug ): void {
     $this->cellSlug = $cellSlug;
   }
 
   /**
    * @return string
    */
-  public function url () {
+  public function url (): string {
     return $this->client->getUrl();
   }
 

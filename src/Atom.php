@@ -77,18 +77,18 @@ use WishKnish\KnishIO\Client\Traits\Json;
 class Atom {
   use Json;
 
-  public $position;
-  public $walletAddress;
-  public $isotope;
-  public $token;
-  public $value;
-  public $batchId;
-  public $metaType;
-  public $metaId;
-  public $meta = [];
-  public $index;
-  public $otsFragment;
-  public $createdAt;
+  public string $position;
+  public string $walletAddress;
+  public string $isotope;
+  public ?string $token;
+  public ?string $value;
+  public ?string $batchId;
+  public ?string $metaType;
+  public ?string $metaId;
+  public array $meta = [];
+  public ?int $index;
+  public ?string $otsFragment;
+  public int $createdAt;
 
   /**
    * Atom constructor.
@@ -96,23 +96,21 @@ class Atom {
    * @param string $position
    * @param string $walletAddress
    * @param string $isotope
-   * @param null|string $token
-   * @param null|string $value
+   * @param string|null $token
+   * @param string|null $value
    * @param string|null $batchId
-   * @param null|string $metaType
-   * @param null|string $metaId
-   * @param array $meta
-   * @param string|null $pubkey
-   * @param string|null $characters
-   * @param null|string $otsFragment
-   * @param null|integer $index
+   * @param string|null $metaType
+   * @param string|null $metaId
+   * @param array|null $meta
+   * @param string|null $otsFragment
+   * @param integer|null $index
    */
-  public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $batchId = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null ) {
+  public function __construct ( string $position, string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
     $this->position = $position;
     $this->walletAddress = $walletAddress;
     $this->isotope = $isotope;
     $this->token = $token;
-    $this->value = null !== $value ? ( string ) $value : null;
+    $this->value = $value;
     $this->batchId = $batchId;
 
     $this->metaType = $metaType;
@@ -131,7 +129,7 @@ class Atom {
    * @return array[]|string|string[]|null
    * @throws ReflectionException|Exception
    */
-  public static function hashAtoms ( array $atoms, $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, string $output = 'base17' ) {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
@@ -211,7 +209,7 @@ class Atom {
    *
    * @return array
    */
-  public static function sortAtoms ( array $atoms = null ) {
+  public static function sortAtoms ( array $atoms = null ): array {
     $atoms = default_if_null( $atoms, [] );
 
     $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();

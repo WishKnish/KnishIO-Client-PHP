@@ -59,9 +59,9 @@ use Symfony\Component\Serializer\Serializer;
  */
 trait Json {
   /**
-   * @return mixed
+   * @return string
    */
-  public function toJson () {
+  public function toJson (): string {
     return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
   }
 
@@ -71,7 +71,7 @@ trait Json {
    *
    * @return static|null
    */
-  public static function arrayToObject ( array $data, $object = null ) {
+  public static function arrayToObject ( array $data, $object = null ): ?Json {
     $object = $object ?? new static();
     foreach ( $data as $property => $value ) {
 
@@ -92,7 +92,7 @@ trait Json {
   /**
    * @param $string
    *
-   * @return object
+   * @return array|object
    */
   public static function jsonToObject ( $string ) {
     return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );

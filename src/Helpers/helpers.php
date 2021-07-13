@@ -55,7 +55,7 @@ if ( !function_exists( 'array_unpacking' ) ) {
    *
    * @return array
    */
-  function array_unpacking ( array $arr, ...$args ) {
+  function array_unpacking ( array $arr, ...$args ): array {
 
     foreach ( $args as $value ) {
 
@@ -104,7 +104,7 @@ if ( !function_exists( 'array_has' ) ) {
    *
    * @return bool
    */
-  function array_has ( $array, $keys ) {
+  function array_has ( $array, $keys ): bool {
     if ( !is_array( $array ) ) {
       return false;
     }
@@ -133,7 +133,7 @@ if ( !function_exists( 'array_get' ) ) {
    *
    * @return mixed
    */
-  function array_get ( $array, $keys, $default = null ) {
+  function array_get ( $array, string $keys, $default = null ) {
     $expKeys = explode( '.', $keys );
     foreach ( $expKeys as $key ) {
       if ( !array_has( $array, $key ) ) {
