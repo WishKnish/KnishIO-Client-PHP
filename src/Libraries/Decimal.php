@@ -72,7 +72,7 @@ dd([
 class Decimal {
 
   // Value determines by min sql decimal precision
-  public static $multiplier = 10 ** 18;
+  public static int $multiplier = 10 ** 18;
 
   /**
    * @param $val
@@ -87,15 +87,14 @@ class Decimal {
   }
 
   /**
-   * Cmp deciamal with precision
+   * Compare decimal with precision
    *
    * @param float $val1
    * @param float $val2
-   * @param bool $debug
    *
    * @return int
    */
-  public static function cmp ( $val1, $val2, $debug = false ) {
+  public static function cmp ( float $val1, float $val2 ): int {
     $val1 = static::val( $val1 ) * static::$multiplier;
     $val2 = static::val( $val2 ) * static::$multiplier;
 
@@ -114,7 +113,7 @@ class Decimal {
    *
    * @return bool
    */
-  public static function equal ( $val1, $val2 ) {
+  public static function equal ( $val1, $val2 ): bool {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }
 

@@ -86,7 +86,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null ) {
+  public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null ): bool {
     $verification_methods = [ 'molecularHash', 'ots', 'isotopeM', 'isotopeP', 'isotopeR', 'isotopeC', 'isotopeV', 'isotopeT', 'isotopeI', 'isotopeU', 'index', 'batchId', ];
 
     foreach ( $verification_methods as $method ) {
@@ -148,7 +148,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeR ( MoleculeStructure $molecule ) {
+  public static function isotopeR ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
 
     /** @var Atom $atom */
@@ -201,7 +201,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function continuId ( MoleculeStructure $molecule ) {
+  public static function continuId ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
 
     /** @var Atom $atom */
@@ -219,7 +219,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function index ( MoleculeStructure $molecule ) {
+  public static function index ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -238,7 +238,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeT ( MoleculeStructure $molecule ) {
+  public static function isotopeT ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -284,7 +284,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeP ( MoleculeStructure $molecule ) {
+  public static function isotopeP ( MoleculeStructure $molecule ): bool {
     return static::isotopeC( $molecule );
   }
 
@@ -293,7 +293,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeC ( MoleculeStructure $molecule ) {
+  public static function isotopeC ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -319,7 +319,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeI ( MoleculeStructure $molecule ) {
+  public static function isotopeI ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -345,7 +345,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeU ( MoleculeStructure $molecule ) {
+  public static function isotopeU ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -371,7 +371,7 @@ class CheckMolecule {
    *
    * @return bool
    */
-  public static function isotopeM ( MoleculeStructure $molecule ) {
+  public static function isotopeM ( MoleculeStructure $molecule ): bool {
 
     static::missing( $molecule );
 
@@ -398,12 +398,11 @@ class CheckMolecule {
    * 2. we're only subtracting on the first atom
    *
    * @param MoleculeStructure $molecule
-   * @param Wallet $senderWallet
+   * @param Wallet|null $senderWallet
    *
    * @return bool
-   * @throws AtomsMissingException|TransferMismatchedException|TransferMalformedException|TransferToSelfException|TransferUnbalancedException|TransferBalanceException|TransferRemainderException
    */
-  public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null ) {
+  public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null ): bool {
 
     static::missing( $molecule );
 
@@ -515,7 +514,7 @@ class CheckMolecule {
    * @return bool
    * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
    */
-  public static function molecularHash ( MoleculeStructure $molecule ) {
+  public static function molecularHash ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
 
     if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {
@@ -536,7 +535,7 @@ class CheckMolecule {
    * @return bool
    * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
    */
-  public static function ots ( MoleculeStructure $molecule ) {
+  public static function ots ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
 
     // Determine first atom
@@ -587,7 +586,7 @@ class CheckMolecule {
    *
    * @return array
    */
-  public static function isotopeFilter ( $isotope, array $atoms ) {
+  public static function isotopeFilter ( string $isotope, array $atoms ): array {
     return array_filter( $atoms, static function ( Atom $atom ) use ( $isotope ) {
       return $isotope === $atom->isotope;
     } );
@@ -596,7 +595,7 @@ class CheckMolecule {
   /**
    * @param MoleculeStructure $molecule
    */
-  private static function missing ( MoleculeStructure $molecule ) {
+  private static function missing ( MoleculeStructure $molecule ): void {
     // No molecular hash?
     if ( $molecule->molecularHash === null ) {
       throw new MolecularHashMissingException();

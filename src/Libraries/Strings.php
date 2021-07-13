@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
+use Exception;
 
 /**
  * Class Str
@@ -64,7 +65,7 @@ class Strings {
    *
    * @return array
    */
-  public static function chunkSubstr ( $str, $size ) {
+  public static function chunkSubstr ( string $str, int $size ): array {
     $chunks = ( $size > 0 ) ? array_pad( [], ceil( mb_strlen( $str ) / $size ), 0 ) : [];
     $o = 0;
 
@@ -83,8 +84,9 @@ class Strings {
    * @param string $alphabet
    *
    * @return string
+   * @throws Exception
    */
-  public static function randomString ( $length = 256, $alphabet = 'abcdef0123456789' ) {
+  public static function randomString ( int $length = 256, string $alphabet = 'abcdef0123456789' ): string {
     $array = array_map( static function () use ( $length ) {
       return random_int( 0, 255 );
     }, array_pad( [], $length, 0 ) );
@@ -104,7 +106,7 @@ class Strings {
    *
    * @return string
    */
-  public static function charsetBaseConvert ( $src, $fromBase, $toBase, $srcSymbolTable = null, $destSymbolTable = null ) {
+  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, string $srcSymbolTable = null, string $destSymbolTable = null ) {
     // The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
     $baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 
@@ -152,7 +154,7 @@ class Strings {
   /**
    * @return string
    */
-  public static function currentTimeMillis () {
+  public static function currentTimeMillis (): string {
     return ( string ) round( array_sum( explode( ' ', microtime() ) ) * 1000 );
   }
 
@@ -162,7 +164,7 @@ class Strings {
    *
    * @return int
    */
-  private static function utf8CharCodeAt ( $str, $index ) {
+  private static function utf8CharCodeAt ( string $str, int $index ): int {
     $char = mb_substr( $str, $index, 1, 'UTF-8' );
     return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0;
   }
@@ -174,7 +176,7 @@ class Strings {
    *
    * @return string
    */
-  public static function hexToBase64 ( $str ) {
+  public static function hexToBase64 ( string $str ): string {
     return base64_encode( hex2bin( $str ) );
   }
 
@@ -185,7 +187,7 @@ class Strings {
    *
    * @return string
    */
-  public static function base64ToHex ( $str ) {
+  public static function base64ToHex ( string $str ): string {
     return bin2hex( base64_decode( $str ) );
   }
 

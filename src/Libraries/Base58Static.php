@@ -69,7 +69,7 @@ class Base58Static extends Base {
    *
    * @return string
    */
-  public static function encode ( $data ) {
+  public static function encode ( $data ): string {
     return ( new Base58( self::$options ) )->encode( $data );
   }
 
@@ -92,7 +92,7 @@ class Base58Static extends Base {
    *
    * @return string
    */
-  public static function encodeInteger ( $data ) {
+  public static function encodeInteger ( $data ): string {
     return ( new Base58( self::$options ) )->encodeInteger( $data );
   }
 
@@ -103,7 +103,7 @@ class Base58Static extends Base {
    *
    * @return integer
    */
-  public static function decodeInteger ( $data ) {
+  public static function decodeInteger ( $data ): int {
     return ( new Base58( self::$options ) )->decodeInteger( $data );
   }
 

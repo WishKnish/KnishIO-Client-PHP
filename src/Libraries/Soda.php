@@ -49,9 +49,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
+use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Base58Static as B58;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
@@ -75,7 +75,7 @@ class Soda {
    *
    * @throws ReflectionException
    */
-  public function __construct ( $characters = null ) {
+  public function __construct ( string $characters = null ) {
 
     $constant = Base58::class . '::' . $characters;
 
@@ -96,9 +96,9 @@ class Soda {
    * @param string $key
    *
    * @return string
-   * @throws Exception|ReflectionException
+   * @throws SodiumException
    */
-  public function encrypt ( $message, $key ) {
+  public function encrypt ( $message, string $key ): string {
 
     return $this->encode( sodium_crypto_box_seal( json_encode( (array) $message ), $this->decode( $key ) ) );
 
@@ -112,8 +112,9 @@ class Soda {
    * @param string $publicKey
    *
    * @return array|null
+   * @throws SodiumException
    */
-  public function decrypt ( $decrypted, $privateKey, $publicKey ) {
+  public function decrypt ( string $decrypted, string $privateKey, string $publicKey ): ?array {
 
     return json_decode( sodium_crypto_box_seal_open( $this->decode( $decrypted ), sodium_crypto_box_keypair_from_secretkey_and_publickey( $this->decode( $privateKey ), $this->decode( $publicKey ) ) ), true );
 
@@ -125,9 +126,10 @@ class Soda {
    * @param string $key
    *
    * @return string
-   * @throws Exception|ReflectionException
+   * @throws SodiumException
+   * @throws Exception
    */
-  public function generatePrivateKey ( $key ) {
+  public function generatePrivateKey ( string $key ): string {
 
     return $this->encode( sodium_crypto_box_secretkey( Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES ) ) );
 
@@ -139,8 +141,9 @@ class Soda {
    * @param string $key
    *
    * @return string
+   * @throws SodiumException
    */
-  public function generatePublicKey ( $key ) {
+  public function generatePublicKey ( string $key ): string {
 
     return $this->encode( sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
 
@@ -152,7 +155,7 @@ class Soda {
    * @return string
    * @throws Exception
    */
-  public function shortHash ( $key ) {
+  public function shortHash ( string $key ): string {
     return $this->encode( Shake256::hash( $key, 8 ) );
   }
 
@@ -161,7 +164,7 @@ class Soda {
    *
    * @return string
    */
-  private function decode ( $data ) {
+  private function decode ( string $data ): string {
 
     B58::$options[ 'characters' ] = $this->characters;
 
@@ -174,7 +177,7 @@ class Soda {
    *
    * @return string
    */
-  private function encode ( $data ) {
+  private function encode ( string $data ): string {
 
     B58::$options[ 'characters' ] = $this->characters;
 

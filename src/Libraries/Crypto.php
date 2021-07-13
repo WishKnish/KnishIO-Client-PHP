@@ -49,9 +49,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
+use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
@@ -63,18 +63,18 @@ class Crypto {
   /**
    * @var string
    */
-  private static $characters = Base58::GMP;
+  private static string $characters = Base58::GMP;
 
   /**
    * Generates a secret based on an optional seed
    *
-   * @param null $seed
-   * @param int $length
+   * @param string|null $seed
+   * @param int|null $length
    *
    * @return string
    * @throws Exception
    */
-  public static function generateSecret ( $seed = null, $length = null ) {
+  public static function generateSecret ( string $seed = null, int $length = null ): string {
     $length = default_if_null( $length, 2048 );
 
     return in_array( $seed, [ null, '' ], true ) ? Strings::randomString( $length ) : bin2hex( Shake256::hash( $seed, $length / 4 ) );
@@ -87,7 +87,7 @@ class Crypto {
    * @return string
    * @throws Exception
    */
-  public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ) {
+  public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
 
     if ( !in_array( null, [ $molecularHash, $index ], true ) ) {
       return static::generateBundleHash( $molecularHash . $index );
@@ -104,7 +104,7 @@ class Crypto {
    * @return string
    * @throws Exception
    */
-  public static function generateBundleHash ( $secret ) {
+  public static function generateBundleHash ( string $secret ): string {
 
     return bin2hex( Shake256::hash( $secret, 32 ) );
 
@@ -119,7 +119,7 @@ class Crypto {
    * @return string|null
    * @throws Exception|ReflectionException
    */
-  public static function encryptMessage ( $message, $key ) {
+  public static function encryptMessage ( $message, string $key ): ?string {
 
     return ( new Soda( static::$characters ) )->encrypt( $message, $key );
 
@@ -133,9 +133,9 @@ class Crypto {
    * @param string $publicKey
    *
    * @return array|null
-   * @throws ReflectionException
+   * @throws ReflectionException|SodiumException
    */
-  public static function decryptMessage ( $decrypted, $privateKey, $publicKey ) {
+  public static function decryptMessage ( string $decrypted, string $privateKey, string $publicKey ): ?array {
 
     return ( new Soda( static::$characters ) )->decrypt( $decrypted, $privateKey, $publicKey );
 
@@ -149,7 +149,7 @@ class Crypto {
    * @return string|null
    * @throws Exception|ReflectionException
    */
-  public static function generateEncPrivateKey ( $key = null ) {
+  public static function generateEncPrivateKey ( string $key = null ): ?string {
 
     return ( new Soda( static::$characters ) )->generatePrivateKey( $key );
 
@@ -161,9 +161,9 @@ class Crypto {
    * @param string $key
    *
    * @return string|null
-   * @throws ReflectionException
+   * @throws ReflectionException|SodiumException
    */
-  public static function generateEncPublicKey ( $key ) {
+  public static function generateEncPublicKey ( string $key ): ?string {
 
     return ( new Soda( static::$characters ) )->generatePublicKey( $key );
 
@@ -172,7 +172,7 @@ class Crypto {
   /**
    * @param string $characters
    */
-  public static function setCharacters ( $characters ) {
+  public static function setCharacters ( string $characters ): void {
 
     $constant = Base58::class . '::' . $characters;
 
@@ -183,7 +183,7 @@ class Crypto {
   /**
    * @return string
    */
-  public static function getCharacters () {
+  public static function getCharacters (): string {
 
     return static::$characters;
 
@@ -195,7 +195,7 @@ class Crypto {
    * @return string
    * @throws ReflectionException|Exception
    */
-  public static function hashShare ( $key ) {
+  public static function hashShare ( string $key ): string {
 
     return ( new Soda( static::$characters ) )->shortHash( $key );
 

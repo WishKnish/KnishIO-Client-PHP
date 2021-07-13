@@ -57,11 +57,15 @@ use function strlen;
 use function substr;
 
 class Sha3 {
-  const KECCAK_ROUNDS = 24;
-  private static $keccakf_rotc = [ 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44 ];
-  private static $keccakf_piln = [ 10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1 ];
+  private const KECCAK_ROUNDS = 24;
+  private static array $keccakf_rotc = [ 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44 ];
+  private static array $keccakf_piln = [ 10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1 ];
 
-  private static function keccakf64 ( &$st, $rounds ) {
+  /**
+   * @param $st
+   * @param int $rounds
+   */
+  private static function keccakf64 ( &$st, int $rounds ): void {
     $keccakf_rndc = [ [ 0x00000000, 0x00000001 ], [ 0x00000000, 0x00008082 ], [ 0x80000000, 0x0000808a ], [ 0x80000000, 0x80008000 ], [ 0x00000000, 0x0000808b ], [ 0x00000000, 0x80000001 ], [ 0x80000000, 0x80008081 ], [ 0x80000000, 0x00008009 ], [ 0x00000000, 0x0000008a ], [ 0x00000000, 0x00000088 ], [ 0x00000000, 0x80008009 ], [ 0x00000000, 0x8000000a ], [ 0x00000000, 0x8000808b ], [ 0x80000000, 0x0000008b ], [ 0x80000000, 0x00008089 ], [ 0x80000000, 0x00008003 ], [ 0x80000000, 0x00008002 ], [ 0x80000000, 0x00000080 ], [ 0x00000000, 0x0000800a ], [ 0x80000000, 0x8000000a ], [ 0x80000000, 0x80008081 ], [ 0x80000000, 0x00008080 ], [ 0x00000000, 0x80000001 ], [ 0x80000000, 0x80008008 ] ];
 
     $bc = [];
@@ -116,7 +120,17 @@ class Sha3 {
     }
   }
 
-  private static function keccak64 ( $in_raw, $capacity, $outputlength, $suffix, $raw_output ) {
+  /**
+   * @param $in_raw
+   * @param int $capacity
+   * @param int $outputlength
+   * @param $suffix
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
+  private static function keccak64 ( $in_raw, int $capacity, int $outputlength, $suffix, bool $raw_output ): string {
     $capacity /= 8;
 
     $inlen = self::ourStrlen( $in_raw );
@@ -162,7 +176,11 @@ class Sha3 {
     return $raw_output ? $r : bin2hex( $r );
   }
 
-  private static function keccakf32 ( &$st, $rounds ) {
+  /**
+   * @param $st
+   * @param int $rounds
+   */
+  private static function keccakf32 ( &$st, int $rounds ): void {
     $keccakf_rndc = [ [ 0x0000, 0x0000, 0x0000, 0x0001 ], [ 0x0000, 0x0000, 0x0000, 0x8082 ], [ 0x8000, 0x0000, 0x0000, 0x0808a ], [ 0x8000, 0x0000, 0x8000, 0x8000 ], [ 0x0000, 0x0000, 0x0000, 0x808b ], [ 0x0000, 0x0000, 0x8000, 0x0001 ], [ 0x8000, 0x0000, 0x8000, 0x08081 ], [ 0x8000, 0x0000, 0x0000, 0x8009 ], [ 0x0000, 0x0000, 0x0000, 0x008a ], [ 0x0000, 0x0000, 0x0000, 0x0088 ], [ 0x0000, 0x0000, 0x8000, 0x08009 ], [ 0x0000, 0x0000, 0x8000, 0x000a ], [ 0x0000, 0x0000, 0x8000, 0x808b ], [ 0x8000, 0x0000, 0x0000, 0x008b ], [ 0x8000, 0x0000, 0x0000, 0x08089 ], [ 0x8000, 0x0000, 0x0000, 0x8003 ], [ 0x8000, 0x0000, 0x0000, 0x8002 ], [ 0x8000, 0x0000, 0x0000, 0x0080 ], [ 0x0000, 0x0000, 0x0000, 0x0800a ], [ 0x8000, 0x0000, 0x8000, 0x000a ], [ 0x8000, 0x0000, 0x8000, 0x8081 ], [ 0x8000, 0x0000, 0x0000, 0x8080 ], [ 0x0000, 0x0000, 0x8000, 0x00001 ], [ 0x8000, 0x0000, 0x8000, 0x8008 ] ];
 
     $bc = [];
@@ -210,7 +228,17 @@ class Sha3 {
     }
   }
 
-  private static function keccak32 ( $in_raw, $capacity, $outputlength, $suffix, $raw_output ) {
+  /**
+   * @param $in_raw
+   * @param int $capacity
+   * @param int $outputlength
+   * @param $suffix
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
+  private static function keccak32 ( $in_raw, int $capacity, int $outputlength, $suffix, bool $raw_output ): string {
     $capacity /= 8;
 
     $inlen = self::ourStrlen( $in_raw );
@@ -257,9 +285,12 @@ class Sha3 {
   }
 
   // 0 = not run, 1 = 64 bit passed, 2 = 32 bit passed, 3 = failed
-  private static $test_state = 0;
+  private static int $test_state = 0;
 
-  private static function selfTest () {
+  /**
+   * @throws Exception
+   */
+  private static function selfTest (): void {
     if ( self::$test_state === 1 || self::$test_state === 2 ) {
       return;
     }
@@ -284,7 +315,17 @@ class Sha3 {
     throw new Exception( 'Sha3 self test failed!' );
   }
 
-  private static function keccak ( $in_raw, $capacity, $outputlength, $suffix, $raw_output ) {
+  /**
+   * @param $in_raw
+   * @param int $capacity
+   * @param int $outputlength
+   * @param $suffix
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
+  private static function keccak ( $in_raw, int $capacity, int $outputlength, $suffix, bool $raw_output ): string {
     self::selfTest();
 
     if ( self::$test_state === 1 ) {
@@ -294,7 +335,15 @@ class Sha3 {
     return self::keccak32( $in_raw, $capacity, $outputlength, $suffix, $raw_output );
   }
 
-  public static function hash ( $in, $mdlen, $raw_output = false ) {
+  /**
+   * @param $in
+   * @param int $mdlen
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
+  public static function hash ( $in, int $mdlen, bool $raw_output = false ): string {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
       throw new Exception( 'Unsupported Sha3 Hash output size.' );
     }
@@ -302,7 +351,16 @@ class Sha3 {
     return self::keccak( $in, $mdlen, $mdlen, 0x06, $raw_output );
   }
 
-  public static function shake ( $in, $security_level, $outlen, $raw_output = false ) {
+  /**
+   * @param $in
+   * @param int $security_level
+   * @param int $outlen
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
+  public static function shake ( $in, int $security_level, int $outlen, bool $raw_output = false ): string {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
       throw new Exception( 'Unsupported Sha3 Shake security level.' );
     }
@@ -320,8 +378,9 @@ class Sha3 {
    * @param string $str
    *
    * @return int
+   * @throws Exception
    */
-  private static function ourStrlen ( $str ) {
+  private static function ourStrlen ( string $str ): int {
     // Premature optimization: cache the function_exists() result
     static $exists = null;
     if ( $exists === null ) {
@@ -344,11 +403,11 @@ class Sha3 {
    *
    * @param string $str
    * @param int $start
-   * @param int $length (optional)
+   * @param int|null $length (optional)
    *
    * @return string
    */
-  private static function ourSubstr ( $str, $start = 0, $length = null ) {
+  private static function ourSubstr ( string $str, int $start = 0, int $length = null ): string {
     // Premature optimization: cache the function_exists() result
     static $exists = null;
     if ( $exists === null ) {

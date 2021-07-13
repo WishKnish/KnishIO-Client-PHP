@@ -87,17 +87,23 @@ use Exception;
  * systems. Also for LE vs. BE systems.
  */
 class DesktopdSha3 {
-  const SHA3_224 = 1;
-  const SHA3_256 = 2;
-  const SHA3_384 = 3;
-  const SHA3_512 = 4;
+  public const SHA3_224 = 1;
+  public const SHA3_256 = 2;
+  public const SHA3_384 = 3;
+  public const SHA3_512 = 4;
 
-  const SHAKE128 = 5;
-  const SHAKE256 = 6;
+  public const SHAKE128 = 5;
+  public const SHAKE256 = 6;
 
-  static array $idxs = [ [ 0, 5, 10, 15, 20 ], [ 1, 6, 11, 16, 21 ], [ 2, 7, 12, 17, 22 ], [ 3, 8, 13, 18, 23 ], [ 4, 9, 14, 19, 24 ] ];
+  public static array $idxs = [ [ 0, 5, 10, 15, 20 ], [ 1, 6, 11, 16, 21 ], [ 2, 7, 12, 17, 22 ], [ 3, 8, 13, 18, 23 ], [ 4, 9, 14, 19, 24 ] ];
 
-  public static function init ( $type = null ) {
+  /**
+   * @param int|null $type
+   *
+   * @return DesktopdSha3
+   * @throws Exception
+   */
+  public static function init ( int $type = null ): DesktopdSha3 {
     switch ( $type ) {
       case self::SHA3_224:
         return new self ( 1152, 448, 0x06, 28 );
@@ -118,8 +124,13 @@ class DesktopdSha3 {
 
   /**
    * Feed input to SHA-3 "sponge"
+   *
+   * @param $data
+   *
+   * @return $this
+   * @throws Exception
    */
-  public function absorb ( $data ) {
+  public function absorb ( $data ): DesktopdSha3 {
     if ( self::PHASE_INPUT !== $this->phase ) {
       throw new Exception ( 'No more input accepted' );
     }
@@ -150,8 +161,13 @@ class DesktopdSha3 {
 
   /**
    * Get hash output
+   *
+   * @param int|null $length
+   *
+   * @return string
+   * @throws Exception
    */
-  public function squeeze ( $length = null ) {
+  public function squeeze ( int $length = null ): string {
     $outputLength = $this->outputLength; // fixed length output
     if ( $length && 0 < $outputLength && $outputLength !== $length ) {
       throw new Exception ( 'Invalid length' );
@@ -186,20 +202,28 @@ class DesktopdSha3 {
   }
 
   // internally used
-  const PHASE_INIT = 1;
-  const PHASE_INPUT = 2;
-  const PHASE_OUTPUT = 3;
-  const PHASE_DONE = 4;
+  public const PHASE_INIT = 1;
+  public const PHASE_INPUT = 2;
+  public const PHASE_OUTPUT = 3;
+  public const PHASE_DONE = 4;
 
-  private $phase = self::PHASE_INIT;
-  private $state; // byte array (string)
-  private $rateInBytes; // positive integer
-  private $suffix; // 8-bit unsigned integer
-  private $inputBuffer = ''; // byte array (string): max length = rateInBytes
-  private $outputLength = 0;
-  private $outputBuffer = '';
+  private int $phase = self::PHASE_INIT;
+  private string $state; // byte array (string)
+  private int $rateInBytes; // positive integer
+  private int $suffix; // 8-bit unsigned integer
+  private string $inputBuffer = ''; // byte array (string): max length = rateInBytes
+  private int $outputLength;
+  private string $outputBuffer = '';
 
-  public function __construct ( $rate, $capacity, $suffix, $length = 0 ) {
+  /**
+   * DesktopdSha3 constructor.
+   *
+   * @param int $rate
+   * @param int $capacity
+   * @param int $suffix
+   * @param int $length
+   */
+  public function __construct ( int $rate, int $capacity, int $suffix, int $length = 0 ) {
     if ( 1600 !== ( $rate + $capacity ) ) {
       throw new Error ( 'Invalid parameters' );
     }
@@ -213,10 +237,12 @@ class DesktopdSha3 {
 
     $this->rateInBytes = $rate / 8;
     $this->outputLength = $length;
-    $this->phase = self::PHASE_INPUT;
   }
 
-  protected function finalizeInput () {
+  /**
+   * @return void
+   */
+  protected function finalizeInput (): void {
     $this->phase = self::PHASE_OUTPUT;
 
     $input = $this->inputBuffer;
@@ -240,7 +266,12 @@ class DesktopdSha3 {
     $this->state = self::keccakF1600Permute( $this->state );
   }
 
-  protected function getOutputBytes ( $outputLength ) {
+  /**
+   * @param int $outputLength
+   *
+   * @return string
+   */
+  protected function getOutputBytes ( int $outputLength ): string {
     // Squeeze
     $output = '';
     while ( 0 < $outputLength ) {
@@ -257,8 +288,12 @@ class DesktopdSha3 {
 
   /**
    * 1600-bit state version of Keccak's permutation
+   *
+   * @param string $state
+   *
+   * @return string
    */
-  public static function keccakF1600Permute ( $state ) {
+  public static function keccakF1600Permute ( string $state ): string {
     // !!! --- Check function from the ext
     if ( function_exists( 'keccakF1600Permute' ) ) {
       return keccakF1600Permute( $state );
@@ -345,14 +380,25 @@ class DesktopdSha3 {
     return implode( $lanes );
   }
 
-  protected static function rotL64_64 ( $n, $offset ) {
+  /**
+   * @param string $n
+   * @param int $offset
+   *
+   * @return int
+   */
+  protected static function rotL64_64 ( string $n, int $offset ): int {
     return ( $n << $offset ) & ( $n >> ( 64 - $offset ) );
   }
 
   /**
    * 64-bit bitwise left rotation (Little endian)
+   *
+   * @param string $n
+   * @param int $offset
+   *
+   * @return string
    */
-  protected static function rotL64 ( $n, $offset ) {
+  protected static function rotL64 ( string $n, int $offset ): string {
 
     //$n = (binary) $n;
     //$offset = ((int) $offset) % 64;
@@ -375,8 +421,12 @@ class DesktopdSha3 {
 
   /**
    * 64-bit bitwise left rotation (Little endian)
+   *
+   * @param string $n
+   *
+   * @return string
    */
-  protected static function rotL64One ( $n ) {
+  protected static function rotL64One ( string $n ): string {
     [ $n[ 0 ], $n[ 1 ], $n[ 2 ], $n[ 3 ], $n[ 4 ], $n[ 5 ], $n[ 6 ], $n[ 7 ] ] = [ chr( ( ( ord( $n[ 0 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 7 ] ) >> 7 ) ), chr( ( ( ord( $n[ 1 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 0 ] ) >> 7 ) ), chr( ( ( ord( $n[ 2 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 1 ] ) >> 7 ) ), chr( ( ( ord( $n[ 3 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 2 ] ) >> 7 ) ), chr( ( ( ord( $n[ 4 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 3 ] ) >> 7 ) ), chr( ( ( ord( $n[ 5 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 4 ] ) >> 7 ) ), chr( ( ( ord( $n[ 6 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 5 ] ) >> 7 ) ), chr( ( ( ord( $n[ 7 ] ) << 1 ) & 0xff ) ^ ( ord( $n[ 6 ] ) >> 7 ) ) ];
     return $n;
   }

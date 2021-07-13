@@ -51,15 +51,23 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
 use Exception;
 
+/**
+ * Class Keccak
+ * @package WishKnish\KnishIO\Client\Libraries\Crypto
+ */
 class Keccak {
   private const KECCAK_ROUNDS = 24;
   private const LFSR = 0x01;
   private const ENCODING = '8bit';
-  private static $keccakf_rotc = [ 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44 ];
-  private static $keccakf_piln = [ 10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1 ];
-  private static $x64 = ( PHP_INT_SIZE === 8 );
+  private static array $keccakf_rotc = [ 1, 3, 6, 10, 15, 21, 28, 36, 45, 55, 2, 14, 27, 41, 56, 8, 25, 43, 62, 18, 39, 61, 20, 44 ];
+  private static array $keccakf_piln = [ 10, 7, 11, 17, 18, 3, 5, 16, 8, 21, 24, 4, 15, 23, 19, 13, 12, 2, 20, 14, 22, 9, 6, 1 ];
+  private static bool $x64 = ( PHP_INT_SIZE === 8 );
 
-  private static function keccakf64 ( &$st, $rounds ): void {
+  /**
+   * @param $st
+   * @param int $rounds
+   */
+  private static function keccakf64 ( &$st, int $rounds ): void {
     $keccakf_rndc = [ [ 0x00000000, 0x00000001 ], [ 0x00000000, 0x00008082 ], [ 0x80000000, 0x0000808a ], [ 0x80000000, 0x80008000 ], [ 0x00000000, 0x0000808b ], [ 0x00000000, 0x80000001 ], [ 0x80000000, 0x80008081 ], [ 0x80000000, 0x00008009 ], [ 0x00000000, 0x0000008a ], [ 0x00000000, 0x00000088 ], [ 0x00000000, 0x80008009 ], [ 0x00000000, 0x8000000a ], [ 0x00000000, 0x8000808b ], [ 0x80000000, 0x0000008b ], [ 0x80000000, 0x00008089 ], [ 0x80000000, 0x00008003 ], [ 0x80000000, 0x00008002 ], [ 0x80000000, 0x00000080 ], [ 0x00000000, 0x0000800a ], [ 0x80000000, 0x8000000a ], [ 0x80000000, 0x80008081 ], [ 0x80000000, 0x00008080 ], [ 0x00000000, 0x80000001 ], [ 0x80000000, 0x80008008 ] ];
 
     $bc = [];
@@ -114,6 +122,15 @@ class Keccak {
     }
   }
 
+  /**
+   * @param $in_raw
+   * @param int $capacity
+   * @param int $outputlength
+   * @param $suffix
+   * @param bool $raw_output
+   *
+   * @return string
+   */
   private static function keccak64 ( $in_raw, int $capacity, int $outputlength, $suffix, bool $raw_output ): string {
     $capacity /= 8;
 
@@ -159,7 +176,11 @@ class Keccak {
     return $raw_output ? $r : bin2hex( $r );
   }
 
-  private static function keccakf32 ( &$st, $rounds ): void {
+  /**
+   * @param $st
+   * @param int $rounds
+   */
+  private static function keccakf32 ( &$st, int $rounds ): void {
     $keccakf_rndc = [ [ 0x0000, 0x0000, 0x0000, 0x0001 ], [ 0x0000, 0x0000, 0x0000, 0x8082 ], [ 0x8000, 0x0000, 0x0000, 0x0808a ], [ 0x8000, 0x0000, 0x8000, 0x8000 ], [ 0x0000, 0x0000, 0x0000, 0x808b ], [ 0x0000, 0x0000, 0x8000, 0x0001 ], [ 0x8000, 0x0000, 0x8000, 0x08081 ], [ 0x8000, 0x0000, 0x0000, 0x8009 ], [ 0x0000, 0x0000, 0x0000, 0x008a ], [ 0x0000, 0x0000, 0x0000, 0x0088 ], [ 0x0000, 0x0000, 0x8000, 0x08009 ], [ 0x0000, 0x0000, 0x8000, 0x000a ], [ 0x0000, 0x0000, 0x8000, 0x808b ], [ 0x8000, 0x0000, 0x0000, 0x008b ], [ 0x8000, 0x0000, 0x0000, 0x08089 ], [ 0x8000, 0x0000, 0x0000, 0x8003 ], [ 0x8000, 0x0000, 0x0000, 0x8002 ], [ 0x8000, 0x0000, 0x0000, 0x0080 ], [ 0x0000, 0x0000, 0x0000, 0x0800a ], [ 0x8000, 0x0000, 0x8000, 0x000a ], [ 0x8000, 0x0000, 0x8000, 0x8081 ], [ 0x8000, 0x0000, 0x0000, 0x8080 ], [ 0x0000, 0x0000, 0x8000, 0x00001 ], [ 0x8000, 0x0000, 0x8000, 0x8008 ] ];
 
     $bc = [];
@@ -207,6 +228,15 @@ class Keccak {
     }
   }
 
+  /**
+   * @param $in_raw
+   * @param int $capacity
+   * @param int $outputlength
+   * @param $suffix
+   * @param bool $raw_output
+   *
+   * @return string
+   */
   private static function keccak32 ( $in_raw, int $capacity, int $outputlength, $suffix, bool $raw_output ): string {
     $capacity /= 8;
 
@@ -256,6 +286,14 @@ class Keccak {
     return self::$x64 ? self::keccak64( $in_raw, $capacity, $outputlength, $suffix, $raw_output ) : self::keccak32( $in_raw, $capacity, $outputlength, $suffix, $raw_output );
   }
 
+  /**
+   * @param $in
+   * @param int $mdlen
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
   public static function hash ( $in, int $mdlen, bool $raw_output = false ): string {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
       throw new Exception( 'Unsupported Keccak Hash output size.' );
@@ -264,6 +302,15 @@ class Keccak {
     return self::keccak_base( $in, $mdlen, $mdlen, self::LFSR, $raw_output );
   }
 
+  /**
+   * @param $in
+   * @param int $security_level
+   * @param int $outlen
+   * @param bool $raw_output
+   *
+   * @return string
+   * @throws Exception
+   */
   public static function shake ( $in, int $security_level, int $outlen, bool $raw_output = false ): string {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
       throw new Exception( 'Unsupported Keccak Shake security level.' );

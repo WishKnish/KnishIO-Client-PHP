@@ -64,7 +64,7 @@ class Sodium {
    * @throws ReflectionException
    * @throws Exception
    */
-  public static function libsodium2sodium () {
+  public static function libsodium2sodium (): void {
 
     if ( extension_loaded( 'libsodium' ) ) {
 
@@ -109,10 +109,10 @@ class Sodium {
    * @param ReflectionFunction $functionReflection
    * @param string $aliasName
    *
-   * @return bool
+   * @return void
    * @throws ReflectionException
    */
-  private static function createFunctionAlias ( $functionReflection, $aliasName ) {
+  private static function createFunctionAlias ( ReflectionFunction $functionReflection, string $aliasName ): void {
 
     if ( !function_exists( $aliasName ) ) {
 
@@ -176,11 +176,8 @@ class Sodium {
       $function = 'function ' . $function . ')' . PHP_EOL . '{return call_user_func_array("' . $functionName . '", func_get_args());}';
 
       eval( $function );
-      return true;
 
     }
-
-    return false;
 
   }
 

@@ -82,7 +82,7 @@ dd ('OK');
  */
 class Shake256 {
 
-  protected static $useExt = true;
+  protected static bool $useExt = true;
 
   /**
    * @return bool
@@ -95,12 +95,12 @@ class Shake256 {
    * Shake256 hashing
    *
    * @param $data
-   * @param $length
+   * @param int $length
    *
    * @return string
    * @throws Exception
    */
-  public static function hash ( $data, $length ) {
+  public static function hash ( $data, int $length ): string {
 
     // Using sha3 php extension
     if ( static::usingExt() ) {

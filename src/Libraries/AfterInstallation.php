@@ -57,7 +57,7 @@ class AfterInstallation {
   /**
    * Fixes unnecessary output in desktopd/php-sha3-streamable
    */
-  public static function sha3Fix () {
+  public static function sha3Fix (): void {
     if ( stripos( PHP_OS, 'win' ) === 0 ) {
 
       $files = [ implode( DIRECTORY_SEPARATOR, [ __DIR__, '..', '..', 'vendor', 'desktopd', 'php-sha3-streamable', 'src', 'SHA3.php' ] ), implode( DIRECTORY_SEPARATOR, [ __DIR__, '..', '..', '..', '..', 'desktopd', 'php-sha3-streamable', 'src', 'SHA3.php' ] ), ];
