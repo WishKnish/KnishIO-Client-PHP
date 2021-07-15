@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use ReflectionException;
-use WishKnish\KnishIO\Client\Response\ResponseMetaCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -64,7 +63,7 @@ class MutationCreateWallet extends MutationProposeMolecule {
    *
    * @throws ReflectionException
    */
-  public function fillMolecule ( Wallet $newWallet ) {
+  public function fillMolecule ( Wallet $newWallet ): void {
     $this->molecule->initWalletCreation( $newWallet );
     $this->molecule->sign();
     $this->molecule->check();

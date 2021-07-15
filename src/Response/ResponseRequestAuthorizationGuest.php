@@ -54,7 +54,7 @@ use WishKnish\KnishIO\Client\Wallet;
 
 class ResponseRequestAuthorizationGuest extends Response {
 
-  protected $dataKey = 'data.AccessToken';
+  protected string $dataKey = 'data.AccessToken';
 
   public function reason (): string {
     return 'Invalid response from server';
@@ -103,11 +103,17 @@ class ResponseRequestAuthorizationGuest extends Response {
     return $this->payloadKey( 'key' );
   }
 
+  /**
+   * @return Wallet
+   */
   public function wallet (): Wallet {
     return $this->query()
         ->getWallet();
   }
 
+  /**
+   * @return mixed
+   */
   public function encrypt () {
     return $this->payloadKey( 'encrypt' );
   }

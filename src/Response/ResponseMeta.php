@@ -54,6 +54,6 @@ namespace WishKnish\KnishIO\Client\Response;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMeta extends Response {
-  protected $dataKey = 'data.Meta';
+  protected string $dataKey = 'data.Meta';
 
 }

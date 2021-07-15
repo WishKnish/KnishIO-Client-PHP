@@ -64,11 +64,11 @@ use WishKnish\KnishIO\Client\Traits\Json;
 class Meta {
   use Json;
 
-  public $modelType;
-  public $modelId;
-  public $meta;
+  public string $modelType;
+  public string $modelId;
+  public array $meta;
   public $snapshotMolecule;
-  public $createdAt;
+  public int $createdAt;
 
   public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null ) {
     $this->modelType = $modelType;
@@ -83,7 +83,7 @@ class Meta {
    *
    * @return array
    */
-  public static function normalizeMeta ( array $meta ) {
+  public static function normalizeMeta ( array $meta ): array {
     $result = [];
     foreach ( $meta as $key => $value ) {
       $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
@@ -96,7 +96,7 @@ class Meta {
    *
    * @return array
    */
-  public static function aggregateMeta ( $meta ) {
+  public static function aggregateMeta ( $meta ): array {
     $aggregate = [];
     if ( count( $meta ) ) {
       foreach ( $meta as $metaEntry ) {

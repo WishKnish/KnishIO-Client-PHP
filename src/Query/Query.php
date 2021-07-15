@@ -71,22 +71,27 @@ abstract class Query {
   /**
    * @var Request
    */
-  protected $request;
+  protected Request $request;
 
   /**
    * @var Response
    */
-  protected $response;
+  protected Response $response;
 
   /**
    * @var array|null
    */
-  protected $variables;
+  protected ?array $variables;
 
   /**
    * @var string
    */
-  protected static $default_query;
+  protected static string $default_query;
+
+  /**
+   * @var array
+   */
+  protected array $fields;
 
   /**
    * Query constructor.
@@ -102,14 +107,14 @@ abstract class Query {
   /**
    * @return Request
    */
-  public function request () {
+  public function request (): Request {
     return $this->request;
   }
 
   /**
    * @return Response
    */
-  public function response () {
+  public function response (): Response {
     return $this->response;
   }
 
@@ -133,12 +138,12 @@ abstract class Query {
 
   /**
    * @param array|null $variables
-   * @param array $fields
+   * @param array|null $fields
    *
-   * @return mixed
+   * @return Response
    * @throws GuzzleException
    */
-  public function execute ( array $variables = null, array $fields = null ) {
+  public function execute ( array $variables = null, array $fields = null ): Response {
 
     // Set a request
     $this->request = $this->createRequest( $variables, $fields );
@@ -158,7 +163,7 @@ abstract class Query {
    * Debug info => get an url to execute GraphQL directly from it
    *
    * @param string $name
-   * @param array|null $variables
+   * @param array|string|null $variables
    * @param array|null $fields
    *
    * @return string
@@ -181,9 +186,9 @@ abstract class Query {
   }
 
   /**
-   * @param array $fields
+   * @param array|null $fields
    *
-   * @return mixed
+   * @return array|string|string[]
    */
   public function compiledQuery ( array $fields = null ) {
     // Fields
@@ -200,7 +205,7 @@ abstract class Query {
    *
    * @return string
    */
-  protected function compiledFields ( array $fields ) {
+  protected function compiledFields ( array $fields ): string {
     foreach ( $fields as $key => $field ) {
       if ( is_array( $field ) ) {
         $fields[ $key ] = $key . ' ' . $this->compiledFields( $field );
@@ -212,9 +217,9 @@ abstract class Query {
   /**
    * @param array|null $variables
    *
-   * @return mixed
+   * @return array
    */
-  public function compiledVariables ( array $variables = null ) {
+  public function compiledVariables ( array $variables = null ): array {
     return default_if_null( $variables, [] );
   }
 
@@ -223,7 +228,7 @@ abstract class Query {
    *
    * @return Response
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): Response {
     return new Response( $this, $response );
   }
 
@@ -232,7 +237,7 @@ abstract class Query {
    *
    * @return Response
    */
-  public function createResponseRaw ( ResponseInterface $response ) {
+  public function createResponseRaw ( ResponseInterface $response ): Response {
     return $this->createResponse( $response->getBody()
         ->getContents() );
   }
@@ -240,24 +245,27 @@ abstract class Query {
   /**
    * @return string|null
    */
-  public function url () {
+  public function url (): ?string {
     return $this->client()
         ->getUrl();
   }
 
   /**
-   * @return mixed
+   * @return array
    */
   public function variables (): array {
     return $this->variables;
   }
 
+  /**
+   * @return HttpClientInterface
+   */
   public function client (): HttpClientInterface {
     return $this->client;
   }
 
   /**
-   * @return mixed
+   * @return array
    */
   public function fields (): array {
     return $this->fields;

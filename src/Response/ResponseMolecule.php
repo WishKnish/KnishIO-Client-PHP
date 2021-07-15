@@ -59,19 +59,19 @@ use function json_decode;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMolecule extends Response {
-  protected $dataKey = 'data.ProposeMolecule';
+  protected string $dataKey = 'data.ProposeMolecule';
 
   protected $payload;
 
-  protected $clientMolecule;
+  protected MoleculeStructure $clientMolecule;
 
   /**
    * Response constructor.
    *
-   * @param Query $query
+   * @param MutationProposeMoleculeStructure|null $query
    * @param string $json
    */
-  public function __construct ( ?MutationProposeMoleculeStructure $query, $json ) {
+  public function __construct ( ?MutationProposeMoleculeStructure $query, string $json ) {
     parent::__construct( $query, $json );
 
     if ( $query !== null ) {
@@ -79,10 +79,7 @@ class ResponseMolecule extends Response {
     }
   }
 
-  /**
-   *
-   */
-  public function init () {
+  public function init (): void {
 
     // Get a json payload
     $payload_json = array_get( $this->data(), 'payload' );
@@ -103,7 +100,7 @@ class ResponseMolecule extends Response {
   /**
    * @return MoleculeStructure|null
    */
-  public function molecule () {
+  public function molecule (): ?MoleculeStructure {
     if ( !$data = $this->data() ) {
       return null;
     }
@@ -119,9 +116,9 @@ class ResponseMolecule extends Response {
   /**
    * Success?
    *
-   * @return mixed
+   * @return bool
    */
-  public function success () {
+  public function success (): bool {
     return ( $this->status() === 'accepted' );
   }
 

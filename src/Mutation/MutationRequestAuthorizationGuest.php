@@ -54,12 +54,12 @@ use WishKnish\KnishIO\Client\Wallet;
 
 class MutationRequestAuthorizationGuest extends Mutation {
   // Query
-  protected static $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
+  protected static string $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
 
   protected Wallet $wallet;
 
   // Fields
-  protected $fields = [ 'token', 'time', 'key', 'encrypt' ];
+  protected array $fields = [ 'token', 'time', 'key', 'encrypt' ];
 
   /**
    * @param Wallet $wallet

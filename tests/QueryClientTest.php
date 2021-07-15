@@ -50,7 +50,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreatePeer;
@@ -64,15 +66,15 @@ use WishKnish\KnishIO\Tests\QueryServerTest;
  * @package WishKnish\KnishIO\Client\Tests
  */
 class QueryClientTest extends TestCase {
-  protected $source_secret;
-  protected $source_wallet;
+  protected string $source_secret;
+  protected Wallet $source_wallet;
 
-  protected $guzzle_client;
+  protected ?HttpClient $guzzle_client;
 
   /**
    * @throws Exception
    */
-  public function beforeExecute () {
+  public function beforeExecute (): void {
     parent::beforeExecute();
 
     // Source secret & wallet
@@ -88,8 +90,9 @@ class QueryClientTest extends TestCase {
    * Clear data test
    *
    * @throws ReflectionException
+   * @throws Exception
    */
-  public function testClearAll () {
+  public function testClearAll (): void {
 
     // Call server cleanup
     $this->callServerCleanup( QueryServerTest::class );
@@ -97,14 +100,15 @@ class QueryClientTest extends TestCase {
     // Initial code
     $this->beforeExecute();
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testMetaIsotope () {
+  public function testMetaIsotope (): void {
 
     // Call server cleanup
     $this->callServerCleanup( QueryServerTest::class );
@@ -123,9 +127,10 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testMetaWalletBundle () {
+  public function testMetaWalletBundle (): void {
 
     $this->assertEquals( true, true );
     return;
@@ -163,9 +168,6 @@ class QueryClientTest extends TestCase {
     $this->executeMolecule( $this->source_secret, $molecule );
   }
 
-  /**
-   * @throws ReflectionException
-   */
   public function testAppendMetaIsotope () {
     /*
     $this->beforeExecute();
@@ -186,9 +188,10 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testWalletCreation () {
+  public function testWalletCreation (): void {
 
     $this->beforeExecute();
 
@@ -199,7 +202,7 @@ class QueryClientTest extends TestCase {
     // Create a molecule
     $molecule = $this->client( $this->source_secret )
         ->createMolecule();
-    $molecule->initWalletCreation( $newWallet, new Wallet( $this->source_secret ) );
+    $molecule->initWalletCreation( $newWallet );
     $molecule->sign();
 
     // Execute query & check response
@@ -208,12 +211,15 @@ class QueryClientTest extends TestCase {
 
   /**
    * @throws Exception
+   * @throws GuzzleException
    */
-  public function testPeerCreation () {
+  public function testPeerCreation (): void {
 
     $this->beforeExecute();
 
-    // Query
+    /**
+     * @var MutationCreatePeer $query
+     */
     $query = $this->client( $this->source_secret )
         ->createMoleculeMutation( MutationCreatePeer::class );
     $query->fillMolecule( 'testPeerSlug', 'test.peer', 'testPeerName', [ 'cellslug1', 'cellslug2' ] );

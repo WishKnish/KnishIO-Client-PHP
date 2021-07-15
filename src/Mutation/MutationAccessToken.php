@@ -53,10 +53,10 @@ use WishKnish\KnishIO\Client\Response\ResponseAccessToken;
 
 class MutationAccessToken extends Mutation {
   // Query
-  protected static $default_query = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
+  protected static string $default_query = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
 
   // Fields
-  protected $fields = [ 'token', 'time', ];
+  protected array $fields = [ 'token', 'time', ];
 
   /**
    * Create a response

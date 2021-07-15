@@ -49,9 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use Exception;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Response\ResponseMetaCreate;
-use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
 /**
  * Class MutationCreateMeta
@@ -60,13 +59,13 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 class MutationCreateMeta extends MutationProposeMolecule {
 
   /**
-   * @param $type
-   * @param $contact
-   * @param $code
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $metadata
    *
-   * @throws Exception
+   * @throws ReflectionException
    */
-  public function fillMolecule ( string $metaType, string $metaId, array $metadata ) {
+  public function fillMolecule ( string $metaType, string $metaId, array $metadata ): void {
     $this->molecule->initMeta( $metadata, $metaType, $metaId );
     $this->molecule->sign();
     $this->molecule->check();
@@ -75,9 +74,9 @@ class MutationCreateMeta extends MutationProposeMolecule {
   /**
    * @param $response
    *
-   * @return ResponseMetaCreate|ResponseMolecule
+   * @return ResponseMetaCreate
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMetaCreate {
     return new ResponseMetaCreate( $this, $response );
   }
 

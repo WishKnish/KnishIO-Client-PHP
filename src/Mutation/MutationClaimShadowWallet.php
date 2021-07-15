@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -64,8 +65,9 @@ class MutationClaimShadowWallet extends MutationProposeMolecule {
    *
    * @return MutationClaimShadowWallet
    * @throws ReflectionException
+   * @throws Exception
    */
-  public function fillMolecule ( string $tokenSlug, ?string $batchId = null ) {
+  public function fillMolecule ( string $tokenSlug, ?string $batchId = null ): MutationClaimShadowWallet {
     // Create a wallet
     $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
 

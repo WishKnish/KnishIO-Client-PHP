@@ -57,19 +57,19 @@ use WishKnish\KnishIO\Client\Response\ResponseBatch;
  */
 class QueryBatch extends Query {
   // Query
-  protected static $default_query = 'query( $batchId: String ) { Batch( batchId: $batchId )
+  protected static string $default_query = 'query( $batchId: String ) { Batch( batchId: $batchId )
 		@fields
 	}';
 
   // Fields
-  protected $fields = [ 'batchId', 'type', 'createdAt', 'wallet' => [ 'address', 'bundleHash', 'amount', ], 'metas' => [ 'key', 'value', ], ];
+  protected array $fields = [ 'batchId', 'type', 'createdAt', 'wallet' => [ 'address', 'bundleHash', 'amount', ], 'metas' => [ 'key', 'value', ], ];
 
   /**
    * @param $response
    *
    * @return ResponseBatch
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseBatch {
     return new ResponseBatch( $this, $response );
   }
 

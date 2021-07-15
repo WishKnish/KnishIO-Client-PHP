@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use Illuminate\Support\Facades\Log;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -60,9 +59,9 @@ use WishKnish\KnishIO\Client\Query\Query;
  */
 class Response {
   /**
-   * @var Query
+   * @var Query|null
    */
-  protected $query;
+  protected ?Query $query;
 
   /**
    * @var array|null
@@ -70,14 +69,14 @@ class Response {
   protected $response;
 
   /**
-   * @var
+   * @var mixed
    */
   protected $payload;
 
   /**
    * @var string
    */
-  protected $dataKey;
+  protected string $dataKey;
 
   /**
    * Response constructor.
@@ -124,10 +123,7 @@ class Response {
     $this->init();
   }
 
-  /**
-   *
-   */
-  public function init () {
+  public function init (): void {
 
   }
 
@@ -160,16 +156,15 @@ class Response {
   /**
    * Get a payload
    *
-   * @return
+   * @return mixed
    */
   public function payload () {
-    return null;
   }
 
   /**
    * @return Query
    */
-  public function query () {
+  public function query (): ?Query {
     return $this->query;
   }
 

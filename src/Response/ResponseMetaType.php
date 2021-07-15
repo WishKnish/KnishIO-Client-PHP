@@ -54,10 +54,10 @@ namespace WishKnish\KnishIO\Client\Response;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMetaType extends Response {
-  protected $dataKey = 'data.MetaType';
+  protected string $dataKey = 'data.MetaType';
 
   /**
-   * @return |null
+   * @return mixed|null
    */
   public function payload () {
     $data = $this->data();

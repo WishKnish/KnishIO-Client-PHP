@@ -59,19 +59,19 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  */
 class QueryMoleculeList extends Query {
   // Query
-  protected static $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
+  protected static string $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
 	 	@fields
 	}';
 
   // Fields
-  protected $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
+  protected array $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
 
   /**
    * @param $response
    *
-   * @return Response|ResponseMoleculeList
+   * @return ResponseMoleculeList
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMoleculeList {
     return new ResponseMoleculeList( $this, $response );
   }
 

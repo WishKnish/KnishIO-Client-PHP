@@ -49,11 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use Exception;
 use ReflectionException;
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
-use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class MutationCreatePeer
@@ -62,14 +58,15 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationCreatePeer extends MutationProposeMolecule {
 
   /**
-   * @param $recipientWallet
-   * @param $amount
-   * @param array $metas
+   * @param string $slug
+   * @param string $host
+   * @param string|null $name
+   * @param array $cellSlugs
    *
+   * @return MutationCreatePeer
    * @throws ReflectionException
-   * @throws Exception
    */
-  public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] ) {
+  public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
     // Set name as slug if it does not defined
     $name = $name ?: $slug;
 

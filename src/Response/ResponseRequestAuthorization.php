@@ -53,10 +53,10 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
- * Class ResponseAuthorization
+ * Class ResponseRequestAuthorization
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseAuthorization extends ResponseMolecule {
+class ResponseRequestAuthorization extends ResponseMolecule {
 
   /**
    * Payload key
@@ -67,7 +67,7 @@ class ResponseAuthorization extends ResponseMolecule {
    */
   private function payloadKey ( $key ) {
     if ( !array_has( $this->payload, $key ) ) {
-      throw new InvalidResponseException( 'ResponseAuthorization: \'' . $key . '\' key is not found in the payload.' );
+      throw new InvalidResponseException( 'ResponseRequestAuthorization: \'' . $key . '\' key is not found in the payload.' );
     }
     return array_get( $this->payload, $key );
   }
@@ -93,11 +93,17 @@ class ResponseAuthorization extends ResponseMolecule {
     return $this->payloadKey( 'key' );
   }
 
+  /**
+   * @return Wallet
+   */
   public function wallet (): Wallet {
     return $this->clientMolecule()
         ->sourceWallet();
   }
 
+  /**
+   * @return mixed
+   */
   public function encrypt () {
     return $this->payloadKey( 'encrypt' );
   }

@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
 
 /**
@@ -59,12 +58,12 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
 class QueryWalletBundle extends Query {
 
   // Query
-  protected static $default_query = 'query( $bundleHash: String, $bundleHashes: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $keys_values: [ MetaInput ], $latest: Boolean, $limit: Int, $order: String ) { WalletBundle( bundleHash: $bundleHash, bundleHashes: $bundleHashes, key: $key, keys: $keys, value: $value, values: $values, keys_values: $keys_values, latest: $latest, limit: $limit, order: $order )
+  protected static string $default_query = 'query( $bundleHash: String, $bundleHashes: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $keys_values: [ MetaInput ], $latest: Boolean, $limit: Int, $order: String ) { WalletBundle( bundleHash: $bundleHash, bundleHashes: $bundleHashes, key: $key, keys: $keys, value: $value, values: $values, keys_values: $keys_values, latest: $latest, limit: $limit, order: $order )
 	 	@fields
 	}';
 
   // Fields
-  protected $fields = [ 'bundleHash', 'slug', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], //	'molecules',
+  protected array $fields = [ 'bundleHash', 'slug', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], //	'molecules',
     //	'wallets',
       'createdAt', ];
 
@@ -78,7 +77,7 @@ class QueryWalletBundle extends Query {
    *
    * @return array
    */
-  public static function createVariables ( $bundleHash = null, $key = null, $value = null, bool $latest = true ) {
+  public static function createVariables ( $bundleHash = null, $key = null, $value = null, bool $latest = true ): array {
 
     $variables = [ 'latest' => $latest, ];
 
@@ -101,9 +100,9 @@ class QueryWalletBundle extends Query {
   /**
    * @param string $response
    *
-   * @return Response|ResponseWalletBundle
+   * @return ResponseWalletBundle
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseWalletBundle {
     return new ResponseWalletBundle( $this, $response );
   }
 

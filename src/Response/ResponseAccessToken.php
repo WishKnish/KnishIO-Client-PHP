@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client\Response;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
 class ResponseAccessToken extends Response {
-  protected $dataKey = 'data.AccessToken';
+  protected string $dataKey = 'data.AccessToken';
 
   public function reason (): string {
     return 'Invalid response from server';

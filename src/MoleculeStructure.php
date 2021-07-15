@@ -67,14 +67,14 @@ class MoleculeStructure {
 
   use Json;
 
-  public $molecularHash;
-  public $cellSlug;
-  public $counterparty;
-  public $bundle;
-  public $status;
-  public $local;
-  public $createdAt;
-  public $atoms = [];
+  public string $molecularHash;
+  public ?string $cellSlug;
+  public ?string $counterparty;
+  public string $bundle;
+  public string $status;
+  public bool $local;
+  public int $createdAt;
+  public array $atoms = [];
 
   /**
    * @param string|null $counterparty
@@ -93,7 +93,7 @@ class MoleculeStructure {
    * @throws Exception
    */
   public function getBatchId ( int $index ): string {
-    $molecularHash = Atom::hashAtoms( $this->atoms, 'base17', [ 'batchId' ] );
+    $molecularHash = Atom::hashAtoms( $this->atoms, 'base17' );
     return Crypto::generateBatchId( $molecularHash, $index );
   }
 
@@ -109,7 +109,7 @@ class MoleculeStructure {
    *
    * @return array
    */
-  protected static function enumerate ( $hash ) {
+  protected static function enumerate ( string $hash ): array {
 
     $target = [];
     $mapped = [ '0' => -8, '1' => -7, '2' => -6, '3' => -5, '4' => -4, '5' => -3, '6' => -2, '7' => -1, '8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8, ];
@@ -138,7 +138,7 @@ class MoleculeStructure {
    *
    * @return array
    */
-  protected static function normalize ( array $mappedHashArray ) {
+  protected static function normalize ( array $mappedHashArray ): array {
 
     $total = array_sum( $mappedHashArray );
     $totalCondition = $total < 0;
@@ -175,7 +175,7 @@ class MoleculeStructure {
    *
    * @return bool
    */
-  public function check ( Wallet $senderWallet = null ) {
+  public function check ( Wallet $senderWallet = null ): bool {
     return CheckMolecule::verify( $this, $senderWallet );
   }
 
@@ -183,13 +183,13 @@ class MoleculeStructure {
    * @return string
    */
   public function __toString () {
-    return ( string ) $this->toJson();
+    return $this->toJson();
   }
 
   /**
    * @return array
    */
-  public function normalizedHash () {
+  public function normalizedHash (): array {
     // Convert Hm to numeric notation via EnumerateMolecule(Hm)
     return static::normalize( static::enumerate( $this->molecularHash ) );
   }
@@ -201,7 +201,7 @@ class MoleculeStructure {
    * @return string
    * @throws Exception
    */
-  public function signatureFragments ( $key, $encode = true ) {
+  public function signatureFragments ( $key, bool $encode = true ): string {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
     $keyChunks = Strings::chunkSubstr( $key, 128 );
 
@@ -231,7 +231,7 @@ class MoleculeStructure {
    *
    * @return static
    */
-  public static function toObject ( array $data ) {
+  public static function toObject ( array $data ): MoleculeStructure {
     $object = static::arrayToObject( $data );
     foreach ( $object->atoms as $key => $atom_data ) {
       $atom = new Atom( $atom_data[ 'position' ], $atom_data[ 'walletAddress' ], $atom_data[ 'isotope' ] );
@@ -246,7 +246,7 @@ class MoleculeStructure {
    *
    * @return object
    */
-  public static function jsonToObject ( $string ) {
+  public static function jsonToObject ( $string ): object {
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
     $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => null, ], ], ] );
 

@@ -54,7 +54,7 @@ namespace WishKnish\KnishIO\Client\Response;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseIdentifier extends Response {
-  protected $dataKey = 'data.LinkIdentifier';
+  protected string $dataKey = 'data.LinkIdentifier';
 
   /**
    * Success?

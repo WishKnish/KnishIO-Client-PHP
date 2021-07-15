@@ -58,21 +58,21 @@ use WishKnish\KnishIO\Client\Response\ResponseIdentifier;
  */
 class QueryLinkIdentifierMutation extends Query {
   // Query
-  protected static $default_query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content )
+  protected static string $default_query = 'mutation( $bundle: String!, $type: String!, $content: String! ) { LinkIdentifier( bundle: $bundle, type: $type, content: $content )
 		@fields
 	}';
 
   // Fields
-  protected $fields = [ 'type', 'bundle', 'content', 'set', 'message', ];
+  protected array $fields = [ 'type', 'bundle', 'content', 'set', 'message', ];
 
   /**
    * Create a response
    *
    * @param string $response
    *
-   * @return Response
+   * @return ResponseIdentifier
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseIdentifier {
     return new ResponseIdentifier( $this, $response );
   }
 

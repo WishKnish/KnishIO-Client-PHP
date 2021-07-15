@@ -77,17 +77,17 @@ class Wallet {
   /**
    * @var string|null
    */
-  public $batchId;
+  public ?string $batchId;
 
   /**
    * @var array
    */
-  public $molecules = [];
+  public array $molecules = [];
 
   /**
    * @var array
    */
-  public $tokenUnits = [];
+  public array $tokenUnits = [];
 
   /**
    * @var int|float
@@ -97,50 +97,45 @@ class Wallet {
   /**
    * @var string|null
    */
-  public $address;
+  public ?string $address;
 
   /**
    * @var string|null
    */
-  public $position;
+  public ?string $position;
 
   /**
    * @var string|null
    */
-  public $bundle;
+  public ?string $bundle;
 
   /**
    * @var string
    */
-  public $token;
+  public string $token;
 
   /**
    * @var string|null
    */
-  public $key;
+  public ?string $key;
 
   /**
    * @var string|null
    */
-  public $pubkey;
-
-  /**
-   * @var string|null
-   */
-  private $privkey;
+  public ?string $pubkey;
 
   /**
    * Wallet constructor.
    *
-   * @param null $secret
+   * @param string|null $secret
    * @param string $token
-   * @param null $position
-   * @param null $batchId
-   * @param null $characters
+   * @param string|null $position
+   * @param string|null $batchId
+   * @param string|null $characters
    *
    * @throws Exception
    */
-  public function __construct ( $secret = null, $token = 'USER', $position = null, $batchId = null, $characters = null ) {
+  public function __construct ( string $secret = null, string $token = 'USER', string $position = null, string $batchId = null, string $characters = null ) {
     $this->token = $token;
     $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
     $this->batchId = $batchId;
@@ -166,7 +161,7 @@ class Wallet {
    * @return Wallet
    * @throws Exception
    */
-  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ) {
+  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
     $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
     $position = $secret ? static::generateWalletPosition() : null;
@@ -192,7 +187,7 @@ class Wallet {
         $items = [ 'id' => $unitData, 'name' => null, 'metas' => [], ];
       }
 
-      // Standart token unit format
+      // Standard token unit format
       else {
         $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
       }
@@ -232,11 +227,11 @@ class Wallet {
   }
 
   /**
-   * @param array $units
+   * @param array $sendTokenUnits
    * @param Wallet $remainderWallet
    * @param Wallet|null $recipientWallet
    */
-  public function splitUnits ( array $sendTokenUnits = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ) {
+  public function splitUnits ( array $sendTokenUnits = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ): void {
 
     // No units supplied, nothing to split
     if ( count( $sendTokenUnits ) === 0 ) {
@@ -275,7 +270,7 @@ class Wallet {
    *
    * @throws Exception
    */
-  public function prepareKeys ( string $secret ) {
+  public function prepareKeys ( string $secret ): void {
     if ( $this->key === null && $this->address === null ) {
 
       $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
@@ -300,8 +295,9 @@ class Wallet {
    * @param int $saltLength
    *
    * @return string
+   * @throws Exception
    */
-  protected static function generateWalletPosition ( $saltLength = 64 ): string {
+  protected static function generateWalletPosition ( int $saltLength = 64 ): string {
     return Strings::randomString( $saltLength );
   }
 
@@ -311,7 +307,7 @@ class Wallet {
    * @return string
    * @throws Exception
    */
-  protected static function generateWalletAddress ( $key ): string {
+  protected static function generateWalletAddress ( string $key ): string {
 
     $digestSponge = Crypto\Shake256::init();
 
@@ -339,7 +335,7 @@ class Wallet {
    * @return string|null
    * @throws Exception
    */
-  public function getMyEncPrivateKey () {
+  public function getMyEncPrivateKey (): ?string {
 
     Crypto::setCharacters( $this->characters );
 
@@ -359,7 +355,7 @@ class Wallet {
    * @return string|null
    * @throws Exception
    */
-  public function getMyEncPublicKey () {
+  public function getMyEncPublicKey (): ?string {
 
     Crypto::setCharacters( $this->characters );
 
@@ -382,7 +378,7 @@ class Wallet {
    * @return array
    * @throws ReflectionException|Exception
    */
-  public function encryptMyMessage ( array $message, ...$keys ) {
+  public function encryptMyMessage ( array $message, ...$keys ): array {
 
     Crypto::setCharacters( $this->characters );
 
@@ -406,7 +402,7 @@ class Wallet {
    * @return array|null
    * @throws Exception
    */
-  public function decryptMyMessage ( $message ) {
+  public function decryptMyMessage ( $message ): ?array {
 
     Crypto::setCharacters( $this->characters );
 
@@ -438,7 +434,7 @@ class Wallet {
    * @return string
    * @throws Exception
    */
-  public static function generateWalletKey ( $secret, $token, $position ) {
+  public static function generateWalletKey ( string $secret, string $token, string $position ): string {
 
     // Converting secret to bigInt
     $bigIntSecret = new BigInteger( $secret, 16 );

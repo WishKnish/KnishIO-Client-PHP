@@ -61,7 +61,7 @@ class ResponseContinuId extends Response {
   /**
    * @var string
    */
-  protected $dataKey = 'data.ContinuId';
+  protected string $dataKey = 'data.ContinuId';
 
   /**
    * Get a payload
@@ -70,7 +70,7 @@ class ResponseContinuId extends Response {
    * @throws InvalidResponseException
    * @throws Exception
    */
-  public function payload () {
+  public function payload (): ?Wallet {
     // Check response
     $data = $this->data();
     if ( $data !== null ) {

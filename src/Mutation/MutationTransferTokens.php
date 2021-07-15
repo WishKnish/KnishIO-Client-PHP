@@ -65,7 +65,7 @@ class MutationTransferTokens extends MutationProposeMolecule {
    * @return MutationTransferTokens
    * @throws ReflectionException
    */
-  public function fillMolecule ( Wallet $toWallet, $amount ) {
+  public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
     $this->molecule->initValue( $toWallet, $amount );
     $this->molecule->sign();
     $this->molecule->check( $this->molecule->sourceWallet() );

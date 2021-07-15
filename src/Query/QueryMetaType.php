@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMetaType;
 
 /**
@@ -58,21 +57,24 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaType;
  */
 class QueryMetaType extends Query {
   // Query
-  protected static $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean, $latest: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas, latest: $latest )
+  protected static string $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean, $latest: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas, latest: $latest )
 		@fields
 	}';
 
   // Fields
-  protected $fields = [ 'metaType', 'instances' => [ 'metaType', 'metaId', 'createdAt', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'atoms' => [ 'molecularHash', 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'otsFragment', 'createdAt', ], 'molecules' => [ 'molecularHash', 'cellSlug', 'bundleHash', 'status', 'height', 'createdAt', 'receivedAt', 'processedAt', 'broadcastedAt', ], ], 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'paginatorInfo' => [ 'currentPage', 'total' ], 'createdAt', ];
+  protected array $fields = [ 'metaType', 'instances' => [ 'metaType', 'metaId', 'createdAt', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'atoms' => [ 'molecularHash', 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'otsFragment', 'createdAt', ], 'molecules' => [ 'molecularHash', 'cellSlug', 'bundleHash', 'status', 'height', 'createdAt', 'receivedAt', 'processedAt', 'broadcastedAt', ], ], 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'paginatorInfo' => [ 'currentPage', 'total' ], 'createdAt', ];
 
   /**
-   * @param null $metaType
-   * @param null $metaId
-   * @param null $key
-   * @param null $value
-   * @param null $latest
+   * Builds a GraphQL-friendly variables object based on input fields
+   *
+   * @param string|null|array $bundleHash
+   * @param string|null|array $key
+   * @param string|null|array $value
+   * @param bool $latest
+   *
+   * @return array
    */
-  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, $latest = null ): array {
+  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, bool $latest = null ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -101,9 +103,9 @@ class QueryMetaType extends Query {
   /**
    * @param string $response
    *
-   * @return Response|ResponseWalletList
+   * @return ResponseMetaType
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMetaType {
     return new ResponseMetaType( $this, $response );
   }
 

@@ -49,31 +49,30 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Tests\TestCase;
-use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
-use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
 
 /**
  * Class QueryCascadeMetaTest
  */
 class QueryCascadeBatchTest extends TestCase {
-  private $tokenSlug = 'UTSTACKABLE';
-  private $fullAmount = 1000;
-  private $transactionAmount = 100;
-  private $cascadeDeep = 5;
-  private $batchPrefix = 'batch_';
+  private string $tokenSlug = 'UTSTACKABLE';
+  private int $fullAmount = 1000;
+  private int $transactionAmount = 100;
+  private int $cascadeDeep = 5;
+  private string $batchPrefix = 'batch_';
 
   /**
    * Clear data test
    *
    * @throws ReflectionException
+   * @throws Exception
    */
-  public function testClearAll () {
+  public function testClearAll (): void {
 
     // Initial code
     $this->beforeExecute();
@@ -86,9 +85,10 @@ class QueryCascadeBatchTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testCascadeBatch () {
+  public function testCascadeBatch (): void {
 
     // Create a token
     $client = $this->createToken();
@@ -115,8 +115,8 @@ class QueryCascadeBatchTest extends TestCase {
 
       // Burn tokens for the last transaction
       if ( $i === $this->cascadeDeep - 1 ) {
-        $client->burnToken( $this->tokenSlug, 5, $this->getBatchId( $index + 1 ) );
-        $client->burnToken( $this->tokenSlug, 5, $this->getBatchId( $index + 2 ) );
+        $client->burnToken( $this->tokenSlug, 5 );
+        $client->burnToken( $this->tokenSlug, 5 );
       }
     }
 
@@ -125,9 +125,6 @@ class QueryCascadeBatchTest extends TestCase {
     dd( $response->data() );
   }
 
-  /**
-   * @throws ReflectionException
-   */
   public function testUnitToken () {
 
   }
@@ -137,12 +134,12 @@ class QueryCascadeBatchTest extends TestCase {
    *
    * @return string
    */
-  private function getBatchId ( int $index ) {
+  private function getBatchId ( int $index ): string {
     return $this->batchPrefix . $index;
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|Exception
    */
   private function transfetToken ( $client, $transactionAmount, $batchId ) {
 
@@ -163,7 +160,7 @@ class QueryCascadeBatchTest extends TestCase {
   /**
    * @throws Exception
    */
-  private function claimShadowWallet ( $client ) {
+  private function claimShadowWallet ( $client ): void {
 
     // Get shadow wallets
     $shadowWallets = $client->queryShadowWallets( $this->tokenSlug );
@@ -175,7 +172,8 @@ class QueryCascadeBatchTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
   private function createToken () {
 

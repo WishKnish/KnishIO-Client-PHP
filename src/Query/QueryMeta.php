@@ -57,21 +57,23 @@ use WishKnish\KnishIO\Client\Response\ResponseMeta;
  */
 class QueryMeta extends Query {
   // Query
-  protected static $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $count: String ) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, count: $count )
+  protected static string $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $count: String ) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, count: $count )
 		@fields
 	}';
 
   // Fields
-  protected $fields = [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ];
+  protected array $fields = [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ];
 
   /**
-   * @param null $metaType
-   * @param null $metaId
-   * @param null $key
-   * @param null $value
-   * @param null $latest
+   * @param string|array|null $metaType
+   * @param string|array|null $metaId
+   * @param string|array|null $key
+   * @param string|array|null $value
+   * @param boolean $latest
+   *
+   * @return array
    */
-  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, $latest = null ): array {
+  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, bool $latest = true ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -102,7 +104,7 @@ class QueryMeta extends Query {
    *
    * @return ResponseMeta
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMeta {
     return new ResponseMeta( $this, $response );
   }
 

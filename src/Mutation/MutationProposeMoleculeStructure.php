@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Facades\DB;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\KnishIOClient;
@@ -79,6 +80,7 @@ class MutationProposeMoleculeStructure extends Query {
    * @param string $json
    *
    * @return mixed
+   * @throws GuzzleException
    * @todo: tmp function not required to pass it to other clients
    */
   public static function rawExecute ( string $json, $client = null ): ResponseMolecule {
@@ -92,7 +94,8 @@ class MutationProposeMoleculeStructure extends Query {
   /**
    * @param string $json
    *
-   * @return ResponseMolecule
+   * @return void
+   * @throws Exception
    * @todo: tmp function not required to pass it to other clients
    */
   public static function rawExecuteLocal ( string $json ): void {
@@ -101,7 +104,7 @@ class MutationProposeMoleculeStructure extends Query {
     try {
 
       // Execute molecule function: Get a final molecule model from the resolver (execute call)
-      \DB::transaction( static function () use ( $resolver ) {
+      DB::transaction( static function () use ( $resolver ) {
         $resolver->execute();
       } );
 
@@ -109,7 +112,7 @@ class MutationProposeMoleculeStructure extends Query {
     catch ( Exception $e ) {
 
       // Transaction rollback
-      \DB::rollBack();
+      DB::rollBack();
 
       // Throw to the final try-catch block
       throw $e;
@@ -121,6 +124,7 @@ class MutationProposeMoleculeStructure extends Query {
    * @param string $json
    *
    * @return mixed
+   * @throws Exception
    * @todo: tmp function to verify json molecule by MoleculeResolver
    */
   public static function rawVerify ( string $json ): MoleculeResolver {
@@ -145,10 +149,10 @@ class MutationProposeMoleculeStructure extends Query {
   /**
    * @param array|null $variables
    *
-   * @return mixed
+   * @return array
    */
   public function compiledVariables ( array $variables = null ): array {
-    // Default variabled
+    // Default variables
     $variables = parent::compiledVariables( $variables );
 
     // Merge variables with a molecule key
@@ -156,7 +160,7 @@ class MutationProposeMoleculeStructure extends Query {
   }
 
   /**
-   * @return Molecule
+   * @return MoleculeStructure
    */
   public function moleculeStructure (): MoleculeStructure {
     return $this->moleculeStructure;
@@ -167,7 +171,7 @@ class MutationProposeMoleculeStructure extends Query {
    *
    * @return ResponseMolecule
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMolecule {
     return new ResponseMolecule( $this, $response );
   }
 
