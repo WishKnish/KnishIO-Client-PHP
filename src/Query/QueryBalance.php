@@ -71,7 +71,7 @@ class QueryBalance extends Query {
    *
    * @return ResponseBalance
    */
-  public function createResponse ( $response ): ResponseBalance {
+  public function createResponse ( string $response ): ResponseBalance {
     return new ResponseBalance( $this, $response );
   }
 

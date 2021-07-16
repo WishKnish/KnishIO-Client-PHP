@@ -93,7 +93,7 @@ class MoleculeStructure {
    * @throws Exception
    */
   public function getBatchId ( int $index ): string {
-    $molecularHash = Atom::hashAtoms( $this->atoms, 'base17' );
+    $molecularHash = Atom::hashAtoms( $this->atoms );
     return Crypto::generateBatchId( $molecularHash, $index );
   }
 

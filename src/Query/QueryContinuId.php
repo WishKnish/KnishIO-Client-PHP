@@ -74,7 +74,7 @@ class QueryContinuId extends Query {
    *
    * @return ResponseContinuId
    */
-  public function createResponse ( $response ): ResponseContinuId {
+  public function createResponse ( string $response ): ResponseContinuId {
     return new ResponseContinuId( $this, $response );
   }
 }

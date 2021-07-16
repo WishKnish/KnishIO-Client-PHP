@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
-use WishKnish\KnishIO\Client\Query\Query;
 use function json_decode;
 
 /**

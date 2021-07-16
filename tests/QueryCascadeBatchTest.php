@@ -80,7 +80,7 @@ class QueryCascadeBatchTest extends TestCase {
     // Call server cleanup
     $this->callServerCleanup( TokenServerTransactionTest::class );
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
@@ -102,7 +102,7 @@ class QueryCascadeBatchTest extends TestCase {
       $batchId = $this->getBatchId( $index );
 
       // Token transferring
-      $client = $this->transfetToken( $client, $transactionAmount, $batchId );
+      $client = $this->transferToken( $client, $transactionAmount, $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client );
@@ -139,9 +139,10 @@ class QueryCascadeBatchTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|Exception
+   * @throws Exception
+   * @throws GuzzleException
    */
-  private function transfetToken ( $client, $transactionAmount, $batchId ) {
+  private function transferToken ( $client, $transactionAmount, $batchId ) {
 
     // Initial code
     $this->beforeExecute();

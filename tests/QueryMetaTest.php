@@ -49,16 +49,15 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-use Closure;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Arr;
 use ReflectionException;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Query\QueryMetaInstance;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Tests\QueryServerTest;
 
@@ -99,13 +98,14 @@ die('Ok');
  */
 class QueryMetaTest extends TestCase {
 
-  protected $source_secret;
-  protected $source_wallet;
+  protected string $source_secret;
+  protected Wallet $source_wallet;
 
-  protected $guzzle_client;
+  protected HttpClient $guzzle_client;
 
   /**
    * @throws Exception
+   * @throws GuzzleException
    */
   public function beforeExecute () {
     // $this->cell_slug = null;
@@ -126,16 +126,16 @@ class QueryMetaTest extends TestCase {
    * @return Wallet
    * @throws Exception
    */
-  public function sourceWallet () {
+  public function sourceWallet (): Wallet {
     return new Wallet ( $this->source_secret );
   }
 
   /**
    * Clear data test
    *
-   * @throws ReflectionException
+   * @throws Exception|GuzzleException
    */
-  public function testClearAll () {
+  public function testClearAll (): void {
 
     // Initial code
     $this->beforeExecute();
@@ -143,14 +143,15 @@ class QueryMetaTest extends TestCase {
     // Call server cleanup
     $this->callServerCleanup( QueryServerTest::class );
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testCreateMetas () {
+  public function testCreateMetas (): void {
 
     $this->beforeExecute();
 
@@ -209,9 +210,10 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException
+   * @throws Exception
+   * @throws GuzzleException
    */
-  public function testMetaTypeQuery () {
+  public function testMetaTypeQuery (): void {
 
     $this->beforeExecute();
 
@@ -282,10 +284,10 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @param Closure $newQuery
-   * @param array $fields
+   * @throws GuzzleException
+   * @throws Exception
    */
-  public function testMetaInstanceQuery () {
+  public function testMetaInstanceQuery (): void {
     $this->beforeExecute();
 
     // Fields
@@ -346,11 +348,12 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @param $data
+   * @param Response $response
+   * @param int $depth
    *
    * @return array
    */
-  protected function getLimitedResult ( Response $response, $depth = 2 ) {
+  protected function getLimitedResult ( Response $response, int $depth = 2 ): array {
     $result = [];
     foreach ( $response->data() as $meta_type ) {
       $item = Arr::only( $meta_type, [ 'metaType' ] );

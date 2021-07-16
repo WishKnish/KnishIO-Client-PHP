@@ -67,11 +67,11 @@ class QueryMoleculeList extends Query {
   protected array $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return ResponseMoleculeList
    */
-  public function createResponse ( $response ): ResponseMoleculeList {
+  public function createResponse ( string $response ): ResponseMoleculeList {
     return new ResponseMoleculeList( $this, $response );
   }
 

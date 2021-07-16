@@ -67,9 +67,10 @@ class QueryMetaType extends Query {
   /**
    * Builds a GraphQL-friendly variables object based on input fields
    *
-   * @param string|null|array $bundleHash
-   * @param string|null|array $key
-   * @param string|null|array $value
+   * @param string|array|null $metaType
+   * @param string|array|null $metaId
+   * @param string|array|null $key
+   * @param string|array|null $value
    * @param bool $latest
    *
    * @return array
@@ -105,7 +106,7 @@ class QueryMetaType extends Query {
    *
    * @return ResponseMetaType
    */
-  public function createResponse ( $response ): ResponseMetaType {
+  public function createResponse ( string $response ): ResponseMetaType {
     return new ResponseMetaType( $this, $response );
   }
 

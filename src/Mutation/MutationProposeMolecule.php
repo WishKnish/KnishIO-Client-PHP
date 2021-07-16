@@ -59,10 +59,10 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class MutationProposeMolecule extends MutationProposeMoleculeStructure {
   // Molecule
-  protected $molecule;
+  protected Molecule $molecule;
 
   // Remainder wallet
-  protected $remainderWallet;
+  protected Wallet $remainderWallet;
 
   /**
    * MutationProposeMolecule constructor.

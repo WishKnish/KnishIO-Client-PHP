@@ -50,42 +50,36 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 use Exception;
-use http\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
-use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
-use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Tests\TestCase;
-use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\Wallet as ClientWallet;
-use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
-use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
-use function Symfony\Component\String\u;
 
 /**
  * Class TokenUnitTransactionTest
  * @package WishKnish\KnishIO\Client\Tests
  */
 class TokenUnitTransactionTest extends TestCase {
-  private $serverTokenSlug = 'UTENVSTACKUNIT';
-  private $tokenSlug = 'UTSTACKUNIT';
-  private $cascadeDeep = 4;
+  private string $serverTokenSlug = 'UTENVSTACKUNIT';
+  private string $tokenSlug = 'UTSTACKUNIT';
+  private int $cascadeDeep = 4;
 
-  private $batchPrefix = 'batch_';
+  private string $batchPrefix = 'batch_';
 
-  private $tokenUnits = [ [ 'unit_id_1', 'unit_name_1', 'unit_meta_1', ], [ 'unit_id_2', 'unit_name_2', 'unit_meta_2', ], [ 'unit_id_3', 'unit_name_3', 'unit_meta_3', ], [ 'unit_id_4', 'unit_name_4', 'unit_meta_4', ], [ 'unit_id_5', 'unit_name_5', 'unit_meta_5', ], [ 'unit_id_6', 'unit_name_6', 'unit_meta_6', ], [ 'unit_id_7', 'unit_name_7', 'unit_meta_7', ], [ 'unit_id_8', 'unit_name_8', 'unit_meta_8', ], [ 'unit_id_9', 'unit_name_9', 'unit_meta_9', ], [ 'unit_id_10', 'unit_name_10', 'unit_meta_10', ], [ 'unit_id_11', 'unit_name_11', 'unit_meta_11', ], ];
+  private array $tokenUnits = [ [ 'unit_id_1', 'unit_name_1', 'unit_meta_1', ], [ 'unit_id_2', 'unit_name_2', 'unit_meta_2', ], [ 'unit_id_3', 'unit_name_3', 'unit_meta_3', ], [ 'unit_id_4', 'unit_name_4', 'unit_meta_4', ], [ 'unit_id_5', 'unit_name_5', 'unit_meta_5', ], [ 'unit_id_6', 'unit_name_6', 'unit_meta_6', ], [ 'unit_id_7', 'unit_name_7', 'unit_meta_7', ], [ 'unit_id_8', 'unit_name_8', 'unit_meta_8', ], [ 'unit_id_9', 'unit_name_9', 'unit_meta_9', ], [ 'unit_id_10', 'unit_name_10', 'unit_meta_10', ], [ 'unit_id_11', 'unit_name_11', 'unit_meta_11', ], ];
 
   /**
    * Clear data test
    *
    * @throws ReflectionException
+   * @throws Exception
    */
-  public function testClearAll () {
+  public function testClearAll (): void {
 
     // Initial code
     $this->beforeExecute();
@@ -93,14 +87,15 @@ class TokenUnitTransactionTest extends TestCase {
     // Call server cleanup
     $this->callServerCleanup( TokenServerTransactionTest::class );
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testUnitTransaction () {
+  public function testUnitTransaction (): void {
     $this->beforeExecute();
 
     $secret = Crypto::generateSecret();
@@ -125,7 +120,7 @@ class TokenUnitTransactionTest extends TestCase {
       $sendingTokenUnitIds = $this->getTokenUnitIds( $tokenUnits );
 
       // Token transferring
-      $client = $this->transfetToken( $client, $batchId, $sendingTokenUnitIds );
+      $client = $this->transferToken( $client, $batchId, $sendingTokenUnitIds );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client, $this->tokenSlug );
@@ -179,8 +174,11 @@ class TokenUnitTransactionTest extends TestCase {
 
   /**
    * Test with request token with units
+   * @throws ReflectionException
+   * @throws Exception
+   * @throws GuzzleException
    */
-  public function testUnitRequest () {
+  public function testUnitRequest (): void {
     $this->beforeExecute();
 
     // Get a env secret
@@ -217,9 +215,10 @@ class TokenUnitTransactionTest extends TestCase {
   /**
    * @param string $secret
    *
-   * @throws ReflectionException
+   * @throws Exception
+   * @throws GuzzleException
    */
-  private function testUnitsErrorTransaction ( string $secret ) {
+  private function testUnitsErrorTransaction ( string $secret ): void {
 
     $client = $this->client( $secret );
     $toSecret = Crypto::generateSecret();
@@ -259,10 +258,10 @@ class TokenUnitTransactionTest extends TestCase {
    * @param array $recipientTokenUnits
    * @param array $remainderTokenUnits
    *
-   * @return mixed|Response
-   * @throws Exception
+   * @return Response
+   * @throws Exception|GuzzleException
    */
-  private function rawTokenTransfer ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
+  private function rawTokenTransfer ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ): Response {
     return $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, $amount, $recipientTokenUnits, $remainderTokenUnits )
         ->execute();
   }
@@ -274,10 +273,13 @@ class TokenUnitTransactionTest extends TestCase {
    * @param $amount
    * @param array $recipientTokenUnits
    * @param array $remainderTokenUnits
+   *
+   * @return MutationTransferTokens
+   * @throws ReflectionException
    */
-  private function getRawTokenTransferQuery ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ) {
+  private function getRawTokenTransferQuery ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ): MutationTransferTokens {
 
-    // Convering token units indexes to the related rows
+    // Converting token units indexes to the related rows
     $recipientTokenUnits = $this->convertToWalletUnits( $recipientTokenUnits );
     $remainderTokenUnits = $this->convertToWalletUnits( $remainderTokenUnits );
 
@@ -335,19 +337,20 @@ class TokenUnitTransactionTest extends TestCase {
    *
    * @return string
    */
-  private function getBatchId ( int $index ) {
+  private function getBatchId ( int $index ): string {
     return $this->batchPrefix . $index;
   }
 
   /**
    * @param KnishIOClient $client
-   * @param array $tokenUnits
    * @param string $batchId
+   * @param array $tokenUnitIds
    *
    * @return mixed|KnishIOClient
-   * @throws ReflectionException
+   * @throws GuzzleException
+   * @throws Exception
    */
-  private function transfetToken ( KnishIOClient $client, string $batchId, array $tokenUnitIds ) {
+  private function transferToken ( KnishIOClient $client, string $batchId, array $tokenUnitIds ) {
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
@@ -366,7 +369,8 @@ class TokenUnitTransactionTest extends TestCase {
    * @param string $batchId
    *
    * @return mixed|KnishIOClient
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
   private function requestToken ( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
 
@@ -388,8 +392,9 @@ class TokenUnitTransactionTest extends TestCase {
    * @param string $tokenSlug
    *
    * @throws Exception
+   * @throws GuzzleException
    */
-  private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ) {
+  private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ): void {
 
     // Get shadow wallets
     $shadowWallets = $client->queryShadowWallets( $tokenSlug );
@@ -401,8 +406,15 @@ class TokenUnitTransactionTest extends TestCase {
   }
 
   /**
+   * @param string $tokenSlug
+   * @param string $batchId
+   * @param array $tokenUnits
+   * @param string|null $secret
+   *
    * @return KnishIOClient
+   * @throws GuzzleException
    * @throws ReflectionException
+   * @throws Exception
    */
   private function createToken ( string $tokenSlug, string $batchId, array $tokenUnits, string $secret = null ): KnishIOClient {
 

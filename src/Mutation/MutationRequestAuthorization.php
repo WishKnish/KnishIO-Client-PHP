@@ -49,7 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use WishKnish\KnishIO\Client\Response\Response;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 
 /**
@@ -60,8 +60,9 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
 
   /**
    * Fill the molecule
+   * @throws ReflectionException
    */
-  public function fillMolecule ( array $meta ) {
+  public function fillMolecule ( array $meta ): MutationRequestAuthorization {
     $this->molecule->initAuthorization( $meta );
     $this->molecule->sign();
     $this->molecule->check();
@@ -74,9 +75,9 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
    *
    * @param string $response
    *
-   * @return Response
+   * @return ResponseRequestAuthorization
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( string $response ): ResponseRequestAuthorization {
     return new ResponseRequestAuthorization( $this, $response );
   }
 }

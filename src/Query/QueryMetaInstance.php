@@ -65,11 +65,11 @@ class QueryMetaInstance extends Query {
   protected array $fields = [ 'nodes' => [ 'metaType', 'metaId', 'createdAt', 'metas' => [ 'key', 'value', 'createdAt', ], ], 'counts' => [ 'key', 'value', ], 'paginator' => [ 'offset', 'total' ], ];
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return Response
    */
-  public function createResponse ( $response ): Response {
+  public function createResponse ( string $response ): Response {
     return new Response( $this, $response, 'data.MetaInstance' );
   }
 

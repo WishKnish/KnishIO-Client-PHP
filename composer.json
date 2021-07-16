@@ -47,8 +47,9 @@
 		"symfony/polyfill-php70": "^1.11",
 		"guzzlehttp/guzzle": "^6.5",
 		"tuupola/base58": "1.0",
-		"webonyx/graphql-php": "^14.5"
-	},
+		"webonyx/graphql-php": "^14.5",
+    "ext-sodium": "*"
+  },
 	"require-dev": {
 		"symfony/var-dumper": "^3.4|^4.0|^5.0",
 		"illuminate/console": "5.4.* || 5.8.* || ^6.0",
@@ -57,8 +58,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"WishKnish\\KnishIO\\Client\\": "src/",
-			"Console\\": "bin/Console/"
+			"WishKnish\\KnishIO\\Client\\": "src/"
 		},
 		"files": [
 			"./src/Helpers/helpers.php"

@@ -87,7 +87,7 @@ class Strings {
    * @throws Exception
    */
   public static function randomString ( int $length = 256, string $alphabet = 'abcdef0123456789' ): string {
-    $array = array_map( static function () use ( $length ) {
+    $array = array_map( static function () {
       return random_int( 0, 255 );
     }, array_pad( [], $length, 0 ) );
     return implode( array_map( static function ( $int ) use ( $alphabet ) {

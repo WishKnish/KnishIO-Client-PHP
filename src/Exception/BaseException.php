@@ -64,8 +64,6 @@ use Throwable;
 abstract class BaseException extends LogicException implements IException {
   protected $message = 'Unknown exception';
   protected $code = 0;
-  protected $file;
-  protected $line;
 
   /**
    * BaseException constructor.

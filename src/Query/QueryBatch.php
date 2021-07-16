@@ -65,11 +65,11 @@ class QueryBatch extends Query {
   protected array $fields = [ 'batchId', 'type', 'createdAt', 'wallet' => [ 'address', 'bundleHash', 'amount', ], 'metas' => [ 'key', 'value', ], ];
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return ResponseBatch
    */
-  public function createResponse ( $response ): ResponseBatch {
+  public function createResponse ( string $response ): ResponseBatch {
     return new ResponseBatch( $this, $response );
   }
 

@@ -49,9 +49,10 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-// Supporing variety versions of PHPUnit
+// Supporting variety versions of PHPUnit
 use Dotenv\Dotenv;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use PHPUnit\TextUI\Command;
 use PHPUnit_Framework_TestCase;
 use ReflectionException;
@@ -78,18 +79,18 @@ abstract class TestCase extends TestCaseBase {
   protected $client;
   protected $dotenv;
 
-  protected $cell_slug = 'unit_test';
-  protected $graphql_url;
+  protected string $cell_slug = 'unit_test';
+  protected string $graphql_url;
 
   // Array [secret1 => KnishIOClient object1, secret2 => KnishIOClient object2, ..]
-  protected $clients = [];
+  protected array $clients = [];
 
   /**
    * Data filepath
    *
    * @return string
    */
-  protected function dataFilepath () {
+  protected function dataFilepath (): string {
     return __DIR__ . '/' . substr( strrchr( static::class, "\\" ), 1 ) . '.data';
   }
 
@@ -97,8 +98,9 @@ abstract class TestCase extends TestCaseBase {
    * Save data
    *
    * @param array $data
+   * @param null $filepath
    */
-  protected function saveData ( array $data, $filepath = null ) {
+  protected function saveData ( array $data, $filepath = null ): void {
     $filepath = default_if_null( $filepath, $this->dataFilepath() );
     file_put_contents( $filepath, json_encode( $data ) );
   }
@@ -114,7 +116,7 @@ abstract class TestCase extends TestCaseBase {
   /**
    * @param string|null $filepath
    */
-  protected function clearData ( string $filepath = null ) {
+  protected function clearData ( string $filepath = null ): void {
     $filepath = default_if_null( $filepath, $this->dataFilepath() );
     if ( file_exists( $filepath ) ) {
       unlink( $filepath );
@@ -164,11 +166,13 @@ abstract class TestCase extends TestCaseBase {
   /**
    * Get a client
    *
-   * @param $secret
+   * @param string $secret
+   * @param null $cell_slug
    *
    * @return mixed
+   * @throws GuzzleException
    */
-  public function client ( $secret, $cell_slug = null ) {
+  public function client ( string $secret, $cell_slug = null ) {
 
     $cell_slug = $cell_slug ?: $this->cell_slug;
 
@@ -191,13 +195,18 @@ abstract class TestCase extends TestCaseBase {
    * @param $secret
    * @param $molecule
    *
-   * @return ResponseMolecule
+   * @return Response
+   * @throws GuzzleException
    */
-  protected function executeMolecule ( $secret, $molecule ): ResponseMolecule {
+  protected function executeMolecule ( $secret, $molecule ): Response {
 
     // Execute query & check response
-    $response = $this->client( $secret )
-        ->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
+    /**
+     * @var MutationProposeMolecule $mutation
+     */
+    $mutation = $this->client( $secret )
+        ->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    $response = $mutation
         ->execute();
 
     // Check the response
@@ -207,9 +216,9 @@ abstract class TestCase extends TestCaseBase {
   }
 
   /**
-   * @param array $response
+   * @param Response $response
    */
-  protected function checkResponse ( Response $response ) {
+  protected function checkResponse ( Response $response ): void {
 
     // Check molecule response
     if ( $response instanceof ResponseMolecule ) {
@@ -229,7 +238,7 @@ abstract class TestCase extends TestCaseBase {
    * @param Response $response
    * @param bool $final
    */
-  protected function debug ( Response $response, $final = false ) {
+  protected function debug ( Response $response, bool $final = false ): void {
 
     // Debug output
     $output = [ 'query' => get_class( $response->query() ), 'url' => $response->query()
@@ -256,16 +265,15 @@ abstract class TestCase extends TestCaseBase {
    *
    * @param array $info
    */
-  protected function output ( array $info ) {
+  protected function output ( array $info ): void {
     echo implode( "\r\n", $info ) . "\r\n\r\n";
   }
 
   /**
    * Clear data test
    *
-   * @throws ReflectionException
    */
-  protected function callThirdPartyTest ( $class, $test, $test_dir ) {
+  protected function callThirdPartyTest ( $class, $test, $test_dir ): void {
 
     // PHP version
     $this->output( [ 'PHP Version: ' . PHP_VERSION ] );
@@ -293,9 +301,8 @@ abstract class TestCase extends TestCaseBase {
   }
 
   /**
-   * @throws ReflectionException
    */
-  protected function callServerCleanup ( $class ) {
+  protected function callServerCleanup ( $class ): void {
     $this->callThirdPartyTest( $class, 'testClearAll', getenv( 'SERVER_TEST_PATH' ) );
   }
 

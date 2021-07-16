@@ -175,7 +175,7 @@ abstract class Query {
       $variables = json_decode( trim( $variables ), true );
     }
     $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\":#Usi', '$1:', json_encode( $variables ) );
+    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables ) );
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
@@ -224,11 +224,11 @@ abstract class Query {
   }
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return Response
    */
-  public function createResponse ( $response ): Response {
+  public function createResponse ( string $response ): Response {
     return new Response( $this, $response );
   }
 

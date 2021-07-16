@@ -54,7 +54,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreatePeer;
 use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Tests\QueryServerTest;
@@ -73,6 +72,7 @@ class QueryClientTest extends TestCase {
 
   /**
    * @throws Exception
+   * @throws GuzzleException
    */
   public function beforeExecute (): void {
     parent::beforeExecute();
@@ -90,7 +90,7 @@ class QueryClientTest extends TestCase {
    * Clear data test
    *
    * @throws ReflectionException
-   * @throws Exception
+   * @throws Exception|GuzzleException
    */
   public function testClearAll (): void {
 

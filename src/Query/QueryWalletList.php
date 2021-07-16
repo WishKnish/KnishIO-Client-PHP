@@ -69,7 +69,7 @@ class QueryWalletList extends Query {
    *
    * @return ResponseWalletList
    */
-  public function createResponse ( $response ): ResponseWalletList {
+  public function createResponse ( string $response ): ResponseWalletList {
     return new ResponseWalletList( $this, $response );
   }
 

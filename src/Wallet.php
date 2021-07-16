@@ -216,7 +216,7 @@ class Wallet {
 
     if ( $this->hasTokenUnits() ) {
 
-      $result = array_map( static function ( $tokenUnit, $_ ) {
+      $result = array_map( static function ( $tokenUnit ) {
         return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
       }, $this->tokenUnits, [] );
 
@@ -231,7 +231,7 @@ class Wallet {
    * @param Wallet $remainderWallet
    * @param Wallet|null $recipientWallet
    */
-  public function splitUnits ( array $sendTokenUnits = [], Wallet $remainderWallet, ?Wallet $recipientWallet = null ): void {
+  public function splitUnits ( array $sendTokenUnits, Wallet $remainderWallet, ?Wallet $recipientWallet = null ): void {
 
     // No units supplied, nothing to split
     if ( count( $sendTokenUnits ) === 0 ) {

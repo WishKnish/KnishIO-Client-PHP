@@ -100,11 +100,11 @@ class QueryMeta extends Query {
   }
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return ResponseMeta
    */
-  public function createResponse ( $response ): ResponseMeta {
+  public function createResponse ( string $response ): ResponseMeta {
     return new ResponseMeta( $this, $response );
   }
 

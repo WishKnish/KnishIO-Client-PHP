@@ -102,7 +102,7 @@ class QueryWalletBundle extends Query {
    *
    * @return ResponseWalletBundle
    */
-  public function createResponse ( $response ): ResponseWalletBundle {
+  public function createResponse ( string $response ): ResponseWalletBundle {
     return new ResponseWalletBundle( $this, $response );
   }
 
