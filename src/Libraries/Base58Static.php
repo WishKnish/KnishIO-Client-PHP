@@ -77,12 +77,11 @@ class Base58Static extends Base {
    * Decode given base58 string back to data
    *
    * @param string $data
-   * @param bool $integer
    *
-   * @return string|integer
+   * @return string
    */
-  public static function decode ( $data, $integer = false ) {
-    return ( new Base58( self::$options ) )->decode( $data, $integer );
+  public static function decode ( string $data ): string {
+    return ( new Base58( self::$options ) )->decode( $data );
   }
 
   /**
