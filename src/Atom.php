@@ -71,7 +71,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property array $meta
  * @property integer|null $index
  * @property string|null $otsFragment
- * @property integer $createdAt
+ * @property string $createdAt
  *
  */
 class Atom {
@@ -88,7 +88,7 @@ class Atom {
   public array $meta = [];
   public ?int $index;
   public ?string $otsFragment;
-  public int $createdAt;
+  public string $createdAt;
 
   /**
    * Atom constructor.

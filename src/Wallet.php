@@ -77,7 +77,7 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $batchId;
+  public ?string $batchId = null;
 
   /**
    * @var array
@@ -97,17 +97,17 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $address;
+  public ?string $address = null;
 
   /**
    * @var string|null
    */
-  public ?string $position;
+  public ?string $position = null;
 
   /**
    * @var string|null
    */
-  public ?string $bundle;
+  public ?string $bundle = null;
 
   /**
    * @var string
@@ -117,12 +117,17 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $key;
+  public ?string $key = null;
 
   /**
    * @var string|null
    */
-  public ?string $pubkey;
+  public ?string $pubkey = null;
+
+  /**
+   * @var string|null
+   */
+  private ?string $privkey = null;
 
   /**
    * Wallet constructor.
@@ -337,7 +342,9 @@ class Wallet {
    */
   public function getMyEncPrivateKey (): ?string {
 
-    Crypto::setCharacters( $this->characters );
+    if( $this->characters ) {
+      Crypto::setCharacters( $this->characters );
+    }
 
     if ( $this->privkey === null && $this->key !== null ) {
 
@@ -357,7 +364,9 @@ class Wallet {
    */
   public function getMyEncPublicKey (): ?string {
 
-    Crypto::setCharacters( $this->characters );
+    if( $this->characters ) {
+      Crypto::setCharacters( $this->characters );
+    }
 
     $privateKey = $this->getMyEncPrivateKey();
 
@@ -380,7 +389,9 @@ class Wallet {
    */
   public function encryptMyMessage ( array $message, ...$keys ): array {
 
-    Crypto::setCharacters( $this->characters );
+    if ( $this->characters ) {
+      Crypto::setCharacters( $this->characters );
+    }
 
     $encrypt = [];
 
@@ -404,7 +415,9 @@ class Wallet {
    */
   public function decryptMyMessage ( $message ): ?array {
 
-    Crypto::setCharacters( $this->characters );
+    if( $this->characters ) {
+      Crypto::setCharacters( $this->characters );
+    }
 
     $pubKey = $this->getMyEncPublicKey();
     $encrypt = $message;

@@ -67,13 +67,13 @@ class MoleculeStructure {
 
   use Json;
 
-  public string $molecularHash;
+  public ?string $molecularHash;
   public ?string $cellSlug;
-  public ?string $counterparty;
-  public string $bundle;
-  public string $status;
+  public ?string $counterparty = null;
+  public ?string $bundle;
+  public ?string $status;
   public bool $local;
-  public int $createdAt;
+  public string $createdAt;
   public array $atoms = [];
 
   /**

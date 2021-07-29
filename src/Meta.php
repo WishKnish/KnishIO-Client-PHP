@@ -59,7 +59,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $modelId
  * @property array $meta
  * @property $snapshotMolecule
- * @property integer $createdAt
+ * @property string $createdAt
  */
 class Meta {
   use Json;

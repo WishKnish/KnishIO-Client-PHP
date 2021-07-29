@@ -120,7 +120,7 @@ class KnishIOClient {
   /**
    * @var string|null
    */
-  private ?string $cellSlug;
+  private ?string $cellSlug = null;
 
   /**
    * @var int

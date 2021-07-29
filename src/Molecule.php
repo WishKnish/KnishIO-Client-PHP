@@ -67,7 +67,7 @@ use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
  * @property string|null $cellSlug
  * @property string|null $bundle
  * @property string|null $status
- * @property integer $createdAt
+ * @property string $createdAt
  * @property-read array $atoms
  */
 class Molecule extends MoleculeStructure {

@@ -71,7 +71,7 @@ trait Json {
    *
    * @return static|null
    */
-  public static function arrayToObject ( array $data, $object = null ): ?Json {
+  public static function arrayToObject ( array $data, $object = null ) {
     $object = $object ?? new static();
     foreach ( $data as $property => $value ) {
 

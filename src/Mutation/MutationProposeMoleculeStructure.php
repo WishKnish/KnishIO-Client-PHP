@@ -105,11 +105,11 @@ class MutationProposeMoleculeStructure extends Query {
   }
 
   /**
-   * @param $response
+   * @param string $response
    *
    * @return ResponseMolecule
    */
-  public function createResponse ( $response ): ResponseMolecule {
+  public function createResponse ( string $response ): ResponseMolecule {
     return new ResponseMolecule( $this, $response );
   }
 
