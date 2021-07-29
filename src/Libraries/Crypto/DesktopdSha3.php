@@ -237,6 +237,7 @@ class DesktopdSha3 {
 
     $this->rateInBytes = $rate / 8;
     $this->outputLength = $length;
+    $this->phase = self::PHASE_INPUT;
   }
 
   /**
@@ -262,7 +263,7 @@ class DesktopdSha3 {
     if ( ( $this->suffix & 0x80 ) !== 0 && $this->blockSize === ( $rateInBytes - 1 ) ) {
       $this->state = self::keccakF1600Permute( $this->state );
     }
-    $this->state[ $rateInBytes - 1 ] ^= "\x80";
+    $this->state[ $rateInBytes - 1 ] = $this->state[ $rateInBytes - 1 ] ^ "\x80";
     $this->state = self::keccakF1600Permute( $this->state );
   }
 
