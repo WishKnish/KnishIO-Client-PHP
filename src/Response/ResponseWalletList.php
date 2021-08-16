@@ -1,11 +1,55 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Exception;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -13,14 +57,16 @@ use WishKnish\KnishIO\Client\Wallet;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseWalletList extends Response {
-  protected $dataKey = 'data.Wallet';
+  protected string $dataKey = 'data.Wallet';
 
   /**
    * @param array $data
+   * @param string|null $secret
    *
-   * @throws \Exception
+   * @return Wallet
+   * @throws Exception
    */
-  public static function toClientWallet ( array $data, string $secret = null ) {
+  public static function toClientWallet ( array $data, string $secret = null ): Wallet {
 
     // Shadow wallet
     if ( $data[ 'position' ] === null ) {
@@ -55,9 +101,9 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return array|null
-   * @throws \Exception
+   * @throws Exception
    */
-  public function getWallets ( ?string $secret = null ) {
+  public function getWallets ( ?string $secret = null ): ?array {
     // Get data
     $list = $this->data();
     if ( !$list ) {
@@ -76,9 +122,9 @@ class ResponseWalletList extends Response {
 
   /**
    * @return array|null
-   * @throws \Exception
+   * @throws Exception
    */
-  public function payload () {
+  public function payload (): ?array {
     // Get data
     $list = $this->data();
     if ( !$list ) {

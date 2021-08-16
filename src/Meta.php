@@ -1,8 +1,51 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client;
 
@@ -16,16 +59,16 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $modelId
  * @property array $meta
  * @property $snapshotMolecule
- * @property integer $createdAt
+ * @property string $createdAt
  */
 class Meta {
   use Json;
 
-  public $modelType;
-  public $modelId;
-  public $meta;
+  public string $modelType;
+  public string $modelId;
+  public array $meta;
   public $snapshotMolecule;
-  public $createdAt;
+  public int $createdAt;
 
   public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null ) {
     $this->modelType = $modelType;
@@ -40,10 +83,10 @@ class Meta {
    *
    * @return array
    */
-  public static function normalizeMeta ( array $meta ) {
+  public static function normalizeMeta ( array $meta ): array {
     $result = [];
     foreach ( $meta as $key => $value ) {
-      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => strval( $value ), ];
+      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => $value, ];
     }
     return $result;
   }
@@ -53,7 +96,7 @@ class Meta {
    *
    * @return array
    */
-  public static function aggregateMeta ( $meta ) {
+  public static function aggregateMeta ( $meta ): array {
     $aggregate = [];
     if ( count( $meta ) ) {
       foreach ( $meta as $metaEntry ) {

@@ -47,30 +47,42 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
+use WishKnish\KnishIO\Client\Wallet;
 
-/**
- * Class QueryBalance
- * @package WishKnish\KnishIO\Client\Query
- */
-class QueryWalletList extends Query {
+class MutationRequestAuthorizationGuest extends Mutation {
   // Query
-  protected static string $default_query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
-	 	@fields
-	}';
+  protected static string $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
+
+  protected Wallet $wallet;
 
   // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', ];
+  protected array $fields = [ 'token', 'time', 'key', 'encrypt' ];
 
   /**
-   * @param string $response
-   *
-   * @return ResponseWalletList
+   * @param Wallet $wallet
    */
-  public function createResponse ( string $response ): ResponseWalletList {
-    return new ResponseWalletList( $this, $response );
+  public function setAuthorizationWallet ( Wallet $wallet ): void {
+    $this->wallet = $wallet;
   }
 
+  /**
+   * @return Wallet|null
+   */
+  public function getWallet (): ?Wallet {
+    return $this->wallet;
+  }
+
+  /**
+   * Create a response
+   *
+   * @param $response
+   *
+   * @return ResponseRequestAuthorizationGuest
+   */
+  public function createResponse ( $response ): ResponseRequestAuthorizationGuest {
+    return new ResponseRequestAuthorizationGuest( $this, $response );
+  }
 }

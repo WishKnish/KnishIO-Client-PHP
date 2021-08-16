@@ -47,30 +47,28 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use Throwable;
 
 /**
- * Class QueryBalance
- * @package WishKnish\KnishIO\Client\Query
+ * Class InvalidResponseException
+ * @package WishKnish\KnishIO\Client\Exception
+ *
+ * @property string $message
+ * @property integer $code
+ * @property string $file
+ * @property integer $line
  */
-class QueryWalletList extends Query {
-  // Query
-  protected static string $default_query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
-	 	@fields
-	}';
-
-  // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', ];
-
+class InvalidRequestException extends BaseException {
   /**
-   * @param string $response
+   * InvalidResponseException constructor.
    *
-   * @return ResponseWalletList
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public function createResponse ( string $response ): ResponseWalletList {
-    return new ResponseWalletList( $this, $response );
+  public function __construct ( $message = 'Invalid request format.', $code = 2, $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
-
 }

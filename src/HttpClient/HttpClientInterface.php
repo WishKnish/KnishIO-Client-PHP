@@ -1,4 +1,51 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\HttpClient;
 
@@ -10,30 +57,28 @@ use GuzzleHttp\ClientInterface;
  */
 interface HttpClientInterface extends ClientInterface {
 
-	/**
-	 * @param $url
-	 * @return mixed
-	 */
-	public function getUrl ();
+  /**
+   * @return string
+   */
+  public function getUrl (): string;
 
-	/**
-	 * @param $url
-	 * @return mixed
-	 */
-	public function setUrl ( $url );
+  /**
+   * @param string $url
+   *
+   * @return mixed
+   */
+  public function setUrl ( string $url ): void;
 
+  /**
+   * @param string $authToken
+   *
+   * @return void
+   */
+  public function setAuthToken ( string $authToken ): void;
 
-	/**
-	 * @param $authToken
-	 * @return mixed
-	 */
-	public function setAuthToken ( $authToken );
-
-
-	/**
-	 * @return mixed
-	 */
-	public function getAuthToken ();
-
+  /**
+   * @return string|null
+   */
+  public function getAuthToken (): ?string;
 
 }

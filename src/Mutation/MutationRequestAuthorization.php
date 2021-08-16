@@ -1,40 +1,84 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
+
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseAuthorization;
-use WishKnish\KnishIO\Client\Wallet;
-use Exception;
+use ReflectionException;
+use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 
 /**
  * Class MutationRequestAuthorization
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationRequestAuthorization extends MutationProposeMolecule
-{
+class MutationRequestAuthorization extends MutationProposeMolecule {
 
+  /**
+   * Fill the molecule
+   * @throws ReflectionException
+   */
+  public function fillMolecule ( array $meta ): MutationRequestAuthorization {
+    $this->molecule->initAuthorization( $meta );
+    $this->molecule->sign();
+    $this->molecule->check();
 
-	/**
-	 * Fill the molecule
-	 */
-    public function fillMolecule ()
-    {
-        $this->molecule->initAuthorization();
-		$this->molecule->sign();
-		$this->molecule->check();
+    return $this;
+  }
 
-		return $this;
-    }
-
-    /**
-     * Create a response
-     *
-     * @param string $response
-     * @return Response
-     */
-    public function createResponse ( $response )
-    {
-        return new ResponseAuthorization( $this, $response );
-    }
+  /**
+   * Create a response
+   *
+   * @param string $response
+   *
+   * @return ResponseMolecule
+   */
+  public function createResponse ( string $response ): ResponseMolecule {
+    return new ResponseRequestAuthorization( $this, $response );
+  }
 }

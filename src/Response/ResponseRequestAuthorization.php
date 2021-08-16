@@ -47,30 +47,65 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
- * Class QueryBalance
- * @package WishKnish\KnishIO\Client\Query
+ * Class ResponseRequestAuthorization
+ * @package WishKnish\KnishIO\Client\Response
  */
-class QueryWalletList extends Query {
-  // Query
-  protected static string $default_query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
-	 	@fields
-	}';
-
-  // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', ];
+class ResponseRequestAuthorization extends ResponseMolecule {
 
   /**
-   * @param string $response
+   * Payload key
    *
-   * @return ResponseWalletList
+   * @param $key
+   *
+   * @return mixed
    */
-  public function createResponse ( string $response ): ResponseWalletList {
-    return new ResponseWalletList( $this, $response );
+  private function payloadKey ( $key ) {
+    if ( !array_has( $this->payload, $key ) ) {
+      throw new InvalidResponseException( 'ResponseRequestAuthorization: \'' . $key . '\' key is not found in the payload.' );
+    }
+    return array_get( $this->payload, $key );
+  }
+
+  /**
+   * Token
+   */
+  public function token () {
+    return $this->payloadKey( 'token' );
+  }
+
+  /**
+   * @return mixed
+   */
+  public function time () {
+    return $this->payloadKey( 'time' );
+  }
+
+  /**
+   * @return mixed
+   */
+  public function pubKey () {
+    return $this->payloadKey( 'key' );
+  }
+
+  /**
+   * @return Wallet
+   */
+  public function wallet (): Wallet {
+    return $this->clientMolecule()
+        ->sourceWallet();
+  }
+
+  /**
+   * @return mixed
+   */
+  public function encrypt () {
+    return $this->payloadKey( 'encrypt' );
   }
 
 }
