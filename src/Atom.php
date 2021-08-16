@@ -77,8 +77,8 @@ use WishKnish\KnishIO\Client\Traits\Json;
 class Atom {
   use Json;
 
-  public string $position;
-  public string $walletAddress;
+  public ?string $position;
+  public ?string $walletAddress;
   public string $isotope;
   public ?string $token;
   public ?string $value;
@@ -105,7 +105,7 @@ class Atom {
    * @param string|null $otsFragment
    * @param integer|null $index
    */
-  public function __construct ( string $position, string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
+  public function __construct ( ?string $position, ?string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
     $this->position = $position;
     $this->walletAddress = $walletAddress;
     $this->isotope = $isotope;

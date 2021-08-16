@@ -80,7 +80,7 @@ abstract class TestCase extends TestCaseBase {
   protected $dotenv;
 
   protected string $cell_slug = 'unit_test';
-  protected string $graphql_url;
+  protected ?string $graphql_url = null;
 
   // Array [secret1 => KnishIOClient object1, secret2 => KnishIOClient object2, ..]
   protected array $clients = [];
@@ -183,7 +183,7 @@ abstract class TestCase extends TestCaseBase {
       $this->clients[ $secret ] = new KnishIOClient( $this->graphql_url );
 
       // Auth the client
-      $response = $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug );
+      $response = $this->clients[ $secret ]->requestAuthToken( $secret, null, $cell_slug );
       $this->checkResponse( $response );
     }
 
