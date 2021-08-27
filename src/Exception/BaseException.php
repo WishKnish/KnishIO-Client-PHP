@@ -74,7 +74,7 @@ abstract class BaseException extends LogicException implements IException {
    */
   public function __construct ( $message = null, $code = 0, $previous = null ) {
     if ( !$message ) {
-      throw new static ( 'Unknown ' . static::class );
+      throw new static ( 'Unknown exception: ' . static::class );
     }
 
     parent::__construct( $message, $code, $previous );
