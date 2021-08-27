@@ -128,6 +128,17 @@ class KnishIOClient {
   private int $serverSdkVersion;
 
   /**
+   * @var array
+   */
+  private array $uris = [];
+
+  /**
+   * @var array
+   */
+  private array $authTokenObjects = [];
+
+
+  /**
    * @param Wallet $sourceWallet
    * @param $amount
    *
@@ -185,6 +196,12 @@ class KnishIOClient {
    */
   public function initialize ( string $url, $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
+
+    // Init uris
+    $this->uris = is_array( $url ) ? $url : [ $url ];
+    foreach( $this->uris as $uri ) {
+      $this->authTokenObjects[ $uri ] = null; // @todo remove this code if it is not required!
+    }
 
     $this->client = default_if_null( $client, new HttpClient( $url ) );
     $this->serverSdkVersion = $serverSdkVersion;
@@ -369,12 +386,13 @@ class KnishIOClient {
    * @param string|null $seed
    * @param string|null $cell_slug
    * @param bool|null $encrypt
+   * @param bool|null $oldVersion
    *
    * @return Response|ResponseRequestAuthorization
    * @throws GuzzleException
-   * @throws Exception
+   * @throws ReflectionException
    */
-  public function requestAuthToken ( ?string $secret = null, ?string $seed = null, ?string $cell_slug = null, ?bool $encrypt = null ) {
+  public function requestAuthToken ( ?string $secret = null, ?string $seed = null, ?string $cell_slug = null, ?bool $encrypt = null, ?bool $oldVersion = true ) {
     // Set a cell slug
     $this->cellSlug = $cell_slug ?: $this->cellSlug();
     $guestMode = false;
@@ -393,22 +411,27 @@ class KnishIOClient {
       $encrypt = $this->hasEncryption();
     }
 
+    $wallet = null;
     if ( $guestMode ) {
       /**
        * @var MutationRequestAuthorizationGuest $query
        */
       $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
-      $authorizationWallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
+      $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
-      $query->setAuthorizationWallet( $authorizationWallet );
-
-      $response = $query->execute( [ 'cellSlug' => $this->cellSlug, 'pubkey' => $authorizationWallet->pubkey, 'encrypt' => $encrypt ] );
+      $response = $query->execute( [
+          'cellSlug' => $this->cellSlug,
+          'pubkey' => $wallet->pubkey,
+          'encrypt' => $encrypt,
+      ] );
 
     }
     else {
+      $wallet = new Wallet( $this->secret, 'AUTH' );
+
       // Create an auth molecule
-      $molecule = $this->createMolecule( $this->secret(), new Wallet( $this->secret, 'AUTH' ) );
+      $molecule = $this->createMolecule( $this->secret(), $wallet );
 
       /**
        * Create query & fill a molecule
@@ -434,11 +457,17 @@ class KnishIOClient {
       $this->client()
           ->setPubKey( $response->pubKey() );
       $this->client()
-          ->setWallet( $response->wallet() );
+          ->setWallet( $wallet );
 
       if ( $this->hasEncryption() !== $response->encrypt() ) {
         ( $response->encrypt() ) ? $this->enableEncryption() : $this->disableEncryption();
       }
+
+      if ( $oldVersion ) {
+        return $response;
+      }
+
+      return AuthToken::create( $response->payload(), $wallet );
 
     } // Not authorized: throw an exception
     else {
@@ -960,5 +989,98 @@ class KnishIOClient {
 
     return $query->execute( [ 'bundle' => $bundleHash ] );
   }
+
+
+
+
+  /**
+   * Authorize with auth token
+   *
+   * @param secret
+   * @param cellSlug
+   * @param authToken
+   * @returns {Promise<void>}
+   */
+  function authorize ( $secret, $cellSlug, $encrypt = null ) {
+
+    // Do we have a secret pre-hashed?
+    if ( $secret ) {
+      $this->setSecret( $secret );
+    }
+
+    // Set a cell slug
+    if ( $cellSlug ) {
+      $this->setCellSlug( $cellSlug );
+    }
+
+    // Auth in process...
+    $this->authInProcess = true;
+
+    $authToken = null;
+
+    // Authorized user
+    if ( $secret ) {
+      $authToken = $this->requestAuthToken(
+        $secret,
+        null,
+        null,
+        $encrypt,
+        false
+      );
+    }
+
+    // Guest
+    else {
+      $authToken = $this->requestAuthToken(
+        null,
+        null,
+        $this->cellSlug,
+        $encrypt,
+        false
+      );
+    }
+
+    // Set an authToken full info
+    $this->setAuthToken( $authToken );
+
+    // Auth process is stopped
+    $this->authInProcess = false;
+
+    // Return full response
+    return $authToken;
+  }
+
+
+  /**
+   * Sets the auth token
+   *
+   * @param authToken
+   */
+  function setAuthToken ( ?AuthToken $authToken ) {
+
+    // An empty auth token
+    if ( !$authToken ) {
+      return;
+    }
+
+    // Save auth token object to global list
+    $this->authTokenObjects[ $this->url() ] = $authToken;
+
+    // Set auth data to apollo client
+    $this->client()->setAuthData( $authToken->getAuthData() );
+
+    // Save a full auth token object with expireAt key
+    $this->authToken = $authToken;
+  }
+
+  /**
+   * Returns the current authorization token
+   *
+   * @return mixed
+   */
+  function getAuthToken () {
+    return $this->authToken;
+  }
+
 
 }
