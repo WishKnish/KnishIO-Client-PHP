@@ -73,7 +73,7 @@ class HttpClient extends Client implements HttpClientInterface {
   /**
    * @var string
    */
-  protected string $url;
+  protected string $uri;
 
   /**
    * @var Cipher
@@ -88,15 +88,15 @@ class HttpClient extends Client implements HttpClientInterface {
   /**
    * HttpClient constructor.
    *
-   * @param string $url
+   * @param string $uri
    * @param array $config
    * @param bool $encrypt
    */
-  public function __construct ( string $url, array $config = [], bool $encrypt = false ) {
-    $this->setUrl( $url );
+  public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
+    $this->setUri( $uri );
     $this->cipher = new Cipher();
     $this->xAuthToken = null;
-    $this->config = [ 'base_uri' => $url, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
+    $this->config = [ 'base_uri' => $uri, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
 
     // Merge config
     $config = array_replace_recursive( $this->config, $config );
@@ -148,17 +148,15 @@ class HttpClient extends Client implements HttpClientInterface {
   /**
    * @return string
    */
-  public function getUrl (): string {
-    return $this->url;
+  public function getUri (): string {
+    return $this->uri;
   }
 
   /**
-   * @param string $url
-   *
-   * @return void
+   * @param string $uri
    */
-  public function setUrl ( string $url ): void {
-    $this->url = $url;
+  public function setUri ( string $uri ): void {
+    $this->uri = $uri;
   }
 
   /**
@@ -174,6 +172,21 @@ class HttpClient extends Client implements HttpClientInterface {
   public function getAuthToken (): ?string {
     return $this->xAuthToken;
   }
+
+
+  /**
+   * Sets the authorization data
+   *
+   * @param {string} token
+   * @param {string} pubkey
+   * @param {Wallet|null} wallet
+   */
+  public function setAuthData ( string $token, string $pubkey, Wallet $wallet ) {
+    $this->setAuthToken( $token );
+    $this->setPubKey( $pubkey );
+    $this->setWallet( $wallet );
+  }
+
 
   /**
    * @param RequestInterface $request

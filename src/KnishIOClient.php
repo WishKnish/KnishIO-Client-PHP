@@ -85,6 +85,9 @@ use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Client\AuthToken;
+
+
 
 /**
  * Class KnishIO
@@ -181,30 +184,41 @@ class KnishIOClient {
   /**
    * KnishIOClient constructor.
    *
-   * @param null $url
+   * @param null $uri
    * @param HttpClientInterface|null $client
+   * @param int $serverSdkVersion
    */
-  public function __construct ( $url = null, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
-    $url = $url ?: $this->url() . '/graphql';
-    $this->initialize( $url, $client, $serverSdkVersion );
+  public function __construct ( $uri = null, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
+    $uri = $uri ?: $this->uri() . '/graphql';
+    $this->initialize( $uri, $client, $serverSdkVersion );
   }
 
   /**
-   * @param string $url
+   * @param string $uri
    * @param null $client
    * @param int $serverSdkVersion
    */
-  public function initialize ( string $url, $client = null, int $serverSdkVersion = 3 ): void {
+  public function initialize ( string $uri, $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
 
     // Init uris
-    $this->uris = is_array( $url ) ? $url : [ $url ];
+    $this->uris = is_array( $uri ) ? $uri : [ $uri ];
     foreach( $this->uris as $uri ) {
       $this->authTokenObjects[ $uri ] = null; // @todo remove this code if it is not required!
     }
 
-    $this->client = default_if_null( $client, new HttpClient( $url ) );
+    $this->client = default_if_null( $client, new HttpClient( $this->getRandomUri() ) );
     $this->serverSdkVersion = $serverSdkVersion;
+  }
+
+
+  /**
+   * Get random uri from specified $this->uris
+   *
+   * @returns {string}
+   */
+  public function getRandomUri () {
+    return $this->uris[ random_int(0, count( $this->uris ) - 1) ];
   }
 
   /**
@@ -233,8 +247,8 @@ class KnishIOClient {
   /**
    * @return string
    */
-  public function url (): string {
-    return $this->client->getUrl();
+  public function uri (): string {
+    return $this->client->getUri();
   }
 
   /**
@@ -383,24 +397,20 @@ class KnishIOClient {
 
   /**
    * @param string|null $secret
-   * @param string|null $seed
-   * @param string|null $cell_slug
+   * @param string|null $cellSlug
    * @param bool|null $encrypt
    * @param bool|null $oldVersion
    *
-   * @return Response|ResponseRequestAuthorization
+   * @return \WishKnish\KnishIO\Client\AuthToken|Response|ResponseRequestAuthorization
    * @throws GuzzleException
    * @throws ReflectionException
    */
-  public function requestAuthToken ( ?string $secret = null, ?string $seed = null, ?string $cell_slug = null, ?bool $encrypt = null, ?bool $oldVersion = true ) {
+  public function requestAuthToken ( ?string $secret = null, ?string $cellSlug = null, ?bool $encrypt = null, ?bool $oldVersion = true ) {
     // Set a cell slug
-    $this->cellSlug = $cell_slug ?: $this->cellSlug();
+    $this->cellSlug = $cellSlug ?: $this->cellSlug();
     $guestMode = false;
 
-    if ( $seed ) {
-      $this->setSecret( Libraries\Crypto::generateSecret( $seed ) );
-    }
-    else if ( $secret ) {
+   if ( $secret ) {
       $this->setSecret( $secret );
     }
     else {
@@ -452,21 +462,21 @@ class KnishIOClient {
     // If the response is success - set auth token
     if ( $response->success() ) {
 
-      $this->client()
-          ->setAuthToken( $response->token() );
-      $this->client()
-          ->setPubKey( $response->pubKey() );
-      $this->client()
-          ->setWallet( $wallet );
-
+      // Change encryption flag
       if ( $this->hasEncryption() !== $response->encrypt() ) {
         ( $response->encrypt() ) ? $this->enableEncryption() : $this->disableEncryption();
       }
 
+      // Old logic supporting
       if ( $oldVersion ) {
+
+        // Set auth data
+        $this->client()->setAuthData( $response->token(), $response->pubKey(), $wallet );
+
         return $response;
       }
 
+      // Create an auth token object
       return AuthToken::create( $response->payload(), $wallet );
 
     } // Not authorized: throw an exception
@@ -1001,7 +1011,7 @@ class KnishIOClient {
    * @param authToken
    * @returns {Promise<void>}
    */
-  function authorize ( $secret, $cellSlug, $encrypt = null ) {
+  public function authorize ( $secret, $cellSlug, $encrypt = null ) {
 
     // Do we have a secret pre-hashed?
     if ( $secret ) {
@@ -1013,16 +1023,13 @@ class KnishIOClient {
       $this->setCellSlug( $cellSlug );
     }
 
-    // Auth in process...
-    $this->authInProcess = true;
-
+    // Auth token (guest or authorized)
     $authToken = null;
 
     // Authorized user
     if ( $secret ) {
       $authToken = $this->requestAuthToken(
         $secret,
-        null,
         null,
         $encrypt,
         false
@@ -1033,7 +1040,6 @@ class KnishIOClient {
     else {
       $authToken = $this->requestAuthToken(
         null,
-        null,
         $this->cellSlug,
         $encrypt,
         false
@@ -1042,9 +1048,6 @@ class KnishIOClient {
 
     // Set an authToken full info
     $this->setAuthToken( $authToken );
-
-    // Auth process is stopped
-    $this->authInProcess = false;
 
     // Return full response
     return $authToken;
@@ -1056,7 +1059,7 @@ class KnishIOClient {
    *
    * @param authToken
    */
-  function setAuthToken ( ?AuthToken $authToken ) {
+  public function setAuthToken ( ?AuthToken $authToken ) {
 
     // An empty auth token
     if ( !$authToken ) {
@@ -1064,10 +1067,10 @@ class KnishIOClient {
     }
 
     // Save auth token object to global list
-    $this->authTokenObjects[ $this->url() ] = $authToken;
+    $this->authTokenObjects[ $this->uri() ] = $authToken;
 
     // Set auth data to apollo client
-    $this->client()->setAuthData( $authToken->getAuthData() );
+    $this->client()->setAuthData( $authToken->getToken(), $authToken->getPubkey(), $authToken->getWallet() );
 
     // Save a full auth token object with expireAt key
     $this->authToken = $authToken;
@@ -1078,7 +1081,7 @@ class KnishIOClient {
    *
    * @return mixed
    */
-  function getAuthToken () {
+  public function getAuthToken () {
     return $this->authToken;
   }
 

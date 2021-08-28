@@ -183,8 +183,9 @@ abstract class TestCase extends TestCaseBase {
       $this->clients[ $secret ] = new KnishIOClient( $this->graphql_url );
 
       // Auth the client
-      $response = $this->clients[ $secret ]->requestAuthToken( $secret, null, $cell_slug );
-      $this->checkResponse( $response );
+      // $response = $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug );
+      // $this->checkResponse( $response );
+      $authToken = $this->clients[ $secret ]->authorize( $secret, $cell_slug );
     }
 
     // Return the client by secret
@@ -242,7 +243,7 @@ abstract class TestCase extends TestCaseBase {
 
     // Debug output
     $output = [ 'query' => get_class( $response->query() ), 'url' => $response->query()
-        ->url(), ];
+        ->uri(), ];
 
     // Reason data on the top of the output
     if ( array_has( $response->data(), 'reason' ) ) {

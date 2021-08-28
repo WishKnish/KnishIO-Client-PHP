@@ -60,14 +60,12 @@ interface HttpClientInterface extends ClientInterface {
   /**
    * @return string
    */
-  public function getUrl (): string;
+  public function getUri (): string;
 
   /**
-   * @param string $url
-   *
-   * @return mixed
+   * @param string $uri
    */
-  public function setUrl ( string $url ): void;
+  public function setUri ( string $uri ): void;
 
   /**
    * @param string $authToken

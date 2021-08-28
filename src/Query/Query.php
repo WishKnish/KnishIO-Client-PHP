@@ -132,7 +132,7 @@ abstract class Query {
     $this->variables = $this->compiledVariables( $variables );
 
     // Create a request
-    return new Request( 'POST', $this->url(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] ) );
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] ) );
 
   }
 
@@ -160,7 +160,7 @@ abstract class Query {
   }
 
   /**
-   * Debug info => get an url to execute GraphQL directly from it
+   * Debug info => get an uri to execute GraphQL directly from it
    *
    * @param string $name
    * @param array|string|null $variables
@@ -168,7 +168,7 @@ abstract class Query {
    *
    * @return string
    */
-  public function getQueryUrl ( string $name, $variables = null, array $fields = null ): string {
+  public function getQueryUri ( string $name, $variables = null, array $fields = null ): string {
 
     // Compile variables
     if ( is_string( $variables ) ) {
@@ -182,7 +182,7 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->url() . str_replace( [ '@name', '@vars', '@fields', ], [ $name, $variables, $fields, ], '?query={@name(@vars)@fields}' );
+    return $this->uri() . str_replace( [ '@name', '@vars', '@fields', ], [ $name, $variables, $fields, ], '?query={@name(@vars)@fields}' );
   }
 
   /**
@@ -245,9 +245,9 @@ abstract class Query {
   /**
    * @return string|null
    */
-  public function url (): ?string {
+  public function uri (): ?string {
     return $this->client()
-        ->getUrl();
+        ->getUri();
   }
 
   /**

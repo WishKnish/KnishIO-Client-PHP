@@ -17,12 +17,12 @@ class AuthToken {
    *
    * @return static
    */
-  static function create ( $data, $wallet ) {
+  public static function create ( $data, $wallet ) {
     $authToken = new static (
         $data[ 'token' ],
         $data[ 'expiresAt' ],
         $data[ 'time' ],
-        $data[ 'pubkey' ],
+        $data[ 'key' ],
         $data[ 'encrypt' ],
     );
     $authToken->setWallet( $wallet );
@@ -37,7 +37,7 @@ class AuthToken {
    * @return static
    * @throws \Exception
    */
-  static function restore ( $snapshot, $secret ) {
+  public static function restore ( $snapshot, $secret ) {
     $wallet = new Wallet (
         $secret,
         'AUTH',
@@ -64,7 +64,7 @@ class AuthToken {
    * @param $pubkey
    * @param $encrypt
    */
-  function __construct (
+  public function __construct (
     $token,
     $expiresAt,
     $time,
@@ -82,7 +82,7 @@ class AuthToken {
   /**
    * @param $wallet
    */
-  function setWallet ( $wallet ) {
+  public function setWallet ( $wallet ) {
     $this->wallet = $wallet;
   }
 
@@ -90,7 +90,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  function getWallet () {
+  public function getWallet () {
     return $this->wallet;
   }
 
@@ -98,7 +98,7 @@ class AuthToken {
   /**
    * @return array
    */
-  function getSnapshot () {
+  public function getSnapshot () {
     return [
       'token' => $this->token,
       'expiresAt' => $this->expiresAt,
@@ -116,7 +116,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  function getToken () {
+  public function getToken () {
     return $this->token;
   }
 
@@ -124,7 +124,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  function getPubkey () {
+  public function getPubkey () {
     return $this->pubkey;
   }
 
@@ -132,7 +132,7 @@ class AuthToken {
   /**
    * @return float|int
    */
-  function getExpireInterval () {
+  public function getExpireInterval () {
     return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
   }
 
@@ -140,7 +140,7 @@ class AuthToken {
   /**
    * @return bool
    */
-  function isExpired () {
+  public function isExpired () {
     return !$this->expiresAt || $this->getExpireInterval() < 0;
   }
 
@@ -150,7 +150,7 @@ class AuthToken {
    *
    * @return array
    */
-  function getAuthData () {
+  public function getAuthData () {
     return [
       'token' => $this->getToken(),
       'pubkey' => $this->getPubkey(),
