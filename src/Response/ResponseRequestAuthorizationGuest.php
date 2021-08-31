@@ -99,7 +99,7 @@ class ResponseRequestAuthorizationGuest extends Response {
   /**
    * @return mixed
    */
-  public function pubKey () {
+  public function pubkey () {
     return $this->payloadKey( 'key' );
   }
 

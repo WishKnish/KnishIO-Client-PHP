@@ -89,7 +89,7 @@ class ResponseRequestAuthorization extends ResponseMolecule {
   /**
    * @return mixed
    */
-  public function pubKey () {
+  public function pubkey () {
     return $this->payloadKey( 'key' );
   }
 

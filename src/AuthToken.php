@@ -3,10 +3,16 @@
 namespace WishKnish\KnishIO\Client;
 
 
+
 /**
  * Class AuthToken
  */
 class AuthToken {
+
+  protected string $token;
+  protected int $expiresAt;
+  protected string $pubkey;
+  protected bool $encrypt;
 
   protected ?Wallet $wallet;
 
@@ -14,16 +20,16 @@ class AuthToken {
   /**
    * @param $data
    * @param $wallet
+   * @param $encrypt
    *
    * @return static
    */
-  public static function create ( $data, $wallet ) {
+  public static function create ( $data, $wallet, $encrypt ) {
     $authToken = new static (
         $data[ 'token' ],
         $data[ 'expiresAt' ],
-        $data[ 'time' ],
-        $data[ 'key' ],
-        $data[ 'encrypt' ],
+        $data[ 'pubkey' ],
+        $encrypt,
     );
     $authToken->setWallet( $wallet );
     return $authToken;
@@ -48,10 +54,8 @@ class AuthToken {
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
       'expiresAt' => array_get( $snapshot, 'expiresAt' ),
-      'time' => array_get( $snapshot, 'time' ),
       'pubkey' => array_get( $snapshot, 'pubkey' ),
-      'encrypt' => array_get( $snapshot, 'encrypt' ),
-    ], $wallet );
+    ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
 
 
@@ -60,20 +64,17 @@ class AuthToken {
    *
    * @param $token
    * @param $expiresAt
-   * @param $time
    * @param $pubkey
    * @param $encrypt
    */
   public function __construct (
     $token,
     $expiresAt,
-    $time,
     $pubkey,
     $encrypt
   ) {
     $this->token = $token;
     $this->expiresAt = $expiresAt;
-    $this->time = $time;
     $this->pubkey = $pubkey;
     $this->encrypt = $encrypt;
   }
@@ -102,7 +103,6 @@ class AuthToken {
     return [
       'token' => $this->token,
       'expiresAt' => $this->expiresAt,
-      'time' => $this->time,
       'pubkey' => $this->pubkey,
       'encrypt' => $this->encrypt,
       'wallet' => [

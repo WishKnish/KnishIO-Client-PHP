@@ -77,7 +77,7 @@ $allMetas = [
 ];
 $secret = \WishKnish\KnishIO\Client\Libraries\Crypto::generateSecret();
 $client = new \WishKnish\KnishIO\Client\KnishIOClient();
-$client->requestAuthToken($secret);
+$client->authorize($secret);
 foreach($allMetas as $metaId => $metaData) {
   if ($metaId === 'first') {
     continue;

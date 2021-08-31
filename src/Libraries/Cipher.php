@@ -76,17 +76,17 @@ class Cipher {
   /**
    * @var string|null
    */
-  private ?string $pubKey;
+  private ?string $pubkey;
 
   /**
    * Cipher constructor.
    *
    * @param ?Wallet $wallet
-   * @param ?string $pubKey
+   * @param ?string $pubkey
    */
-  public function __construct ( ?Wallet $wallet = null, ?string $pubKey = null ) {
+  public function __construct ( ?Wallet $wallet = null, ?string $pubkey = null ) {
     $this->wallet = $wallet;
-    $this->pubKey = $pubKey;
+    $this->pubkey = $pubkey;
   }
 
   /**
@@ -107,21 +107,21 @@ class Cipher {
   }
 
   /**
-   * @param string $pubKey
+   * @param string $pubkey
    */
-  public function setPubKey ( string $pubKey ): void {
-    $this->pubKey = $pubKey;
+  public function setPubkey ( string $pubkey ): void {
+    $this->pubkey = $pubkey;
   }
 
   /**
    * @return string
    */
-  public function pubKey (): string {
-    if ( $this->pubKey === null ) {
+  public function getPubkey (): string {
+    if ( $this->pubkey === null ) {
       throw new CodeException( 'Server public key missing.' );
     }
 
-    return $this->pubKey;
+    return $this->pubkey;
   }
 
   /**
@@ -151,7 +151,7 @@ class Cipher {
             }
 
             $content = [ 'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }', 'variables' => [ 'Hash' => json_encode( $this->wallet()
-                ->encryptMyMessage( $original, $this->pubKey() ), JSON_THROW_ON_ERROR ) ] ];
+                ->encryptMyMessage( $original, $this->getPubkey() ), JSON_THROW_ON_ERROR ) ] ];
 
             $promise = $handler( $request->withBody( Utils::streamFor( json_encode( $content ) ) ), $options );
 

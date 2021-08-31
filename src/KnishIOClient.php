@@ -140,6 +140,12 @@ class KnishIOClient {
    */
   private array $authTokenObjects = [];
 
+  /**
+   * @var \WishKnish\KnishIO\Client\AuthToken|null
+   */
+  private ?AuthToken $authToken;
+
+
 
   /**
    * @param Wallet $sourceWallet
@@ -209,6 +215,24 @@ class KnishIOClient {
 
     $this->client = default_if_null( $client, new HttpClient( $this->getRandomUri() ) );
     $this->serverSdkVersion = $serverSdkVersion;
+  }
+
+  /**
+   * @param $encrypt
+   *
+   * @return bool
+   */
+  public function switchEncryption( $encrypt ) {
+    if ( $this->hasEncryption() === $encrypt ) {
+      return false;
+    }
+
+    if ( $encrypt ) {
+      $this->enableEncryption();
+    } else {
+      $this->disableEncryption();
+    }
+    return true;
   }
 
 
@@ -395,97 +419,6 @@ class KnishIOClient {
     return $query;
   }
 
-  /**
-   * @param string|null $secret
-   * @param string|null $cellSlug
-   * @param bool|null $encrypt
-   * @param bool|null $oldVersion
-   *
-   * @return \WishKnish\KnishIO\Client\AuthToken|Response|ResponseRequestAuthorization
-   * @throws GuzzleException
-   * @throws ReflectionException
-   */
-  public function requestAuthToken ( ?string $secret = null, ?string $cellSlug = null, ?bool $encrypt = null, ?bool $oldVersion = true ) {
-    // Set a cell slug
-    $this->cellSlug = $cellSlug ?: $this->cellSlug();
-    $guestMode = false;
-
-   if ( $secret ) {
-      $this->setSecret( $secret );
-    }
-    else {
-      $guestMode = true;
-    }
-
-    if ( $encrypt === null ) {
-      $encrypt = $this->hasEncryption();
-    }
-
-    $wallet = null;
-    if ( $guestMode ) {
-      /**
-       * @var MutationRequestAuthorizationGuest $query
-       */
-      $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
-
-      $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
-
-      $response = $query->execute( [
-          'cellSlug' => $this->cellSlug,
-          'pubkey' => $wallet->pubkey,
-          'encrypt' => $encrypt,
-      ] );
-
-    }
-    else {
-      $wallet = new Wallet( $this->secret, 'AUTH' );
-
-      // Create an auth molecule
-      $molecule = $this->createMolecule( $this->secret(), $wallet );
-
-      /**
-       * Create query & fill a molecule
-       *
-       * @var MutationRequestAuthorization $query
-       */
-      $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-      $query->fillMolecule( [ 'encrypt' => (string) $encrypt ] );
-
-      /**
-       * Get a response
-       *
-       * @var ResponseRequestAuthorization $response
-       */
-      $response = $query->execute();
-    }
-
-    // If the response is success - set auth token
-    if ( $response->success() ) {
-
-      // Change encryption flag
-      if ( $this->hasEncryption() !== $response->encrypt() ) {
-        ( $response->encrypt() ) ? $this->enableEncryption() : $this->disableEncryption();
-      }
-
-      // Old logic supporting
-      if ( $oldVersion ) {
-
-        // Set auth data
-        $this->client()->setAuthData( $response->token(), $response->pubKey(), $wallet );
-
-        return $response;
-      }
-
-      // Create an auth token object
-      return AuthToken::create( $response->payload(), $wallet );
-
-    } // Not authorized: throw an exception
-    else {
-      throw new UnauthenticatedException( $response->reason() );
-    }
-
-    return $response;
-  }
 
   /**
    * @param $tokenSlug
@@ -1001,53 +934,96 @@ class KnishIOClient {
   }
 
 
+  /**
+   * @param $cellSlug
+   * @param $encrypt
+   *
+   * @return \WishKnish\KnishIO\Client\AuthToken
+   * @throws GuzzleException
+   */
+  public function getGuestAuthToken( $cellSlug, $encrypt ) {
+    $this->setCellSlug( $cellSlug );
 
+    $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
+
+    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
+
+    $response = $query->execute( [
+        'cellSlug' => $this->cellSlug,
+        'pubkey' => $wallet->pubkey,
+        'encrypt' => $encrypt,
+    ] );
+
+    // Create an auth token object
+    return AuthToken::create( $response->payload(), $wallet, $encrypt );
+  }
+
+  /**
+   * @param $secret
+   * @param $encrypt
+   *
+   * @return \WishKnish\KnishIO\Client\AuthToken
+   * @throws GuzzleException
+   * @throws ReflectionException
+   */
+  public function getProfileAuthToken( $secret, $encrypt ) {
+    $this->setSecret( $secret );
+
+    $wallet = new Wallet( $this->secret, 'AUTH' );
+
+    // Create an auth molecule
+    $molecule = $this->createMolecule( $this->secret(), $wallet );
+
+    /**
+     * Create query & fill a molecule
+     *
+     * @var MutationRequestAuthorization $query
+     */
+    $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
+    $query->fillMolecule( [ 'encrypt' => (string) $encrypt ] );
+
+    /**
+     * Get a response
+     *
+     * @var ResponseRequestAuthorization $response
+     */
+    $response = $query->execute();
+
+    // Create an auth token object
+    return AuthToken::create( $response->payload(), $wallet, $encrypt );
+  }
 
   /**
    * Authorize with auth token
    *
-   * @param secret
-   * @param cellSlug
-   * @param authToken
-   * @returns {Promise<void>}
+   * @param $secret
+   * @param null $cellSlug
+   * @param false $encrypt
+   *
+   * @return \WishKnish\KnishIO\Client\AuthToken
+   * @throws GuzzleException
+   * @throws ReflectionException
    */
-  public function authorize ( $secret, $cellSlug, $encrypt = null ) {
-
-    // Do we have a secret pre-hashed?
-    if ( $secret ) {
-      $this->setSecret( $secret );
-    }
-
-    // Set a cell slug
-    if ( $cellSlug ) {
-      $this->setCellSlug( $cellSlug );
-    }
+  public function authorize ( $secret, $cellSlug = null, $encrypt = false ) {
 
     // Auth token (guest or authorized)
     $authToken = null;
 
     // Authorized user
     if ( $secret ) {
-      $authToken = $this->requestAuthToken(
-        $secret,
-        null,
-        $encrypt,
-        false
-      );
+      $authToken = $this->getProfileAuthToken( $secret, $encrypt );
     }
 
     // Guest
     else {
-      $authToken = $this->requestAuthToken(
-        null,
-        $this->cellSlug,
-        $encrypt,
-        false
-      );
+      $authToken = $this->getGuestAuthToken( $cellSlug, $encrypt );
     }
 
     // Set an authToken full info
     $this->setAuthToken( $authToken );
+
+    // Switch encryption
+    $this->switchEncryption( $encrypt );
 
     // Return full response
     return $authToken;

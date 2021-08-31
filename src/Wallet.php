@@ -419,12 +419,12 @@ class Wallet {
       Crypto::setCharacters( $this->characters );
     }
 
-    $pubKey = $this->getMyEncPublicKey();
+    $pubkey = $this->getMyEncPublicKey();
     $encrypt = $message;
 
     if ( is_array( $message ) ) {
 
-      $hash = Crypto::hashShare( $pubKey );
+      $hash = Crypto::hashShare( $pubkey );
       $encrypt = '0';
 
       if ( array_key_exists( $hash, $message ) ) {
@@ -435,7 +435,7 @@ class Wallet {
 
     }
 
-    return Crypto::decryptMessage( $encrypt, $this->getMyEncPrivateKey(), $pubKey );
+    return Crypto::decryptMessage( $encrypt, $this->getMyEncPrivateKey(), $pubkey );
 
   }
 
