@@ -116,7 +116,7 @@ class Soda {
    */
   public function decrypt ( string $encrypted, string $privateKey, string $publicKey ): ?array {
 
-    // Get descrypted string
+    // Get decrypted string
     $decrypted = sodium_crypto_box_seal_open(
         $this->decode( $encrypted ),
         sodium_crypto_box_keypair_from_secretkey_and_publickey(
