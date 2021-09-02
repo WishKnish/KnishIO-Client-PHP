@@ -107,16 +107,25 @@ class Soda {
   /**
    * Uses the given private key to decrypt an encrypted message
    *
-   * @param string $decrypted
+   * @param string $encrypted
    * @param string $privateKey
    * @param string $publicKey
    *
    * @return array|null
    * @throws SodiumException
    */
-  public function decrypt ( string $decrypted, string $privateKey, string $publicKey ): ?array {
+  public function decrypt ( string $encrypted, string $privateKey, string $publicKey ): ?array {
 
-    return json_decode( sodium_crypto_box_seal_open( $this->decode( $decrypted ), sodium_crypto_box_keypair_from_secretkey_and_publickey( $this->decode( $privateKey ), $this->decode( $publicKey ) ) ), true );
+    // Get descrypted string
+    $decrypted = sodium_crypto_box_seal_open(
+        $this->decode( $encrypted ),
+        sodium_crypto_box_keypair_from_secretkey_and_publickey(
+            $this->decode( $privateKey ),
+            $this->decode( $publicKey )
+        )
+    );
+
+    return json_decode( $decrypted, true );
 
   }
 
