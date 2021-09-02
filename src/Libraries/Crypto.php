@@ -128,16 +128,16 @@ class Crypto {
   /**
    * Uses the given private key to decrypt an encrypted message
    *
-   * @param string $decrypted
+   * @param string $encrypted
    * @param string $privateKey
    * @param string $publicKey
    *
    * @return array|null
    * @throws ReflectionException|SodiumException
    */
-  public static function decryptMessage ( string $decrypted, string $privateKey, string $publicKey ): ?array {
+  public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ): ?array {
 
-    return ( new Soda( static::$characters ) )->decrypt( $decrypted, $privateKey, $publicKey );
+    return ( new Soda( static::$characters ) )->decrypt( $encrypted, $privateKey, $publicKey );
 
   }
 

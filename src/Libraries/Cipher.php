@@ -150,12 +150,23 @@ class Cipher {
               return $handler( $request, $options );
             }
 
-            $content = [ 'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }', 'variables' => [ 'Hash' => json_encode( $this->wallet()
-                ->encryptMyMessage( $original, $this->getPubkey() ), JSON_THROW_ON_ERROR ) ] ];
+            // Wallet::encryptMyMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
+            $encryptedMessage = $this->wallet()->encryptMyMessage( $original, $this->getPubkey() );
 
-            $promise = $handler( $request->withBody( Utils::streamFor( json_encode( $content ) ) ), $options );
+            // Full request context
+            $content = [
+                'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
+                'variables' => [
+                    'Hash' => json_encode( $encryptedMessage, JSON_THROW_ON_ERROR ),
+                ],
+            ];
 
-            return $promise->then( $this->response( $options ) );
+            // Prepare content for sending
+            $content = Utils::streamFor( json_encode( $content ) );
+
+            // Send a request
+            return $handler( $request->withBody( $content ), $options )
+                ->then( $this->response( $options ) );
           }
 
           throw new InvalidRequestException();

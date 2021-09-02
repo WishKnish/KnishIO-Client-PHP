@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client;
 use BI\BigInteger;
 use Exception;
 use ReflectionException;
+use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Libraries\Base58;
@@ -246,10 +247,6 @@ class Wallet {
     // Init recipient & remainder token units
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
-
-    // Init recipient & remainder token units
-    $recipientTokenUnits = [];
-    $remainderTokenUnits = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
       if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
@@ -382,12 +379,12 @@ class Wallet {
 
   /**
    * @param array $message
-   * @param mixed ...$keys
+   * @param mixed ...$pubkeys
    *
    * @return array
    * @throws ReflectionException|Exception
    */
-  public function encryptMyMessage ( array $message, ...$keys ): array {
+  public function encryptMyMessage ( array $message, ...$pubkeys ): array {
 
     if ( $this->characters ) {
       Crypto::setCharacters( $this->characters );
@@ -395,9 +392,9 @@ class Wallet {
 
     $encrypt = [];
 
-    foreach ( $keys as $key ) {
+    foreach ( $pubkeys as $pubkey ) {
 
-      $encrypt[ Crypto::hashShare( $key ) ] = Crypto::encryptMessage( $message, $key );
+      $encrypt[ Crypto::hashShare( $pubkey ) ] = Crypto::encryptMessage( $message, $pubkey );
 
     }
 
@@ -420,22 +417,21 @@ class Wallet {
     }
 
     $pubkey = $this->getMyEncPublicKey();
-    $encrypt = $message;
 
+    $encrypted = $message;
     if ( is_array( $message ) ) {
 
       $hash = Crypto::hashShare( $pubkey );
-      $encrypt = '0';
 
-      if ( array_key_exists( $hash, $message ) ) {
-
-        $encrypt = $message[ $hash ];
-
+      if ( !array_key_exists( $hash, $message ) ) {
+          throw new CodeException( 'Wallet::decryptMyMessage - hash does not found for the wallet\'s pubkey.' );
       }
+
+      $encrypted = $message[ $hash ];
 
     }
 
-    return Crypto::decryptMessage( $encrypt, $this->getMyEncPrivateKey(), $pubkey );
+    return Crypto::decryptMessage( $encrypted, $this->getMyEncPrivateKey(), $pubkey );
 
   }
 
