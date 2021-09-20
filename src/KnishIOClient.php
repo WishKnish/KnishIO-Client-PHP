@@ -969,10 +969,10 @@ class KnishIOClient {
   public function getProfileAuthToken( $secret, $encrypt ) {
     $this->setSecret( $secret );
 
-    $wallet = new Wallet( $this->secret, 'AUTH' );
+    $wallet = new Wallet( $secret, 'AUTH' );
 
     // Create an auth molecule
-    $molecule = $this->createMolecule( $this->secret(), $wallet );
+    $molecule = $this->createMolecule( $secret, $wallet );
 
     /**
      * Create query & fill a molecule
