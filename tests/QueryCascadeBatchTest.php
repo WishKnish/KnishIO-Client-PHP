@@ -1,47 +1,94 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use Exception;
+use GuzzleHttp\Exception\GuzzleException;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Tests\TestCase;
-use WishKnish\KnishIO\Client\Wallet as ClientWallet;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
-use WishKnish\KnishIO\Client\Query\QueryWalletList;
+use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
 
 /**
  * Class QueryCascadeMetaTest
  */
-class QueryCascadeBatchTest extends TestCase
-{
-  private $tokenSlug = 'UTSTACKABLE';
-  private $fullAmount = 1000;
-  private $transactionAmount = 100;
-  private $cascadeDeep = 5;
-  private $batchPrefix = 'batch_';
-
+class QueryCascadeBatchTest extends TestCase {
+  private string $tokenSlug = 'UTSTACKABLE';
+  private int $fullAmount = 1000;
+  private int $transactionAmount = 100;
+  private int $cascadeDeep = 5;
+  private string $batchPrefix = 'batch_';
 
   /**
    * Clear data test
    *
-   * @throws \ReflectionException
+   * @throws ReflectionException
+   * @throws Exception
    */
-  public function testClearAll () {
+  public function testClearAll (): void {
 
     // Initial code
     $this->beforeExecute();
 
     // Call server cleanup
-    $this->callServerCleanup(\WishKnish\KnishIO\Tests\TokenServerTransactionTest::class);
+    $this->callServerCleanup( TokenServerTransactionTest::class );
 
-    // Deafult assertion
-    $this->assertEquals(true, true);
+    // Default assertion
+    $this->assertEquals( true, true );
   }
 
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  public function testCascadeBatch() {
+  public function testCascadeBatch (): void {
 
     // Create a token
     $client = $this->createToken();
@@ -55,78 +102,66 @@ class QueryCascadeBatchTest extends TestCase
       $batchId = $this->getBatchId( $index );
 
       // Token transferring
-      $client = $this->transfetToken( $client, $transactionAmount, $batchId );
+      $client = $this->transferToken( $client, $transactionAmount, $batchId );
 
       // Claim created shadow wallet
       $this->claimShadowWallet( $client );
 
       // Create a meta to custom batchID
-      $client->createMeta( 'batch', $batchId, [
-        'key_shared' => 'value_shared',
-        "key_$index" => "value_$index",
-      ] );
+      $client->createMeta( 'batch', $batchId, [ 'key_shared' => 'value_shared', "key_$index" => "value_$index", ] );
 
       // Change transaction amount for each step
       $transactionAmount -= 10;
 
       // Burn tokens for the last transaction
       if ( $i === $this->cascadeDeep - 1 ) {
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 1) );
-        $client->burnToken( $this->tokenSlug,5, $this->getBatchId( $index + 2) );
+        $client->burnToken( $this->tokenSlug, 5 );
+        $client->burnToken( $this->tokenSlug, 5 );
       }
     }
 
-
     // Get metas for last batchID
-    $response = (new QueryBatch( $client->client() ))->execute([
-      'batchId' => $batchId,
-    ]);
+    $response = ( new QueryBatch( $client->client() ) )->execute( [ 'batchId' => $batchId, ] );
     dd( $response->data() );
   }
 
-
-  /**
-   * @throws ReflectionException
-   */
-  public function testUnitToken() {
+  public function testUnitToken () {
 
   }
-
 
   /**
    * @param int $index
    *
    * @return string
    */
-  private function getBatchId( int $index ) {
+  private function getBatchId ( int $index ): string {
     return $this->batchPrefix . $index;
   }
 
-
   /**
-   * @throws ReflectionException
+   * @throws Exception
+   * @throws GuzzleException
    */
-  private function transfetToken( $client, $transactionAmount, $batchId ) {
+  private function transferToken ( $client, $transactionAmount, $batchId ) {
 
     // Initial code
-    $this->beforeExecute ();
+    $this->beforeExecute();
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
     $toBundle = Crypto::generateBundleHash( $toSecret );
 
     // Transferring
-    $response = $client->transferToken($toBundle, $this->tokenSlug, $transactionAmount, $batchId);
-    $this->checkResponse($response);
+    $response = $client->transferToken( $toBundle, $this->tokenSlug, $transactionAmount, $batchId );
+    $this->checkResponse( $response );
 
     return $this->client( $toSecret );
   }
 
-
   /**
    * @throws Exception
    */
-  private function claimShadowWallet( $client ) {
+  private function claimShadowWallet ( $client ): void {
 
     // Get shadow wallets
     $shadowWallets = $client->queryShadowWallets( $this->tokenSlug );
@@ -137,25 +172,18 @@ class QueryCascadeBatchTest extends TestCase
     }
   }
 
-
   /**
-   * @throws ReflectionException
+   * @throws ReflectionException|GuzzleException
+   * @throws Exception
    */
-  private function createToken() {
+  private function createToken () {
 
     // Initial code
-    $this->beforeExecute ();
+    $this->beforeExecute();
 
-    $client = $this->client(Crypto::generateSecret());
-    $response = $client->createToken($this->tokenSlug, $this->fullAmount, [
-      'name'			=> $this->tokenSlug,
-      'fungibility'	=> 'stackable',
-      'splittable'	=> 1,
-      'supply'		=> 'limited',
-      'decimals'		=> 0,
-      'icon'			=> 'icon',
-    ], $this->getBatchId( 0 ) );
-    $this->checkResponse($response);
+    $client = $this->client( Crypto::generateSecret() );
+    $response = $client->createToken( $this->tokenSlug, $this->fullAmount, [ 'name' => $this->tokenSlug, 'fungibility' => 'stackable', 'splittable' => 1, 'supply' => 'limited', 'decimals' => 0, 'icon' => 'icon', ], $this->getBatchId( 0 ) );
+    $this->checkResponse( $response );
 
     return $client;
   }

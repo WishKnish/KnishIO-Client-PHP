@@ -1,23 +1,79 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
+
 namespace WishKnish\KnishIO\Client\Response;
 
-
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\Wallet;
-
 
 class ResponseRequestAuthorizationGuest extends Response {
 
-  protected $dataKey = 'data.AccessToken';
+  protected string $dataKey = 'data.AccessToken';
 
+
+
+  /**
+   * @return string
+   */
   public function reason (): string {
     return 'Invalid response from server';
   }
 
+  /**
+   * @return bool
+   */
   public function success (): bool {
     return $this->payload() !== null;
   }
 
+  /**
+   * @return array|mixed|null
+   */
   public function payload () {
     return $this->data();
   }
@@ -26,23 +82,22 @@ class ResponseRequestAuthorizationGuest extends Response {
    * Payload key
    *
    * @param $key
+   *
    * @return mixed
    */
   private function payloadKey ( $key ) {
-    if (!array_has( $this->payload(), $key ) ) {
-      throw new InvalidResponseException( 'ResponseRequestAuthorizationGuest: \''.$key.'\' key is not found in the payload.' );
+    if ( !array_has( $this->payload(), $key ) ) {
+      throw new InvalidResponseException( 'ResponseRequestAuthorizationGuest: \'' . $key . '\' key is not found in the payload.' );
     }
     return array_get( $this->payload(), $key );
   }
-
 
   /**
    * Token
    */
   public function token () {
-    return $this->payloadKey('token' );
+    return $this->payloadKey( 'token' );
   }
-
 
   /**
    * @return mixed
@@ -54,14 +109,13 @@ class ResponseRequestAuthorizationGuest extends Response {
   /**
    * @return mixed
    */
-  public function pubKey () {
+  public function pubkey () {
     return $this->payloadKey( 'key' );
   }
 
-  public function wallet (): Wallet {
-    return $this->query()->getWallet();
-  }
-
+  /**
+   * @return mixed
+   */
   public function encrypt () {
     return $this->payloadKey( 'encrypt' );
   }

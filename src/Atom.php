@@ -1,8 +1,51 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client;
 
@@ -28,24 +71,24 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property array $meta
  * @property integer|null $index
  * @property string|null $otsFragment
- * @property integer $createdAt
+ * @property string $createdAt
  *
  */
 class Atom {
   use Json;
 
-  public $position;
-  public $walletAddress;
-  public $isotope;
-  public $token;
-  public $value;
-  public $batchId;
-  public $metaType;
-  public $metaId;
-  public $meta = [];
-  public $index;
-  public $otsFragment;
-  public $createdAt;
+  public ?string $position;
+  public ?string $walletAddress;
+  public string $isotope;
+  public ?string $token;
+  public ?string $value;
+  public ?string $batchId;
+  public ?string $metaType;
+  public ?string $metaId;
+  public array $meta = [];
+  public ?int $index;
+  public ?string $otsFragment;
+  public string $createdAt;
 
   /**
    * Atom constructor.
@@ -53,23 +96,21 @@ class Atom {
    * @param string $position
    * @param string $walletAddress
    * @param string $isotope
-   * @param null|string $token
-   * @param null|string $value
+   * @param string|null $token
+   * @param string|null $value
    * @param string|null $batchId
-   * @param null|string $metaType
-   * @param null|string $metaId
-   * @param array $meta
-   * @param string|null $pubkey
-   * @param string|null $characters
-   * @param null|string $otsFragment
-   * @param null|integer $index
+   * @param string|null $metaType
+   * @param string|null $metaId
+   * @param array|null $meta
+   * @param string|null $otsFragment
+   * @param integer|null $index
    */
-  public function __construct ( $position, $walletAddress, $isotope, $token = null, $value = null, $batchId = null, $metaType = null, $metaId = null, array $meta = null, $otsFragment = null, $index = null ) {
+  public function __construct ( ?string $position, ?string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
     $this->position = $position;
     $this->walletAddress = $walletAddress;
     $this->isotope = $isotope;
     $this->token = $token;
-    $this->value = null !== $value ? ( string ) $value : null;
+    $this->value = $value;
     $this->batchId = $batchId;
 
     $this->metaType = $metaType;
@@ -88,7 +129,7 @@ class Atom {
    * @return array[]|string|string[]|null
    * @throws ReflectionException|Exception
    */
-  public static function hashAtoms ( array $atoms, $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, string $output = 'base17' ) {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
@@ -168,7 +209,7 @@ class Atom {
    *
    * @return array
    */
-  public static function sortAtoms ( array $atoms = null ) {
+  public static function sortAtoms ( array $atoms = null ): array {
     $atoms = default_if_null( $atoms, [] );
 
     $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
@@ -193,14 +234,14 @@ class Atom {
     return Meta::aggregateMeta( $this->meta );
   }
 
-	/**
-	 * @param string $property
-	 * @param $value
-	 * @todo change to __set?
-	 */
-	public function setProperty( string $property, $value ): void
-	{
-		$property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+  /**
+   * @param string $property
+   * @param $value
+   *
+   * @todo change to __set?
+   */
+  public function setProperty ( string $property, $value ): void {
+    $property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {

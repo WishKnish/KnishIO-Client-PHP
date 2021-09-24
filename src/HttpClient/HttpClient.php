@@ -1,9 +1,56 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\HttpClient;
 
-
 use ArrayObject;
+use GuzzleHttp\Client;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -12,136 +59,134 @@ use GuzzleHttp\Promise;
 use WishKnish\KnishIO\Client\Libraries\Cipher;
 use WishKnish\KnishIO\Client\Wallet;
 
-
 /**
  * Class HttpClient
  * @package WishKnish\KnishIO\HttpClient
  */
-class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
+class HttpClient extends Client implements HttpClientInterface {
 
-
-	/**
-	 * @var string|null
-	 */
-	private ?string $xAuthToken;
+  /**
+   * @var string|null
+   */
+  private ?string $xAuthToken;
 
   /**
    * @var string
    */
-	protected string $url;
+  protected string $uri;
 
   /**
    * @var Cipher
    */
-	private Cipher $cipher;
+  private Cipher $cipher;
 
   /**
    * @var array
    */
-	private array $config;
+  private array $config;
 
   /**
    * HttpClient constructor.
    *
-   * @param string $url
+   * @param string $uri
    * @param array $config
    * @param bool $encrypt
    */
-	public function __construct( string $url, array $config = [], bool $encrypt = false ) {
-		$this->setUrl( $url );
-		$this->cipher = new Cipher();
-		$this->xAuthToken = null;
-		$this->config = [
-      'base_uri'    => $url,
-      'handler'     => $this->cipher->stack(),
-      'encrypt'     => $encrypt,
-      RequestOptions::VERIFY      => false,
-      RequestOptions::HTTP_ERRORS => false,
-      RequestOptions::HEADERS     => [
-        'User-Agent' => 'KnishIO/0.1',
-        'Accept'     => 'application/json',
-      ],
-    ];
+  public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
+    $this->setUri( $uri );
+    $this->cipher = new Cipher();
+    $this->xAuthToken = null;
+    $this->config = [ 'base_uri' => $uri, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
 
-		// Merge config
-		$config = array_replace_recursive ( $this->config, $config );
+    // Merge config
+    $config = array_replace_recursive( $this->config, $config );
 
-		// Guzzle constructor
-		parent::__construct( $config );
-	}
+    // Guzzle constructor
+    parent::__construct( $config );
+  }
 
-	public function enableEncryption (): void {
+  public function enableEncryption (): void {
     $this->config[ 'encrypt' ] = true;
   }
 
   public function disableEncryption (): void {
-    $this->config[ 'encrypt' ] =  false;
+    $this->config[ 'encrypt' ] = false;
   }
 
-  public function hasEncryption(): bool {
-	  return $this->config[ 'encrypt' ];
+  public function hasEncryption (): bool {
+    return $this->config[ 'encrypt' ];
   }
 
   /**
    * @param Wallet $wallet
    */
-	public function setWallet ( Wallet $wallet ): void {
-	  $this->cipher->setWallet( $wallet );
+  public function setWallet ( Wallet $wallet ): void {
+    $this->cipher->setWallet( $wallet );
   }
 
   /**
    * @return Wallet
    */
-  public function wallet(): Wallet {
-	  return $this->cipher->wallet();
+  public function wallet (): Wallet {
+    return $this->cipher->wallet();
   }
 
   /**
-   * @param string $pubKey
+   * @param string $pubkey
    */
-  public function setPubKey ( string $pubKey ): void {
-	  $this->cipher->setPubKey( $pubKey );
+  public function setPubkey ( string $pubkey ): void {
+    $this->cipher->setPubkey( $pubkey );
   }
 
   /**
    * @return string
    */
-  public function pubKey(): string {
-	  return $this->cipher->pubKey();
+  public function getPubkey (): string {
+    return $this->cipher->getPubkey();
+  }
+
+  /**
+   * @return string
+   */
+  public function getUri (): string {
+    return $this->uri;
+  }
+
+  /**
+   * @param string $uri
+   */
+  public function setUri ( string $uri ): void {
+    $this->uri = $uri;
+  }
+
+  /**
+   * @param string $authToken
+   */
+  public function setAuthToken ( string $authToken ): void {
+    $this->xAuthToken = $authToken;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getAuthToken (): ?string {
+    return $this->xAuthToken;
   }
 
 
-	/**
-	 * @return string
-	 */
-	public function getUrl (): string {
-		return $this->url;
-	}
-
   /**
-   * @param string $url
+   * Sets the authorization data
    *
-   * @return void
+   * @param {string} token
+   * @param {string} pubkey
+   * @param {Wallet|null} wallet
    */
-	public function setUrl ( string $url ): void {
-		$this->url = $url;
-	}
+  public function setAuthData ( string $token, string $pubkey, Wallet $wallet ) {
+    $this->setAuthToken( $token );
+    $this->setPubkey( $pubkey );
+    $this->setWallet( $wallet );
+  }
 
-
-	/**
-	 * @param string $authToken
-	 */
-	public function setAuthToken ( string $authToken ): void {
-		$this->xAuthToken = $authToken;
-	}
-
-
-	/**
-	 * @return string|null
-	 */
-	public function getAuthToken (): ?string {
-		return $this->xAuthToken;
-	}
 
   /**
    * @param RequestInterface $request
@@ -150,22 +195,22 @@ class HttpClient extends \GuzzleHttp\Client implements HttpClientInterface {
    * @return ResponseInterface
    * @throws GuzzleException
    */
-  public function send( RequestInterface $request, array $options = [] ): ResponseInterface {
-    $config = array_replace_recursive ( $this->config, $options );
+  public function send ( RequestInterface $request, array $options = [] ): ResponseInterface {
+    $config = array_replace_recursive( $this->config, $options );
 
-	  return parent::send( $request, $config );
+    return parent::send( $request, $config );
   }
 
   /**
    * @param string $method
-   * @param array  $args
+   * @param array $args
    *
    * @return Promise\PromiseInterface
    */
-  public function __call( $method, $args ) {
+  public function __call ( $method, $args ) {
 
     $opts = ( new ArrayObject( $args ) )->getArrayCopy();
-    $opts[ 1 ] = array_replace_recursive ( $this->config, $opts[ 1 ] ?? [] );
+    $opts[ 1 ] = array_replace_recursive( $this->config, $opts[ 1 ] ?? [] );
 
     return parent::__call( $method, $opts );
   }

@@ -1,17 +1,58 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client;
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
-use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -26,22 +67,21 @@ use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
  * @property string|null $cellSlug
  * @property string|null $bundle
  * @property string|null $status
- * @property integer $createdAt
+ * @property string $createdAt
  * @property-read array $atoms
  */
 class Molecule extends MoleculeStructure {
   // @todo move this consts to the config
-  private const USE_META_CONTEXT = false;
-  private const DEFAULT_META_CONTEXT = 'http://www.schema.org';
+  private const DEFAULT_META_CONTEXT = 'https://www.schema.org';
 
-  private $secret;
-  private $sourceWallet;
-  private $remainderWallet;
+  private string $secret;
+  private ?Wallet $sourceWallet;
+  private Wallet $remainderWallet;
 
   /**
    * @return string
    */
-  public static function continuIdMetaType () {
+  public static function continuIdMetaType (): string {
     return 'walletBundle';
   }
 
@@ -71,30 +111,30 @@ class Molecule extends MoleculeStructure {
   /**
    * @param MoleculeStructure $moleculeStructure
    */
-  public function fill ( MoleculeStructure $moleculeStructure ) {
+  public function fill ( MoleculeStructure $moleculeStructure ): void {
     foreach ( get_object_vars( $moleculeStructure ) as $key => $value ) {
       $this->$key = $value;
     }
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function secret () {
+  public function secret (): string {
     return $this->secret;
   }
 
   /**
    * Source wallet
    */
-  public function sourceWallet () {
+  public function sourceWallet (): ?Wallet {
     return $this->sourceWallet;
   }
 
   /**
    * @return Wallet
    */
-  public function remainderWallet () {
+  public function remainderWallet (): Wallet {
     return $this->remainderWallet;
   }
 
@@ -122,7 +162,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function clear () {
+  public function clear (): Molecule {
     $this->molecularHash = null;
     $this->bundle = null;
     $this->status = null;
@@ -137,7 +177,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function addAtom ( Atom $atom ) {
+  public function addAtom ( Atom $atom ): Molecule {
 
     $this->molecularHash = null;
     $this->atoms[] = $atom;
@@ -172,11 +212,20 @@ class Molecule extends MoleculeStructure {
    */
   protected function contextMetas ( array $metas = [], $context = null ): array {
     // Add context key if it is enabled
-    if ( static::USE_META_CONTEXT ) {
-      $metas[ 'context' ] = $context ?: static::DEFAULT_META_CONTEXT;
+    if ( $context ) {
+      $metas[ 'context' ] = $context;
     }
-
     return $metas;
+  }
+
+
+  /**
+   * @param array $metas
+   *
+   * @return array
+   */
+  protected function schemaOrgMetas( array $metas = [] ) {
+    return $this->contextMetas( $metas, static::DEFAULT_META_CONTEXT );
   }
 
   /**
@@ -190,22 +239,7 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
 
     // Remainder atom
-    $this->atoms[] = new Atom(
-      $userRemainderWallet->position,
-      $userRemainderWallet->address,
-      'I',
-      $userRemainderWallet->token,
-      null,
-      null,
-      static::continuIdMetaType(),
-      $userRemainderWallet->bundle,
-      $this->finalMetas(
-        [],
-        $userRemainderWallet
-      ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $userRemainderWallet->position, $userRemainderWallet->address, 'I', $userRemainderWallet->token, null, null, static::continuIdMetaType(), $userRemainderWallet->bundle, $this->finalMetas( [], $userRemainderWallet ), null, $this->generateIndex() );
 
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -214,7 +248,7 @@ class Molecule extends MoleculeStructure {
 
   public function createRule ( $metaType, $metaId, $meta ): Molecule {
 
-    $aggregateMeta =Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
+    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
 
     foreach ( [ 'conditions', 'callback', 'rule', ] as $k ) {
       if ( !array_key_exists( $k, $meta ) ) {
@@ -226,21 +260,7 @@ class Molecule extends MoleculeStructure {
       }
     }
 
-    $this->addAtom(
-      new Atom(
-        $this->sourceWallet->position,
-        $this->sourceWallet->address,
-        'R',
-        $this->sourceWallet->token,
-        null,
-        null,
-        $metaType,
-        $metaId,
-        $this->finalMetas( $aggregateMeta, $this->sourceWallet ),
-        null,
-        $this->generateIndex()
-      )
-    );
+    $this->addAtom( new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'R', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $aggregateMeta, $this->sourceWallet ), null, $this->generateIndex() ) );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -258,7 +278,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    */
 
-  public function replenishTokens ( $amount, string $token, array $metas ) {
+  public function replenishTokens ( $amount, string $token, array $metas ): Molecule {
 
     $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
     $aggregateMeta[ 'action' ] = 'add';
@@ -272,19 +292,7 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
 
     // Initializing a new Atom to remove tokens from source
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'C',
-      $this->sourceWallet->token,
-      $amount,
-      $this->sourceWallet->batchId,
-      'token',
-      $token,
-      $this->finalMetas( $this->contextMetas( $aggregateMeta ) ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'C', $this->sourceWallet->token, $amount, $this->sourceWallet->batchId, 'token', $token, $this->finalMetas( $this->contextMetas( $aggregateMeta ) ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -300,7 +308,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function burnToken ( $amount, $walletBundle = null ) {
+  public function burnToken ( $amount, string $walletBundle = null ): Molecule {
 
     if ( $amount < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
@@ -313,36 +321,9 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
 
     // Initializing a new Atom to remove tokens from source
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      -$amount,
-      $this->sourceWallet->batchId,
-      null,
-      null,
-      $this->finalMetas( [] ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'V', $this->sourceWallet->token, -$amount, $this->sourceWallet->batchId, null, null, $this->finalMetas( [] ), null, $this->generateIndex() );
 
-    $this->atoms[] = new Atom(
-      $this->remainderWallet->position,
-      $this->remainderWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      $this->sourceWallet->balance - $amount,
-      $this->remainderWallet->batchId,
-      $walletBundle ? 'walletBundle' : null,
-      $walletBundle,
-      $this->finalMetas(
-        [],
-        $this->remainderWallet
-      ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->remainderWallet->position, $this->remainderWallet->address, 'V', $this->sourceWallet->token, $this->sourceWallet->balance - $amount, $this->remainderWallet->batchId, $walletBundle ? 'walletBundle' : null, $walletBundle, $this->finalMetas( [], $this->remainderWallet ), null, $this->generateIndex() );
 
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -359,7 +340,7 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws BalanceInsufficientException
    */
-  public function initValue ( Wallet $recipientWallet, $value ) {
+  public function initValue ( Wallet $recipientWallet, $value ): Molecule {
 
     if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
@@ -368,55 +349,13 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
 
     // Initializing a new Atom to remove tokens from source
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      -$value,
-      $this->sourceWallet->batchId,
-      null,
-      null,
-      $this->finalMetas( [] ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'V', $this->sourceWallet->token, -$value, $this->sourceWallet->batchId, null, null, $this->finalMetas( [] ), null, $this->generateIndex() );
 
     // Initializing a new Atom to add tokens to recipient
-    $this->atoms[] = new Atom(
-      $recipientWallet->position,
-      $recipientWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      $value,
-      $recipientWallet->batchId,
-      'walletBundle',
-      $recipientWallet->bundle,
-      $this->finalMetas(
-        [],
-        $recipientWallet
-      ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $recipientWallet->position, $recipientWallet->address, 'V', $this->sourceWallet->token, $value, $recipientWallet->batchId, 'walletBundle', $recipientWallet->bundle, $this->finalMetas( [], $recipientWallet ), null, $this->generateIndex() );
 
     // Initializing a new Atom to deposit remainder in a new wallet
-    $this->atoms[] = new Atom(
-      $this->remainderWallet->position,
-      $this->remainderWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      $this->sourceWallet->balance - $value,
-      $this->remainderWallet->batchId,
-      'walletBundle',
-      $this->sourceWallet->bundle,
-      $this->finalMetas(
-        [],
-        $this->remainderWallet
-      ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->remainderWallet->position, $this->remainderWallet->address, 'V', $this->sourceWallet->token, $this->sourceWallet->balance - $value, $this->remainderWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( [], $this->remainderWallet ), null, $this->generateIndex() );
 
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
@@ -428,36 +367,14 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function initWalletCreation ( Wallet $newWallet ) {
+  public function initWalletCreation ( Wallet $newWallet ): Molecule {
     $this->molecularHash = null;
 
     // Metas
-    $metas = [
-      'address' => $newWallet->address,
-      'token' => $newWallet->token,
-      'bundle' => $newWallet->bundle,
-      'position' => $newWallet->position,
-      'amount' => '0',
-      'batch_id' => $newWallet->batchId,
-    ];
+    $metas = [ 'address' => $newWallet->address, 'token' => $newWallet->token, 'bundle' => $newWallet->bundle, 'position' => $newWallet->position, 'amount' => '0', 'batch_id' => $newWallet->batchId, ];
 
     // Create an 'C' atom
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'C',
-      $this->sourceWallet->token,
-      null,
-      $this->sourceWallet->batchId,
-      'wallet',
-      $newWallet->address,
-      $this->finalMetas(
-        $this->contextMetas( $metas ),
-        $newWallet
-      ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'C', $this->sourceWallet->token, null, $this->sourceWallet->batchId, 'wallet', $newWallet->address, $this->finalMetas( $this->contextMetas( $metas ), $newWallet ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -478,26 +395,10 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
 
     // Metas
-    $metas = [
-      'host' => $host,
-      'name' => $name,
-      'cellSlugs' => json_encode( $cellSlugs ),
-    ];
+    $metas = [ 'host' => $host, 'name' => $name, 'cellSlugs' => json_encode( $cellSlugs ), ];
 
     // Create an 'C' atom
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'P',
-      $this->sourceWallet->token,
-      null,
-      $this->sourceWallet->batchId,
-      'peer',
-      $slug,
-      $this->finalMetas( $metas ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'P', $this->sourceWallet->token, null, $this->sourceWallet->batchId, 'peer', $slug, $this->finalMetas( $metas ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -516,7 +417,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function initTokenCreation ( Wallet $recipientWallet, $amount, array $meta ) {
+  public function initTokenCreation ( Wallet $recipientWallet, $amount, array $meta ): Molecule {
 
     $this->molecularHash = null;
 
@@ -532,19 +433,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'C',
-      $this->sourceWallet->token,
-      $amount,
-      $recipientWallet->batchId,
-      'token',
-      $recipientWallet->token,
-      $this->finalMetas( $this->contextMetas( $meta ), $this->sourceWallet ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'C', $this->sourceWallet->token, $amount, $recipientWallet->batchId, 'token', $recipientWallet->token, $this->finalMetas( $this->contextMetas( $meta ), $this->sourceWallet ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -556,34 +445,19 @@ class Molecule extends MoleculeStructure {
   /**
    * Init shadow wallet claim
    *
-   * @param $token string
-   * @param $wallet ClientWallet object
+   * @param string $tokenSlug
+   * @param Wallet $wallet
+   *
+   * @return $this
    */
-  public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ) {
+  public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
 
     $this->molecularHash = null;
 
-    $metas = [
-      'tokenSlug' => $tokenSlug,
-      'walletAddress' => $wallet->address,
-      'walletPosition' => $wallet->position,
-      'batchId' => $wallet->batchId,
-    ];
+    $metas = [ 'tokenSlug' => $tokenSlug, 'walletAddress' => $wallet->address, 'walletPosition' => $wallet->position, 'batchId' => $wallet->batchId, ];
 
     // Create an 'C' atom
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'C',
-      $this->sourceWallet->token,
-      null,
-      $wallet->batchId,
-      'wallet',
-      $wallet->address,
-      $this->finalMetas( $this->contextMetas( $metas ) ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'C', $this->sourceWallet->token, null, $wallet->batchId, 'wallet', $wallet->address, $this->finalMetas( $this->contextMetas( $metas ) ), null, $this->generateIndex() );
 
     // Add user remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -602,27 +476,12 @@ class Molecule extends MoleculeStructure {
    * @return self
    * @throws Exception
    */
-  public function initIdentifierCreation ( $type, $contact, $code ) {
+  public function initIdentifierCreation ( string $type, string $contact, string $code ): Molecule {
     $this->molecularHash = null;
 
-    $metas = [
-      'code' => $code,
-      'hash' => Crypto::generateBundleHash( trim( $contact ) ),
-    ];
+    $metas = [ 'code' => $code, 'hash' => Crypto::generateBundleHash( trim( $contact ) ), ];
 
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'C',
-      $this->sourceWallet->token,
-      null,
-      null,
-      'identifier',
-      $type,
-      $this->finalMetas( $this->contextMetas( $metas ), $this->sourceWallet ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'C', $this->sourceWallet->token, null, null, 'identifier', $type, $this->finalMetas( $this->contextMetas( $metas ), $this->sourceWallet ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -636,26 +495,14 @@ class Molecule extends MoleculeStructure {
    *
    * @param array $meta
    * @param string $metaType
-   * @param string|integer $metaId
+   * @param string $metaId
    *
    * @return self
    */
-  public function initMeta ( array $meta, $metaType, $metaId ) {
+  public function initMeta ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
 
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'M',
-      $this->sourceWallet->token,
-      null,
-      $this->sourceWallet->batchId,
-      $metaType,
-      $metaId,
-      $this->finalMetas( $meta, $this->sourceWallet ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'M', $this->sourceWallet->token, null, $this->sourceWallet->batchId, $metaType, $metaId, $this->finalMetas( $meta, $this->sourceWallet ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -668,27 +515,15 @@ class Molecule extends MoleculeStructure {
    * Initialize meta append molecule
    *
    * @param array $meta
-   * @param $metaType
-   * @param $metaId
+   * @param string $metaType
+   * @param string $metaId
    *
    * @return $this
    */
-  public function initMetaAppend ( array $meta, $metaType, $metaId ) {
+  public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
 
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'A',
-      $this->sourceWallet->token,
-      null,
-      null,
-      $metaType,
-      $metaId,
-      $this->finalMetas( $meta ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'A', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $meta ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -709,26 +544,14 @@ class Molecule extends MoleculeStructure {
    *
    * @return self
    */
-  public function initTokenRequest ( string $token, $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ) {
+  public function initTokenRequest ( string $token, $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
 
     $this->molecularHash = null;
 
     // Set meta token
     $meta[ 'token' ] = $token;
 
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'T',
-      $this->sourceWallet->token,
-      $amount,
-      $batchId,
-      $metaType,
-      $metaId,
-      $this->finalMetas( $meta, $this->sourceWallet ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'T', $this->sourceWallet->token, $amount, $batchId, $metaType, $metaId, $this->finalMetas( $meta, $this->sourceWallet ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -742,22 +565,10 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    */
-  public function initAuthorization ( array $meta = [] ) {
+  public function initAuthorization ( array $meta = [] ): Molecule {
     $this->molecularHash = null;
 
-    $this->atoms[] = new Atom(
-      $this->sourceWallet->position,
-      $this->sourceWallet->address,
-      'U',
-      $this->sourceWallet->token,
-      null,
-      $this->sourceWallet->batchId,
-      null,
-      null,
-      $this->finalMetas( $meta ),
-      null,
-      $this->generateIndex()
-    );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'U', $this->sourceWallet->token, null, $this->sourceWallet->batchId, null, null, $this->finalMetas( $meta ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -777,10 +588,10 @@ class Molecule extends MoleculeStructure {
    * @return string
    * @throws Exception|ReflectionException|AtomsMissingException
    */
-  public function sign ( $anonymous = false, $compressed = true ) {
+  public function sign ( bool $anonymous = false, bool $compressed = true ): ?string {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
-        return !( $atom instanceof Atom );
-      } ) ) ) {
+          return !( $atom instanceof Atom );
+        } ) ) ) {
       throw new AtomsMissingException();
     }
 
@@ -807,10 +618,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Chunking the signature across multiple atoms
-    $chunkedSignature = Strings::chunkSubstr(
-      $signatureFragments,
-      ceil( mb_strlen( $signatureFragments ) / count( $this->atoms ) )
-    );
+    $chunkedSignature = Strings::chunkSubstr( $signatureFragments, ceil( mb_strlen( $signatureFragments ) / count( $this->atoms ) ) );
     $lastPosition = null;
 
     foreach ( $chunkedSignature as $chunkCount => $chunk ) {
@@ -825,7 +633,7 @@ class Molecule extends MoleculeStructure {
   /**
    * @return int
    */
-  public function generateIndex () {
+  public function generateIndex (): int {
     return static::generateNextAtomIndex( $this->atoms );
   }
 
@@ -834,7 +642,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return int
    */
-  public static function generateNextAtomIndex ( array $atoms = [] ) {
+  public static function generateNextAtomIndex ( array $atoms = [] ): int {
 
     $atom = end( $atoms );
 

@@ -1,28 +1,71 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use ReflectionException;
 use WishKnish\KnishIO\Client\Response\ResponseMetaCreate;
 
 /**
  * Class MutationCreateMeta
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationCreateMeta extends MutationProposeMolecule
-{
+class MutationCreateMeta extends MutationProposeMolecule {
 
   /**
-   * @param $type
-   * @param $contact
-   * @param $code
-   * @throws \Exception
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $metadata
+   *
+   * @throws ReflectionException
    */
-  public function fillMolecule ( string $metaType, string $metaId, array $metadata )
-  {
+  public function fillMolecule ( string $metaType, string $metaId, array $metadata ): void {
     $this->molecule->initMeta( $metadata, $metaType, $metaId );
     $this->molecule->sign();
     $this->molecule->check();
@@ -31,11 +74,10 @@ class MutationCreateMeta extends MutationProposeMolecule
   /**
    * @param $response
    *
-   * @return ResponseMetaCreate|\WishKnish\KnishIO\Client\Response\ResponseMolecule
+   * @return ResponseMetaCreate
    */
-  public function createResponse ( $response ) {
+  public function createResponse ( $response ): ResponseMetaCreate {
     return new ResponseMetaCreate( $this, $response );
   }
-
 
 }
