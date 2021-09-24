@@ -84,6 +84,7 @@ use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
+use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 use WishKnish\KnishIO\Client\AuthToken;
 
@@ -933,15 +934,14 @@ class KnishIOClient {
     return $query->execute( [ 'bundle' => $bundleHash ] );
   }
 
-
   /**
    * @param $cellSlug
    * @param $encrypt
    *
-   * @return \WishKnish\KnishIO\Client\AuthToken
+   * @return ResponseRequestAuthorizationGuest
    * @throws GuzzleException
    */
-  public function getGuestAuthToken( $cellSlug, $encrypt ) {
+  public function requestGuestAuthToken( $cellSlug, $encrypt ): Response {
     $this->setCellSlug( $cellSlug );
 
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
@@ -954,19 +954,22 @@ class KnishIOClient {
         'encrypt' => $encrypt,
     ] );
 
-    // Create an auth token object
-    return AuthToken::create( $response->payload(), $wallet, $encrypt );
+    // Create & set an auth token object
+    $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
+    $this->setAuthToken( $authToken );
+
+    return $response;
   }
 
   /**
    * @param $secret
    * @param $encrypt
    *
-   * @return \WishKnish\KnishIO\Client\AuthToken
+   * @return ResponseRequestAuthorization
    * @throws GuzzleException
    * @throws ReflectionException
    */
-  public function getProfileAuthToken( $secret, $encrypt ) {
+  public function requestProfileAuthToken( $secret, $encrypt ): Response {
     $this->setSecret( $secret );
 
     $wallet = new Wallet( $secret, 'AUTH' );
@@ -989,44 +992,42 @@ class KnishIOClient {
      */
     $response = $query->execute();
 
-    // Create an auth token object
-    return AuthToken::create( $response->payload(), $wallet, $encrypt );
+    // Create & set an auth token object
+    $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
+    $this->setAuthToken( $authToken );
+
+    return $response;
   }
 
   /**
-   * Authorize with auth token
+   * Request an auth token
    *
    * @param $secret
    * @param null $cellSlug
    * @param false $encrypt
    *
-   * @return \WishKnish\KnishIO\Client\AuthToken
-   * @throws GuzzleException
-   * @throws ReflectionException
+   * @return Response
    */
-  public function authorize ( $secret, $cellSlug = null, $encrypt = false ) {
+  public function requestAuthToken( $secret, $cellSlug = null, $encrypt = false ): Response {
 
-    // Auth token (guest or authorized)
-    $authToken = null;
+    // Response for request guest/profile auth token
+    $response = null;
 
     // Authorized user
     if ( $secret ) {
-      $authToken = $this->getProfileAuthToken( $secret, $encrypt );
+      $response = $this->requestProfileAuthToken( $secret, $encrypt );
     }
 
     // Guest
     else {
-      $authToken = $this->getGuestAuthToken( $cellSlug, $encrypt );
+      $response = $this->requestGuestAuthToken( $cellSlug, $encrypt );
     }
-
-    // Set an authToken full info
-    $this->setAuthToken( $authToken );
 
     // Switch encryption
     $this->switchEncryption( $encrypt );
 
     // Return full response
-    return $authToken;
+    return $response;
   }
 
 

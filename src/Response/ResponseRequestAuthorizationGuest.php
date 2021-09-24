@@ -50,20 +50,30 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\Wallet;
 
 class ResponseRequestAuthorizationGuest extends Response {
 
   protected string $dataKey = 'data.AccessToken';
 
+
+
+  /**
+   * @return string
+   */
   public function reason (): string {
     return 'Invalid response from server';
   }
 
+  /**
+   * @return bool
+   */
   public function success (): bool {
     return $this->payload() !== null;
   }
 
+  /**
+   * @return array|mixed|null
+   */
   public function payload () {
     return $this->data();
   }
@@ -101,14 +111,6 @@ class ResponseRequestAuthorizationGuest extends Response {
    */
   public function pubkey () {
     return $this->payloadKey( 'key' );
-  }
-
-  /**
-   * @return Wallet
-   */
-  public function wallet (): Wallet {
-    return $this->query()
-        ->getWallet();
   }
 
   /**
