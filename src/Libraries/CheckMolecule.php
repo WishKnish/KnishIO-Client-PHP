@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
@@ -124,15 +125,16 @@ class CheckMolecule {
 
         /** @var Atom[] $atoms */
         $atoms = static::isotopeFilter( 'V', $molecule->atoms );
+        Log::debug( 'All atoms', [ $atoms ] );
         $remainder = $atoms[ count( $atoms ) - 1 ];
 
         if ( $subscription->batchId !== $remainder->batchId ) {
-          throw new BatchIdException();
+          throw new BatchIdException( 'Source batch ID is not equal to the remainder one.' );
         }
 
         array_walk( $atoms, static function ( Atom $atom ) {
           if ( $atom->batchId === null ) {
-            throw new BatchIdException();
+            throw new BatchIdException( 'Batch ID can not be null.' );
           }
         } );
       }

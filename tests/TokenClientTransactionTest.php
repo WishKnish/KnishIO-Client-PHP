@@ -84,16 +84,15 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * Check wallet
+   * Check a wallet
    *
    * @param $client
    * @param string $bundle
    * @param string $token
-   * @param $amount
+   * @param float $amount
    * @param bool $hasBatchID
-   *
    */
-  protected function checkWallet ( $client, string $bundle, string $token, $amount, bool $hasBatchID = false ): void {
+  protected function checkWallet ( $client, string $bundle, string $token, float $amount, bool $hasBatchID = false ): void {
 
     // Get a wallet
     $response = $client->queryBalance( $token, $bundle );
@@ -119,10 +118,10 @@ class TokenClientTransactionTest extends TestCase {
    * @param $client
    * @param string $bundle
    * @param string $token
-   * @param int $amount
+   * @param float $amount
    * @param bool $hasBatchId
    */
-  protected function checkWalletShadow ( $client, string $bundle, string $token, int $amount, bool $hasBatchId = false ): void {
+  protected function checkWalletShadow ( $client, string $bundle, string $token, float $amount, bool $hasBatchId = false ): void {
     $this->checkWallet( $client, $bundle, $token, $amount, $hasBatchId );
   }
 
@@ -611,6 +610,7 @@ class TokenClientTransactionTest extends TestCase {
         // Create & execute a query
         $query = $client->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
         $response = $query->execute();
+        dump( $response );
 
         // Assert a rejected status
         $this->assertEquals( $response->status(), 'rejected' );
