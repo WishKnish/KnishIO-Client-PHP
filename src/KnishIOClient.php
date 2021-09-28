@@ -689,6 +689,7 @@ class KnishIOClient {
     }
 
     if ( $to !== null ) {
+
       // Is a string? $to is bundle or secret
       if ( is_string( $to ) ) {
 
@@ -713,6 +714,9 @@ class KnishIOClient {
 
         // Set metaId as an wallet address
         $metaId = $to->address;
+
+        // Set a batch ID to the recipient wallet
+        $to->batchId = $batchId ?? Crypto::generateBatchId();
       }
     }
     else {
@@ -829,11 +833,22 @@ class KnishIOClient {
         $recipientWallet = Wallet::create( $recipient, $token );
       }
     }
+
+
+    // Compute the batch ID for the recipient
+    // (typically used by stackable tokens)
+    if ( $batchId !== null ) {
+      $recipientWallet->batchId = $batchId;
+    } else {
+      $recipientWallet->initBatchId( $fromWallet );
+    }
+
     // Set recipient batch ID
     $recipientWallet->batchId = $batchId ?? Crypto::generateBatchId();
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet->initBatchId( $fromWallet, true );
 
     $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
 
@@ -874,6 +889,7 @@ class KnishIOClient {
 
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet->initBatchId( $fromWallet, true );
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {

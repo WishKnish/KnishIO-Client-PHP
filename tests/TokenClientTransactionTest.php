@@ -610,7 +610,6 @@ class TokenClientTransactionTest extends TestCase {
         // Create & execute a query
         $query = $client->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
         $response = $query->execute();
-        dump( $response );
 
         // Assert a rejected status
         $this->assertEquals( $response->status(), 'rejected' );
