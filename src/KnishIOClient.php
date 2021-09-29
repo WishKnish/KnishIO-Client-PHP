@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use WishKnish\KnishIO\Client\Exception\BatchIdException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
@@ -76,6 +77,7 @@ use WishKnish\KnishIO\Client\Mutation\MutationRequestTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
+use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -678,6 +680,21 @@ class KnishIOClient {
   public function requestTokens ( $token, $amount, $to = null, array $meta = null, ?string $batchId = null, array $units = [] ): Response {
     $meta = default_if_null( $meta, [] );
 
+
+    // Get a token & init is Stackable flag for batch ID initialization
+    $tokenResponse = $this->createQuery( QueryToken::class )
+      ->execute( [ 'slug' => $token ] );
+    $isStackable = array_get( $tokenResponse->data(), '0.fungibility' ) === 'stackable';
+
+    // NON-stackable tokens & batch ID is NOT NULL - error
+    if ( !$isStackable && $batchId !== null ) {
+      throw new BatchIdException( 'Expected Batch ID is null for non-stackable tokens.' );
+    }
+    // Stackable tokens & batch ID is NULL - generate new one
+    if ( $isStackable && $batchId === null ) {
+      $batchId = Crypto::generateBatchId();
+    }
+
     if ( count( $units ) > 0 ) {
       if ( $amount > 0 ) {
         throw new StackableUnitAmountException();
@@ -714,9 +731,6 @@ class KnishIOClient {
 
         // Set metaId as an wallet address
         $metaId = $to->address;
-
-        // Set a batch ID to the recipient wallet
-        $to->batchId = $batchId ?? Crypto::generateBatchId();
       }
     }
     else {
@@ -842,9 +856,6 @@ class KnishIOClient {
     } else {
       $recipientWallet->initBatchId( $fromWallet );
     }
-
-    // Set recipient batch ID
-    $recipientWallet->batchId = $batchId ?? Crypto::generateBatchId();
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );

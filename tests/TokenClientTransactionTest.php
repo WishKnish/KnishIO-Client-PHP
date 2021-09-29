@@ -315,9 +315,6 @@ class TokenClientTransactionTest extends TestCase {
     $transaction_amount = array_get( $data, 'amount.transaction' );
     $full_amount = array_get( $data, 'amount.full' );
 
-    // Secrets initialization
-    $secret = array_get( $this->getData(), 'secret' );
-
     // Get to bundle hashes from the recipient secret
     $toSecret = array_get( $data, 'secret.recipient' );
 
@@ -439,7 +436,6 @@ class TokenClientTransactionTest extends TestCase {
     $data = $this->getData();
     $token = $this->token_slug[ 'fungible' ];
     $transaction_amount = array_get( $data, 'amount.transaction' );
-    $full_amount = array_get( $data, 'amount.full' );
     $custom_transaction_amount = 1;
 
     // Recipient.2: last transaction from wallet => recipient.0 without remainder

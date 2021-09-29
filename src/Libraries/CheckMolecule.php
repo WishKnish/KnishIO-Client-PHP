@@ -125,7 +125,6 @@ class CheckMolecule {
 
         /** @var Atom[] $atoms */
         $atoms = static::isotopeFilter( 'V', $molecule->atoms );
-        Log::debug( 'All atoms', [ $atoms ] );
         $remainder = $atoms[ count( $atoms ) - 1 ];
 
         if ( $subscription->batchId !== $remainder->batchId ) {
