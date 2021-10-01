@@ -324,9 +324,9 @@ class KnishIOClient {
   /**
    * @return string
    */
-  public function secret (): ?string {
+  public function getSecret (): ?string {
     if ( !$this->secret ) {
-      throw new UnauthenticatedException( 'Expected ' . static::class . '::authentication call before.' );
+      throw new UnauthenticatedException( 'KnishIOClient::getSecret - Expected ' . static::class . '::authentication call before.' );
     }
 
     return $this->secret;
@@ -337,9 +337,9 @@ class KnishIOClient {
    *
    * @returns {string}
    */
-  public function bundle (): ?string {
+  public function getBundle (): ?string {
     if ( !$this->bundle ) {
-      throw new UnauthenticatedException( 'KnishIOClient::bundle() - Unable to find a stored bundle!' );
+      throw new UnauthenticatedException( 'KnishIOClient::getBundle() - Unable to find a stored bundle!' );
     }
     return $this->bundle;
   }
@@ -361,7 +361,7 @@ class KnishIOClient {
    */
   public function createMolecule ( string $secret = null, Wallet $sourceWallet = null, Wallet $remainderWallet = null ): Molecule {
 
-    $secret = $secret ?: $this->secret();
+    $secret = $secret ?: $this->getSecret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
     if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery ) {
@@ -437,7 +437,7 @@ class KnishIOClient {
     $query = $this->createQuery( QueryBalance::class );
 
     // Execute the query
-    return $query->execute( [ 'bundleHash' => $bundleHash ?: $this->bundle(), 'token' => $tokenSlug, ] );
+    return $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, ] );
   }
 
   /**
@@ -486,7 +486,7 @@ class KnishIOClient {
    * @throws Exception
    */
   public function createWallet ( string $tokenSlug ): Response {
-    $newWallet = new Wallet( $this->secret(), $tokenSlug );
+    $newWallet = new Wallet( $this->getSecret(), $tokenSlug );
 
     /**
      * @var MutationCreateWallet $query
@@ -536,7 +536,7 @@ class KnishIOClient {
     }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->secret(), $token, null, $batchId );
+    $recipientWallet = new Wallet( $this->getSecret(), $token, null, $batchId );
 
     // Create a query
     /** @var MutationCreateToken $query */
@@ -560,7 +560,7 @@ class KnishIOClient {
   public function createMeta ( string $metaType, string $metaId, array $metadata = null ): Response {
 
     // Create a custom molecule
-    $molecule = $this->createMolecule( $this->secret(), $this->getSourceWallet() );
+    $molecule = $this->createMolecule( $this->getSecret(), $this->getSourceWallet() );
 
     // Create & execute a query
     /** @var MutationCreateMeta $query */
@@ -613,7 +613,7 @@ class KnishIOClient {
     /**
      * @var ResponseWalletList $response
      */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->bundle(), 'token' => $token, 'unspent' => $unspent, ] );
+    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $token, 'unspent' => $unspent, ] );
 
     return $response->getWallets();
   }
@@ -637,7 +637,7 @@ class KnishIOClient {
     /**
      * @var ResponseWalletList $response
      */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?? $this->bundle(), 'token' => $tokenSlug, ] );
+    $response = $query->execute( [ 'bundleHash' => $bundleHash ?? $this->getBundle(), 'token' => $tokenSlug, ] );
 
     return $response->payload();
   }
@@ -688,7 +688,7 @@ class KnishIOClient {
 
     // NON-stackable tokens & batch ID is NOT NULL - error
     if ( !$isStackable && $batchId !== null ) {
-      throw new BatchIdException( 'Expected Batch ID is null for non-stackable tokens.' );
+      throw new BatchIdException( 'Expected Batch ID = null for non-stackable tokens.' );
     }
     // Stackable tokens & batch ID is NULL - generate new one
     if ( $isStackable && $batchId === null ) {
@@ -735,7 +735,7 @@ class KnishIOClient {
     }
     else {
       $metaType = 'walletBundle';
-      $metaId = $this->bundle();
+      $metaId = $this->getBundle();
     }
 
     // Create a query
@@ -814,7 +814,7 @@ class KnishIOClient {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->getBundle() )
             ->payload();
 
     // Calculate amount & set meta key
@@ -858,7 +858,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet = Wallet::create( $this->getSecret(), $token, $fromWallet->batchId, $fromWallet->characters );
     $this->remainderWallet->initBatchId( $fromWallet, true );
 
     $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
@@ -891,7 +891,7 @@ class KnishIOClient {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->bundle() )
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->getBundle() )
             ->payload();
 
     if ( $fromWallet === null ) {
@@ -899,7 +899,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->secret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet = Wallet::create( $this->getSecret(), $token, $fromWallet->batchId, $fromWallet->characters );
     $remainderWallet->initBatchId( $fromWallet, true );
 
     // Calculate amount & set meta key
@@ -934,10 +934,10 @@ class KnishIOClient {
    */
   public function getSourceWallet (): Wallet {
     // Has a ContinuID wallet?
-    $sourceWallet = $this->queryContinuId( Crypto::generateBundleHash( $this->secret() ) )
+    $sourceWallet = $this->queryContinuId( $this->getBundle() )
         ->payload();
     if ( !$sourceWallet ) {
-      $sourceWallet = new Wallet( $this->secret() );
+      $sourceWallet = new Wallet( $this->getSecret() );
     }
 
     // Return final source wallet

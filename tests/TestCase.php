@@ -168,11 +168,11 @@ abstract class TestCase extends TestCaseBase {
    *
    * @param string $secret
    * @param null $cell_slug
+   * @param false $encrypt
    *
-   * @return mixed
-   * @throws GuzzleException
+   * @return mixed|KnishIOClient
    */
-  public function client ( string $secret, $cell_slug = null ) {
+  public function client ( string $secret, $cell_slug = null, $encrypt = false ) {
 
     $cell_slug = $cell_slug ?: $this->cell_slug;
 
@@ -185,7 +185,7 @@ abstract class TestCase extends TestCaseBase {
       // Auth the client
       // $response = $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug );
       // $this->checkResponse( $response );
-      $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug );
+      $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug, $encrypt );
     }
 
     // Return the client by secret
