@@ -72,7 +72,7 @@ class MoleculeStructure {
   public ?string $counterparty = null;
   public ?string $bundle;
   public ?string $status;
-  public bool $local;
+  public int $local = 0;
   public string $createdAt;
   public array $atoms = [];
 
