@@ -55,7 +55,6 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
-use WishKnish\KnishIO\Client\Libraries\Base58;
 
 /**
  * Class Wallet
@@ -145,7 +144,7 @@ class Wallet {
     $this->token = $token;
     $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
     $this->batchId = $batchId;
-    $this->characters = defined( Base58::class . '::' . $characters ) ? $characters : null;
+    $this->characters = $characters ?? 'BASE64';
     $this->position = $position;
 
     if ( $secret ) {
@@ -301,7 +300,6 @@ class Wallet {
    * @return bool
    */
   public static function isBundleHash ( $code ): bool {
-
     return is_string( $code ) && mb_strlen( $code ) === 64 && ctype_xdigit( $code );
   }
 
@@ -330,17 +328,13 @@ class Wallet {
       $workingFragment = $fragment;
 
       foreach ( range( 1, 16 ) as $_ ) {
-
         $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
-
       }
 
       $digestSponge->absorb( $workingFragment );
-
     }
 
     return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
-
   }
 
   /**
@@ -356,13 +350,10 @@ class Wallet {
     }
 
     if ( $this->privkey === null && $this->key !== null ) {
-
       $this->privkey = Crypto::generateEncPrivateKey( $this->key );
-
     }
 
     return $this->privkey;
-
   }
 
   /**
@@ -380,23 +371,51 @@ class Wallet {
     $privateKey = $this->getMyEncPrivateKey();
 
     if ( $this->pubkey === null && $privateKey !== null ) {
-
       $this->pubkey = Crypto::generateEncPublicKey( $privateKey );
-
     }
 
     return $this->pubkey;
-
   }
 
   /**
-   * @param array $message
+   * @param string $message
+   * @param ...$pubkeys
+   *
+   * @return array
+   * @throws ReflectionException
+   */
+  public function encryptBinary( string $message, ...$pubkeys ): array {
+    return $this->encryptMyMessage( base64_encode( $message ), ...$pubkeys );
+  }
+
+  /**
+   * @param array|string $message
+   *
+   * @return array|null
+   * @throws Exception
+   */
+  public function decryptBinary( $message ) {
+    $decrypt = $this->decryptMyMessage( $message );
+
+    if ( $decrypt !== null ) {
+      $decrypt = base64_decode( $decrypt, true );
+
+      if ( $decrypt === false ) {
+        $decrypt = null;
+      }
+    }
+
+    return $decrypt;
+  }
+
+  /**
+   * @param array|string $message
    * @param mixed ...$pubkeys
    *
    * @return array
    * @throws ReflectionException|Exception
    */
-  public function encryptMyMessage ( array $message, ...$pubkeys ): array {
+  public function encryptMyMessage ( $message, ...$pubkeys ): array {
 
     if ( $this->characters ) {
       Crypto::setCharacters( $this->characters );
@@ -405,13 +424,10 @@ class Wallet {
     $encrypt = [];
 
     foreach ( $pubkeys as $pubkey ) {
-
       $encrypt[ Crypto::hashShare( $pubkey ) ] = Crypto::encryptMessage( $message, $pubkey );
-
     }
 
     return $encrypt;
-
   }
 
   /**
@@ -419,10 +435,10 @@ class Wallet {
    *
    * @param string|array $message
    *
-   * @return array|null
+   * @return array|string|null
    * @throws Exception
    */
-  public function decryptMyMessage ( $message ): ?array {
+  public function decryptMyMessage ( $message ) {
 
     if( $this->characters ) {
       Crypto::setCharacters( $this->characters );
@@ -440,11 +456,9 @@ class Wallet {
       }
 
       $encrypted = $message[ $hash ];
-
     }
 
     return Crypto::decryptMessage( $encrypted, $this->getMyEncPrivateKey(), $pubkey );
-
   }
 
   /**
@@ -468,14 +482,11 @@ class Wallet {
         ->absorb( $indexedKey->toString( 16 ) );
 
     if ( $token !== '' ) {
-
       $intermediateKeySponge->absorb( $token );
-
     }
 
     // Hashing the intermediate key to produce the private key
     return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
-
   }
 
 }
