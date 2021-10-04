@@ -94,14 +94,6 @@ class ResponseRequestAuthorization extends ResponseMolecule {
   }
 
   /**
-   * @return Wallet
-   */
-  public function wallet (): Wallet {
-    return $this->clientMolecule()
-        ->sourceWallet();
-  }
-
-  /**
    * @return mixed
    */
   public function encrypt () {

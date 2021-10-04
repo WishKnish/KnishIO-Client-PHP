@@ -47,76 +47,39 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseBalance;
 
-class ResponseRequestAuthorizationGuest extends Response {
+/**
+ * Class QueryToken
+ * @package WishKnish\KnishIO\Client\Query
+ */
+class QueryToken extends Query {
+  // Query
+  protected static string $default_query = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
+	 	@fields
+	 }';
 
-  protected string $dataKey = 'data.AccessToken';
-
-
-
-  /**
-   * @return string
-   */
-  public function reason (): string {
-    return 'Invalid response from server';
-  }
-
-  /**
-   * @return bool
-   */
-  public function success (): bool {
-    return $this->payload() !== null;
-  }
-
-  /**
-   * @return array|mixed|null
-   */
-  public function payload () {
-    return $this->data();
-  }
+  // Fields
+  protected array $fields = [
+    'slug',
+    'name',
+    'fungibility',
+    'supply',
+    'decimals',
+    'amount',
+    'icon',
+  ];
 
   /**
-   * Payload key
+   * @param string $response
    *
-   * @param $key
-   *
-   * @return mixed
+   * @return Response
    */
-  private function payloadKey ( $key ) {
-    if ( !array_has( $this->payload(), $key ) ) {
-      throw new InvalidResponseException( 'ResponseRequestAuthorizationGuest: \'' . $key . '\' key is not found in the payload.' );
-    }
-    return array_get( $this->payload(), $key );
+  public function createResponse ( string $response ): Response {
+    return new Response( $this, $response, 'data.Token' );
   }
 
-  /**
-   * Token
-   */
-  public function token () {
-    return $this->payloadKey( 'token' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function time () {
-    return $this->payloadKey( 'time' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function pubkey () {
-    return $this->payloadKey( 'key' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function encrypt () {
-    return $this->payloadKey( 'encrypt' );
-  }
 }

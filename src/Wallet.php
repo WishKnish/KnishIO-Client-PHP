@@ -208,6 +208,18 @@ class Wallet {
   }
 
   /**
+   * @param $sourceWallet
+   * @param false $isRemainder
+   *
+   * @throws Exception
+   */
+  public function initBatchId ( $sourceWallet, $isRemainder = false ) {
+    if ( $sourceWallet->batchId ) {
+      $this->batchId = $isRemainder ? $sourceWallet->batchId : Crypto::generateBatchId();
+    }
+  }
+
+  /**
    * @return bool
    */
   public function hasTokenUnits (): bool {
