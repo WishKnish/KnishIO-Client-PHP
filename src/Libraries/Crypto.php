@@ -63,7 +63,7 @@ class Crypto {
   /**
    * @var string
    */
-  private static string $characters = Base58::GMP;
+  private static string $characters = 'BASE64';
 
   /**
    * Generates a secret based on an optional seed
@@ -105,9 +105,7 @@ class Crypto {
    * @throws Exception
    */
   public static function generateBundleHash ( string $secret ): string {
-
     return bin2hex( Shake256::hash( $secret, 32 ) );
-
   }
 
   /**
@@ -120,9 +118,7 @@ class Crypto {
    * @throws Exception|ReflectionException
    */
   public static function encryptMessage ( $message, string $key ): ?string {
-
     return ( new Soda( static::$characters ) )->encrypt( $message, $key );
-
   }
 
   /**
@@ -132,13 +128,11 @@ class Crypto {
    * @param string $privateKey
    * @param string $publicKey
    *
-   * @return array|null
+   * @return array|string|null
    * @throws ReflectionException|SodiumException
    */
-  public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ): ?array {
-
+  public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ) {
     return ( new Soda( static::$characters ) )->decrypt( $encrypted, $privateKey, $publicKey );
-
   }
 
   /**
@@ -150,9 +144,7 @@ class Crypto {
    * @throws Exception|ReflectionException
    */
   public static function generateEncPrivateKey ( string $key = null ): ?string {
-
     return ( new Soda( static::$characters ) )->generatePrivateKey( $key );
-
   }
 
   /**
@@ -164,29 +156,21 @@ class Crypto {
    * @throws ReflectionException|SodiumException
    */
   public static function generateEncPublicKey ( string $key ): ?string {
-
     return ( new Soda( static::$characters ) )->generatePublicKey( $key );
-
   }
 
   /**
    * @param string $characters
    */
   public static function setCharacters ( string $characters ): void {
-
-    $constant = Base58::class . '::' . $characters;
-
-    static::$characters = defined( $constant ) ? constant( $constant ) : static::$characters;
-
+    static::$characters = $characters;
   }
 
   /**
    * @return string
    */
   public static function getCharacters (): string {
-
     return static::$characters;
-
   }
 
   /**
@@ -196,9 +180,7 @@ class Crypto {
    * @throws ReflectionException|Exception
    */
   public static function hashShare ( string $key ): string {
-
     return ( new Soda( static::$characters ) )->shortHash( $key );
-
   }
 
 }
