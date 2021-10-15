@@ -981,9 +981,11 @@ class KnishIOClient {
         'encrypt' => $encrypt,
     ] );
 
-    // Create & set an auth token object
-    $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
-    $this->setAuthToken( $authToken );
+    // Create & set an auth token object if there any data in payload (@todo add a key based check?)
+    if ( $response->payload() ) {
+      $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
+      $this->setAuthToken( $authToken );
+    }
 
     return $response;
   }
@@ -1019,9 +1021,11 @@ class KnishIOClient {
      */
     $response = $query->execute();
 
-    // Create & set an auth token object
-    $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
-    $this->setAuthToken( $authToken );
+    // Create & set an auth token object if the response is successful
+    if ( $response->success() ) {
+      $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
+      $this->setAuthToken( $authToken );
+    }
 
     return $response;
   }
