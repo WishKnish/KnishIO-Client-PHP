@@ -265,9 +265,9 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $cellSlug
+   * @param string|null $cellSlug
    */
-  public function setCellSlug ( string $cellSlug ): void {
+  public function setCellSlug ( ?string $cellSlug ): void {
     $this->cellSlug = $cellSlug;
   }
 
