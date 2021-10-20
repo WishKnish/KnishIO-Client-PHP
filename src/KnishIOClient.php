@@ -193,12 +193,11 @@ class KnishIOClient {
   /**
    * KnishIOClient constructor.
    *
-   * @param null $uri
+   * @param $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( $uri = null, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
-    $uri = $uri ?: $this->uri() . '/graphql';
+  public function __construct ( $uri, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
     $this->initialize( $uri, $client, $serverSdkVersion );
   }
 
@@ -364,7 +363,11 @@ class KnishIOClient {
     $secret = $secret ?: $this->getSecret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if ( $sourceWallet === null && $this->remainderWallet->token !== 'AUTH' && $this->lastMoleculeQuery ) {
+    if ( $sourceWallet === null &&
+        $this->remainderWallet &&
+        $this->remainderWallet->token !== 'AUTH' &&
+        $this->lastMoleculeQuery
+    ) {
 
       /**
        * @var ResponseMolecule $response
