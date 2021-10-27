@@ -59,7 +59,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  */
 class QueryMoleculeList extends Query {
   // Query
-  protected static string $default_query = 'query( $status: String, $lastMolecularHash: String, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, limit: $limit, order: $order )
+  protected static string $default_query = 'query( $status: String, $lastMolecularHash: String, $local: Boolean, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, local: $local, limit: $limit, order: $order )
 	 	@fields
 	}';
 
