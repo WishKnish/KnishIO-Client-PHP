@@ -10,7 +10,7 @@ namespace WishKnish\KnishIO\Client;
 class AuthToken {
 
   protected string $token;
-  protected int $expiresAt;
+  protected ?int $expiresAt;
   protected string $pubkey;
   protected bool $encrypt;
 
@@ -24,7 +24,7 @@ class AuthToken {
    *
    * @return static
    */
-  public static function create ( $data, $wallet, $encrypt ) {
+  public static function create ( $data, $wallet, $encrypt ): self {
     $authToken = new static (
         $data[ 'token' ],
         $data[ 'expiresAt' ],
@@ -43,7 +43,7 @@ class AuthToken {
    * @return static
    * @throws \Exception
    */
-  public static function restore ( $snapshot, $secret ) {
+  public static function restore ( $snapshot, $secret ): self {
     $wallet = new Wallet (
         $secret,
         'AUTH',
@@ -83,7 +83,7 @@ class AuthToken {
   /**
    * @param $wallet
    */
-  public function setWallet ( $wallet ) {
+  public function setWallet ( $wallet ): void {
     $this->wallet = $wallet;
   }
 
@@ -91,7 +91,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  public function getWallet () {
+  public function getWallet (): Wallet {
     return $this->wallet;
   }
 
@@ -99,7 +99,7 @@ class AuthToken {
   /**
    * @return array
    */
-  public function getSnapshot () {
+  public function getSnapshot (): array {
     return [
       'token' => $this->token,
       'expiresAt' => $this->expiresAt,
@@ -116,7 +116,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  public function getToken () {
+  public function getToken (): string {
     return $this->token;
   }
 
@@ -124,7 +124,7 @@ class AuthToken {
   /**
    * @return mixed
    */
-  public function getPubkey () {
+  public function getPubkey (): string {
     return $this->pubkey;
   }
 
@@ -132,7 +132,10 @@ class AuthToken {
   /**
    * @return float|int
    */
-  public function getExpireInterval () {
+  public function getExpireInterval (): ?int {
+    if ( !$this->expiresAt ) {
+      return null;
+    }
     return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
   }
 
@@ -140,7 +143,7 @@ class AuthToken {
   /**
    * @return bool
    */
-  public function isExpired () {
+  public function isExpired (): bool {
     return !$this->expiresAt || $this->getExpireInterval() < 0;
   }
 
@@ -150,7 +153,7 @@ class AuthToken {
    *
    * @return array
    */
-  public function getAuthData () {
+  public function getAuthData (): array {
     return [
       'token' => $this->getToken(),
       'pubkey' => $this->getPubkey(),
