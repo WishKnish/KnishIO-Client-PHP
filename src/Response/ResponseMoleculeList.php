@@ -75,9 +75,6 @@ class ResponseMoleculeList extends Response {
   public function payload (): ?array {
     // Get data
     $list = $this->data();
-    if ( !$list ) {
-      return null;
-    }
 
     // Get a list of client molecules
     $molecules = [];
