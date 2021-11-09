@@ -534,6 +534,42 @@ class TokenClientTransactionTest extends TestCase {
         ->execute();
   }
 
+
+
+
+  /*
+   $bundleHash = '12a9147d5f402ac98979f944a997e534bd424d56b79b5eb7e1541f938b84432c';
+    $token = 'UTENVFUNGIBLE';
+    $secret = Crypto::generateSecret();
+
+    // Create authorized client
+    $client = new KnishIOClient( 'http://lumen.knishio/graphql' );
+    $client->requestAuthToken( $secret );
+
+    // Has a ContinuID wallet?
+    $shadowWallet = $client->queryContinuId( $bundleHash )
+        ->payload();
+
+    $wallet = \WishKnish\KnishIO\Client\Wallet::create( $secret, $token );
+    $wallet->address = $shadowWallet->address;
+    $wallet->position = $shadowWallet->position;
+
+    // Create an intruder molecule
+    $molecule = $client->createMolecule( $secret, new \WishKnish\KnishIO\Client\Wallet( $secret ) );
+    $molecule->sourceWallet()->address = $shadowWallet->address;
+    $molecule->sourceWallet()->position = $shadowWallet->position;
+    $molecule->initShadowWalletClaim( $token, $wallet );
+    $molecule->sign();
+    $molecule->check();
+    // Replace a bundle to a recipient one
+    $molecule->bundle = Crypto::generateBundleHash( $secret );
+
+    // Create & execute a query
+    $query = $client->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
+    $response = $query->execute();
+    dd( $response );
+  */
+
   /**
    * Claim shadow wallet
    *
