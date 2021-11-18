@@ -55,11 +55,11 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  * Class QueryMoleculeList
  * @package WishKnish\KnishIO\Client\Query
  *
- * /graphql?query={Molecule(lastMolecularHash:"",limit:10,order:"created_at asc"){molecularHash}}
+ * /graphql?query={Molecule(lastMolecularHashes:[],limit:10,order:"created_at asc"){molecularHash}}
  */
 class QueryMoleculeList extends Query {
   // Query
-  protected static string $default_query = 'query( $status: String, $lastMolecularHash: String, $local: Boolean, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHash: $lastMolecularHash, local: $local, limit: $limit, order: $order )
+  protected static string $default_query = 'query( $status: String, $lastMolecularHashes: [ String! ], $local: Boolean, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHashes: $lastMolecularHashes, local: $local, limit: $limit, order: $order )
 	 	@fields
 	}';
 

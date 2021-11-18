@@ -555,12 +555,13 @@ class KnishIOClient {
   /**
    * @param string $metaType
    * @param string $metaId
-   * @param array|null $metadata
+   * @param array $metadata
    *
    * @return Response
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws ReflectionException
    */
-  public function createMeta ( string $metaType, string $metaId, array $metadata = null ): Response {
+  public function createMeta ( string $metaType, string $metaId, array $metadata = [] ): Response {
 
     // Create a custom molecule
     $molecule = $this->createMolecule( $this->getSecret(), $this->getSourceWallet() );
@@ -972,8 +973,6 @@ class KnishIOClient {
    * @throws GuzzleException
    */
   public function requestGuestAuthToken( $cellSlug, $encrypt ): Response {
-    $this->setCellSlug( $cellSlug );
-
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
@@ -1046,6 +1045,9 @@ class KnishIOClient {
 
     // Response for request guest/profile auth token
     $response = null;
+
+    // Set a cell slug
+    $this->setCellSlug( $cellSlug );
 
     // Authorized user
     if ( $secret ) {
