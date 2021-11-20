@@ -239,7 +239,7 @@ abstract class Query {
    */
   public function createResponseRaw ( ResponseInterface $response ): Response {
     return $this->createResponse( $response->getBody()
-        ->getContents() );
+      ->getContents() );
   }
 
   /**
@@ -247,7 +247,7 @@ abstract class Query {
    */
   public function uri (): ?string {
     return $this->client()
-        ->getUri();
+      ->getUri();
   }
 
   /**

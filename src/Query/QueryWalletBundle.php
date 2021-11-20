@@ -63,9 +63,21 @@ class QueryWalletBundle extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'bundleHash', 'slug', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], //	'molecules',
+  protected array $fields = [
+    'bundleHash',
+    'slug',
+    'metas' => [
+      'molecularHash',
+      'position',
+      'metaType',
+      'metaId',
+      'key',
+      'value',
+      'createdAt',
+    ], //	'molecules',
     //	'wallets',
-      'createdAt', ];
+    'createdAt',
+  ];
 
   /**
    * Builds a GraphQL-friendly variables object based on input fields

@@ -108,8 +108,8 @@ class Shake256 {
     }
 
     return SHA3::init( SHA3::SHAKE256 )
-        ->absorb( $data )
-        ->squeeze( $length );
+      ->absorb( $data )
+      ->squeeze( $length );
 
   }
 

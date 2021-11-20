@@ -109,11 +109,11 @@ class Soda {
 
     // Get decrypted string
     $decrypted = sodium_crypto_box_seal_open(
-        $this->decode( $encrypted ),
-        sodium_crypto_box_keypair_from_secretkey_and_publickey(
-            $this->decode( $privateKey ),
-            $this->decode( $publicKey )
-        )
+      $this->decode( $encrypted ),
+      sodium_crypto_box_keypair_from_secretkey_and_publickey(
+        $this->decode( $privateKey ),
+        $this->decode( $publicKey )
+      )
     );
 
     return json_decode( $decrypted, true );

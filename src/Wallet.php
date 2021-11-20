@@ -345,7 +345,7 @@ class Wallet {
    */
   public function getMyEncPrivateKey (): ?string {
 
-    if( $this->characters ) {
+    if ( $this->characters ) {
       Crypto::setCharacters( $this->characters );
     }
 
@@ -364,7 +364,7 @@ class Wallet {
    */
   public function getMyEncPublicKey (): ?string {
 
-    if( $this->characters ) {
+    if ( $this->characters ) {
       Crypto::setCharacters( $this->characters );
     }
 
@@ -384,7 +384,7 @@ class Wallet {
    * @return array
    * @throws ReflectionException
    */
-  public function encryptBinary( string $message, ...$pubkeys ): array {
+  public function encryptBinary ( string $message, ...$pubkeys ): array {
     return $this->encryptMyMessage( base64_encode( $message ), ...$pubkeys );
   }
 
@@ -394,7 +394,7 @@ class Wallet {
    * @return array|null
    * @throws Exception
    */
-  public function decryptBinary( $message ) {
+  public function decryptBinary ( $message ) {
     $decrypt = $this->decryptMyMessage( $message );
 
     if ( $decrypt !== null ) {
@@ -440,7 +440,7 @@ class Wallet {
    */
   public function decryptMyMessage ( $message ) {
 
-    if( $this->characters ) {
+    if ( $this->characters ) {
       Crypto::setCharacters( $this->characters );
     }
 
@@ -452,7 +452,7 @@ class Wallet {
       $hash = Crypto::hashShare( $pubkey );
 
       if ( !array_key_exists( $hash, $message ) ) {
-          throw new CodeException( 'Wallet::decryptMyMessage - hash does not found for the wallet\'s pubkey.' );
+        throw new CodeException( 'Wallet::decryptMyMessage - hash does not found for the wallet\'s pubkey.' );
       }
 
       $encrypted = $message[ $hash ];
@@ -479,7 +479,7 @@ class Wallet {
 
     // Hashing the indexed key to produce the intermediate key
     $intermediateKeySponge = Crypto\Shake256::init()
-        ->absorb( $indexedKey->toString( 16 ) );
+      ->absorb( $indexedKey->toString( 16 ) );
 
     if ( $token !== '' ) {
       $intermediateKeySponge->absorb( $token );

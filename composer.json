@@ -37,7 +37,7 @@
 		"docs": "https://docs.knish.io"
 	},
 	"require": {
-		"php": ">=7.4|>=8.0",
+		"php": "^8.0",
 		"ext-json": "*",
 		"desktopd/php-sha3-streamable": "@dev",
 		"simplito/bigint-wrapper-php": "^1.0",

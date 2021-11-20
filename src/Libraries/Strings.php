@@ -132,7 +132,7 @@ class Strings {
     for ( $i = 0, $length = mb_strlen( $src ); $i < $length; $i++ ) {
 
       $value = $value->mul( $bigIntegerFromBase )
-          ->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
+        ->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
     }
 
     if ( $value->cmp( $bigIntegerZero ) <= 0 ) {

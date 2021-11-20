@@ -136,7 +136,7 @@ class Cipher {
         if ( array_get( $options, 'encrypt', false ) ) {
 
           $requestContent = $request->getBody()
-              ->getContents();
+            ->getContents();
           $original = json_decode( $requestContent, true, 512, JSON_THROW_ON_ERROR );
 
           if ( array_key_exists( 'query', $original ) ) {
@@ -151,14 +151,15 @@ class Cipher {
             }
 
             // Wallet::encryptMyMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
-            $encryptedMessage = $this->wallet()->encryptMyMessage( $original, $this->getPubkey() );
+            $encryptedMessage = $this->wallet()
+              ->encryptMyMessage( $original, $this->getPubkey() );
 
             // Full request context
             $content = [
-                'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
-                'variables' => [
-                    'Hash' => json_encode( $encryptedMessage, JSON_THROW_ON_ERROR ),
-                ],
+              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
+              'variables' => [
+                'Hash' => json_encode( $encryptedMessage, JSON_THROW_ON_ERROR ),
+              ],
             ];
 
             // Prepare content for sending
@@ -166,7 +167,7 @@ class Cipher {
 
             // Send a request
             return $handler( $request->withBody( $content ), $options )
-                ->then( $this->response( $options ) );
+              ->then( $this->response( $options ) );
           }
 
           throw new InvalidRequestException();
@@ -189,7 +190,7 @@ class Cipher {
       if ( array_get( $options, 'encrypt', false ) ) {
 
         $original = json_decode( $response->getBody()
-            ->getContents(), true, 512, JSON_THROW_ON_ERROR );
+          ->getContents(), true, 512, JSON_THROW_ON_ERROR );
 
         $data = array_has( $original, 'data.data' ) ? array_get( $original, 'data.data' ) : array_get( $original, 'data' );
 
@@ -201,7 +202,7 @@ class Cipher {
             if ( $encrypted ) {
 
               $decryption = $this->wallet()
-                  ->decryptMyMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
+                ->decryptMyMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
 
               if ( $decryption === null ) {
                 throw new InvalidResponseException( 'Error decoding response.' );

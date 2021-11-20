@@ -6,7 +6,7 @@ use WishKnish\KnishIO\Client\Exception\CodeException;
 
 class Base64 {
 
-  public function encode( $data ): string {
+  public function encode ( $data ): string {
     return base64_encode( $data );
   }
 

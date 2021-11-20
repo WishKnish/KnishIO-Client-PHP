@@ -2,8 +2,6 @@
 
 namespace WishKnish\KnishIO\Client;
 
-
-
 /**
  * Class AuthToken
  */
@@ -16,7 +14,6 @@ class AuthToken {
 
   protected ?Wallet $wallet;
 
-
   /**
    * @param $data
    * @param $wallet
@@ -26,15 +23,14 @@ class AuthToken {
    */
   public static function create ( $data, $wallet, $encrypt ): self {
     $authToken = new static (
-        $data[ 'token' ],
-        $data[ 'expiresAt' ],
-        $data[ 'pubkey' ],
-        $encrypt,
+      $data[ 'token' ],
+      $data[ 'expiresAt' ],
+      $data[ 'pubkey' ],
+      $encrypt,
     );
     $authToken->setWallet( $wallet );
     return $authToken;
   }
-
 
   /**
    * @param $snapshot
@@ -45,11 +41,11 @@ class AuthToken {
    */
   public static function restore ( $snapshot, $secret ): self {
     $wallet = new Wallet (
-        $secret,
-        'AUTH',
-        array_get( $snapshot, 'wallet.position' ),
-        null,
-        array_get( $snapshot, 'wallet.characters' )
+      $secret,
+      'AUTH',
+      array_get( $snapshot, 'wallet.position' ),
+      null,
+      array_get( $snapshot, 'wallet.characters' )
     );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
@@ -57,7 +53,6 @@ class AuthToken {
       'pubkey' => array_get( $snapshot, 'pubkey' ),
     ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
-
 
   /**
    * AuthToken constructor.
@@ -79,7 +74,6 @@ class AuthToken {
     $this->encrypt = $encrypt;
   }
 
-
   /**
    * @param $wallet
    */
@@ -87,14 +81,12 @@ class AuthToken {
     $this->wallet = $wallet;
   }
 
-
   /**
    * @return mixed
    */
   public function getWallet (): Wallet {
     return $this->wallet;
   }
-
 
   /**
    * @return array
@@ -112,7 +104,6 @@ class AuthToken {
     ];
   }
 
-
   /**
    * @return mixed
    */
@@ -120,14 +111,12 @@ class AuthToken {
     return $this->token;
   }
 
-
   /**
    * @return mixed
    */
   public function getPubkey (): string {
     return $this->pubkey;
   }
-
 
   /**
    * @return float|int
@@ -139,14 +128,12 @@ class AuthToken {
     return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
   }
 
-
   /**
    * @return bool
    */
   public function isExpired (): bool {
     return !$this->expiresAt || $this->getExpireInterval() < 0;
   }
-
 
   /**
    * Get auth data for the final client (apollo)

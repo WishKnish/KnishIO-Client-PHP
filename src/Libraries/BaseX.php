@@ -6,8 +6,8 @@ use ArrayObject;
 use Tuupola\Base58 as B58;
 
 class BaseX {
-  const BASE2  = '01';
-  const BASE8  = '01234567';
+  const BASE2 = '01';
+  const BASE8 = '01234567';
   const BASE11 = '0123456789a';
   const BASE36 = '0123456789abcdefghijklmnopqrstuvwxyz';
   const BASE62 = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -20,9 +20,9 @@ class BaseX {
     $base58 = [ 'BITCOIN', 'FLICKR', 'RIPPLE', 'IPFS' ];
     $base64 = [ 'BASE64' ];
     $config = [
-        "characters" => B58::GMP,
-        "check" => false,
-        "version" => 0x00,
+      "characters" => B58::GMP,
+      "check" => false,
+      "version" => 0x00,
     ];
 
     $this->encoder = new Base58( $config );
@@ -30,7 +30,7 @@ class BaseX {
     $cloneOptions = ( new ArrayObject( $options ) )->getArrayCopy();
     $characters = array_get( $cloneOptions, 'characters' ) ?? 'BASE64';
 
-    unset( $cloneOptions['characters'] );
+    unset( $cloneOptions[ 'characters' ] );
 
     $config = array_merge( $config, $cloneOptions );
 

@@ -55,8 +55,6 @@ class ResponseRequestAuthorizationGuest extends Response {
 
   protected string $dataKey = 'data.AccessToken';
 
-
-
   /**
    * @return string
    */

@@ -173,7 +173,6 @@ class HttpClient extends Client implements HttpClientInterface {
     return $this->xAuthToken;
   }
 
-
   /**
    * Sets the authorization data
    *
@@ -186,7 +185,6 @@ class HttpClient extends Client implements HttpClientInterface {
     $this->setPubkey( $pubkey );
     $this->setWallet( $wallet );
   }
-
 
   /**
    * @param RequestInterface $request

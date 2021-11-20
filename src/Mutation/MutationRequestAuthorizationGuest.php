@@ -58,16 +58,15 @@ class MutationRequestAuthorizationGuest extends Mutation {
 
   // Fields
   protected array $fields = [
-      'token',
-      'expiresAt',
-      'pubkey',
+    'token',
+    'expiresAt',
+    'pubkey',
 
-      // Deprecated fields
-      'time',
-      'key',
-      'encrypt',
+    // Deprecated fields
+    'time',
+    'key',
+    'encrypt',
   ];
-
 
   /**
    * Create a response

@@ -218,13 +218,12 @@ class Molecule extends MoleculeStructure {
     return $metas;
   }
 
-
   /**
    * @param array $metas
    *
    * @return array
    */
-  protected function schemaOrgMetas( array $metas = [] ) {
+  protected function schemaOrgMetas ( array $metas = [] ) {
     return $this->contextMetas( $metas, static::DEFAULT_META_CONTEXT );
   }
 
@@ -590,8 +589,8 @@ class Molecule extends MoleculeStructure {
    */
   public function sign ( bool $anonymous = false, bool $compressed = true ): ?string {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
-          return !( $atom instanceof Atom );
-        } ) ) ) {
+        return !( $atom instanceof Atom );
+      } ) ) ) {
       throw new AtomsMissingException();
     }
 
