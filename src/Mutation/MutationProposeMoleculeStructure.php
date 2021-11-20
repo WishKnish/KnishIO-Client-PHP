@@ -77,8 +77,9 @@ class MutationProposeMoleculeStructure extends Query {
    * @param HttpClientInterface $client
    * @param MoleculeStructure $moleculeStructure
    * @param string|null $query
+   *
+   * @noinspection PhpPureAttributeCanBeAddedInspection
    */
-  #[Pure]
   public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
     parent::__construct( $client, $query );
 
@@ -91,6 +92,7 @@ class MutationProposeMoleculeStructure extends Query {
    *
    * @return array
    */
+  #[Pure]
   public function compiledVariables ( array $variables = null ): array {
     // Default variables
     $variables = parent::compiledVariables( $variables );

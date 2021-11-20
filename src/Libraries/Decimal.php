@@ -116,6 +116,7 @@ class Decimal {
    *
    * @return bool
    */
+  #[Pure]
   public static function equal ( $val1, $val2 ): bool {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }
