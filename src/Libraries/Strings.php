@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * Class Str
@@ -187,6 +188,7 @@ class Strings {
    *
    * @return string
    */
+  #[Pure]
   public static function base64ToHex ( string $str ): string {
     return bin2hex( base64_decode( $str ) );
   }

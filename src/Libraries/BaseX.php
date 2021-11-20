@@ -3,6 +3,7 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use ArrayObject;
+use JetBrains\PhpStorm\Pure;
 use Tuupola\Base58 as B58;
 
 class BaseX {
@@ -47,6 +48,7 @@ class BaseX {
     }
   }
 
+  #[Pure]
   public function encode ( $data ): string {
     return $this->encoder->encode( $data );
   }

@@ -2,6 +2,9 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use JetBrains\PhpStorm\ArrayShape;
+use JetBrains\PhpStorm\Pure;
+
 /**
  * Class AuthToken
  */
@@ -91,6 +94,13 @@ class AuthToken {
   /**
    * @return array
    */
+  #[ArrayShape( [
+    'token' => "string",
+    'expiresAt' => "int|null",
+    'pubkey' => "string",
+    'encrypt' => "bool",
+    'wallet' => "array"
+  ] )]
   public function getSnapshot (): array {
     return [
       'token' => $this->token,
@@ -131,6 +141,7 @@ class AuthToken {
   /**
    * @return bool
    */
+  #[Pure]
   public function isExpired (): bool {
     return !$this->expiresAt || $this->getExpireInterval() < 0;
   }
@@ -140,6 +151,12 @@ class AuthToken {
    *
    * @return array
    */
+  #[Pure]
+  #[ArrayShape( [
+    'token' => "mixed|string",
+    'pubkey' => "mixed|string",
+    'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+  ] )]
   public function getAuthData (): array {
     return [
       'token' => $this->getToken(),

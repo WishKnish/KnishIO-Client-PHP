@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use JetBrains\PhpStorm\NoReturn;
 use ReflectionException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -213,6 +214,7 @@ class QueryClientTest extends TestCase {
    * @throws Exception
    * @throws GuzzleException
    */
+  #[NoReturn]
   public function testPeerCreation (): void {
 
     $this->beforeExecute();

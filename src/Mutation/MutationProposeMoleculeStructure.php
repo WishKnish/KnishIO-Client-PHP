@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use JetBrains\PhpStorm\Pure;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -77,6 +78,7 @@ class MutationProposeMoleculeStructure extends Query {
    * @param MoleculeStructure $moleculeStructure
    * @param string|null $query
    */
+  #[Pure]
   public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
     parent::__construct( $client, $query );
 

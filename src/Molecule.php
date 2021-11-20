@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
@@ -223,6 +224,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return array
    */
+  #[Pure]
   protected function schemaOrgMetas ( array $metas = [] ) {
     return $this->contextMetas( $metas, static::DEFAULT_META_CONTEXT );
   }

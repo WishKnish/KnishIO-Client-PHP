@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Query;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
+use JetBrains\PhpStorm\Pure;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
@@ -219,6 +220,7 @@ abstract class Query {
    *
    * @return array
    */
+  #[Pure]
   public function compiledVariables ( array $variables = null ): array {
     return default_if_null( $variables, [] );
   }

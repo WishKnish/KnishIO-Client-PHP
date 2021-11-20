@@ -65,6 +65,8 @@ dd([
 ]);
 */
 
+use JetBrains\PhpStorm\Pure;
+
 /**
  * Class Decimal
  * @package WishKnish\KnishIO\Client\Libraries
@@ -94,6 +96,7 @@ class Decimal {
    *
    * @return int
    */
+  #[Pure]
   public static function cmp ( float $val1, float $val2 ): int {
     $val1 = static::val( $val1 ) * static::$multiplier;
     $val2 = static::val( $val2 ) * static::$multiplier;

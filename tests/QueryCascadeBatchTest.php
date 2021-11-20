@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use JetBrains\PhpStorm\NoReturn;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
@@ -88,6 +89,7 @@ class QueryCascadeBatchTest extends TestCase {
    * @throws ReflectionException|GuzzleException
    * @throws Exception
    */
+  #[NoReturn]
   public function testCascadeBatch (): void {
 
     // Create a token

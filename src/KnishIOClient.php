@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use JetBrains\PhpStorm\Pure;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BatchIdException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
@@ -152,6 +153,7 @@ class KnishIOClient {
    *
    * @return array
    */
+  #[Pure]
   public static function splitTokenUnits ( Wallet $sourceWallet, $amount ): array {
 
     // Token units initialization
@@ -269,6 +271,7 @@ class KnishIOClient {
   /**
    * @return string
    */
+  #[Pure]
   public function uri (): string {
     return $this->client->getUri();
   }
