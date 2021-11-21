@@ -76,7 +76,7 @@ class TokenClientTransactionTest extends TestCase {
   // Token slugs
   protected array $token_slug = [ 'fungible' => 'UTFUNGIBLE', 'stackable' => 'UTSTACKABLE', 'env.fungible' => 'UTENVFUNGIBLE', 'env.stackable' => 'UTENVSTACKABLE', ];
 
-  public function beforeExecute () {
+  public function beforeExecute (): void {
     // $this->cell_slug = null;
     // $this->graphql_url = 'https://frontrow.knish.io/graphql';
 
@@ -139,7 +139,7 @@ class TokenClientTransactionTest extends TestCase {
     // Call server cleanup
     $this->callServerCleanup( TokenServerTransactionTest::class );
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
@@ -209,7 +209,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testRequestToken (): void {
@@ -245,19 +245,19 @@ class TokenClientTransactionTest extends TestCase {
     $client = $this->client( $secret[ 'env' ] );
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 0 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 1.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 1.0 );
 
     // --- Base receive (NOT-splitting)
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 0 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 2.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 2.0 );
 
     // --- RECEIVER.1
 
     // --- Base receive (NOT-splitting)
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 1 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 1 ], $token, $transaction_amount * 1.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 1 ], $token, $transaction_amount * 1.0 );
 
     // --- RECEIVER.2
 
@@ -300,7 +300,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testBaseTransaction (): void {
@@ -352,7 +352,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test token transferring
    *
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testBatchTransaction (): void {
@@ -366,9 +366,6 @@ class TokenClientTransactionTest extends TestCase {
 
     // Initial code
     $this->beforeExecute();
-
-    // Secrets initialization
-    $secret = array_get( $this->getData(), 'secret' );
 
     // Get to bundle hashes from the recipient secret
     $toBundle = [];
@@ -426,7 +423,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test V isotope combination (multi-recipients)
    *
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testVIsotopeCombination (): void {
@@ -471,7 +468,6 @@ class TokenClientTransactionTest extends TestCase {
    *
    * @return Response
    * @throws GuzzleException
-   * @throws ReflectionException
    * @throws Exception
    */
   protected function vIsotopeCombination ( $from_secret, $token, $recipients, bool $generate_wallets = false, int $transaction_amount = 1 ): Response {
@@ -542,7 +538,6 @@ class TokenClientTransactionTest extends TestCase {
    * @param array $intruders
    *
    * @throws GuzzleException
-   * @throws ReflectionException
    * @throws Exception
    */
   protected function claimShadowWallet ( string $token, string $recipient, array $intruders ): void {

@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\Pure;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\BatchIdException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
@@ -89,7 +89,6 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
-use WishKnish\KnishIO\Client\AuthToken;
 
 /**
  * Class KnishIO
@@ -143,7 +142,7 @@ class KnishIOClient {
   private array $authTokenObjects = [];
 
   /**
-   * @var \WishKnish\KnishIO\Client\AuthToken|null
+   * @var AuthToken|null
    */
   private ?AuthToken $authToken;
 
@@ -194,23 +193,27 @@ class KnishIOClient {
    * @param $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
+   *
+   * @throws Exception
    */
-  public function __construct ( $uri, HttpClientInterface $client = null, $serverSdkVersion = 3 ) {
+  public function __construct ( $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
     $this->initialize( $uri, $client, $serverSdkVersion );
   }
 
   /**
-   * @param string $uri
+   * @param string|array $uri
    * @param null $client
    * @param int $serverSdkVersion
+   *
+   * @throws Exception
    */
-  public function initialize ( string $uri, $client = null, int $serverSdkVersion = 3 ): void {
+  public function initialize ( string|array $uri, $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
 
     // Init uris
     $this->uris = is_array( $uri ) ? $uri : [ $uri ];
-    foreach ( $this->uris as $uri ) {
-      $this->authTokenObjects[ $uri ] = null; // @todo remove this code if it is not required!
+    foreach ( $this->uris as $uriItem ) {
+      $this->authTokenObjects[ $uriItem ] = null; // @todo remove this code if it is not required!
     }
 
     $this->client = default_if_null( $client, new HttpClient( $this->getRandomUri() ) );
@@ -222,7 +225,7 @@ class KnishIOClient {
    *
    * @return bool
    */
-  public function switchEncryption ( $encrypt ) {
+  public function switchEncryption ( $encrypt ): bool {
     if ( $this->hasEncryption() === $encrypt ) {
       return false;
     }
@@ -240,6 +243,7 @@ class KnishIOClient {
    * Get random uri from specified $this->uris
    *
    * @returns {string}
+   * @throws Exception
    */
   public function getRandomUri () {
     return $this->uris[ random_int( 0, count( $this->uris ) - 1 ) ];
@@ -320,7 +324,7 @@ class KnishIOClient {
   }
 
   /**
-   * @return string
+   * @return string|null
    */
   public function getSecret (): ?string {
     if ( !$this->secret ) {
@@ -430,6 +434,7 @@ class KnishIOClient {
    *
    * @return Response
    * @throws GuzzleException
+   * @throws JsonException
    */
   public function queryBalance ( $tokenSlug, $bundleHash = null ): Response {
 
@@ -451,6 +456,7 @@ class KnishIOClient {
    *
    * @return Response|null
    * @throws GuzzleException
+   * @throws JsonException
    */
   public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): ?Response {
 
@@ -507,7 +513,7 @@ class KnishIOClient {
    * @param array $units
    *
    * @return Response
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function createToken ( $token, $amount, array $meta = null, ?string $batchId = null, array $units = [] ): Response {
@@ -532,7 +538,7 @@ class KnishIOClient {
         $amount = count( $units );
 
         // Set custom default metadata
-        $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
+        $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units, JSON_THROW_ON_ERROR ), ] );
       }
     }
 
@@ -652,6 +658,7 @@ class KnishIOClient {
    *
    * @return Response
    * @throws GuzzleException
+   * @throws JsonException
    */
   public function queryBundle ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true, array $fields = null ): Response {
     /**
@@ -675,7 +682,7 @@ class KnishIOClient {
    * @param array $units
    *
    * @return Response
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function requestTokens ( $token, $amount, $to = null, array $meta = null, ?string $batchId = null, array $units = [] ): Response {
@@ -702,7 +709,7 @@ class KnishIOClient {
 
       $amount = count( $units );
       $meta = Meta::aggregateMeta( $meta );
-      $meta[ 'tokenUnits' ] = json_encode( $units );
+      $meta[ 'tokenUnits' ] = json_encode( $units, JSON_THROW_ON_ERROR );
     }
 
     if ( $to !== null ) {
@@ -802,7 +809,7 @@ class KnishIOClient {
   /**
    * @param string|Wallet $recipient
    * @param string $token
-   * @param int|float $amount
+   * @param float|int $amount
    * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
@@ -810,7 +817,7 @@ class KnishIOClient {
    * @return Response
    * @throws Exception|GuzzleException
    */
-  public function transferToken ( $recipient, string $token, $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function transferToken ( Wallet|string $recipient, string $token, float|int $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -884,7 +891,6 @@ class KnishIOClient {
    * @param Wallet|null $sourceWallet
    *
    * @return Response
-   * @throws ReflectionException
    * @throws Exception|GuzzleException
    */
   public function burnToken ( string $token, $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
@@ -948,7 +954,7 @@ class KnishIOClient {
    * @param $bundleHash
    *
    * @return ResponseContinuId
-   * @throws GuzzleException
+   * @throws GuzzleException|JsonException
    */
   public function queryContinuId ( $bundleHash ): ResponseContinuId {
     /**
@@ -967,6 +973,7 @@ class KnishIOClient {
    *
    * @return ResponseRequestAuthorizationGuest
    * @throws GuzzleException
+   * @throws Exception
    */
   public function requestGuestAuthToken ( $cellSlug, $encrypt ): Response {
     $this->setCellSlug( $cellSlug );
@@ -996,7 +1003,7 @@ class KnishIOClient {
    *
    * @return ResponseRequestAuthorization
    * @throws GuzzleException
-   * @throws ReflectionException
+   * @throws Exception
    */
   public function requestProfileAuthToken ( $secret, $encrypt ): Response {
     $this->setSecret( $secret );
@@ -1038,17 +1045,15 @@ class KnishIOClient {
    * @param false $encrypt
    *
    * @return Response
+   * @throws GuzzleException
    */
-  public function requestAuthToken ( $secret, $cellSlug = null, $encrypt = false ): Response {
+  public function requestAuthToken ( $secret, $cellSlug = null, bool $encrypt = false ): Response {
 
     // Response for request guest/profile auth token
-    $response = null;
-
     // Authorized user
     if ( $secret ) {
       $response = $this->requestProfileAuthToken( $secret, $encrypt );
     }
-
     // Guest
     else {
       $response = $this->requestGuestAuthToken( $cellSlug, $encrypt );
@@ -1064,9 +1069,9 @@ class KnishIOClient {
   /**
    * Sets the auth token
    *
-   * @param authToken
+   * @param AuthToken|null $authToken
    */
-  public function setAuthToken ( ?AuthToken $authToken ) {
+  public function setAuthToken ( ?AuthToken $authToken ): void {
 
     // An empty auth token
     if ( !$authToken ) {
@@ -1087,9 +1092,9 @@ class KnishIOClient {
   /**
    * Returns the current authorization token
    *
-   * @return mixed
+   * @return AuthToken|null
    */
-  public function getAuthToken () {
+  public function getAuthToken (): ?AuthToken {
     return $this->authToken;
   }
 

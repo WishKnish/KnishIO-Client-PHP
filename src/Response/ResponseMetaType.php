@@ -57,9 +57,9 @@ class ResponseMetaType extends Response {
   protected string $dataKey = 'data.MetaType';
 
   /**
-   * @return mixed|null
+   * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
     $data = $this->data();
 
     if ( !$data ) {

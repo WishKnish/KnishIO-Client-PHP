@@ -53,6 +53,7 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\NoReturn;
 use ReflectionException;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Tests\TokenServerTransactionTest;
@@ -127,7 +128,7 @@ class QueryCascadeBatchTest extends TestCase {
     dd( $response->data() );
   }
 
-  public function testUnitToken () {
+  public function testUnitToken (): void {
 
   }
 
@@ -142,9 +143,8 @@ class QueryCascadeBatchTest extends TestCase {
 
   /**
    * @throws Exception
-   * @throws GuzzleException
    */
-  private function transferToken ( $client, $transactionAmount, $batchId ) {
+  private function transferToken ( $client, $transactionAmount, $batchId ): KnishIOClient {
 
     // Initial code
     $this->beforeExecute();
@@ -170,7 +170,7 @@ class QueryCascadeBatchTest extends TestCase {
 
     // Init recipient query
     foreach ( $shadowWallets as $shadowWallet ) {
-      $response = $client->claimShadowWallet( $this->tokenSlug, $shadowWallet->batchId );
+      $client->claimShadowWallet( $this->tokenSlug, $shadowWallet->batchId );
     }
   }
 
@@ -178,7 +178,7 @@ class QueryCascadeBatchTest extends TestCase {
    * @throws ReflectionException|GuzzleException
    * @throws Exception
    */
-  private function createToken () {
+  private function createToken (): KnishIOClient {
 
     // Initial code
     $this->beforeExecute();

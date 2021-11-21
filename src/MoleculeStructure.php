@@ -246,7 +246,7 @@ class MoleculeStructure {
    *
    * @return object
    */
-  public static function jsonToObject ( $string ): object {
+  public static function jsonToObject ( string $string ): object {
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
     $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => null, ], ], ] );
 

@@ -53,9 +53,9 @@ namespace WishKnish\KnishIO\Client\Tests;
 use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use JsonException;
 use PHPUnit\TextUI\Command;
 use PHPUnit_Framework_TestCase;
-use ReflectionException;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -99,18 +99,23 @@ abstract class TestCase extends TestCaseBase {
    *
    * @param array $data
    * @param null $filepath
+   *
+   * @throws JsonException
    */
   protected function saveData ( array $data, $filepath = null ): void {
     $filepath = default_if_null( $filepath, $this->dataFilepath() );
-    file_put_contents( $filepath, json_encode( $data ) );
+    file_put_contents( $filepath, json_encode( $data, JSON_THROW_ON_ERROR ) );
   }
 
   /**
+   * @param string|null $filepath
+   *
    * @return mixed
+   * @throws JsonException
    */
-  protected function getData ( $filepath = null ) {
+  protected function getData ( string $filepath = null ): mixed {
     $filepath = default_if_null( $filepath, $this->dataFilepath() );
-    return json_decode( file_get_contents( $filepath ), true );
+    return json_decode( file_get_contents( $filepath ), true, 512, JSON_THROW_ON_ERROR );
   }
 
   /**
@@ -128,7 +133,7 @@ abstract class TestCase extends TestCaseBase {
    *
    * @throws Exception
    */
-  protected function beforeExecute () {
+  protected function beforeExecute (): void {
 
     // Load env
     $env_path = __DIR__ . '/../';
@@ -170,9 +175,10 @@ abstract class TestCase extends TestCaseBase {
    * @param null $cell_slug
    * @param false $encrypt
    *
-   * @return mixed|KnishIOClient
+   * @return KnishIOClient
+   * @throws Exception
    */
-  public function client ( string $secret, $cell_slug = null, $encrypt = false ) {
+  public function client ( string $secret, $cell_slug = null, bool $encrypt = false ): KnishIOClient {
 
     $cell_slug = $cell_slug ?: $this->cell_slug;
 
@@ -185,7 +191,11 @@ abstract class TestCase extends TestCaseBase {
       // Auth the client
       // $response = $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug );
       // $this->checkResponse( $response );
-      $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug, $encrypt );
+      try {
+        $this->clients[ $secret ]->requestAuthToken( $secret, $cell_slug, $encrypt );
+      }
+      catch ( GuzzleException $e ) {
+      }
     }
 
     // Return the client by secret
@@ -198,13 +208,11 @@ abstract class TestCase extends TestCaseBase {
    *
    * @return Response
    * @throws GuzzleException
+   * @throws Exception
    */
   protected function executeMolecule ( $secret, $molecule ): Response {
 
     // Execute query & check response
-    /**
-     * @var MutationProposeMolecule $mutation
-     */
     $mutation = $this->client( $secret )
         ->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
     $response = $mutation
@@ -296,7 +304,7 @@ abstract class TestCase extends TestCaseBase {
 
       // Create & run a unit test command
       $command = new Command();
-      $response = $command->run( [ 'phpunit', '--configuration', __DIR__ . '/../' . 'phpunit.xml', '--filter', '/(::' . $test . ')( .*)?$/', $class, $server_test_filepath, '--teamcity', ], false );
+      $command->run( [ 'phpunit', '--configuration', __DIR__ . '/../' . 'phpunit.xml', '--filter', '/(::' . $test . ')( .*)?$/', $class, $server_test_filepath, '--teamcity', ], false );
     }
     $this->assertEquals( true, true );
   }

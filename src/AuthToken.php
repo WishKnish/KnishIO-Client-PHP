@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use Exception;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 
@@ -40,7 +41,7 @@ class AuthToken {
    * @param $secret
    *
    * @return static
-   * @throws \Exception
+   * @throws Exception
    */
   public static function restore ( $snapshot, $secret ): self {
     $wallet = new Wallet (
@@ -129,7 +130,7 @@ class AuthToken {
   }
 
   /**
-   * @return float|int
+   * @return int|null
    */
   public function getExpireInterval (): ?int {
     if ( !$this->expiresAt ) {

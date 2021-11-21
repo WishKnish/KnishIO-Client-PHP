@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Class ResponseRequestAuthorization
@@ -65,7 +64,7 @@ class ResponseRequestAuthorization extends ResponseMolecule {
    *
    * @return mixed
    */
-  private function payloadKey ( $key ) {
+  private function payloadKey ( $key ): mixed {
     if ( !array_has( $this->payload, $key ) ) {
       throw new InvalidResponseException( 'ResponseRequestAuthorization: \'' . $key . '\' key is not found in the payload.' );
     }
@@ -82,21 +81,21 @@ class ResponseRequestAuthorization extends ResponseMolecule {
   /**
    * @return mixed
    */
-  public function time () {
+  public function time (): mixed {
     return $this->payloadKey( 'time' );
   }
 
   /**
    * @return mixed
    */
-  public function pubkey () {
+  public function pubkey (): mixed {
     return $this->payloadKey( 'key' );
   }
 
   /**
    * @return mixed
    */
-  public function encrypt () {
+  public function encrypt (): mixed {
     return $this->payloadKey( 'encrypt' );
   }
 

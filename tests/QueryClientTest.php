@@ -73,7 +73,6 @@ class QueryClientTest extends TestCase {
 
   /**
    * @throws Exception
-   * @throws GuzzleException
    */
   public function beforeExecute (): void {
     parent::beforeExecute();
@@ -91,7 +90,7 @@ class QueryClientTest extends TestCase {
    * Clear data test
    *
    * @throws ReflectionException
-   * @throws Exception|GuzzleException
+   * @throws Exception
    */
   public function testClearAll (): void {
 
@@ -106,7 +105,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testMetaIsotope (): void {
@@ -169,7 +168,7 @@ class QueryClientTest extends TestCase {
     $this->executeMolecule( $this->source_secret, $molecule );
   }
 
-  public function testAppendMetaIsotope () {
+  public function testAppendMetaIsotope (): void {
     /*
     $this->beforeExecute();
 
@@ -189,7 +188,7 @@ class QueryClientTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testWalletCreation (): void {

@@ -51,7 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use Exception;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -93,8 +93,8 @@ class Atom {
   /**
    * Atom constructor.
    *
-   * @param string $position
-   * @param string $walletAddress
+   * @param string|null $position
+   * @param string|null $walletAddress
    * @param string $isotope
    * @param string|null $token
    * @param string|null $value
@@ -126,10 +126,10 @@ class Atom {
    * @param array $atoms
    * @param string $output
    *
-   * @return array[]|string|string[]|null
-   * @throws ReflectionException|Exception
+   * @return array|string|null
+   * @throws Exception
    */
-  public static function hashAtoms ( array $atoms, string $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
@@ -238,6 +238,7 @@ class Atom {
    * @param string $property
    * @param $value
    *
+   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
@@ -245,7 +246,7 @@ class Atom {
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {
-      $metas = json_decode( $value, true );
+      $metas = json_decode( $value, true, 512, JSON_THROW_ON_ERROR );
       if ( $metas !== null ) {
         $this->meta = Meta::normalizeMeta( $metas );
       }

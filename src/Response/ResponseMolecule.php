@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
 use function json_decode;
@@ -60,7 +61,7 @@ use function json_decode;
 class ResponseMolecule extends Response {
   protected string $dataKey = 'data.ProposeMolecule';
 
-  protected $payload;
+  protected mixed $payload;
 
   protected MoleculeStructure $clientMolecule;
 
@@ -69,6 +70,8 @@ class ResponseMolecule extends Response {
    *
    * @param MutationProposeMoleculeStructure|null $query
    * @param string $json
+   *
+   * @throws JsonException
    */
   public function __construct ( ?MutationProposeMoleculeStructure $query, string $json ) {
     parent::__construct( $query, $json );
@@ -78,13 +81,16 @@ class ResponseMolecule extends Response {
     }
   }
 
+  /**
+   * @throws JsonException
+   */
   public function init (): void {
 
     // Get a json payload
     $payload_json = array_get( $this->data(), 'payload' );
 
     // Decode payload
-    $this->payload = json_decode( $payload_json, true );
+    $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
   }
 
   /**
@@ -124,21 +130,21 @@ class ResponseMolecule extends Response {
   /**
    * @return mixed
    */
-  public function status () {
+  public function status (): mixed {
     return array_get( $this->data(), 'status', 'rejected' );
   }
 
   /**
    * @return mixed
    */
-  public function reason () {
+  public function reason (): mixed {
     return array_get( $this->data(), 'reason', 'Invalid response from server' );
   }
 
   /**
-   * @return mixed|null
+   * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
     return $this->payload;
   }
 

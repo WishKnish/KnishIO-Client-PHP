@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use JetBrains\PhpStorm\Pure;
+use JsonException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
@@ -142,20 +143,20 @@ class Molecule extends MoleculeStructure {
   /**
    * Encrypt message by source wallet
    *
-   * @param array $data
+   * @param mixed $data
    * @param array $shared_wallets
    *
-   * @return false|mixed
+   * @return array
+   * @throws ReflectionException
    */
-  public function encryptMessage ( array $data, array $shared_wallets = [] ) {
+  public function encryptMessage ( mixed $data, array $shared_wallets = [] ): array {
     // Merge all args to the common list
-    $args = [ $data, $this->sourceWallet->pubkey ];
+    $keys = [];
     foreach ( $shared_wallets as $shared_wallet ) {
-      $args[] = $shared_wallet->pubkey;
+      $keys[] = $shared_wallet->pubkey;
     }
 
-    // Call Wallet::encryptMyMessage function
-    return call_user_func_array( [ $this->sourceWallet, 'encryptMyMessage' ], $args );
+    return $this->sourceWallet->encryptMyMessage( $data, $this->sourceWallet->pubkey, ...$keys );
   }
 
   /**
@@ -192,6 +193,7 @@ class Molecule extends MoleculeStructure {
    * @param Wallet|null $wallet
    *
    * @return array
+   * @throws JsonException
    */
   protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
     $wallet = $wallet ?: $this->sourceWallet;
@@ -225,7 +227,7 @@ class Molecule extends MoleculeStructure {
    * @return array
    */
   #[Pure]
-  protected function schemaOrgMetas ( array $metas = [] ) {
+  protected function schemaOrgMetas ( array $metas = [] ): array {
     return $this->contextMetas( $metas, static::DEFAULT_META_CONTEXT );
   }
 
@@ -235,6 +237,7 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $userRemainderWallet
    *
    * @return self
+   * @throws JsonException
    */
   public function addUserRemainderAtom ( Wallet $userRemainderWallet ): Molecule {
     $this->molecularHash = null;
@@ -247,6 +250,9 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
+  /**
+   * @throws JsonException
+   */
   public function createRule ( $metaType, $metaId, $meta ): Molecule {
 
     $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
@@ -257,7 +263,7 @@ class Molecule extends MoleculeStructure {
       }
 
       if ( is_array( $aggregateMeta[ $k ] ) ) {
-        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_UNESCAPED_SLASHES );
+        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES );
       }
     }
 
@@ -272,14 +278,15 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param integer|float $amount
+   * @param float|integer $amount
    * @param string $token
    * @param array $metas
    *
    * @return self
+   * @throws JsonException
    */
 
-  public function replenishTokens ( $amount, string $token, array $metas ): Molecule {
+  public function replenishTokens ( float|int $amount, string $token, array $metas ): Molecule {
 
     $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
     $aggregateMeta[ 'action' ] = 'add';
@@ -303,13 +310,13 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param integer|float $amount
+   * @param float|integer $amount
    * @param string|null $walletBundle
    *
    * @return self
-   * @throws BalanceInsufficientException
+   * @throws BalanceInsufficientException|JsonException
    */
-  public function burnToken ( $amount, string $walletBundle = null ): Molecule {
+  public function burnToken ( float|int $amount, string $walletBundle = null ): Molecule {
 
     if ( $amount < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
@@ -336,12 +343,12 @@ class Molecule extends MoleculeStructure {
    * regenerated wallet receiving the remainder
    *
    * @param Wallet $recipientWallet
-   * @param integer|float $value
+   * @param float|integer $value
    *
    * @return self
-   * @throws BalanceInsufficientException
+   * @throws BalanceInsufficientException|JsonException
    */
-  public function initValue ( Wallet $recipientWallet, $value ): Molecule {
+  public function initValue ( Wallet $recipientWallet, float|int $value ): Molecule {
 
     if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
@@ -367,6 +374,7 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $newWallet
    *
    * @return $this
+   * @throws JsonException
    */
   public function initWalletCreation ( Wallet $newWallet ): Molecule {
     $this->molecularHash = null;
@@ -391,12 +399,13 @@ class Molecule extends MoleculeStructure {
    * @param array $cellSlugs
    *
    * @return $this
+   * @throws JsonException
    */
   public function initPeerCreation ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): Molecule {
     $this->molecularHash = null;
 
     // Metas
-    $metas = [ 'host' => $host, 'name' => $name, 'cellSlugs' => json_encode( $cellSlugs ), ];
+    $metas = [ 'host' => $host, 'name' => $name, 'cellSlugs' => json_encode( $cellSlugs, JSON_THROW_ON_ERROR ), ];
 
     // Create an 'C' atom
     $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'P', $this->sourceWallet->token, null, $this->sourceWallet->batchId, 'peer', $slug, $this->finalMetas( $metas ), null, $this->generateIndex() );
@@ -413,12 +422,13 @@ class Molecule extends MoleculeStructure {
    * Initialize a C-type molecule to issue a new type of token
    *
    * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
-   * @param integer|float $amount - how many of the token we are initially issuing (for fungible tokens only)
+   * @param float|integer $amount - how many of the token we are initially issuing (for fungible tokens only)
    * @param array $meta - additional fields to configure the token
    *
    * @return self
+   * @throws JsonException
    */
-  public function initTokenCreation ( Wallet $recipientWallet, $amount, array $meta ): Molecule {
+  public function initTokenCreation ( Wallet $recipientWallet, float|int $amount, array $meta ): Molecule {
 
     $this->molecularHash = null;
 
@@ -450,6 +460,7 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $wallet
    *
    * @return $this
+   * @throws JsonException
    */
   public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
 
@@ -499,6 +510,7 @@ class Molecule extends MoleculeStructure {
    * @param string $metaId
    *
    * @return self
+   * @throws JsonException
    */
   public function initMeta ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
@@ -520,6 +532,7 @@ class Molecule extends MoleculeStructure {
    * @param string $metaId
    *
    * @return $this
+   * @throws JsonException
    */
   public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
@@ -537,15 +550,16 @@ class Molecule extends MoleculeStructure {
 
   /**
    * @param string $token
-   * @param int|float $amount
+   * @param float|int $amount
    * @param string $metaType
    * @param string $metaId
    * @param array $meta
    * @param string|null $batchId
    *
    * @return self
+   * @throws JsonException
    */
-  public function initTokenRequest ( string $token, $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
+  public function initTokenRequest ( string $token, float|int $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
 
     $this->molecularHash = null;
 
@@ -565,6 +579,7 @@ class Molecule extends MoleculeStructure {
    * @param array $meta
    *
    * @return $this
+   * @throws JsonException
    */
   public function initAuthorization ( array $meta = [] ): Molecule {
     $this->molecularHash = null;
@@ -586,8 +601,8 @@ class Molecule extends MoleculeStructure {
    * @param bool $anonymous
    * @param bool $compressed
    *
-   * @return string
-   * @throws Exception|ReflectionException|AtomsMissingException
+   * @return string|null
+   * @throws Exception
    */
   public function sign ( bool $anonymous = false, bool $compressed = true ): ?string {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {

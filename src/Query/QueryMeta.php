@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseMeta;
 
 /**
@@ -65,15 +66,15 @@ class QueryMeta extends Query {
   protected array $fields = [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ];
 
   /**
-   * @param string|array|null $metaType
-   * @param string|array|null $metaId
-   * @param string|array|null $key
-   * @param string|array|null $value
+   * @param array|string|null $metaType
+   * @param array|string|null $metaId
+   * @param array|string|null $key
+   * @param array|string|null $value
    * @param boolean $latest
    *
    * @return array
    */
-  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, bool $latest = true ): array {
+  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = true ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -103,6 +104,7 @@ class QueryMeta extends Query {
    * @param string $response
    *
    * @return ResponseMeta
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseMeta {
     return new ResponseMeta( $this, $response );

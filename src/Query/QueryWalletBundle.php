@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
 
 /**
@@ -82,14 +83,14 @@ class QueryWalletBundle extends Query {
   /**
    * Builds a GraphQL-friendly variables object based on input fields
    *
-   * @param string|null|array $bundleHash
-   * @param string|null|array $key
-   * @param string|null|array $value
+   * @param array|string|null $bundleHash
+   * @param array|string|null $key
+   * @param array|string|null $value
    * @param bool $latest
    *
    * @return array
    */
-  public static function createVariables ( $bundleHash = null, $key = null, $value = null, bool $latest = true ): array {
+  public static function createVariables ( array|string $bundleHash = null, array|string $key = null, array|string $value = null, bool $latest = true ): array {
 
     $variables = [ 'latest' => $latest, ];
 
@@ -113,6 +114,7 @@ class QueryWalletBundle extends Query {
    * @param string $response
    *
    * @return ResponseWalletBundle
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseWalletBundle {
     return new ResponseWalletBundle( $this, $response );

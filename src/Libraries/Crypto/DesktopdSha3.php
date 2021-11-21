@@ -207,7 +207,7 @@ class DesktopdSha3 {
   public const PHASE_OUTPUT = 3;
   public const PHASE_DONE = 4;
 
-  private int $phase = self::PHASE_INIT;
+  private int $phase;
   private string $state; // byte array (string)
   private int $rateInBytes; // positive integer
   private int $suffix; // 8-bit unsigned integer

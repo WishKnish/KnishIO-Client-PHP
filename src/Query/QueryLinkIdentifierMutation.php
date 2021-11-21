@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseIdentifier;
 
 /**
@@ -70,6 +71,7 @@ class QueryLinkIdentifierMutation extends Query {
    * @param string $response
    *
    * @return ResponseIdentifier
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseIdentifier {
     return new ResponseIdentifier( $this, $response );

@@ -81,7 +81,7 @@ class Decimal {
    *
    * @return float|int
    */
-  public static function val ( $val ) {
+  public static function val ( $val ): float|int {
     if ( abs( $val * static::$multiplier ) < 1 ) {
       return 0.0;
     }

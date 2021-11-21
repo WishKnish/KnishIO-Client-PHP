@@ -61,7 +61,7 @@ class ResponseIdentifier extends Response {
    *
    * @return mixed
    */
-  public function success () {
+  public function success (): mixed {
     return array_get( $this->data(), 'set' );
   }
 
@@ -70,7 +70,7 @@ class ResponseIdentifier extends Response {
    *
    * @return mixed
    */
-  public function message () {
+  public function message (): mixed {
     return array_get( $this->data(), 'message' );
   }
 
