@@ -1,10 +1,57 @@
 <?php
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
+
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use ReflectionException;
-use WishKnish\KnishIO\Client\Libraries\Base58Static as B58;
+use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
@@ -14,144 +61,115 @@ use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
  * @property string|null $characters
  *
  */
-class Soda
-{
-    /**
-     * @var string|null
-     */
-    public $characters;
+class Soda {
+  /**
+   * @var array
+   */
+  public $characters;
 
-    /**
-     * Soda constructor.
-     * @param string|null $characters
-     * @throws ReflectionException
-     */
-    public function __construct ( $characters = null )
-    {
+  /**
+   * Soda constructor.
+   *
+   * @param string|null $characters
+   *
+   * @throws ReflectionException
+   */
+  public function __construct ( string $characters = null ) {
+    $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
 
-        $constant = Base58::class . '::' . $characters;
-
-        $this->characters = defined( $constant ) ? constant( $constant ) : Base58::GMP;
-
-        if ( ! extension_loaded( 'sodium' ) ) {
-
-            Sodium::libsodium2sodium();
-
-        }
-
+    if ( !extension_loaded( 'sodium' ) ) {
+      Sodium::libsodium2sodium();
     }
+  }
 
-    /**
-     * Encrypts the given message or data with the recipient's public key
-     *
-     * @param array|object $message
-     * @param string $key
-     * @return string
-     * @throws Exception|ReflectionException
-     */
-    public function encrypt ( $message, $key )
-    {
+  /**
+   * Encrypts the given message or data with the recipient's public key
+   *
+   * @param array|string $message
+   * @param string $key
+   *
+   * @return string
+   * @throws SodiumException
+   */
+  public function encrypt ( $message, string $key ): string {
+    return $this->encode( sodium_crypto_box_seal( json_encode( $message ), $this->decode( $key ) ) );
+  }
 
-        return $this->encode(
-            sodium_crypto_box_seal(
-                json_encode( (array) $message ),
-                $this->decode( $key )
-            )
-        );
+  /**
+   * Uses the given private key to decrypt an encrypted message
+   *
+   * @param string $encrypted
+   * @param string $privateKey
+   * @param string $publicKey
+   *
+   * @return array|string|null
+   * @throws SodiumException
+   */
+  public function decrypt ( string $encrypted, string $privateKey, string $publicKey ) {
 
-    }
+    // Get decrypted string
+    $decrypted = sodium_crypto_box_seal_open(
+        $this->decode( $encrypted ),
+        sodium_crypto_box_keypair_from_secretkey_and_publickey(
+            $this->decode( $privateKey ),
+            $this->decode( $publicKey )
+        )
+    );
 
-    /**
-     * Uses the given private key to decrypt an encrypted message
-     *
-     * @param string $decrypted
-     * @param string $privateKey
-     * @param string $publicKey
-     * @return array|null
-     */
-    public function decrypt ( $decrypted, $privateKey, $publicKey )
-    {
+    return json_decode( $decrypted, true );
+  }
 
-        return json_decode(
-            sodium_crypto_box_seal_open(
-                $this->decode( $decrypted ),
-                sodium_crypto_box_keypair_from_secretkey_and_publickey(
-                    $this->decode( $privateKey ),
-                    $this->decode( $publicKey )
-                )
-            ),
-            true
-        );
+  /**
+   * Derives a private key for encrypting data with the given key
+   *
+   * @param string $key
+   *
+   * @return string
+   * @throws SodiumException
+   * @throws Exception
+   */
+  public function generatePrivateKey ( string $key ): string {
+    return $this->encode( sodium_crypto_box_secretkey( Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES ) ) );
+  }
 
-    }
+  /**
+   * Derives a public key for encrypting data for this wallet's consumption
+   *
+   * @param string $key
+   *
+   * @return string
+   * @throws SodiumException
+   */
+  public function generatePublicKey ( string $key ): string {
+    return $this->encode( sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
+  }
 
-    /**
-     * Derives a private key for encrypting data with the given key
-     *
-     * @param string $key
-     * @return string
-     * @throws Exception|ReflectionException
-     */
-    public function generatePrivateKey ( $key )
-    {
+  /**
+   * @param string $key
+   *
+   * @return string
+   * @throws Exception
+   */
+  public function shortHash ( string $key ): string {
+    return $this->encode( Shake256::hash( $key, 8 ) );
+  }
 
-        return $this->encode(
-            sodium_crypto_box_secretkey(
-            	Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES )
-            )
-        );
+  /**
+   * @param string $data
+   *
+   * @return string
+   */
+  private function decode ( string $data ): string {
+    return ( new BaseX( $this->characters ) )->decode( $data );
+  }
 
-    }
-
-    /**
-     * Derives a public key for encrypting data for this wallet's consumption
-     *
-     * @param string $key
-     * @return string
-     */
-    public function generatePublicKey ( $key )
-    {
-
-        return $this->encode( sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
-
-    }
-
-    /**
-     * @param string $key
-     * @return string
-     * @throws Exception
-     */
-    public function shortHash ( $key )
-    {
-        return $this->encode(
-			Shake256::hash( $key, 8 )
-        );
-    }
-
-    /**
-     * @param string $data
-     * @return string
-     */
-    private function decode ( $data )
-    {
-
-        B58::$options[ 'characters' ] = $this->characters;
-
-        return B58::decode( $data );
-
-    }
-
-    /**
-     * @param string $data
-     * @return string
-     */
-    private function encode ( $data )
-    {
-
-        B58::$options[ 'characters' ] = $this->characters;
-
-        return B58::encode( $data );
-
-    }
+  /**
+   * @param string $data
+   *
+   * @return string
+   */
+  private function encode ( string $data ): string {
+    return ( new BaseX( $this->characters ) )->encode( $data );
+  }
 
 }

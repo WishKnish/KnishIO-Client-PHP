@@ -1,39 +1,79 @@
 <?php
-// Copyright 2019 WishKnish Corp. All rights reserved.
-// You may use, distribute, and modify this code under the GPLV3 license, which is provided at:
-// https://github.com/WishKnish/KnishIO-Client-JS/blob/master/LICENSE
-// This experimental code is part of the Knish.IO API Client and is provided AS IS with no warranty whatsoever.
+/*
+                               (
+                              (/(
+                              (//(
+                              (///(
+                             (/////(
+                             (//////(                          )
+                            (////////(                        (/)
+                            (////////(                       (///)
+                           (//////////(                      (////)
+                           (//////////(                     (//////)
+                          (////////////(                    (///////)
+                         (/////////////(                   (/////////)
+                        (//////////////(                  (///////////)
+                        (///////////////(                (/////////////)
+                       (////////////////(               (//////////////)
+                      (((((((((((((((((((              (((((((((((((((
+                     (((((((((((((((((((              ((((((((((((((
+                     (((((((((((((((((((            ((((((((((((((
+                    ((((((((((((((((((((           (((((((((((((
+                    ((((((((((((((((((((          ((((((((((((
+                    (((((((((((((((((((         ((((((((((((
+                    (((((((((((((((((((        ((((((((((
+                    ((((((((((((((((((/      (((((((((
+                    ((((((((((((((((((     ((((((((
+                    (((((((((((((((((    (((((((
+                   ((((((((((((((((((  (((((
+                   #################  ##
+                   ################  #
+                  ################# ##
+                 %################  ###
+                 ###############(   ####
+                ###############      ####
+               ###############       ######
+              %#############(        (#######
+             %#############           #########
+            ############(              ##########
+           ###########                  #############
+          #########                      ##############
+        %######
+
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use Exception;
 use WishKnish\KnishIO\Client\Wallet;
-use WishKnish\KnishIO\Client\WalletShadow;
 
 /**
  * Class ResponseBalance
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseBalance extends Response
-{
-	protected $dataKey = 'data.Balance';
+class ResponseBalance extends Response {
+  protected string $dataKey = 'data.Balance';
 
+  /**
+   * Get a payload
+   *
+   * @return Wallet
+   * @throws Exception
+   */
+  public function payload (): ?Wallet {
+    // Get data
+    $walletData = $this->data();
+    if ( !$walletData ) {
+      return null;
+    }
 
-	/**
-	 * Get a payload
-	 *
-	 * @return Wallet|WalletShadow|null
-	 * @throws \Exception
-	 */
-	public function payload()
-	{
-		// Get data
-		$balance = $this->data();
-		if (!$balance) {
-			return null;
-		}
-
-		// Return a client wallet object
-		return ResponseWalletList::toClientWallet($balance);
-	}
+    // Return a client wallet object
+    return ResponseWalletList::toClientWallet( $walletData );
+  }
 
 }
