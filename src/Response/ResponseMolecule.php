@@ -81,16 +81,19 @@ class ResponseMolecule extends Response {
     }
   }
 
-  /**
-   * @throws JsonException
-   */
   public function init (): void {
 
     // Get a json payload
     $payload_json = array_get( $this->data(), 'payload' );
 
     // Decode payload
-    $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
+    try {
+      $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
+    }
+    catch ( JsonException $e ) {
+      // Unable to decode JSON response?
+      /** @TODO Add proper handing of JSON errors */
+    }
   }
 
   /**
