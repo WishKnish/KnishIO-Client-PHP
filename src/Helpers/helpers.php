@@ -99,12 +99,12 @@ if ( !function_exists( 'array_has' ) ) {
   /**
    * Check if an item or items exist in an array using "dot" notation.
    *
-   * @param ArrayAccess|array $array
+   * @param ArrayAccess|array|null $array
    * @param array|string $keys
    *
    * @return bool
    */
-  function array_has ( ArrayAccess|array $array, array|string $keys ): bool {
+  function array_has ( ArrayAccess|array|null $array, array|string $keys ): bool {
     if ( !is_array( $array ) ) {
       return false;
     }
@@ -127,13 +127,13 @@ if ( !function_exists( 'array_get' ) ) {
   /**
    * Get an item from an array using "dot" notation.
    *
-   * @param ArrayAccess|array $array
+   * @param ArrayAccess|array|null $array
    * @param string $keys
    * @param mixed|null $default
    *
    * @return mixed
    */
-  function array_get ( ArrayAccess|array $array, string $keys, mixed $default = null ): mixed {
+  function array_get ( ArrayAccess|array|null $array, string $keys, mixed $default = null ): mixed {
     $expKeys = explode( '.', $keys );
     foreach ( $expKeys as $key ) {
       if ( !array_has( $array, $key ) ) {
