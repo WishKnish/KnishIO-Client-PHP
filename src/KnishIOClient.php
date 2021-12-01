@@ -62,10 +62,12 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
+use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Query\Query;
+use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -499,6 +501,70 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute();
+  }
+
+
+  /**
+   * Queries the ledger to retrieve a list of active sessions for the given MetaType
+   *
+   * @param {string} bundleHash
+   * @param {string} metaType
+   * @param {string} metaId
+   * @return {Promise<*>}
+   */
+  public function queryActiveSession ( string $bundleHash, string $metaType, string $metaId ): Response {
+
+    $query = $this->createQuery( QueryActiveSession::class );
+
+    // Execute the query
+    return $query->execute( [
+        'bundleHash' => $bundleHash,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+    ] );
+  }
+
+
+  /**
+   * Builds and executes a molecule to declare an active session for the given MetaType
+   *
+   * @param {string} bundle
+   * @param {string} metaType
+   * @param {string} metaId
+   * @param {string} ipAddress
+   * @param {string} browser
+   * @param {string} osCpu
+   * @param {string} resolution
+   * @param {string} timeZone
+   * @param {object|array} json
+   * @return {Promise<void>}
+   */
+  public function activeSession (
+    string $bundle,
+    string $metaType,
+    string $metaId,
+    string $ipAddress,
+    string $browser,
+    string $osCpu,
+    string $resolution,
+    string $timeZone,
+    array $json = []
+  ) {
+
+    $query = $this->createQuery( MutationActiveSession::class );
+
+    // Execute the query
+    return $query->execute( [
+        'bundleHash' => $bundle,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+        'ipAddress' => $ipAddress,
+        'browser' => $browser,
+        'osCpu' => $osCpu,
+        'resolution' => $resolution,
+        'timeZone' => $timeZone,
+        'json' => json_encode( $json )
+    ] );
   }
 
   /**
