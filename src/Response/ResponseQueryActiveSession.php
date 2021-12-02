@@ -47,40 +47,32 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
-
-use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
+namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class QueryActiveSession
- * @package WishKnish\KnishIO\Client\Query
+ * Class ResponseQueryActiveSession
+ * @package WishKnish\KnishIO\Client\Response
  */
-class QueryActiveSession extends Query {
+class ResponseQueryActiveSession extends Response {
 
-  // Query
-  protected static string $default_query = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUserQuery( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
-	 	@fields
-	 }';
-
-  // Fields
-  protected array $fields = [
-    'bundleHash',
-    'metaType',
-    'metaId',
-    'jsonData',
-    'createdAt',
-    'updatedAt',
-  ];
-
+  protected string $dataKey = 'data.ActiveUserQuery';
 
   /**
-   * @param $response
-   *
-   * @return Response
+   * @return array
    */
-  public function createResponse ( string $response ): Response {
-   return new ResponseQueryActiveSession( $this, $response );
+  public function payload (): array {
+    $list = $this->data();
+
+    // Prepare active user list
+    $activeUsers = [];
+    foreach( $list as $item ) {
+      if ( $jsonData = array_get( $item, 'jsonData' ) ) {
+        $item[ 'jsonData' ] = json_decode( $jsonData, true );
+      }
+      $activeUsers[] = $item;
+    }
+
+    return $activeUsers;
   }
 
 }
