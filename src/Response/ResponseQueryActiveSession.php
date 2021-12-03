@@ -55,7 +55,7 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseQueryActiveSession extends Response {
 
-  protected string $dataKey = 'data.ActiveUserQuery';
+  protected string $dataKey = 'data.ActiveUser';
 
   /**
    * @return array

@@ -123,18 +123,9 @@ class QueryUserActivity extends Query {
     $this->client = $client;
     $this->query = $query ?? static::$default_query;
 
-    $cascadeCount = 8;
-    $fnCreateInstanceCascade = static function ( int $cascade = 1 ) {
-      $instanceArray = $this->instanceCountFields;
-
-      if ( $cascade < $this->instanceCascadeCount ) {
-        $instanceArray[ 'instances' ] = $fnCreateInstanceCascade( $cascade + 1 );
-      }
-
-      return $instanceArray;
-    };
+    // Generate instance cascade fields
     $this->fields[ 'instanceCount' ] = $this->instanceCountFields;
-    $this->fields[ 'instances' ] = $this->getInstanceCascade();
+    $this->fields[ 'instanceCount' ][ 'instances' ] = $this->getInstanceCascade();
   }
 
   /**
@@ -145,14 +136,11 @@ class QueryUserActivity extends Query {
    */
   protected function getInstanceCascade( int $cascade = 1, int $cascadeCount = self::INSTANCE_CASCADE_COUNT ): array {
     $fields = $this->instanceCountFields;
-
     if ( $cascade < $cascadeCount ) {
       $fields[ 'instances' ] = $this->getInstanceCascade( $cascade + 1, $cascadeCount );
     }
-
     return $fields;
   }
-
 
   /**
    * @param $response
@@ -160,7 +148,7 @@ class QueryUserActivity extends Query {
    * @return Response
    */
   public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.ActiveUserQuery' );
+    return new Response( $this, $response, 'data.UserActivity' );
   }
 
 }
