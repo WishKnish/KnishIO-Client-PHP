@@ -479,10 +479,9 @@ class KnishIOClient {
    */
   public function queryBatch ( string $batchId ): Response {
 
-    $query = $this->createQuery( QueryBatch::class );
-
     // Execute the query
-    return $query->execute( [ 'batchId' => $batchId ] );
+    return $this->createQuery( QueryBatch::class )
+      ->execute( [ 'batchId' => $batchId ] );
   }
 
   /**

@@ -185,10 +185,8 @@ class CheckMolecule {
         }
 
         foreach ( $callbacks as $callback ) {
-          foreach ( [ 'action', ] as $key ) {
-            if ( !array_key_exists( $key, $callback ) ) {
-              throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
-            }
+          if ( !array_key_exists( 'action', $callback ) ) {
+            throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
           }
         }
       }
@@ -261,11 +259,8 @@ class CheckMolecule {
         }
       }
 
-      foreach ( [ 'token', ] as $key ) {
-
-        if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
-          throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-        }
+      if ( !array_key_exists( 'token', $meta ) || empty( $meta[ $key ] ) ) {
+        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
 
       if ( $atom->token !== 'USER' ) {

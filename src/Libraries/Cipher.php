@@ -64,7 +64,6 @@ use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidRequestException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Wallet;
-use function GuzzleHttp\json_encode;
 
 class Cipher {
 
@@ -163,7 +162,7 @@ class Cipher {
             ];
 
             // Prepare content for sending
-            $content = Utils::streamFor( json_encode( $content ) );
+            $content = Utils::streamFor( json_encode( $content, JSON_THROW_ON_ERROR ) );
 
             // Send a request
             return $handler( $request->withBody( $content ), $options )
@@ -215,7 +214,7 @@ class Cipher {
           throw new InvalidResponseException( 'Incorrect response format.' );
         }
 
-        return $response->withBody( Utils::streamFor( json_encode( $original ) ) );
+        return $response->withBody( Utils::streamFor( json_encode( $original, JSON_THROW_ON_ERROR ) ) );
       }
 
       return $response;

@@ -53,6 +53,7 @@ use Exception;
 use ReflectionException;
 use ReflectionExtension;
 use ReflectionFunction;
+use RuntimeException;
 
 /**
  * Class Sodium
@@ -98,7 +99,7 @@ class Sodium {
 
     }
     else {
-      throw new Exception( 'Sodium extension is required.' );
+      throw new RuntimeException( 'Sodium extension is required.' );
     }
 
   }

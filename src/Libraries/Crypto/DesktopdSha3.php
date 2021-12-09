@@ -53,6 +53,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 vim: ts=4 noet ai */
 
 use Exception;
+use RuntimeException;
 
 /**
  * Streamable SHA-3 for PHP 5.2+, with no lib/ext dependencies!
@@ -119,7 +120,7 @@ class DesktopdSha3 {
         return new self ( 1088, 512, 0x1f );
     }
 
-    throw new Exception ( 'Invalid operation type' );
+    throw new RuntimeException ( 'Invalid operation type' );
   }
 
   /**
@@ -132,7 +133,7 @@ class DesktopdSha3 {
    */
   public function absorb ( $data ): DesktopdSha3 {
     if ( self::PHASE_INPUT !== $this->phase ) {
-      throw new Exception ( 'No more input accepted' );
+      throw new RuntimeException ( 'No more input accepted' );
     }
 
     $rateInBytes = $this->rateInBytes;
@@ -170,7 +171,7 @@ class DesktopdSha3 {
   public function squeeze ( int $length = null ): string {
     $outputLength = $this->outputLength; // fixed length output
     if ( $length && 0 < $outputLength && $outputLength !== $length ) {
-      throw new Exception ( 'Invalid length' );
+      throw new RuntimeException ( 'Invalid length' );
     }
 
     if ( self::PHASE_INPUT === $this->phase ) {
@@ -178,7 +179,7 @@ class DesktopdSha3 {
     }
 
     if ( self::PHASE_OUTPUT !== $this->phase ) {
-      throw new Exception ( 'No more output allowed' );
+      throw new RuntimeException ( 'No more output allowed' );
     }
     if ( 0 < $outputLength ) {
       $this->phase = self::PHASE_DONE;

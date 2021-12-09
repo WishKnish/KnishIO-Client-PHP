@@ -53,6 +53,7 @@ use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use RuntimeException;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -157,7 +158,7 @@ class TokenClientTransactionTest extends TestCase {
 
     $env_secret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$env_secret ) {
-      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new RuntimeException( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Secret array
@@ -543,7 +544,7 @@ class TokenClientTransactionTest extends TestCase {
   protected function claimShadowWallet ( string $token, string $recipient, array $intruders ): void {
     // Check
     if ( !is_dir( getenv( 'SERVER_LOG_PATH' ) ) ) {
-      throw new Exception( "
+      throw new RuntimeException( "
 				SERVER_LOG_PATH is required in .env file.\r\n
 				The path must be to the SERVER storage log and SERVER must have this env: MAIL_DRIVER=log
 			" );
@@ -642,12 +643,12 @@ class TokenClientTransactionTest extends TestCase {
     $log_file = key( $log_files );
 
     if ( !file_exists( $log_file ) ) {
-      throw new Exception( 'Log file does not exist.' );
+      throw new RuntimeException( 'Log file does not exist.' );
     }
     $logs = file_get_contents( $log_file );
     if ( !preg_match( '#<p>Your verification code: <b>([A-Za-z0-9]+)</b></p>#Ui', $logs, $matches ) ) {
 
-      throw new Exception( 'Identifier code does not exist.' );
+      throw new RuntimeException( 'Identifier code does not exist.' );
     }
 
     // Remove log file

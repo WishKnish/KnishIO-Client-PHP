@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use RuntimeException;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
@@ -183,7 +184,7 @@ class TokenUnitTransactionTest extends TestCase {
     // Get a env secret
     $envSecret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$envSecret ) {
-      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new RuntimeException( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Create a env stackable units token

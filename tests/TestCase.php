@@ -56,6 +56,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use PHPUnit\TextUI\Command;
 use PHPUnit_Framework_TestCase;
+use RuntimeException;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -156,7 +157,7 @@ abstract class TestCase extends TestCaseBase {
 
     // Check app url
     if ( !$app_url ) {
-      throw new Exception( 'APP_URL is empty.' );
+      throw new RuntimeException( 'APP_URL is empty.' );
     }
 
     // GraphQL url

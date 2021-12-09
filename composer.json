@@ -45,7 +45,7 @@
 		"symfony/property-access": "^3.4|^4.0",
 		"symfony/polyfill-mbstring": "^1.11",
 		"symfony/polyfill-php70": "^1.11",
-		"guzzlehttp/guzzle": "^6.5",
+    "guzzlehttp/guzzle": "^7.0.1",
 		"tuupola/base58": "^2.1",
 		"webonyx/graphql-php": "^14.5",
     "ext-sodium": "*"

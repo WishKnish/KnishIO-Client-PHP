@@ -87,7 +87,7 @@ class QueryCascadeBatchTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   #[NoReturn]

@@ -56,7 +56,6 @@ use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Response\Response;
-use function GuzzleHttp\json_encode;
 
 /**
  * Class Query
@@ -131,6 +130,7 @@ abstract class Query {
    * @param array $headers
    *
    * @return Request
+   * @throws JsonException
    */
   public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ): Request {
 
@@ -138,7 +138,7 @@ abstract class Query {
     $this->variables = $this->compiledVariables( $variables );
 
     // Create a request
-    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] ) );
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ], JSON_THROW_ON_ERROR ) );
 
   }
 
@@ -182,7 +182,7 @@ abstract class Query {
       $variables = json_decode( trim( $variables ), true, 512, JSON_THROW_ON_ERROR );
     }
     $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables ) );
+    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables, JSON_THROW_ON_ERROR ) );
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
