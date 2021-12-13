@@ -246,6 +246,9 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
+  /**
+   * @throws \JsonException
+   */
   public function createRule ( $metaType, $metaId, $meta ): Molecule {
 
     $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
@@ -256,7 +259,7 @@ class Molecule extends MoleculeStructure {
       }
 
       if ( is_array( $aggregateMeta[ $k ] ) ) {
-        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_UNESCAPED_SLASHES );
+        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES );
       }
     }
 
@@ -267,7 +270,6 @@ class Molecule extends MoleculeStructure {
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
     return $this;
-
   }
 
   /**

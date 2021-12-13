@@ -148,6 +148,7 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
+   * @throws \JsonException
    */
   public static function isotopeR ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
@@ -163,33 +164,44 @@ class CheckMolecule {
         }
       }
 
-      $conditions = json_decode( $metas[ 'conditions' ], true );
+      $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
 
       if ( $conditions === null ) {
         throw new MetaMissingException( 'Invalid format for conditions.' );
       }
 
-      foreach ( $conditions as $condition ) {
-        $keys = array_keys( $condition );
+      if ( is_array( $conditions ) ) {
+        foreach ( $conditions as $condition ) {
+          $keys = array_keys( $condition );
 
-        if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-          throw new MetaMissingException( 'Missing field in conditions.' );
+          if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+            throw new MetaMissingException( 'Missing field in conditions.' );
+          }
         }
       }
 
       if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-        $callbacks = json_decode( $metas[ 'callback' ], true );
+        $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
         if ( $callbacks === null ) {
           throw new MetaMissingException( 'Invalid format for callback.' );
         }
 
-        foreach ( $callbacks as $callback ) {
-          foreach ( [ 'action', ] as $key ) {
-            if ( !array_key_exists( $key, $callback ) ) {
-              throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+        if ( $conditions !== 'policy' ) {
+          foreach ( $callbacks as $callback ) {
+            foreach ( [ 'action', ] as $key ) {
+              if ( !array_key_exists( $key, $callback ) ) {
+                throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+              }
             }
           }
+        }
+
+
+        $collect = collect( $callbacks );
+
+        if ( !$collect->contains( fn ( $value, $key ) => in_array( $key, [ 'read', 'write' ] ) ) ) {
+          throw new MetaMissingException( 'Mixing rules with politics!' );
         }
       }
     }
