@@ -57,7 +57,16 @@ class MutationRequestAuthorizationGuest extends Mutation {
   protected static string $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
 
   // Fields
-  protected array $fields = [ 'token', 'time', 'key', 'encrypt' ];
+  protected array $fields = [
+      'token',
+      'expiresAt',
+      'pubkey',
+
+      // Deprecated fields
+      'time',
+      'key',
+      'encrypt',
+  ];
 
 
   /**

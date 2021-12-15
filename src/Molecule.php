@@ -68,7 +68,7 @@ use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
  * @property string|null $bundle
  * @property string|null $status
  * @property string $createdAt
- * @property-read array $atoms
+ * @property array $atoms
  */
 class Molecule extends MoleculeStructure {
   // @todo move this consts to the config
