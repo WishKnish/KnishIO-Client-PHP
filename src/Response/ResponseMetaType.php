@@ -66,7 +66,22 @@ class ResponseMetaType extends Response {
       return null;
     }
 
-    return $data[ 0 ][ 'instances' ];
+    $result = [
+      'instances' => [],
+      'instanceCount' => [],
+      'paginatorInfo' => [],
+    ];
+
+    $metaData = $data[ 0 ];
+
+    // Duplicate logic from js (@todo $result = $data[ 0 ]?)
+    foreach( $result as $key => $value ) {
+      if ( $responseValue = array_get( $metaData, $key ) ) {
+        $result[ $key ] = $responseValue;
+      }
+    }
+
+    return $result;
   }
 
 }

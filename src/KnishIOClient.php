@@ -457,7 +457,7 @@ class KnishIOClient {
    * @return Response|null
    * @throws GuzzleException
    */
-  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): ?Response {
+  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): ?array {
 
     // Create a query
     /** @var QueryMetaType $query */
@@ -467,7 +467,6 @@ class KnishIOClient {
     // Execute the query
     return $query->execute( $variables, $fields )
         ->payload();
-
   }
 
   /**
@@ -497,7 +496,7 @@ class KnishIOClient {
     /**
      * @var MutationCreateWallet $query
      */
-    $query = $this->createQuery( MutationCreateWallet::class );
+    $query = $this->createMoleculeMutation( MutationCreateWallet::class );
     $query->fillMolecule( $newWallet );
 
     // Execute the query
@@ -1059,12 +1058,12 @@ class KnishIOClient {
   }
 
   /**
-   * @param $bundleHash
+   * @param string $bundleHash
    *
    * @return ResponseContinuId
    * @throws GuzzleException
    */
-  public function queryContinuId ( $bundleHash ): ResponseContinuId {
+  public function queryContinuId ( string $bundleHash ): ResponseContinuId {
     /**
      * Create & execute the query
      *
@@ -1076,19 +1075,21 @@ class KnishIOClient {
   }
 
   /**
-   * @param $cellSlug
-   * @param $encrypt
+   * @param string $cellSlug
+   * @param bool $encrypt
    *
-   * @return ResponseRequestAuthorizationGuest
+   * @return Response
    * @throws GuzzleException
    */
-  public function requestGuestAuthToken( $cellSlug, $encrypt ): Response {
+  public function requestGuestAuthToken( string $cellSlug, bool $encrypt ): Response {
+    $this->setCellSlug( $cellSlug );
+
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
     $response = $query->execute( [
-        'cellSlug' => $this->cellSlug,
+        'cellSlug' => $cellSlug,
         'pubkey' => $wallet->pubkey,
         'encrypt' => $encrypt,
     ] );
@@ -1143,15 +1144,15 @@ class KnishIOClient {
   }
 
   /**
-   * Request an auth token
-   *
-   * @param $secret
-   * @param null $cellSlug
-   * @param false $encrypt
+   * @param string $secret
+   * @param string|null $cellSlug
+   * @param bool $encrypt
    *
    * @return Response
+   * @throws GuzzleException
+   * @throws ReflectionException
    */
-  public function requestAuthToken( $secret, $cellSlug = null, $encrypt = false ): Response {
+  public function requestAuthToken( string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
 
     // Response for request guest/profile auth token
     $response = null;
