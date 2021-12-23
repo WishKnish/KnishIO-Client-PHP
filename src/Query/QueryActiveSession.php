@@ -47,41 +47,40 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Query;
+
+use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
 
 /**
- * Class ResponseMetaType
- * @package WishKnish\KnishIO\Client\Response
+ * Class QueryActiveSession
+ * @package WishKnish\KnishIO\Client\Query
  */
-class ResponseMetaType extends Response {
-  protected string $dataKey = 'data.MetaType';
+class QueryActiveSession extends Query {
+
+  // Query
+  protected static string $default_query = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
+	 	@fields
+	 }';
+
+  // Fields
+  protected array $fields = [
+    'bundleHash',
+    'metaType',
+    'metaId',
+    'jsonData',
+    'createdAt',
+    'updatedAt',
+  ];
+
 
   /**
-   * @return mixed|null
+   * @param $response
+   *
+   * @return Response
    */
-  public function payload () {
-    $data = $this->data();
-
-    if ( !$data ) {
-      return null;
-    }
-
-    $result = [
-      'instances' => [],
-      'instanceCount' => [],
-      'paginatorInfo' => [],
-    ];
-
-    $metaData = $data[ 0 ];
-
-    // Duplicate logic from js (@todo $result = $data[ 0 ]?)
-    foreach( $result as $key => $value ) {
-      if ( $responseValue = array_get( $metaData, $key ) ) {
-        $result[ $key ] = $responseValue;
-      }
-    }
-
-    return $result;
+  public function createResponse ( string $response ): Response {
+   return new ResponseQueryActiveSession( $this, $response );
   }
 
 }

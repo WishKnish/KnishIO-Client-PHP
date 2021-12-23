@@ -66,12 +66,12 @@ class MutationCreatePeer extends MutationProposeMolecule {
    * @return MutationCreatePeer
    * @throws ReflectionException
    */
-  public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
+  public function fillMolecule ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
     // Set name as slug if it does not defined
     $name = $name ?: $slug;
 
     // Fill the molecule
-    $this->molecule->initPeerCreation( $slug, $host, $name, $cellSlugs );
+    $this->molecule->initPeerCreation( $slug, $host, $peerId, $name, $cellSlugs );
     $this->molecule->sign();
     $this->molecule->check();
 

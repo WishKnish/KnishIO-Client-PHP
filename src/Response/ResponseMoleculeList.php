@@ -69,10 +69,9 @@ class ResponseMoleculeList extends Response {
   }
 
   /**
-   * @return array|null
-   * @throws Exception
+   * @return array
    */
-  public function payload (): ?array {
+  public function payload (): array {
     // Get data
     $list = $this->data();
 
