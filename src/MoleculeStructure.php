@@ -242,13 +242,16 @@ class MoleculeStructure {
   }
 
   /**
-   * @param string $string
+   * @param string $json
+   * @param string|null $secret
    *
    * @return object
+   * @throws Exception
    */
-  public static function jsonToObject ( $string ): object {
+  public static function jsonToObject ( string $json, string $secret = null ): object {
+    $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => null, ], ], ] );
+    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
 
     foreach ( $object->atoms as $idx => $atom ) {
       $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
