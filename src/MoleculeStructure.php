@@ -77,6 +77,14 @@ class MoleculeStructure {
   public array $atoms = [];
 
   /**
+   * @return string
+   */
+  public function getLogString(): string {
+    return $this->molecularHash .
+        ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+  }
+
+  /**
    * @param string|null $counterparty
    *
    * @return $this
