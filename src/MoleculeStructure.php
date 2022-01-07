@@ -76,10 +76,11 @@ class MoleculeStructure {
   public string $createdAt;
   public array $atoms = [];
 
+
   /**
    * @return string
    */
-  public function getLogString(): string {
+  public function logString(): string {
     return $this->molecularHash .
         ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
   }
