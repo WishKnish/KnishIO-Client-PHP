@@ -55,6 +55,9 @@ use GuzzleHttp\Psr7\Request;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
+use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
 use function GuzzleHttp\json_encode;
 
@@ -92,6 +95,11 @@ abstract class Query {
    * @var array
    */
   protected array $fields;
+
+  /**
+   * @var bool
+   */
+  protected bool $isMutation = false;
 
   /**
    * Query constructor.
@@ -160,7 +168,22 @@ abstract class Query {
   }
 
   /**
+   * @param string $json
+   * !!! DEBUG FUCNTION
+   *
+   * @return string
+   * @throws GuzzleException
+   */
+  public static function getProposeMoleculeUri ( string $json ): string {
+    $client = new KnishIOClient( url() . '/graphql' );
+    $molecule = Molecule::jsonToObject( $json );
+    $query = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->getQueryUri( 'ProposeMolecule' );
+  }
+
+  /**
    * Debug info => get an uri to execute GraphQL directly from it
+   * !!! DEBUG FUCNTION
    *
    * @param string $name
    * @param array|string|null $variables
@@ -182,7 +205,11 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->uri() . str_replace( [ '@name', '@vars', '@fields', ], [ $name, $variables, $fields, ], '?query={@name(@vars)@fields}' );
+    return $this->uri() . str_replace(
+        [ '@name', '@mutation', '@vars', '@fields', ],
+        [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ],
+        '?query=@mutation{@name(@vars)@fields}'
+    );
   }
 
   /**

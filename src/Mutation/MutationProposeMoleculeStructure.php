@@ -71,6 +71,11 @@ class MutationProposeMoleculeStructure extends Query {
   protected MoleculeStructure $moleculeStructure;
 
   /**
+   * @var bool
+   */
+  protected bool $isMutation = true;
+
+  /**
    * MutationProposeMoleculeStructure constructor.
    *
    * @param HttpClientInterface $client

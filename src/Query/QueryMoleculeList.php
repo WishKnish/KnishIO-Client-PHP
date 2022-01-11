@@ -59,12 +59,12 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  */
 class QueryMoleculeList extends Query {
   // Query
-  protected static string $default_query = 'query( $status: String, $lastMolecularHashes: [ String! ], $cellSlug: String, $local: Boolean, $limit: Int, $order: String ) { Molecule( status: $status, lastMolecularHashes: $lastMolecularHashes, cellSlug: $cellSlug, local: $local, limit: $limit, order: $order )
+  protected static string $default_query = 'query( $status: String, $molecularHash: String, $lastMolecularHashes: [ String! ], $firstMolecularHashes: [ String! ], $cellSlug: String, $local: Boolean, $algorithm: String, $limit: Int, $order: String ) { Molecule( status: $status, molecularHash: $molecularHash, lastMolecularHashes: $lastMolecularHashes, firstMolecularHashes: $firstMolecularHashes, cellSlug: $cellSlug, local: $local, algorithm: $algorithm, limit: $limit, order: $order )
 	 	@fields
 	}';
 
   // Fields
-  protected array $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
+  protected array $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'processedAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
 
   /**
    * @param string $response
