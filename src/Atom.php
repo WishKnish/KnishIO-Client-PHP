@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -134,19 +135,22 @@ class Atom {
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
 
+    $atomListDebug = [];
     foreach ( $atomList as $atom ) {
 
-      $atom_data = get_object_vars( $atom );
+      $atomData = get_object_vars( $atom );
 
       $molecularSponge->absorb( $numberOfAtoms );
 
-      foreach ( $atom_data as $name => $value ) {
+      $atomDebug = [  'meta' => [] ];
+      foreach ( $atomData as $name => $value ) {
 
-        // Old atoms support (without batch_id field)
-        if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
+        // All nullable values does not hashing (only custom keys)
+        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
           continue;
         }
 
+        // Excluded keys
         if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
           continue;
         }
@@ -160,24 +164,25 @@ class Atom {
 
               $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
               $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
+              $atomDebug[ 'meta' ][ ( string ) $meta[ 'key' ] ] = ( string ) $meta[ 'value' ];
             }
           }
-          $atom->$name = $list;
 
           continue;
         }
 
-        if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
-          $molecularSponge->absorb( ( string ) $value );
-          continue;
-        }
+        // Absorb value as string
+        $molecularSponge->absorb( ( string ) $value );
 
-        if ( $value !== null ) {
-          $molecularSponge->absorb( ( string ) $value );
-        }
+        $atomDebug[ $name ] = ( string ) $value;
 
       }
+      $atomListDebug[] = $atomDebug;
     }
+
+    // Log::info( '$atomListDebug', $atomListDebug );
+
 
     switch ( $output ) {
       case 'hex':
