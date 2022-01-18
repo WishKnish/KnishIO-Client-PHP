@@ -388,19 +388,37 @@ class Molecule extends MoleculeStructure {
   /**
    * @param string $slug
    * @param string $host
+   * @param string|null $peerId
    * @param string|null $name
    * @param array $cellSlugs
    *
    * @return $this
    */
-  public function initPeerCreation ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): Molecule {
+  public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
     $this->molecularHash = null;
 
     // Metas
-    $metas = [ 'host' => $host, 'name' => $name, 'cellSlugs' => json_encode( $cellSlugs ), ];
+    $metas = [
+      'host' => $host,
+      'name' => $name,
+      'cellSlugs' => json_encode( $cellSlugs ),
+      'peerId' => $peerId,
+    ];
 
     // Create an 'C' atom
-    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'P', $this->sourceWallet->token, null, $this->sourceWallet->batchId, 'peer', $slug, $this->finalMetas( $metas ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom(
+        $this->sourceWallet->position,
+        $this->sourceWallet->address,
+        'P',
+        $this->sourceWallet->token,
+        null,
+        $this->sourceWallet->batchId,
+        'peer',
+        $slug,
+        $this->finalMetas( $metas ),
+        null,
+        $this->generateIndex()
+    );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );

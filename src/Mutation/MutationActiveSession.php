@@ -47,41 +47,55 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Mutation;
 
-/**
- * Class ResponseMetaType
- * @package WishKnish\KnishIO\Client\Response
- */
-class ResponseMetaType extends Response {
-  protected string $dataKey = 'data.MetaType';
+use WishKnish\KnishIO\Client\Response\Response;
+
+
+class MutationActiveSession extends Mutation {
+
+  // Query
+  protected static string $default_query = 'mutation( $bundleHash: String!,
+      $metaType: String!,
+      $metaId: String!,
+      $ipAddress: String,
+      $browser: String,
+      $osCpu: String,
+      $resolution: String,
+      $timeZone: String,
+      $json: String ) {
+        ActiveSession(
+          bundleHash: $bundleHash,
+          metaType: $metaType,
+          metaId: $metaId,
+          ipAddress: $ipAddress,
+          browser: $browser,
+          osCpu: $osCpu,
+          resolution: $resolution,
+          timeZone: $timeZone,
+          json: $json
+        )
+          @fields
+      }';
+
+  // Fields
+  protected array $fields = [
+      'bundleHash',
+      'metaType',
+      'metaId',
+      'jsonData',
+      'createdAt',
+      'updatedAt',
+  ];
+
 
   /**
-   * @return mixed|null
+   * @param $response
+   *
+   * @return Response
    */
-  public function payload () {
-    $data = $this->data();
-
-    if ( !$data ) {
-      return null;
-    }
-
-    $result = [
-      'instances' => [],
-      'instanceCount' => [],
-      'paginatorInfo' => [],
-    ];
-
-    $metaData = $data[ 0 ];
-
-    // Duplicate logic from js (@todo $result = $data[ 0 ]?)
-    foreach( $result as $key => $value ) {
-      if ( $responseValue = array_get( $metaData, $key ) ) {
-        $result[ $key ] = $responseValue;
-      }
-    }
-
-    return $result;
+  public function createResponse ( string $response ): Response {
+    return new Response( $this, $response, 'data.ActiveSession' );
   }
-
 }
+

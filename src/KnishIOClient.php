@@ -62,10 +62,12 @@ use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
+use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Query\Query;
+use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -78,6 +80,7 @@ use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryToken;
+use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -454,7 +457,7 @@ class KnishIOClient {
    * @return Response|null
    * @throws GuzzleException
    */
-  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): ?Response {
+  public function queryMeta ( $metaType, $metaId = null, $key = null, $value = null, $latest = null, $fields = null ): ?array {
 
     // Create a query
     /** @var QueryMetaType $query */
@@ -464,7 +467,6 @@ class KnishIOClient {
     // Execute the query
     return $query->execute( $variables, $fields )
         ->payload();
-
   }
 
   /**
@@ -494,11 +496,118 @@ class KnishIOClient {
     /**
      * @var MutationCreateWallet $query
      */
-    $query = $this->createQuery( MutationCreateWallet::class );
+    $query = $this->createMoleculeMutation( MutationCreateWallet::class );
     $query->fillMolecule( $newWallet );
 
     // Execute the query
     return $query->execute();
+  }
+
+
+  /**
+   * Queries the ledger to retrieve a list of active sessions for the given MetaType
+   *
+   * @param {string} bundleHash
+   * @param {string} metaType
+   * @param {string} metaId
+   * @return {Promise<*>}
+   */
+  public function queryActiveSession ( string $bundleHash, string $metaType, string $metaId ): Response {
+
+    $query = $this->createQuery( QueryActiveSession::class );
+
+    // Execute the query
+    return $query->execute( [
+        'bundleHash' => $bundleHash,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+    ] );
+  }
+
+
+  /**
+   * Builds and executes a molecule to declare an active session for the given MetaType
+   *
+   * @param {string} bundle
+   * @param {string} metaType
+   * @param {string} metaId
+   * @param {string} ipAddress
+   * @param {string} browser
+   * @param {string} osCpu
+   * @param {string} resolution
+   * @param {string} timeZone
+   * @param {object|array} json
+   * @return {Promise<void>}
+   */
+  public function activeSession (
+    string $bundle,
+    string $metaType,
+    string $metaId,
+    string $ipAddress,
+    string $browser,
+    string $osCpu,
+    string $resolution,
+    string $timeZone,
+    array $json = []
+  ) {
+
+    $query = $this->createQuery( MutationActiveSession::class );
+
+    // Execute the query
+    return $query->execute( [
+        'bundleHash' => $bundle,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+        'ipAddress' => $ipAddress,
+        'browser' => $browser,
+        'osCpu' => $osCpu,
+        'resolution' => $resolution,
+        'timeZone' => $timeZone,
+        'json' => json_encode( $json )
+    ] );
+  }
+
+
+  /**
+   *
+   * @param {string} bundleHash
+   * @param {string} metaType
+   * @param {string} metaId
+   * @param {string} ipAddress
+   * @param {string} browser
+   * @param {string} osCpu
+   * @param {string} resolution
+   * @param {string} timeZone
+   * @param {Array} countBy
+   * @param {string} interval
+   * @return {Promise<*>}
+   */
+  public function queryUserActivity (
+    string $bundleHash,
+    string $metaType,
+    string $metaId,
+    string $ipAddress,
+    string $browser,
+    string $osCpu,
+    string $resolution,
+    string $timeZone,
+    array $countBy,
+    string $interval
+  ) {
+    $query = $this->createQuery( QueryUserActivity::class );
+
+    return $query->execute( [
+        'bundleHash' => $bundleHash,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+        'ipAddress' => $ipAddress,
+        'browser' => $browser,
+        'osCpu' => $osCpu,
+        'resolution' => $resolution,
+        'timeZone' => $timeZone,
+        'countBy' => $countBy,
+        'interval' => $interval,
+    ] );
   }
 
   /**
@@ -555,12 +664,13 @@ class KnishIOClient {
   /**
    * @param string $metaType
    * @param string $metaId
-   * @param array|null $metadata
+   * @param array $metadata
    *
    * @return Response
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws ReflectionException
    */
-  public function createMeta ( string $metaType, string $metaId, array $metadata = null ): Response {
+  public function createMeta ( string $metaType, string $metaId, array $metadata = [] ): Response {
 
     // Create a custom molecule
     $molecule = $this->createMolecule( $this->getSecret(), $this->getSourceWallet() );
@@ -948,12 +1058,12 @@ class KnishIOClient {
   }
 
   /**
-   * @param $bundleHash
+   * @param string $bundleHash
    *
    * @return ResponseContinuId
    * @throws GuzzleException
    */
-  public function queryContinuId ( $bundleHash ): ResponseContinuId {
+  public function queryContinuId ( string $bundleHash ): ResponseContinuId {
     /**
      * Create & execute the query
      *
@@ -965,13 +1075,13 @@ class KnishIOClient {
   }
 
   /**
-   * @param $cellSlug
-   * @param $encrypt
+   * @param string $cellSlug
+   * @param bool $encrypt
    *
-   * @return ResponseRequestAuthorizationGuest
+   * @return Response
    * @throws GuzzleException
    */
-  public function requestGuestAuthToken( $cellSlug, $encrypt ): Response {
+  public function requestGuestAuthToken( string $cellSlug, bool $encrypt ): Response {
     $this->setCellSlug( $cellSlug );
 
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
@@ -979,7 +1089,7 @@ class KnishIOClient {
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
     $response = $query->execute( [
-        'cellSlug' => $this->cellSlug,
+        'cellSlug' => $cellSlug,
         'pubkey' => $wallet->pubkey,
         'encrypt' => $encrypt,
     ] );
@@ -1034,18 +1144,21 @@ class KnishIOClient {
   }
 
   /**
-   * Request an auth token
-   *
-   * @param $secret
-   * @param null $cellSlug
-   * @param false $encrypt
+   * @param string $secret
+   * @param string|null $cellSlug
+   * @param bool $encrypt
    *
    * @return Response
+   * @throws GuzzleException
+   * @throws ReflectionException
    */
-  public function requestAuthToken( $secret, $cellSlug = null, $encrypt = false ): Response {
+  public function requestAuthToken( string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
 
     // Response for request guest/profile auth token
     $response = null;
+
+    // Set a cell slug
+    $this->setCellSlug( $cellSlug );
 
     // Authorized user
     if ( $secret ) {

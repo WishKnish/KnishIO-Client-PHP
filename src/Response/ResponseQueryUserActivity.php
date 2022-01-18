@@ -50,38 +50,28 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class ResponseMetaType
+ * Class ResponseQueryUserActivity
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseMetaType extends Response {
-  protected string $dataKey = 'data.MetaType';
+class ResponseQueryUserActivity extends Response {
+
+  protected string $dataKey = 'data.UserActivity';
 
   /**
-   * @return mixed|null
+   * @return mixed|string|null
    */
   public function payload () {
-    $data = $this->data();
 
-    if ( !$data ) {
-      return null;
+    /*
+    const data = JSON.parse( JSON.stringify( this.data() ) );
+    if ( data.instances ) {
+    for ( const datum of data.instances ) {
+            datum.jsonData = JSON.parse( datum.jsonData );
+          }
     }
+    */
 
-    $result = [
-      'instances' => [],
-      'instanceCount' => [],
-      'paginatorInfo' => [],
-    ];
-
-    $metaData = $data[ 0 ];
-
-    // Duplicate logic from js (@todo $result = $data[ 0 ]?)
-    foreach( $result as $key => $value ) {
-      if ( $responseValue = array_get( $metaData, $key ) ) {
-        $result[ $key ] = $responseValue;
-      }
-    }
-
-    return $result;
+    return $this->data();
   }
 
 }
