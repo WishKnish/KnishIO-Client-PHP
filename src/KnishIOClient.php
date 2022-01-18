@@ -740,19 +740,7 @@ class KnishIOClient {
    * @throws Exception
    */
   public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ?array {
-    /**
-     * Get shadow wallet list
-     *
-     * @var QueryWalletList $query
-     */
-    $query = $this->createQuery( QueryWalletList::class );
-
-    /**
-     * @var ResponseWalletList $response
-     */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?? $this->getBundle(), 'token' => $tokenSlug, ] );
-
-    return $response->payload();
+    return $this->queryWallets( $bundleHash, $tokenSlug );
   }
 
   /**
@@ -814,7 +802,6 @@ class KnishIOClient {
       }
 
       $amount = count( $units );
-      $meta = Meta::aggregateMeta( $meta );
       $meta[ 'tokenUnits' ] = json_encode( $units );
     }
 
