@@ -158,50 +158,44 @@ class CheckMolecule {
 
       $metas = Meta::aggregateMeta( $atom->meta );
 
-      foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
-        if ( !array_key_exists( $key, $metas ) ) {
-          throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+      if ( array_key_exists( 'policy', $metas ) ) {
+        $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
+
+        if ( !array_every(array_keys( $policy ), static fn( $value ) => in_array( $value, [ 'read', 'write' ], true) ) ) {
+          throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
       }
 
-      $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
+      if ( array_key_exists( 'rule', $metas ) ) {
 
-      if ( $conditions === null ) {
-        throw new MetaMissingException( 'Invalid format for conditions.' );
-      }
-
-      if ( is_array( $conditions ) ) {
-        foreach ( $conditions as $condition ) {
-          $keys = array_keys( $condition );
-
-          if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-            throw new MetaMissingException( 'Missing field in conditions.' );
+        foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
+          if ( !array_key_exists( $key, $metas ) ) {
+            throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
           }
         }
-      }
 
-      if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-        $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
+        $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
 
-        if ( $callbacks === null ) {
-          throw new MetaMissingException( 'Invalid format for callback.' );
+        if ( $conditions === null ) {
+          throw new MetaMissingException( 'Invalid format for conditions.' );
         }
 
-        if ( $conditions !== 'policy' ) {
-          foreach ( $callbacks as $callback ) {
-            foreach ( [ 'action', ] as $key ) {
-              if ( !array_key_exists( $key, $callback ) ) {
-                throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
-              }
+        if ( is_array( $conditions ) ) {
+          foreach ( $conditions as $condition ) {
+            $keys = array_keys( $condition );
+
+            if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+              throw new MetaMissingException( 'Missing field in conditions.' );
             }
           }
         }
 
+        if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
+          $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
-        $collect = collect( $callbacks );
-
-        if ( !$collect->contains( fn ( $value, $key ) => in_array( $key, [ 'read', 'write' ] ) ) ) {
-          throw new MetaMissingException( 'Mixing rules with politics!' );
+          if ( $callbacks === null ) {
+            throw new MetaMissingException( 'Invalid format for callback.' );
+          }
         }
       }
     }

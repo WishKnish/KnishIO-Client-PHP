@@ -144,3 +144,15 @@ if ( !function_exists( 'array_get' ) ) {
     return $array;
   }
 }
+
+if ( !function_exists( 'array_every' ) ) {
+  function array_every( array $array, callable $callable ): bool {
+    foreach ( $array as $value ) {
+      if ( !$callable( $value ) ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
