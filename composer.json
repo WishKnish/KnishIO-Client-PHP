@@ -42,7 +42,7 @@
     "ext-sodium": "*",
 		"desktopd/php-sha3-streamable": "@dev",
 		"simplito/bigint-wrapper-php": "^1.0",
-		"symfony/serializer": "^5.0|^6.0",
+		"symfony/serializer": "^5.0",
 		"symfony/polyfill-mbstring": "^1.24",
 		"guzzlehttp/guzzle": "^7.4",
 		"tuupola/base58": "^2.1",
