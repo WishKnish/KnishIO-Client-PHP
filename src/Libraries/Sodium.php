@@ -53,6 +53,7 @@ use Exception;
 use ReflectionException;
 use ReflectionExtension;
 use ReflectionFunction;
+use RuntimeException;
 
 /**
  * Class Sodium
@@ -98,7 +99,7 @@ class Sodium {
 
     }
     else {
-      throw new Exception( 'Sodium extension is required.' );
+      throw new RuntimeException( 'Sodium extension is required.' );
     }
 
   }
@@ -110,7 +111,6 @@ class Sodium {
    * @param string $aliasName
    *
    * @return void
-   * @throws ReflectionException
    */
   private static function createFunctionAlias ( ReflectionFunction $functionReflection, string $aliasName ): void {
 
@@ -118,7 +118,7 @@ class Sodium {
 
       $functionName = $functionReflection->getName();
 
-      if ( strpos( $functionName, '\\' ) !== 0 ) {
+      if ( !str_starts_with( $functionName, '\\' ) ) {
 
         $functionName = '\\' . $functionName;
 

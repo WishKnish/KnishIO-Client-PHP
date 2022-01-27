@@ -76,15 +76,6 @@ class MoleculeStructure {
   public string $createdAt;
   public array $atoms = [];
 
-
-  /**
-   * @return string
-   */
-  public function logString(): string {
-    return $this->molecularHash .
-        ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
-  }
-
   /**
    * @param string|null $counterparty
    *
@@ -251,16 +242,13 @@ class MoleculeStructure {
   }
 
   /**
-   * @param string $json
-   * @param string|null $secret
+   * @param string $string
    *
    * @return object
-   * @throws Exception
    */
-  public static function jsonToObject ( string $json, string $secret = null ): object {
-    $secret = $secret ?? Crypto::generateSecret();
+  public static function jsonToObject ( string $string ): object {
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
+    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => null, ], ], ] );
 
     foreach ( $object->atoms as $idx => $atom ) {
       $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

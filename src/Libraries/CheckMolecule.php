@@ -50,8 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
@@ -148,6 +147,7 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
+   * @throws JsonException
    */
   public static function isotopeR ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
@@ -163,7 +163,7 @@ class CheckMolecule {
         }
       }
 
-      $conditions = json_decode( $metas[ 'conditions' ], true );
+      $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
 
       if ( $conditions === null ) {
         throw new MetaMissingException( 'Invalid format for conditions.' );
@@ -178,17 +178,15 @@ class CheckMolecule {
       }
 
       if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-        $callbacks = json_decode( $metas[ 'callback' ], true );
+        $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
         if ( $callbacks === null ) {
           throw new MetaMissingException( 'Invalid format for callback.' );
         }
 
         foreach ( $callbacks as $callback ) {
-          foreach ( [ 'action', ] as $key ) {
-            if ( !array_key_exists( $key, $callback ) ) {
-              throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
-            }
+          if ( !array_key_exists( 'action', $callback ) ) {
+            throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
           }
         }
       }
@@ -261,11 +259,8 @@ class CheckMolecule {
         }
       }
 
-      foreach ( [ 'token', ] as $key ) {
-
-        if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
-          throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-        }
+      if ( !array_key_exists( 'token', $meta ) || empty( $meta[ $key ] ) ) {
+        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
 
       if ( $atom->token !== 'USER' ) {
@@ -513,7 +508,8 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
-   * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
+   * @throws MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
+   * @throws Exception
    */
   public static function molecularHash ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );

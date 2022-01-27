@@ -2,7 +2,9 @@
 
 namespace WishKnish\KnishIO\Client;
 
-
+use Exception;
+use JetBrains\PhpStorm\ArrayShape;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * Class AuthToken
@@ -16,7 +18,6 @@ class AuthToken {
 
   protected ?Wallet $wallet;
 
-
   /**
    * @param $data
    * @param $wallet
@@ -26,30 +27,29 @@ class AuthToken {
    */
   public static function create ( $data, $wallet, $encrypt ): self {
     $authToken = new static (
-        $data[ 'token' ],
-        $data[ 'expiresAt' ],
-        $data[ 'pubkey' ],
-        $encrypt,
+      $data[ 'token' ],
+      $data[ 'expiresAt' ],
+      $data[ 'pubkey' ],
+      $encrypt,
     );
     $authToken->setWallet( $wallet );
     return $authToken;
   }
-
 
   /**
    * @param $snapshot
    * @param $secret
    *
    * @return static
-   * @throws \Exception
+   * @throws Exception
    */
   public static function restore ( $snapshot, $secret ): self {
     $wallet = new Wallet (
-        $secret,
-        'AUTH',
-        array_get( $snapshot, 'wallet.position' ),
-        null,
-        array_get( $snapshot, 'wallet.characters' )
+      $secret,
+      'AUTH',
+      array_get( $snapshot, 'wallet.position' ),
+      null,
+      array_get( $snapshot, 'wallet.characters' )
     );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
@@ -57,7 +57,6 @@ class AuthToken {
       'pubkey' => array_get( $snapshot, 'pubkey' ),
     ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
-
 
   /**
    * AuthToken constructor.
@@ -79,14 +78,12 @@ class AuthToken {
     $this->encrypt = $encrypt;
   }
 
-
   /**
    * @param $wallet
    */
   public function setWallet ( $wallet ): void {
     $this->wallet = $wallet;
   }
-
 
   /**
    * @return mixed
@@ -95,10 +92,16 @@ class AuthToken {
     return $this->wallet;
   }
 
-
   /**
    * @return array
    */
+  #[ArrayShape( [
+    'token' => "string",
+    'expiresAt' => "int|null",
+    'pubkey' => "string",
+    'encrypt' => "bool",
+    'wallet' => "array"
+  ] )]
   public function getSnapshot (): array {
     return [
       'token' => $this->token,
@@ -112,14 +115,12 @@ class AuthToken {
     ];
   }
 
-
   /**
    * @return mixed
    */
   public function getToken (): string {
     return $this->token;
   }
-
 
   /**
    * @return mixed
@@ -128,9 +129,8 @@ class AuthToken {
     return $this->pubkey;
   }
 
-
   /**
-   * @return float|int
+   * @return int|null
    */
   public function getExpireInterval (): ?int {
     if ( !$this->expiresAt ) {
@@ -139,20 +139,25 @@ class AuthToken {
     return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
   }
 
-
   /**
    * @return bool
    */
+  #[Pure]
   public function isExpired (): bool {
     return !$this->expiresAt || $this->getExpireInterval() < 0;
   }
-
 
   /**
    * Get auth data for the final client (apollo)
    *
    * @return array
    */
+  #[Pure]
+  #[ArrayShape( [
+    'token' => "mixed|string",
+    'pubkey' => "mixed|string",
+    'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+  ] )]
   public function getAuthData (): array {
     return [
       'token' => $this->getToken(),

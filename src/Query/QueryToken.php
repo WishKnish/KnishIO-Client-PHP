@@ -49,8 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\Response\ResponseBalance;
 
 /**
  * Class QueryToken
@@ -77,6 +77,7 @@ class QueryToken extends Query {
    * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response, 'data.Token' );

@@ -51,8 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use Exception;
-use Illuminate\Support\Facades\Log;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -94,8 +93,8 @@ class Atom {
   /**
    * Atom constructor.
    *
-   * @param string $position
-   * @param string $walletAddress
+   * @param string|null $position
+   * @param string|null $walletAddress
    * @param string $isotope
    * @param string|null $token
    * @param string|null $value
@@ -127,30 +126,27 @@ class Atom {
    * @param array $atoms
    * @param string $output
    *
-   * @return array[]|string|string[]|null
-   * @throws ReflectionException|Exception
+   * @return array|string|null
+   * @throws Exception
    */
-  public static function hashAtoms ( array $atoms, string $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
 
-    $atomListDebug = [];
     foreach ( $atomList as $atom ) {
 
-      $atomData = get_object_vars( $atom );
+      $atom_data = get_object_vars( $atom );
 
       $molecularSponge->absorb( $numberOfAtoms );
 
-      $atomDebug = [  'meta' => [] ];
-      foreach ( $atomData as $name => $value ) {
+      foreach ( $atom_data as $name => $value ) {
 
-        // All nullable values does not hashing (only custom keys)
-        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
+        // Old atoms support (without batch_id field)
+        if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
           continue;
         }
 
-        // Excluded keys
         if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
           continue;
         }
@@ -164,25 +160,24 @@ class Atom {
 
               $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
               $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
-
-              $atomDebug[ 'meta' ][ ( string ) $meta[ 'key' ] ] = ( string ) $meta[ 'value' ];
             }
           }
+          $atom->$name = $list;
 
           continue;
         }
 
-        // Absorb value as string
-        $molecularSponge->absorb( ( string ) $value );
+        if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
+          $molecularSponge->absorb( ( string ) $value );
+          continue;
+        }
 
-        $atomDebug[ $name ] = ( string ) $value;
+        if ( $value !== null ) {
+          $molecularSponge->absorb( ( string ) $value );
+        }
 
       }
-      $atomListDebug[] = $atomDebug;
     }
-
-    // Log::info( '$atomListDebug', $atomListDebug );
-
 
     switch ( $output ) {
       case 'hex':
@@ -243,6 +238,7 @@ class Atom {
    * @param string $property
    * @param $value
    *
+   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
@@ -250,7 +246,7 @@ class Atom {
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {
-      $metas = json_decode( $value, true );
+      $metas = json_decode( $value, true, 512, JSON_THROW_ON_ERROR );
       if ( $metas !== null ) {
         $this->meta = Meta::normalizeMeta( $metas );
       }

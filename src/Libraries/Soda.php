@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
+use JsonException;
 use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
@@ -65,7 +66,7 @@ class Soda {
   /**
    * @var array
    */
-  public $characters;
+  public array $characters;
 
   /**
    * Soda constructor.
@@ -85,14 +86,15 @@ class Soda {
   /**
    * Encrypts the given message or data with the recipient's public key
    *
-   * @param array|string $message
+   * @param mixed $message
    * @param string $key
    *
    * @return string
    * @throws SodiumException
+   * @throws JsonException
    */
-  public function encrypt ( $message, string $key ): string {
-    return $this->encode( sodium_crypto_box_seal( json_encode( $message ), $this->decode( $key ) ) );
+  public function encrypt ( mixed $message, string $key ): string {
+    return $this->encode( sodium_crypto_box_seal( json_encode( $message, JSON_THROW_ON_ERROR ), $this->decode( $key ) ) );
   }
 
   /**
@@ -102,21 +104,22 @@ class Soda {
    * @param string $privateKey
    * @param string $publicKey
    *
-   * @return array|string|null
+   * @return mixed
+   * @throws JsonException
    * @throws SodiumException
    */
-  public function decrypt ( string $encrypted, string $privateKey, string $publicKey ) {
+  public function decrypt ( string $encrypted, string $privateKey, string $publicKey ): mixed {
 
     // Get decrypted string
     $decrypted = sodium_crypto_box_seal_open(
-        $this->decode( $encrypted ),
-        sodium_crypto_box_keypair_from_secretkey_and_publickey(
-            $this->decode( $privateKey ),
-            $this->decode( $publicKey )
-        )
+      $this->decode( $encrypted ),
+      sodium_crypto_box_keypair_from_secretkey_and_publickey(
+        $this->decode( $privateKey ),
+        $this->decode( $publicKey )
+      )
     );
 
-    return json_decode( $decrypted, true );
+    return json_decode( $decrypted, true, 512, JSON_THROW_ON_ERROR );
   }
 
   /**

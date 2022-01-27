@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
 use Exception;
+use RuntimeException;
 use function function_exists;
 use function mb_strlen;
 use function mb_substr;
@@ -296,7 +297,7 @@ class Sha3 {
     }
 
     if ( self::$test_state === 3 ) {
-      throw new Exception( 'Sha3 previous self test failed!' );
+      throw new RuntimeException( 'Sha3 previous self test failed!' );
     }
 
     $in = '';
@@ -312,7 +313,7 @@ class Sha3 {
     }
 
     self::$test_state = 3;
-    throw new Exception( 'Sha3 self test failed!' );
+    throw new RuntimeException( 'Sha3 self test failed!' );
   }
 
   /**
@@ -345,7 +346,7 @@ class Sha3 {
    */
   public static function hash ( $in, int $mdlen, bool $raw_output = false ): string {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
-      throw new Exception( 'Unsupported Sha3 Hash output size.' );
+      throw new RuntimeException( 'Unsupported Sha3 Hash output size.' );
     }
 
     return self::keccak( $in, $mdlen, $mdlen, 0x06, $raw_output );
@@ -362,7 +363,7 @@ class Sha3 {
    */
   public static function shake ( $in, int $security_level, int $outlen, bool $raw_output = false ): string {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
-      throw new Exception( 'Unsupported Sha3 Shake security level.' );
+      throw new RuntimeException( 'Unsupported Sha3 Shake security level.' );
     }
 
     return self::keccak( $in, $security_level, $outlen, 0x1f, $raw_output );
@@ -390,7 +391,7 @@ class Sha3 {
     if ( $exists ) {
       $length = mb_strlen( $str, '8bit' );
       if ( $length === false ) {
-        throw new Exception( 'mb_strlen() failed.' );
+        throw new RuntimeException( 'mb_strlen() failed.' );
       }
       return $length;
     }
