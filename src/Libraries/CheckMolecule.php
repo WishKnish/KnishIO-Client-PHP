@@ -249,19 +249,20 @@ class CheckMolecule {
       $meta = Meta::aggregateMeta( $atom->meta );
       $metaType = strtolower( ( string ) $atom->metaType );
 
-      if ( $metaType === 'wallet' ) {
-
-        foreach ( [ 'position', 'bundle' ] as $key ) {
-
+      // Check required meta keys closure
+      $checkRequiredMetaKeys = static function ( array $keys ) use ( $meta ) {
+        foreach ( $keys as $key ) {
           if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
             throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
           }
         }
+      };
+
+      if ( $metaType === 'wallet' ) {
+        $checkRequiredMetaKeys( [ 'position', 'bundle' ] );
       }
 
-      if ( !array_key_exists( 'token', $meta ) || empty( $meta[ $key ] ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-      }
+      $checkRequiredMetaKeys( [ 'token' ] );
 
       if ( $atom->token !== 'USER' ) {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );

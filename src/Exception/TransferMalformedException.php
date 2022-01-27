@@ -68,7 +68,7 @@ class TransferMalformedException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Token transfer atoms are malformed', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Token transfer atoms are malformed', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

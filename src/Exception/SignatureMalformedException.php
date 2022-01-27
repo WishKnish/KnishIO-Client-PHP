@@ -68,7 +68,7 @@ class SignatureMalformedException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'OTS malformed', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'OTS malformed', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

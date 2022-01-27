@@ -93,8 +93,8 @@ class Atom {
   /**
    * Atom constructor.
    *
-   * @param string|null $position
-   * @param string|null $walletAddress
+   * @param string $position
+   * @param string $walletAddress
    * @param string $isotope
    * @param string|null $token
    * @param string|null $value
@@ -136,17 +136,18 @@ class Atom {
 
     foreach ( $atomList as $atom ) {
 
-      $atom_data = get_object_vars( $atom );
+      $atomData = get_object_vars( $atom );
 
       $molecularSponge->absorb( $numberOfAtoms );
 
-      foreach ( $atom_data as $name => $value ) {
+      foreach ( $atomData as $name => $value ) {
 
-        // Old atoms support (without batch_id field)
-        if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
+        // All nullable values does not hashing (only custom keys)
+        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
           continue;
         }
 
+        // Excluded keys
         if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
           continue;
         }
@@ -160,24 +161,19 @@ class Atom {
 
               $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
               $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
             }
           }
-          $atom->$name = $list;
 
           continue;
         }
 
-        if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
-          $molecularSponge->absorb( ( string ) $value );
-          continue;
-        }
-
-        if ( $value !== null ) {
-          $molecularSponge->absorb( ( string ) $value );
-        }
-
+        // Absorb value as string
+        $molecularSponge->absorb( ( string ) $value );
       }
+
     }
+
 
     switch ( $output ) {
       case 'hex':
@@ -246,7 +242,7 @@ class Atom {
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {
-      $metas = json_decode( $value, true, 512, JSON_THROW_ON_ERROR );
+      $metas = json_decode( $value, true );
       if ( $metas !== null ) {
         $this->meta = Meta::normalizeMeta( $metas );
       }

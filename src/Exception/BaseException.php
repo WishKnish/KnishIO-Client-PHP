@@ -69,15 +69,11 @@ abstract class BaseException extends LogicException implements IException {
   /**
    * BaseException constructor.
    *
-   * @param null $message
+   * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = null, $code = 0, $previous = null ) {
-    if ( !$message ) {
-      throw new static ( 'Unknown exception: ' . static::class );
-    }
-
+  public function __construct ( string $message, int $code = 0, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 
@@ -85,7 +81,7 @@ abstract class BaseException extends LogicException implements IException {
    * @return string
    */
   #[Pure]
-  public function __toString () {
+  public function __toString (): string {
     return static::class . " '" . $this->message . "' in " . $this->file . ' (' . $this->line . ')' . PHP_EOL . $this->getTraceAsString();
   }
 }
