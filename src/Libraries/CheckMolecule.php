@@ -145,7 +145,7 @@ class CheckMolecule {
    * @throws JsonException
    */
   public static function isotopeR ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     /** @var Atom $atom */
     foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
@@ -211,7 +211,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function continuId ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     /** @var Atom $atom */
     $atom = reset( $molecule->atoms );
@@ -229,8 +229,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function index ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     foreach ( $molecule->atoms as $atom ) {
 
@@ -248,8 +247,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeT ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms T
 
@@ -301,8 +299,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeC ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms C
 
@@ -327,8 +324,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeI ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms I
 
@@ -353,8 +349,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeU ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms U
 
@@ -379,8 +374,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeM ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms M
 
@@ -410,8 +404,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     $isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
 
@@ -505,10 +498,8 @@ class CheckMolecule {
       }
 
     } // No senderWallet, but have a remainder?
-    else {
-      if ( !Decimal::equal( $value, 0.0 ) ) {
-        throw new TransferWalletException();
-      }
+    else if ( !Decimal::equal( $value, 0.0 ) ) {
+      throw new TransferWalletException();
     }
 
     // Looks like we passed all the tests!
@@ -524,7 +515,7 @@ class CheckMolecule {
    * @throws MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException|Exception
    */
   public static function molecularHash ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {
       throw new MolecularHashMismatchException();
@@ -545,7 +536,7 @@ class CheckMolecule {
    * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
    */
   public static function ots ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Determine first atom
     /** @var Atom $firstAtom */

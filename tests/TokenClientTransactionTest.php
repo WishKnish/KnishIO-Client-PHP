@@ -487,8 +487,8 @@ class TokenClientTransactionTest extends TestCase {
       if ( !$generate_wallets ) {
 
         // Get shadow wallet list
-        $query = $client->createQuery( QueryWalletList::class );
-        $response = $query->execute( [ 'bundleHash' => Crypto::generateBundleHash( $recipient ), 'token' => $token, ] );
+        $response = $client->createQuery( QueryWalletList::class )
+          ->execute( [ 'bundleHash' => Crypto::generateBundleHash( $recipient ), 'token' => $token, ] );
         $wallets = $response->payload();
 
         // Set a recipient wallet
@@ -622,10 +622,8 @@ class TokenClientTransactionTest extends TestCase {
       $client = $this->client( $recipient );
 
       // Get shadow wallets
-      $shadowWallets = $client->queryShadowWallets( $token );
-
       // Init recipient query
-      foreach ( $shadowWallets as $shadowWallet ) {
+      foreach ( $client->queryShadowWallets( $token ) as $shadowWallet ) {
 
         // Create an intruder molecule
         $molecule = $client->createMolecule( $intruder, new Wallet( $intruder ) );
@@ -653,9 +651,8 @@ class TokenClientTransactionTest extends TestCase {
     }
 
     // --- Bind a shadow wallet (with original bundle hash)
-    $responses = $this->client( $recipient )
-        ->claimShadowWallets( $token );
-    foreach ( $responses as $response ) {
+    foreach ( $this->client( $recipient )
+        ->claimShadowWallets( $token ) as $response ) {
       $this->checkResponse( $response );
     }
     // ---

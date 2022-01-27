@@ -221,11 +221,9 @@ class MoleculeStructure {
 
     // Building a one-time-signature
     $signatureFragments = '';
-    foreach ( $keyChunks as $idx => $keyChunk ) {
+    foreach ( $keyChunks as $idx => $workingChunk ) {
 
       // Iterate a number of times equal to 8-Hm[i]
-      $workingChunk = $keyChunk;
-
       for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $idx ] * ( $encode ? -1 : 1 ); $iterationCount < $condition; $iterationCount++ ) {
 
         $workingChunk = bin2hex( Crypto\Shake256::hash( $workingChunk, 64 ) );
@@ -256,10 +254,10 @@ class MoleculeStructure {
    * @param string $string
    * @param string|null $secret
    *
-   * @return object
+   * @return MoleculeStructure
    * @throws Exception
    */
-  public static function jsonToObject ( string $string, string $secret = null ): object {
+  public static function jsonToObject ( string $string, string $secret = null ): static {
     $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
     $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );

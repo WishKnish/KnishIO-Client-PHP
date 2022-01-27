@@ -34,17 +34,13 @@ class BaseX {
     if ( in_array( $characters, $base64, true ) ) {
       $this->encoder = new Base64();
     }
-    else {
-      if ( in_array( $characters, $base58, true ) ) {
-        $config[ 'characters' ] = constant( Base58::class . '::' . $characters );
-        $this->encoder = new Base58( $config );
-      }
-      else {
-        if ( in_array( $characters, $basex, true ) ) {
-          $config[ 'characters' ] = constant( static::class . '::' . $characters );
-          $this->encoder = new Base58( $config );
-        }
-      }
+    else if ( in_array( $characters, $base58, true ) ) {
+      $config[ 'characters' ] = constant( Base58::class . '::' . $characters );
+      $this->encoder = new Base58( $config );
+    }
+    else if ( in_array( $characters, $basex, true ) ) {
+      $config[ 'characters' ] = constant( static::class . '::' . $characters );
+      $this->encoder = new Base58( $config );
     }
   }
 

@@ -225,7 +225,7 @@ class Wallet {
    * @return bool
    */
   public function hasTokenUnits (): bool {
-    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
+    return count( $this->tokenUnits ) > 0;
   }
 
   /**
@@ -326,9 +326,7 @@ class Wallet {
 
     $digestSponge = Crypto\Shake256::init();
 
-    foreach ( Strings::chunkSubstr( $key, 128 ) as $fragment ) {
-
-      $workingFragment = $fragment;
+    foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
 
       foreach ( range( 1, 16 ) as $ignored ) {
         $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
@@ -481,10 +479,8 @@ class Wallet {
   public static function generateWalletKey ( string $secret, string $token, string $position ): string {
 
     // Converting secret to bigInt
-    $bigIntSecret = new BigInteger( $secret, 16 );
-
     // Adding new position to the user secret to produce the indexed key
-    $indexedKey = $bigIntSecret->add( new BigInteger( $position, 16 ) );
+    $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $position, 16 ) );
 
     // Hashing the indexed key to produce the intermediate key
     $intermediateKeySponge = Crypto\Shake256::init()

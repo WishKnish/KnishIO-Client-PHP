@@ -152,9 +152,7 @@ class Atom {
         }
 
         if ( $name === 'meta' ) {
-          $list = $value;
-
-          foreach ( $list as $meta ) {
+          foreach ( $value as $meta ) {
 
             if ( isset( $meta[ 'value' ] ) ) {
 
