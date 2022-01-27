@@ -62,7 +62,10 @@ class ResponseAccessToken extends Response {
     return $this->payload() !== null;
   }
 
-  public function payload () {
+  /**
+   * @return mixed
+   */
+  public function payload (): mixed {
     return $this->data();
   }
 
@@ -73,7 +76,7 @@ class ResponseAccessToken extends Response {
    *
    * @return mixed
    */
-  private function payloadKey ( $key ) {
+  private function payloadKey ( $key ): mixed {
     if ( !array_has( $this->payload(), $key ) ) {
       throw new InvalidResponseException( 'ResponseAccessToken: \'' . $key . '\' key is not found in the payload.' );
     }
@@ -90,7 +93,7 @@ class ResponseAccessToken extends Response {
   /**
    * @return mixed
    */
-  public function time () {
+  public function time (): mixed {
     return $this->payloadKey( 'time' );
   }
 

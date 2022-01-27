@@ -57,9 +57,9 @@ class ResponseMetaType extends Response {
   protected string $dataKey = 'data.MetaType';
 
   /**
-   * @return mixed|null
+   * @return array|null
    */
-  public function payload () {
+  public function payload (): ?array {
     $data = $this->data();
 
     if ( !$data ) {
@@ -67,15 +67,13 @@ class ResponseMetaType extends Response {
     }
 
     $result = [
-      'instances' => [],
-      'instanceCount' => [],
-      'paginatorInfo' => [],
+      'instances' => [], 'instanceCount' => [], 'paginatorInfo' => [],
     ];
 
     $metaData = $data[ 0 ];
 
     // Duplicate logic from js (@todo $result = $data[ 0 ]?)
-    foreach( $result as $key => $value ) {
+    foreach ( $result as $key => $value ) {
       if ( $responseValue = array_get( $metaData, $key ) ) {
         $result[ $key ] = $responseValue;
       }

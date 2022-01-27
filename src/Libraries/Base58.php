@@ -68,7 +68,9 @@ class Base58 extends Base {
   /**
    * @var array
    */
-  private array $options = [ 'characters' => Base::GMP, 'check' => false, 'version' => 0x00, ];
+  private array $options = [
+    'characters' => Base::GMP, 'check' => false, 'version' => 0x00,
+  ];
 
   /**
    * Base58 constructor.

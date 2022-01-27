@@ -69,9 +69,9 @@ trait Json {
    * @param array $data
    * @param null $object
    *
-   * @return static|null
+   * @return static
    */
-  public static function arrayToObject ( array $data, $object = null ) {
+  public static function arrayToObject ( array $data, $object = null ): static {
     $object = $object ?? new static();
     foreach ( $data as $property => $value ) {
 
@@ -90,11 +90,11 @@ trait Json {
   }
 
   /**
-   * @param $string
+   * @param string $string
    *
    * @return array|object
    */
-  public static function jsonToObject ( $string ) {
+  public static function jsonToObject ( string $string ): object|array {
     return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );
   }
 }

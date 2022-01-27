@@ -51,7 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
 use Illuminate\Support\Facades\Log;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
@@ -91,17 +91,11 @@ class CheckMolecule {
     $verification_methods = [ 'molecularHash', 'ots', 'isotopeM', 'isotopeP', 'isotopeR', 'isotopeC', 'isotopeV', 'isotopeT', 'isotopeI', 'isotopeU', 'index', 'batchId', ];
 
     foreach ( $verification_methods as $method ) {
-
-      switch ( $method ) {
-        case 'isotopeV':
-        {
-          static::{$method}( $molecule, $fromWallet );
-          break;
-        }
-        default:
-        {
-          static::{$method}( $molecule );
-        }
+      if( $method === 'isotopeV' ) {
+        static::{$method}( $molecule, $fromWallet );
+      }
+      else {
+        static::{$method}( $molecule );
       }
     }
 
@@ -148,7 +142,7 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
-   * @throws \JsonException
+   * @throws JsonException
    */
   public static function isotopeR ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );
@@ -161,14 +155,18 @@ class CheckMolecule {
       if ( array_key_exists( 'policy', $metas ) ) {
         $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
 
-        if ( !array_every(array_keys( $policy ), static fn( $value ) => in_array( $value, [ 'read', 'write' ], true) ) ) {
+        if ( !array_every( array_keys( $policy ), static fn( $value ) => in_array( $value, [
+          'read', 'write'
+        ], true ) ) ) {
           throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
       }
 
       if ( array_key_exists( 'rule', $metas ) ) {
 
-        foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
+        foreach ( [
+          'callback', 'conditions', 'rule',
+        ] as $key ) {
           if ( !array_key_exists( $key, $metas ) ) {
             throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
           }
@@ -184,13 +182,17 @@ class CheckMolecule {
           foreach ( $conditions as $condition ) {
             $keys = array_keys( $condition );
 
-            if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+            if ( count( array_intersect( $keys, [
+                'key', 'value', 'comparison',
+              ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
               throw new MetaMissingException( 'Missing field in conditions.' );
             }
           }
         }
 
-        if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
+        if ( !in_array( strtolower( $metas[ 'callback' ] ), [
+          'reject', 'unseat',
+        ], true ) ) {
           $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
           if ( $callbacks === null ) {
@@ -257,22 +259,20 @@ class CheckMolecule {
       $meta = Meta::aggregateMeta( $atom->meta );
       $metaType = strtolower( ( string ) $atom->metaType );
 
-      if ( $metaType === 'wallet' ) {
-
-        foreach ( [ 'position', 'bundle' ] as $key ) {
-
+      // Check required meta keys closure
+      $checkRequiredMetaKeys = static function ( array $keys ) use ( $meta ) {
+        foreach ( $keys as $key ) {
           if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
             throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
           }
         }
+      };
+
+      if ( $metaType === 'wallet' ) {
+        $checkRequiredMetaKeys( [ 'position', 'bundle' ] );
       }
 
-      foreach ( [ 'token', ] as $key ) {
-
-        if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
-          throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-        }
-      }
+      $checkRequiredMetaKeys( [ 'token' ] );
 
       if ( $atom->token !== 'USER' ) {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
@@ -505,8 +505,10 @@ class CheckMolecule {
       }
 
     } // No senderWallet, but have a remainder?
-    else if ( !Decimal::equal( $value, 0.0 ) ) {
-      throw new TransferWalletException();
+    else {
+      if ( !Decimal::equal( $value, 0.0 ) ) {
+        throw new TransferWalletException();
+      }
     }
 
     // Looks like we passed all the tests!
@@ -519,7 +521,7 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
-   * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
+   * @throws MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException|Exception
    */
   public static function molecularHash ( MoleculeStructure $molecule ): bool {
     static::missing( $molecule );

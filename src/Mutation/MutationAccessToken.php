@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseAccessToken;
 
 class MutationAccessToken extends Mutation {
@@ -64,6 +65,7 @@ class MutationAccessToken extends Mutation {
    * @param $response
    *
    * @return ResponseAccessToken
+   * @throws JsonException
    */
   public function createResponse ( $response ): ResponseAccessToken {
     return new ResponseAccessToken( $this, $response );

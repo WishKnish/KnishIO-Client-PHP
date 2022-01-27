@@ -52,7 +52,6 @@ namespace WishKnish\KnishIO\Client\Tests;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Arr;
-use ReflectionException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryMetaInstance;
@@ -105,9 +104,8 @@ class QueryMetaTest extends TestCase {
 
   /**
    * @throws Exception
-   * @throws GuzzleException
    */
-  public function beforeExecute () {
+  public function beforeExecute (): void {
     // $this->cell_slug = null;
     // $this->graphql_url = 'https://frontrow.knish.io/graphql';
 
@@ -133,7 +131,7 @@ class QueryMetaTest extends TestCase {
   /**
    * Clear data test
    *
-   * @throws Exception|GuzzleException
+   * @throws Exception
    */
   public function testClearAll (): void {
 
@@ -148,7 +146,7 @@ class QueryMetaTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testCreateMetas (): void {

@@ -49,7 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use ReflectionException;
+use Exception;
+use JsonException;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -63,7 +64,7 @@ class MutationTransferTokens extends MutationProposeMolecule {
    * @param $amount
    *
    * @return MutationTransferTokens
-   * @throws ReflectionException
+   * @throws JsonException|Exception
    */
   public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
     $this->molecule->initValue( $toWallet, $amount );

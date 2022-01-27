@@ -107,7 +107,7 @@ class ResponseWalletList extends Response {
     // Get data
     $list = $this->data();
     if ( !$list ) {
-      return null;
+      return [];
     }
 
     // Get a list of client wallets
@@ -125,20 +125,7 @@ class ResponseWalletList extends Response {
    * @throws Exception
    */
   public function payload (): ?array {
-    // Get data
-    $list = $this->data();
-    if ( !$list ) {
-      return null;
-    }
-
-    // Get a list of client wallets
-    $wallets = [];
-    foreach ( $list as $item ) {
-      $wallets[] = static::toClientWallet( $item );
-    }
-
-    // Return a wallets list
-    return $wallets;
+    return $this->getWallets();
   }
 
 }

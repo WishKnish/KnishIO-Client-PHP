@@ -76,13 +76,11 @@ class MoleculeStructure {
   public string $createdAt;
   public array $atoms = [];
 
-
   /**
    * @return string
    */
-  public function logString(): string {
-    return $this->molecularHash .
-        ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+  public function logString (): string {
+    return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
   }
 
   /**
@@ -158,7 +156,11 @@ class MoleculeStructure {
 
         if ( $totalCondition ? $value < 8 : $value > -8 ) {
 
-          $totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
+          $totalCondition ? [
+            ++$mappedHashArray[ $key ], ++$total,
+          ] : [
+            --$mappedHashArray[ $key ], --$total,
+          ];
 
           if ( $total === 0 ) {
             break;
@@ -251,16 +253,16 @@ class MoleculeStructure {
   }
 
   /**
-   * @param string $json
+   * @param string $string
    * @param string|null $secret
    *
    * @return object
    * @throws Exception
    */
-  public static function jsonToObject ( string $json, string $secret = null ): object {
+  public static function jsonToObject ( string $string, string $secret = null ): object {
     $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
+    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
 
     foreach ( $object->atoms as $idx => $atom ) {
       $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

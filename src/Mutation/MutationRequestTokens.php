@@ -49,7 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use ReflectionException;
+use Exception;
+use JsonException;
 
 /**
  * Class MutationRequestTokens
@@ -66,7 +67,7 @@ class MutationRequestTokens extends MutationProposeMolecule {
    * @param string|null $batchId
    *
    * @return MutationRequestTokens
-   * @throws ReflectionException
+   * @throws JsonException|Exception
    */
   public function fillMolecule ( string $tokenSlug, $requestedAmount, string $metaType, string $metaId, array $metas = null, ?string $batchId = null ): MutationRequestTokens {
     // Default metas value

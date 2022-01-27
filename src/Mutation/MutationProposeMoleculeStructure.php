@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use JetBrains\PhpStorm\Pure;
+use JsonException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -81,6 +83,8 @@ class MutationProposeMoleculeStructure extends Query {
    * @param HttpClientInterface $client
    * @param MoleculeStructure $moleculeStructure
    * @param string|null $query
+   *
+   * @noinspection PhpPureAttributeCanBeAddedInspection
    */
   public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
     parent::__construct( $client, $query );
@@ -94,6 +98,7 @@ class MutationProposeMoleculeStructure extends Query {
    *
    * @return array
    */
+  #[Pure]
   public function compiledVariables ( array $variables = null ): array {
     // Default variables
     $variables = parent::compiledVariables( $variables );
@@ -113,6 +118,7 @@ class MutationProposeMoleculeStructure extends Query {
    * @param string $response
    *
    * @return ResponseMolecule
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseMolecule {
     return new ResponseMolecule( $this, $response );

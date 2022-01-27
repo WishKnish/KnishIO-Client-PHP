@@ -173,20 +173,18 @@ class HttpClient extends Client implements HttpClientInterface {
     return $this->xAuthToken;
   }
 
-
   /**
    * Sets the authorization data
    *
-   * @param {string} token
-   * @param {string} pubkey
-   * @param {Wallet|null} wallet
+   * @param string $token
+   * @param string $pubkey
+   * @param Wallet $wallet
    */
-  public function setAuthData ( string $token, string $pubkey, Wallet $wallet ) {
+  public function setAuthData ( string $token, string $pubkey, Wallet $wallet ): void {
     $this->setAuthToken( $token );
     $this->setPubkey( $pubkey );
     $this->setWallet( $wallet );
   }
-
 
   /**
    * @param RequestInterface $request

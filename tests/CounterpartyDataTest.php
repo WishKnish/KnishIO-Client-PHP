@@ -68,7 +68,6 @@ class CounterpartyDataTest extends TestCase {
 
   /**
    * @throws Exception
-   * @throws GuzzleException
    */
   public function beforeExecute ():void {
     parent::beforeExecute();

@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
 use Exception;
+use RuntimeException;
 
 /**
  * Class Keccak
@@ -296,7 +297,7 @@ class Keccak {
    */
   public static function hash ( $in, int $mdlen, bool $raw_output = false ): string {
     if ( !in_array( $mdlen, [ 224, 256, 384, 512 ], true ) ) {
-      throw new Exception( 'Unsupported Keccak Hash output size.' );
+      throw new RuntimeException( 'Unsupported Keccak Hash output size.' );
     }
 
     return self::keccak_base( $in, $mdlen, $mdlen, self::LFSR, $raw_output );
@@ -313,7 +314,7 @@ class Keccak {
    */
   public static function shake ( $in, int $security_level, int $outlen, bool $raw_output = false ): string {
     if ( !in_array( $security_level, [ 128, 256 ], true ) ) {
-      throw new Exception( 'Unsupported Keccak Shake security level.' );
+      throw new RuntimeException( 'Unsupported Keccak Shake security level.' );
     }
 
     return self::keccak_base( $in, $security_level, $outlen, 0x1f, $raw_output );

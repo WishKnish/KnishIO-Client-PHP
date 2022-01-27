@@ -49,8 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
-
 
 class MutationActiveSession extends Mutation {
 
@@ -80,19 +80,14 @@ class MutationActiveSession extends Mutation {
 
   // Fields
   protected array $fields = [
-      'bundleHash',
-      'metaType',
-      'metaId',
-      'jsonData',
-      'createdAt',
-      'updatedAt',
+    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
   ];
 
-
   /**
-   * @param $response
+   * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response, 'data.ActiveSession' );
