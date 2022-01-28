@@ -57,13 +57,12 @@ class ResponseMetaType extends Response {
   protected string $dataKey = 'data.MetaType';
 
   /**
-   * @return array|null
+   * @return array|array[]
    */
-  public function payload (): ?array {
+  public function payload (): array {
     $data = $this->data();
-
     if ( !$data ) {
-      return null;
+      return [];
     }
 
     $result = [

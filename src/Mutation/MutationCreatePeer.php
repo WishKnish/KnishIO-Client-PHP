@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use Exception;
 use JsonException;
 
 /**

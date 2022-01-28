@@ -77,11 +77,11 @@ class Decimal {
   public static int $multiplier = 10 ** 18;
 
   /**
-   * @param $val
+   * @param float $val
    *
-   * @return float|int
+   * @return float
    */
-  public static function val ( $val ): float|int {
+  public static function val ( float $val ): float {
     if ( abs( $val * static::$multiplier ) < 1 ) {
       return 0.0;
     }

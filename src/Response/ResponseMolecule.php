@@ -52,7 +52,6 @@ namespace WishKnish\KnishIO\Client\Response;
 use JsonException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
-use function json_decode;
 
 /**
  * Class ResponseMolecule
@@ -81,6 +80,9 @@ class ResponseMolecule extends Response {
     }
   }
 
+  /**
+   * Initialization
+   */
   public function init (): void {
 
     // Get a json payload
@@ -131,16 +133,16 @@ class ResponseMolecule extends Response {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function status (): mixed {
+  public function status (): string {
     return array_get( $this->data(), 'status', 'rejected' );
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function reason (): mixed {
+  public function reason (): string {
     return array_get( $this->data(), 'reason', 'Invalid response from server' );
   }
 

@@ -19,13 +19,13 @@ class AuthToken {
   protected ?Wallet $wallet;
 
   /**
-   * @param $data
-   * @param $wallet
-   * @param $encrypt
+   * @param array $data
+   * @param Wallet $wallet
+   * @param bool $encrypt
    *
    * @return static
    */
-  public static function create ( $data, $wallet, $encrypt ): self {
+  public static function create ( array $data, Wallet $wallet, bool $encrypt ): self {
     $authToken = new static (
       $data[ 'token' ],
       $data[ 'expiresAt' ],
@@ -37,13 +37,13 @@ class AuthToken {
   }
 
   /**
-   * @param $snapshot
-   * @param $secret
+   * @param array $snapshot
+   * @param string $secret
    *
    * @return static
    * @throws Exception
    */
-  public static function restore ( $snapshot, $secret ): self {
+  public static function restore ( array $snapshot, string $secret ): self {
     $wallet = new Wallet (
       $secret,
       'AUTH',
@@ -67,10 +67,10 @@ class AuthToken {
    * @param $encrypt
    */
   public function __construct (
-    $token,
-    $expiresAt,
-    $pubkey,
-    $encrypt
+    string $token,
+    mixed $expiresAt, // @todo string?
+    string $pubkey,
+    bool $encrypt
   ) {
     $this->token = $token;
     $this->expiresAt = $expiresAt;
@@ -79,9 +79,9 @@ class AuthToken {
   }
 
   /**
-   * @param $wallet
+   * @param Wallet $wallet
    */
-  public function setWallet ( $wallet ): void {
+  public function setWallet ( Wallet $wallet ): void {
     $this->wallet = $wallet;
   }
 
@@ -130,11 +130,11 @@ class AuthToken {
   }
 
   /**
-   * @return int|null
+   * @return int
    */
-  public function getExpireInterval (): ?int {
+  public function getExpireInterval (): int {
     if ( !$this->expiresAt ) {
-      return null;
+      return -1;
     }
     return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
   }

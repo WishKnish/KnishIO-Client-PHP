@@ -70,6 +70,14 @@ class Meta {
   public string $snapshotMolecule;
   public int $createdAt;
 
+  /**
+   * Meta constructor.
+   *
+   * @param string $modelType
+   * @param string $modelId
+   * @param array $meta
+   * @param string|null $snapshotMolecule
+   */
   public function __construct ( string $modelType, string $modelId, array $meta, string $snapshotMolecule = null ) {
     $this->modelType = $modelType;
     $this->modelId = $modelId;
@@ -92,25 +100,14 @@ class Meta {
   }
 
   /**
-   * @param object|array $meta
+   * @param array $meta
    *
    * @return array
    */
-  public static function aggregateMeta ( object|array $meta ): array {
+  public static function aggregateMeta ( array $meta ): array {
     $aggregate = [];
-    if ( count( $meta ) ) {
-      foreach ( $meta as $metaEntry ) {
-        if ( is_object( $metaEntry ) ) {
-          $metaKey = $metaEntry->key;
-          $metaValue = $metaEntry->value;
-        }
-        else {
-          $metaKey = $metaEntry[ 'key' ];
-          $metaValue = $metaEntry[ 'value' ];
-        }
-
-        $aggregate[ $metaKey ] = $metaValue;
-      }
+    foreach ( $meta as $metaEntry ) {
+      $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
     }
     return $aggregate;
   }

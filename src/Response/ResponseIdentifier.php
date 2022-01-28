@@ -57,20 +57,20 @@ class ResponseIdentifier extends Response {
   protected string $dataKey = 'data.LinkIdentifier';
 
   /**
-   * Success?
+   * Success
    *
-   * @return mixed
+   * @return bool
    */
-  public function success (): mixed {
+  public function success (): bool {
     return array_get( $this->data(), 'set' );
   }
 
   /**
    * Message
    *
-   * @return mixed
+   * @return string
    */
-  public function message (): mixed {
+  public function message (): string {
     return array_get( $this->data(), 'message' );
   }
 

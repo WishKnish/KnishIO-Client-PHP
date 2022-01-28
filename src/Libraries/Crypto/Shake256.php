@@ -118,6 +118,7 @@ class Shake256 {
    * @throws Exception
    */
   public static function init (): DesktopdSha3|SHA3 {
+
     // Using sha3 php extension
     if ( static::$useExt ) {
       return DesktopdSha3::init( DesktopdSha3::SHAKE256 );

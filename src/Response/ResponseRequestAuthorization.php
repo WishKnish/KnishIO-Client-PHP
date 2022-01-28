@@ -72,9 +72,11 @@ class ResponseRequestAuthorization extends ResponseMolecule {
   }
 
   /**
-   * Token
+   * Access token value
+   *
+   * @return string
    */
-  public function token () {
+  public function token (): string {
     return $this->payloadKey( 'token' );
   }
 
@@ -86,16 +88,16 @@ class ResponseRequestAuthorization extends ResponseMolecule {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function pubkey (): mixed {
+  public function pubkey (): string {
     return $this->payloadKey( 'key' );
   }
 
   /**
-   * @return mixed
+   * @return bool
    */
-  public function encrypt (): mixed {
+  public function encrypt (): bool {
     return $this->payloadKey( 'encrypt' );
   }
 

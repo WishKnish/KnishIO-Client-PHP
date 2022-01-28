@@ -91,9 +91,7 @@ use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
-use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
-use WishKnish\KnishIO\Client\AuthToken;
 
 
 
@@ -153,18 +151,22 @@ class KnishIOClient {
    */
   private ?AuthToken $authToken;
 
-
   /**
    * @param Wallet $sourceWallet
-   * @param $amount
+   * @param array|null $sendTokenUnits
    *
    * @return array
    */
   #[Pure]
-  public static function splitTokenUnits ( Wallet $sourceWallet, $amount ): array {
+  public static function splitTokenUnits ( Wallet $sourceWallet, ?array $sendTokenUnits ): array {
 
-    // Token units initialization
-    [ $amount, $sendTokenUnits, ] = static::splitUnitAmount( $amount );
+    // Not a token units transfer
+    if ( $sendTokenUnits === null ) {
+      return [ 0, [], [] ];
+    }
+
+    // Calculate amount
+    $amount = count( $sendTokenUnits );
 
     // Init recipient & remainder token units
     $recipientTokenUnits = [];
@@ -179,20 +181,6 @@ class KnishIOClient {
     }
 
     return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
-  }
-
-  /**
-   * @param $amount
-   *
-   * @return array
-   */
-  public static function splitUnitAmount ( $amount ): array {
-    $tokenUnits = [];
-    if ( is_array( $amount ) ) {
-      $tokenUnits = $amount;
-      $amount = count( $amount );
-    }
-    return [ $amount, $tokenUnits, ];
   }
 
   /**

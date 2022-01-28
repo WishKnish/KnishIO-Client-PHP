@@ -131,6 +131,9 @@ class Response {
     $this->init();
   }
 
+  /**
+   * Initialization
+   */
   public function init (): void {
 
   }

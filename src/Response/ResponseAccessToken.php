@@ -51,13 +51,23 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
+/**
+ * Class ResponseAccessToken
+ * @package WishKnish\KnishIO\Client\Response
+ */
 class ResponseAccessToken extends Response {
   protected string $dataKey = 'data.AccessToken';
 
+  /**
+   * @return string
+   */
   public function reason (): string {
     return 'Invalid response from server';
   }
 
+  /**
+   * @return bool
+   */
   public function success (): bool {
     return $this->payload() !== null;
   }

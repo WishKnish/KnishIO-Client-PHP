@@ -51,6 +51,10 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
+/**
+ * Class ResponseRequestAuthorizationGuest
+ * @package WishKnish\KnishIO\Client\Response
+ */
 class ResponseRequestAuthorizationGuest extends Response {
 
   protected string $dataKey = 'data.AccessToken';
@@ -93,9 +97,9 @@ class ResponseRequestAuthorizationGuest extends Response {
   /**
    * Token
    *
-   * @return mixed
+   * @return string
    */
-  public function token (): mixed {
+  public function token (): string {
     return $this->payloadKey( 'token' );
   }
 
@@ -107,16 +111,16 @@ class ResponseRequestAuthorizationGuest extends Response {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function pubkey (): mixed {
+  public function pubkey (): string {
     return $this->payloadKey( 'key' );
   }
 
   /**
-   * @return mixed
+   * @return bool
    */
-  public function encrypt (): mixed {
+  public function encrypt (): bool {
     return $this->payloadKey( 'encrypt' );
   }
 }
