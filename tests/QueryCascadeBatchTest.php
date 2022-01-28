@@ -167,6 +167,7 @@ class QueryCascadeBatchTest extends TestCase {
 
     // Get shadow wallets
     foreach ( $client->queryShadowWallets( $this->tokenSlug ) as $shadowWallet ) {
+
       // Init recipient query
       $client->claimShadowWallet( $this->tokenSlug, $shadowWallet->batchId );
     }

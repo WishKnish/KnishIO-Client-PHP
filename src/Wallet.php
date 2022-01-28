@@ -225,7 +225,7 @@ class Wallet {
    * @return bool
    */
   public function hasTokenUnits (): bool {
-    return count( $this->tokenUnits ) > 0;
+    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
   }
 
   /**
@@ -327,7 +327,6 @@ class Wallet {
     $digestSponge = Crypto\Shake256::init();
 
     foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
-
       foreach ( range( 1, 16 ) as $ignored ) {
         $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
       }

@@ -62,7 +62,8 @@ class MutationCreateWallet extends MutationProposeMolecule {
   /**
    * @param Wallet $newWallet
    *
-   * @throws JsonException|Exception
+   * @throws JsonException
+   * @throws Exception
    */
   public function fillMolecule ( Wallet $newWallet ): void {
     $this->molecule->initWalletCreation( $newWallet );

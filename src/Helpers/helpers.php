@@ -145,13 +145,19 @@ if ( !function_exists( 'array_get' ) ) {
 }
 
 if ( !function_exists( 'array_every' ) ) {
+
+  /**
+   * @param array $array
+   * @param callable $callable
+   *
+   * @return bool
+   */
   function array_every( array $array, callable $callable ): bool {
     foreach ( $array as $value ) {
       if ( !$callable( $value ) ) {
         return false;
       }
     }
-
     return true;
   }
 }

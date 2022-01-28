@@ -3,6 +3,7 @@
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 
 /**
@@ -25,7 +26,12 @@ class AuthToken {
    * @return static
    */
   public static function create ( $data, $wallet, $encrypt ): self {
-    $authToken = new static ( $data[ 'token' ], $data[ 'expiresAt' ], $data[ 'pubkey' ], $encrypt, );
+    $authToken = new static (
+      $data[ 'token' ],
+      $data[ 'expiresAt' ],
+      $data[ 'pubkey' ],
+      $encrypt,
+    );
     $authToken->setWallet( $wallet );
     return $authToken;
   }
@@ -38,9 +44,17 @@ class AuthToken {
    * @throws Exception
    */
   public static function restore ( $snapshot, $secret ): self {
-    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
+    $wallet = new Wallet (
+      $secret,
+      'AUTH',
+      array_get( $snapshot, 'wallet.position' ),
+      null,
+      array_get( $snapshot, 'wallet.characters' )
+    );
     return static::create( [
-      'token' => array_get( $snapshot, 'token' ), 'expiresAt' => array_get( $snapshot, 'expiresAt' ), 'pubkey' => array_get( $snapshot, 'pubkey' ),
+      'token' => array_get( $snapshot, 'token' ),
+      'expiresAt' => array_get( $snapshot, 'expiresAt' ),
+      'pubkey' => array_get( $snapshot, 'pubkey' ),
     ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
 
@@ -52,7 +66,12 @@ class AuthToken {
    * @param $pubkey
    * @param $encrypt
    */
-  public function __construct ( $token, $expiresAt, $pubkey, $encrypt ) {
+  public function __construct (
+    $token,
+    $expiresAt,
+    $pubkey,
+    $encrypt
+  ) {
     $this->token = $token;
     $this->expiresAt = $expiresAt;
     $this->pubkey = $pubkey;
@@ -76,10 +95,22 @@ class AuthToken {
   /**
    * @return array
    */
+  #[ArrayShape( [
+    'token' => "string",
+    'expiresAt' => "int|null",
+    'pubkey' => "string",
+    'encrypt' => "bool",
+    'wallet' => "array"
+  ] )]
   public function getSnapshot (): array {
     return [
-      'token' => $this->token, 'expiresAt' => $this->expiresAt, 'pubkey' => $this->pubkey, 'encrypt' => $this->encrypt, 'wallet' => [
-        'position' => $this->wallet->position, 'characters' => $this->wallet->characters,
+      'token' => $this->token,
+      'expiresAt' => $this->expiresAt,
+      'pubkey' => $this->pubkey,
+      'encrypt' => $this->encrypt,
+      'wallet' => [
+        'position' => $this->wallet->position,
+        'characters' => $this->wallet->characters,
       ],
     ];
   }
@@ -122,9 +153,16 @@ class AuthToken {
    * @return array
    */
   #[Pure]
+  #[ArrayShape( [
+    'token' => "mixed|string",
+    'pubkey' => "mixed|string",
+    'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+  ] )]
   public function getAuthData (): array {
     return [
-      'token' => $this->getToken(), 'pubkey' => $this->getPubkey(), 'wallet' => $this->getWallet(),
+      'token' => $this->getToken(),
+      'pubkey' => $this->getPubkey(),
+      'wallet' => $this->getWallet(),
     ];
   }
 

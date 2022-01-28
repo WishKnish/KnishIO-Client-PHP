@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use Exception;
+use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -170,7 +171,6 @@ class Atom {
       }
 
     }
-
     switch ( $output ) {
       case 'hex':
       {
@@ -230,6 +230,7 @@ class Atom {
    * @param string $property
    * @param $value
    *
+   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {

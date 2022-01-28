@@ -62,7 +62,8 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
 
   /**
    * Fill the molecule
-   * @throws JsonException|Exception
+   * @throws JsonException
+   * @throws Exception
    */
   public function fillMolecule ( array $meta ): MutationRequestAuthorization {
     $this->molecule->initAuthorization( $meta );

@@ -66,7 +66,8 @@ class MutationCreateToken extends MutationProposeMolecule {
    * @param array|null $meta
    *
    * @return MutationCreateToken
-   * @throws JsonException|Exception
+   * @throws JsonException
+   * @throws Exception
    */
   public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = null ): MutationCreateToken {
     // Default metas value

@@ -152,13 +152,13 @@ class TokenUnitTransactionTest extends TestCase {
     // --- Token create
     $tokenUnits = [ 'unit1', 'unit2', 'unit3' ];
     $response = $this->client( $secret )
-        ->createToken( $tokenSlug, 0, [ 'name' => $tokenSlug, 'supply' => 'limited', 'icon' => 'icon', 'fungibility' => 'stackable', ], 'token_error', $tokenUnits );
+      ->createToken( $tokenSlug, 0, [ 'name' => $tokenSlug, 'supply' => 'limited', 'icon' => 'icon', 'fungibility' => 'stackable', ], 'token_error', $tokenUnits );
     $this->assertEquals( $response->reason(), 'TokenResolver: Wrong token units format.' );
 
     // --- Token transfer
     // From & to wallets
     $fromWallet = $client->queryBalance( $this->tokenSlug )
-        ->payload();
+      ->payload();
     $toWallet = ClientWallet::create( $secret, $this->tokenSlug );
 
     $query = $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, 1, [ 10 ], [] );
@@ -169,7 +169,7 @@ class TokenUnitTransactionTest extends TestCase {
     $molecule->sign();
 
     $response = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
-        ->execute();
+      ->execute();
     $this->assertEquals( $response->reason(), 'AtomValueResolver: Wrong token units format.' );
   }
 
@@ -225,7 +225,7 @@ class TokenUnitTransactionTest extends TestCase {
 
     // From & to wallets
     $fromWallet = $client->queryBalance( $this->tokenSlug )
-        ->payload();
+      ->payload();
     $toWallet = ClientWallet::create( $toSecret, $this->tokenSlug );
 
     // --- 1
@@ -263,7 +263,7 @@ class TokenUnitTransactionTest extends TestCase {
    */
   private function rawTokenTransfer ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ): Response {
     return $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, $amount, $recipientTokenUnits, $remainderTokenUnits )
-        ->execute();
+      ->execute();
   }
 
   /**
@@ -397,8 +397,9 @@ class TokenUnitTransactionTest extends TestCase {
   private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ): void {
 
     // Get shadow wallets
-    // Init recipient query
     foreach ( $client->queryShadowWallets( $tokenSlug ) as $shadowWallet ) {
+
+      // Init recipient query
       $client->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
     }
   }
