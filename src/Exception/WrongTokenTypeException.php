@@ -68,7 +68,7 @@ class WrongTokenTypeException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Wrong type of token for this isotope', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Wrong type of token for this isotope', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

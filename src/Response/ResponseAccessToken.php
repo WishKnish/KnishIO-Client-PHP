@@ -51,18 +51,31 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
+/**
+ * Class ResponseAccessToken
+ * @package WishKnish\KnishIO\Client\Response
+ */
 class ResponseAccessToken extends Response {
   protected string $dataKey = 'data.AccessToken';
 
+  /**
+   * @return string
+   */
   public function reason (): string {
     return 'Invalid response from server';
   }
 
+  /**
+   * @return bool
+   */
   public function success (): bool {
     return $this->payload() !== null;
   }
 
-  public function payload () {
+  /**
+   * @return mixed
+   */
+  public function payload (): mixed {
     return $this->data();
   }
 
@@ -73,7 +86,7 @@ class ResponseAccessToken extends Response {
    *
    * @return mixed
    */
-  private function payloadKey ( $key ) {
+  private function payloadKey ( $key ): mixed {
     if ( !array_has( $this->payload(), $key ) ) {
       throw new InvalidResponseException( 'ResponseAccessToken: \'' . $key . '\' key is not found in the payload.' );
     }
@@ -90,7 +103,7 @@ class ResponseAccessToken extends Response {
   /**
    * @return mixed
    */
-  public function time () {
+  public function time (): mixed {
     return $this->payloadKey( 'time' );
   }
 

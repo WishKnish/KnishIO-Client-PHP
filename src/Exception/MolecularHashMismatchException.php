@@ -68,7 +68,7 @@ class MolecularHashMismatchException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'The molecular hash does not match', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'The molecular hash does not match', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

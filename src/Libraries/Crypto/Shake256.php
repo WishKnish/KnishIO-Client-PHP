@@ -108,8 +108,8 @@ class Shake256 {
     }
 
     return SHA3::init( SHA3::SHAKE256 )
-        ->absorb( $data )
-        ->squeeze( $length );
+      ->absorb( $data )
+      ->squeeze( $length );
 
   }
 
@@ -117,7 +117,8 @@ class Shake256 {
    * @return SHA3|DesktopdSha3
    * @throws Exception
    */
-  public static function init () {
+  public static function init (): DesktopdSha3|SHA3 {
+
     // Using sha3 php extension
     if ( static::$useExt ) {
       return DesktopdSha3::init( DesktopdSha3::SHAKE256 );

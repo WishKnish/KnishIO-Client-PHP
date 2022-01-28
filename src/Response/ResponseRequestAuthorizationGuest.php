@@ -51,11 +51,13 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
+/**
+ * Class ResponseRequestAuthorizationGuest
+ * @package WishKnish\KnishIO\Client\Response
+ */
 class ResponseRequestAuthorizationGuest extends Response {
 
   protected string $dataKey = 'data.AccessToken';
-
-
 
   /**
    * @return string
@@ -72,20 +74,20 @@ class ResponseRequestAuthorizationGuest extends Response {
   }
 
   /**
-   * @return array|mixed|null
+   * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
     return $this->data();
   }
 
   /**
    * Payload key
    *
-   * @param $key
+   * @param string $key
    *
    * @return mixed
    */
-  private function payloadKey ( $key ) {
+  private function payloadKey ( string $key ): mixed {
     if ( !array_has( $this->payload(), $key ) ) {
       throw new InvalidResponseException( 'ResponseRequestAuthorizationGuest: \'' . $key . '\' key is not found in the payload.' );
     }
@@ -94,29 +96,31 @@ class ResponseRequestAuthorizationGuest extends Response {
 
   /**
    * Token
+   *
+   * @return string
    */
-  public function token () {
+  public function token (): string {
     return $this->payloadKey( 'token' );
   }
 
   /**
    * @return mixed
    */
-  public function time () {
+  public function time (): mixed {
     return $this->payloadKey( 'time' );
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function pubkey () {
+  public function pubkey (): string {
     return $this->payloadKey( 'key' );
   }
 
   /**
-   * @return mixed
+   * @return bool
    */
-  public function encrypt () {
+  public function encrypt (): bool {
     return $this->payloadKey( 'encrypt' );
   }
 }

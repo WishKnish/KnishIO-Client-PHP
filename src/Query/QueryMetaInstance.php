@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -68,6 +69,7 @@ class QueryMetaInstance extends Query {
    * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response, 'data.MetaInstance' );

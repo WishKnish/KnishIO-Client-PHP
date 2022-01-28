@@ -82,7 +82,7 @@ class MoleculeStructure {
    */
   public function logString(): string {
     return $this->molecularHash .
-        ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+      ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
   }
 
   /**
@@ -152,7 +152,7 @@ class MoleculeStructure {
     $total = array_sum( $mappedHashArray );
     $totalCondition = $total < 0;
 
-    while ( $total < 0 || $total > 0 ) {
+    while ( $total !== 0 ) {
 
       foreach ( $mappedHashArray as $key => $value ) {
 
@@ -173,9 +173,9 @@ class MoleculeStructure {
   /**
    * MoleculeStructure constructor.
    *
-   * @param null $cellSlug
+   * @param string|null $cellSlug
    */
-  public function __construct ( $cellSlug = null ) {
+  public function __construct ( string $cellSlug = null ) {
     $this->cellSlug = $cellSlug;
   }
 
@@ -191,7 +191,7 @@ class MoleculeStructure {
   /**
    * @return string
    */
-  public function __toString () {
+  public function __toString (): string {
     return $this->toJson();
   }
 
@@ -204,13 +204,13 @@ class MoleculeStructure {
   }
 
   /**
-   * @param $key
+   * @param string $key
    * @param bool $encode
    *
    * @return string
    * @throws Exception
    */
-  public function signatureFragments ( $key, bool $encode = true ): string {
+  public function signatureFragments ( string $key, bool $encode = true ): string {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
     $keyChunks = Strings::chunkSubstr( $key, 128 );
 
@@ -219,11 +219,9 @@ class MoleculeStructure {
 
     // Building a one-time-signature
     $signatureFragments = '';
-    foreach ( $keyChunks as $idx => $keyChunk ) {
+    foreach ( $keyChunks as $idx => $workingChunk ) {
 
       // Iterate a number of times equal to 8-Hm[i]
-      $workingChunk = $keyChunk;
-
       for ( $iterationCount = 0, $condition = 8 + $normalizedHash[ $idx ] * ( $encode ? -1 : 1 ); $iterationCount < $condition; $iterationCount++ ) {
 
         $workingChunk = bin2hex( Crypto\Shake256::hash( $workingChunk, 64 ) );
@@ -254,10 +252,10 @@ class MoleculeStructure {
    * @param string $json
    * @param string|null $secret
    *
-   * @return object
+   * @return MoleculeStructure
    * @throws Exception
    */
-  public static function jsonToObject ( string $json, string $secret = null ): object {
+  public static function jsonToObject ( string $json, string $secret = null ): static {
     $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
     $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );

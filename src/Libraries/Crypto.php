@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
+use JsonException;
 use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
@@ -111,13 +112,13 @@ class Crypto {
   /**
    * Encrypts the given message or data with the recipient's public key
    *
-   * @param array|object $message
+   * @param mixed $message
    * @param string $key
    *
-   * @return string|null
-   * @throws Exception|ReflectionException
+   * @return string
+   * @throws JsonException|SodiumException|Exception
    */
-  public static function encryptMessage ( $message, string $key ): ?string {
+  public static function encryptMessage ( mixed $message, string $key ): string {
     return ( new Soda( static::$characters ) )->encrypt( $message, $key );
   }
 
@@ -128,10 +129,10 @@ class Crypto {
    * @param string $privateKey
    * @param string $publicKey
    *
-   * @return array|string|null
-   * @throws ReflectionException|SodiumException
+   * @return mixed
+   * @throws SodiumException|JsonException|Exception
    */
-  public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ) {
+  public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ): mixed {
     return ( new Soda( static::$characters ) )->decrypt( $encrypted, $privateKey, $publicKey );
   }
 
@@ -141,7 +142,7 @@ class Crypto {
    * @param string|null $key
    *
    * @return string|null
-   * @throws Exception|ReflectionException
+   * @throws Exception
    */
   public static function generateEncPrivateKey ( string $key = null ): ?string {
     return ( new Soda( static::$characters ) )->generatePrivateKey( $key );
@@ -153,7 +154,7 @@ class Crypto {
    * @param string $key
    *
    * @return string|null
-   * @throws ReflectionException|SodiumException
+   * @throws SodiumException|Exception
    */
   public static function generateEncPublicKey ( string $key ): ?string {
     return ( new Soda( static::$characters ) )->generatePublicKey( $key );

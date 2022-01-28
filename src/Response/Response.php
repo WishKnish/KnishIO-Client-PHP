@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -66,12 +67,17 @@ class Response {
   /**
    * @var array|null
    */
-  protected $response;
+  protected ?array $response;
+
+  /**
+   * @var string
+   */
+  protected string $origin_response;
 
   /**
    * @var mixed
    */
-  protected $payload;
+  protected mixed $payload;
 
   /**
    * @var string
@@ -84,6 +90,8 @@ class Response {
    * @param Query|null $query
    * @param string $json
    * @param string|null $dataKey
+   *
+   * @throws JsonException
    */
   public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
     // Set a query
@@ -93,7 +101,7 @@ class Response {
     $this->origin_response = $json;
 
     // Json decode
-    $this->response = json_decode( $json, true );
+    $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
 
     // Set datakey from
     if ( $dataKey !== null ) {
@@ -123,6 +131,9 @@ class Response {
     $this->init();
   }
 
+  /**
+   * Initialization
+   */
   public function init (): void {
 
   }
@@ -132,7 +143,7 @@ class Response {
    *
    * @return mixed
    */
-  public function data () {
+  public function data (): mixed {
     // For the root class
     if ( !$this->dataKey ) {
       return $this->response;
@@ -147,9 +158,9 @@ class Response {
   }
 
   /**
-   * @return mixed
+   * @return array|null
    */
-  public function response () {
+  public function response (): ?array {
     return $this->response;
   }
 
@@ -158,12 +169,12 @@ class Response {
    *
    * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
     return null;
   }
 
   /**
-   * @return Query
+   * @return Query|null
    */
   public function query (): ?Query {
     return $this->query;

@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use RuntimeException;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
@@ -92,7 +93,7 @@ class TokenUnitTransactionTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testUnitTransaction (): void {
@@ -151,13 +152,13 @@ class TokenUnitTransactionTest extends TestCase {
     // --- Token create
     $tokenUnits = [ 'unit1', 'unit2', 'unit3' ];
     $response = $this->client( $secret )
-        ->createToken( $tokenSlug, 0, [ 'name' => $tokenSlug, 'supply' => 'limited', 'icon' => 'icon', 'fungibility' => 'stackable', ], 'token_error', $tokenUnits );
+      ->createToken( $tokenSlug, 0, [ 'name' => $tokenSlug, 'supply' => 'limited', 'icon' => 'icon', 'fungibility' => 'stackable', ], 'token_error', $tokenUnits );
     $this->assertEquals( $response->reason(), 'TokenResolver: Wrong token units format.' );
 
     // --- Token transfer
     // From & to wallets
     $fromWallet = $client->queryBalance( $this->tokenSlug )
-        ->payload();
+      ->payload();
     $toWallet = ClientWallet::create( $secret, $this->tokenSlug );
 
     $query = $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, 1, [ 10 ], [] );
@@ -168,13 +169,12 @@ class TokenUnitTransactionTest extends TestCase {
     $molecule->sign();
 
     $response = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule )
-        ->execute();
+      ->execute();
     $this->assertEquals( $response->reason(), 'AtomValueResolver: Wrong token units format.' );
   }
 
   /**
    * Test with request token with units
-   * @throws ReflectionException
    * @throws Exception
    * @throws GuzzleException
    */
@@ -184,7 +184,7 @@ class TokenUnitTransactionTest extends TestCase {
     // Get a env secret
     $envSecret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$envSecret ) {
-      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new RuntimeException( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Create a env stackable units token
@@ -225,7 +225,7 @@ class TokenUnitTransactionTest extends TestCase {
 
     // From & to wallets
     $fromWallet = $client->queryBalance( $this->tokenSlug )
-        ->payload();
+      ->payload();
     $toWallet = ClientWallet::create( $toSecret, $this->tokenSlug );
 
     // --- 1
@@ -263,7 +263,7 @@ class TokenUnitTransactionTest extends TestCase {
    */
   private function rawTokenTransfer ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ): Response {
     return $this->getRawTokenTransferQuery( $client, $fromWallet, $toWallet, $amount, $recipientTokenUnits, $remainderTokenUnits )
-        ->execute();
+      ->execute();
   }
 
   /**
@@ -275,7 +275,7 @@ class TokenUnitTransactionTest extends TestCase {
    * @param array $remainderTokenUnits
    *
    * @return MutationTransferTokens
-   * @throws ReflectionException
+   * @throws Exception
    */
   private function getRawTokenTransferQuery ( $client, ClientWallet $fromWallet, ClientWallet $toWallet, $amount, array $recipientTokenUnits, array $remainderTokenUnits ): MutationTransferTokens {
 
@@ -346,11 +346,11 @@ class TokenUnitTransactionTest extends TestCase {
    * @param string $batchId
    * @param array $tokenUnitIds
    *
-   * @return mixed|KnishIOClient
+   * @return KnishIOClient
    * @throws GuzzleException
    * @throws Exception
    */
-  private function transferToken ( KnishIOClient $client, string $batchId, array $tokenUnitIds ) {
+  private function transferToken ( KnishIOClient $client, string $batchId, array $tokenUnitIds ): KnishIOClient {
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
@@ -368,11 +368,11 @@ class TokenUnitTransactionTest extends TestCase {
    * @param array $tokenUnitIds
    * @param string $batchId
    *
-   * @return mixed|KnishIOClient
-   * @throws ReflectionException|GuzzleException
+   * @return KnishIOClient
+   * @throws GuzzleException
    * @throws Exception
    */
-  private function requestToken ( KnishIOClient $client, array $tokenUnitIds, string $batchId ) {
+  private function requestToken ( KnishIOClient $client, array $tokenUnitIds, string $batchId ): KnishIOClient {
 
     // Data for recipient
     $toSecret = Crypto::generateSecret();
@@ -397,11 +397,10 @@ class TokenUnitTransactionTest extends TestCase {
   private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ): void {
 
     // Get shadow wallets
-    $shadowWallets = $client->queryShadowWallets( $tokenSlug );
+    foreach ( $client->queryShadowWallets( $tokenSlug ) as $shadowWallet ) {
 
-    // Init recipient query
-    foreach ( $shadowWallets as $shadowWallet ) {
-      $response = $client->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
+      // Init recipient query
+      $client->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
     }
   }
 
@@ -413,7 +412,6 @@ class TokenUnitTransactionTest extends TestCase {
    *
    * @return KnishIOClient
    * @throws GuzzleException
-   * @throws ReflectionException
    * @throws Exception
    */
   private function createToken ( string $tokenSlug, string $batchId, array $tokenUnits, string $secret = null ): KnishIOClient {

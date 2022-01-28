@@ -62,7 +62,7 @@ class ResponseBalance extends Response {
   /**
    * Get a payload
    *
-   * @return Wallet
+   * @return Wallet|null
    * @throws Exception
    */
   public function payload (): ?Wallet {

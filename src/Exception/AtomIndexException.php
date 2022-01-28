@@ -68,7 +68,7 @@ class AtomIndexException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'There is an atom without an index', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'There is an atom without an index', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

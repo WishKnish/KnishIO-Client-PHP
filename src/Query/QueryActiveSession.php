@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
 
@@ -65,22 +66,17 @@ class QueryActiveSession extends Query {
 
   // Fields
   protected array $fields = [
-    'bundleHash',
-    'metaType',
-    'metaId',
-    'jsonData',
-    'createdAt',
-    'updatedAt',
+    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
   ];
 
-
   /**
-   * @param $response
+   * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
-   return new ResponseQueryActiveSession( $this, $response );
+    return new ResponseQueryActiveSession( $this, $response );
   }
 
 }

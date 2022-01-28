@@ -53,6 +53,7 @@ use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use ReflectionException;
+use RuntimeException;
 use WishKnish\KnishIO\Atom;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -76,7 +77,7 @@ class TokenClientTransactionTest extends TestCase {
   // Token slugs
   protected array $token_slug = [ 'fungible' => 'UTFUNGIBLE', 'stackable' => 'UTSTACKABLE', 'env.fungible' => 'UTENVFUNGIBLE', 'env.stackable' => 'UTENVSTACKABLE', ];
 
-  public function beforeExecute () {
+  public function beforeExecute (): void {
     // $this->cell_slug = null;
     // $this->graphql_url = 'https://frontrow.knish.io/graphql';
 
@@ -139,7 +140,7 @@ class TokenClientTransactionTest extends TestCase {
     // Call server cleanup
     $this->callServerCleanup( TokenServerTransactionTest::class );
 
-    // Deafult assertion
+    // Default assertion
     $this->assertEquals( true, true );
   }
 
@@ -157,7 +158,7 @@ class TokenClientTransactionTest extends TestCase {
 
     $env_secret = env( 'SECRET_TOKEN_KNISH' );
     if ( !$env_secret ) {
-      throw new Exception( 'env.SECRET_TOKEN_KNISH is not set.' );
+      throw new RuntimeException( 'env.SECRET_TOKEN_KNISH is not set.' );
     }
 
     // Secret array
@@ -209,7 +210,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testRequestToken (): void {
@@ -245,19 +246,19 @@ class TokenClientTransactionTest extends TestCase {
     $client = $this->client( $secret[ 'env' ] );
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 0 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 1.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 1.0 );
 
     // --- Base receive (NOT-splitting)
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 0 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 2.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 0 ], $token, $transaction_amount * 2.0 );
 
     // --- RECEIVER.1
 
     // --- Base receive (NOT-splitting)
     $response = $client->requestTokens( $token, $transaction_amount, $toBundle[ 1 ] );
     $this->checkResponse( $response );
-    $this->checkWalletShadow( $client, $toBundle[ 1 ], $token, $transaction_amount * 1.0, false );
+    $this->checkWalletShadow( $client, $toBundle[ 1 ], $token, $transaction_amount * 1.0 );
 
     // --- RECEIVER.2
 
@@ -300,7 +301,7 @@ class TokenClientTransactionTest extends TestCase {
   }
 
   /**
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testBaseTransaction (): void {
@@ -352,7 +353,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test token transferring
    *
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testBatchTransaction (): void {
@@ -366,9 +367,6 @@ class TokenClientTransactionTest extends TestCase {
 
     // Initial code
     $this->beforeExecute();
-
-    // Secrets initialization
-    $secret = array_get( $this->getData(), 'secret' );
 
     // Get to bundle hashes from the recipient secret
     $toBundle = [];
@@ -426,7 +424,7 @@ class TokenClientTransactionTest extends TestCase {
   /**
    * Test V isotope combination (multi-recipients)
    *
-   * @throws ReflectionException|GuzzleException
+   * @throws GuzzleException
    * @throws Exception
    */
   public function testVIsotopeCombination (): void {
@@ -471,7 +469,6 @@ class TokenClientTransactionTest extends TestCase {
    *
    * @return Response
    * @throws GuzzleException
-   * @throws ReflectionException
    * @throws Exception
    */
   protected function vIsotopeCombination ( $from_secret, $token, $recipients, bool $generate_wallets = false, int $transaction_amount = 1 ): Response {
@@ -490,8 +487,8 @@ class TokenClientTransactionTest extends TestCase {
       if ( !$generate_wallets ) {
 
         // Get shadow wallet list
-        $query = $client->createQuery( QueryWalletList::class );
-        $response = $query->execute( [ 'bundleHash' => Crypto::generateBundleHash( $recipient ), 'token' => $token, ] );
+        $response = $client->createQuery( QueryWalletList::class )
+          ->execute( [ 'bundleHash' => Crypto::generateBundleHash( $recipient ), 'token' => $token, ] );
         $wallets = $response->payload();
 
         // Set a recipient wallet
@@ -578,13 +575,12 @@ class TokenClientTransactionTest extends TestCase {
    * @param array $intruders
    *
    * @throws GuzzleException
-   * @throws ReflectionException
    * @throws Exception
    */
   protected function claimShadowWallet ( string $token, string $recipient, array $intruders ): void {
     // Check
     if ( !is_dir( getenv( 'SERVER_LOG_PATH' ) ) ) {
-      throw new Exception( "
+      throw new RuntimeException( "
 				SERVER_LOG_PATH is required in .env file.\r\n
 				The path must be to the SERVER storage log and SERVER must have this env: MAIL_DRIVER=log
 			" );
@@ -626,10 +622,8 @@ class TokenClientTransactionTest extends TestCase {
       $client = $this->client( $recipient );
 
       // Get shadow wallets
-      $shadowWallets = $client->queryShadowWallets( $token );
-
       // Init recipient query
-      foreach ( $shadowWallets as $shadowWallet ) {
+      foreach ( $client->queryShadowWallets( $token ) as $shadowWallet ) {
 
         // Create an intruder molecule
         $molecule = $client->createMolecule( $intruder, new Wallet( $intruder ) );
@@ -657,9 +651,8 @@ class TokenClientTransactionTest extends TestCase {
     }
 
     // --- Bind a shadow wallet (with original bundle hash)
-    $responses = $this->client( $recipient )
-        ->claimShadowWallets( $token );
-    foreach ( $responses as $response ) {
+    foreach ( $this->client( $recipient )
+        ->claimShadowWallets( $token ) as $response ) {
       $this->checkResponse( $response );
     }
     // ---
@@ -683,12 +676,12 @@ class TokenClientTransactionTest extends TestCase {
     $log_file = key( $log_files );
 
     if ( !file_exists( $log_file ) ) {
-      throw new Exception( 'Log file does not exist.' );
+      throw new RuntimeException( 'Log file does not exist.' );
     }
     $logs = file_get_contents( $log_file );
     if ( !preg_match( '#<p>Your verification code: <b>([A-Za-z0-9]+)</b></p>#Ui', $logs, $matches ) ) {
 
-      throw new Exception( 'Identifier code does not exist.' );
+      throw new RuntimeException( 'Identifier code does not exist.' );
     }
 
     // Remove log file

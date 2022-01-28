@@ -49,9 +49,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
-use function json_decode;
 
 /**
  * Class ResponseMolecule
@@ -60,7 +60,7 @@ use function json_decode;
 class ResponseMolecule extends Response {
   protected string $dataKey = 'data.ProposeMolecule';
 
-  protected $payload;
+  protected mixed $payload;
 
   protected MoleculeStructure $clientMolecule;
 
@@ -69,6 +69,8 @@ class ResponseMolecule extends Response {
    *
    * @param MutationProposeMoleculeStructure|null $query
    * @param string $json
+   *
+   * @throws JsonException
    */
   public function __construct ( ?MutationProposeMoleculeStructure $query, string $json ) {
     parent::__construct( $query, $json );
@@ -78,13 +80,22 @@ class ResponseMolecule extends Response {
     }
   }
 
+  /**
+   * Initialization
+   */
   public function init (): void {
 
     // Get a json payload
     $payload_json = array_get( $this->data(), 'payload' );
 
     // Decode payload
-    $this->payload = json_decode( $payload_json, true );
+    try {
+      $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
+    }
+    catch ( JsonException $e ) {
+      // Unable to decode JSON response?
+      /** @TODO Add proper handing of JSON errors */
+    }
   }
 
   /**
@@ -122,23 +133,23 @@ class ResponseMolecule extends Response {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function status () {
+  public function status (): string {
     return array_get( $this->data(), 'status', 'rejected' );
   }
 
   /**
-   * @return mixed
+   * @return string
    */
-  public function reason () {
+  public function reason (): string {
     return array_get( $this->data(), 'reason', 'Invalid response from server' );
   }
 
   /**
-   * @return mixed|null
+   * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
     return $this->payload;
   }
 

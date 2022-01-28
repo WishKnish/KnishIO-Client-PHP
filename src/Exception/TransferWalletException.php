@@ -68,7 +68,7 @@ class TransferWalletException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Sender wallet is missing or invalid', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Sender wallet is missing or invalid', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

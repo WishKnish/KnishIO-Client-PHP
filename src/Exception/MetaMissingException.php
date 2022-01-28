@@ -69,7 +69,7 @@ class MetaMissingException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Empty meta data.', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Empty meta data.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
 
   }

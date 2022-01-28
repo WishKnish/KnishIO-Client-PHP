@@ -49,17 +49,16 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
-use Psr\Http\Message\RequestInterface;
+use JetBrains\PhpStorm\Pure;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
-use function GuzzleHttp\json_encode;
 
 /**
  * Class Query
@@ -67,9 +66,14 @@ use function GuzzleHttp\json_encode;
  */
 abstract class Query {
   /**
-   * @var Client
+   * @var HttpClientInterface
    */
-  protected $client;
+  protected HttpClientInterface $client;
+
+  /**
+   * @var string
+   */
+  protected string $query;
 
   /**
    * @var Request
@@ -131,16 +135,18 @@ abstract class Query {
    *
    * @param array|null $variables
    * @param array|null $fields
+   * @param array $headers
    *
-   * @return RequestInterface
+   * @return Request
+   * @throws JsonException
    */
-  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ) {
+  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ): Request {
 
     // Default value of variables
     $this->variables = $this->compiledVariables( $variables );
 
     // Create a request
-    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] ) );
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ], JSON_THROW_ON_ERROR ) );
 
   }
 
@@ -149,7 +155,7 @@ abstract class Query {
    * @param array|null $fields
    *
    * @return Response
-   * @throws GuzzleException
+   * @throws GuzzleException|JsonException
    */
   public function execute ( array $variables = null, array $fields = null ): Response {
 
@@ -169,7 +175,7 @@ abstract class Query {
 
   /**
    * @param string $json
-   * !!! DEBUG FUCNTION
+   * !!! DEBUG FUNCTION
    *
    * @return string
    * @throws GuzzleException
@@ -190,15 +196,16 @@ abstract class Query {
    * @param array|null $fields
    *
    * @return string
+   * @throws JsonException
    */
-  public function getQueryUri ( string $name, $variables = null, array $fields = null ): string {
+  public function getQueryUri ( string $name, array|string $variables = null, array $fields = null ): string {
 
     // Compile variables
     if ( is_string( $variables ) ) {
-      $variables = json_decode( trim( $variables ), true );
+      $variables = json_decode( trim( $variables ), true, 512, JSON_THROW_ON_ERROR );
     }
     $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables ) );
+    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables, JSON_THROW_ON_ERROR ) );
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
@@ -209,15 +216,15 @@ abstract class Query {
         [ '@name', '@mutation', '@vars', '@fields', ],
         [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ],
         '?query=@mutation{@name(@vars)@fields}'
-    );
+      );
   }
 
   /**
    * @param array|null $fields
    *
-   * @return array|string|string[]
+   * @return array|string
    */
-  public function compiledQuery ( array $fields = null ) {
+  public function compiledQuery ( array $fields = null ): array|string {
     // Fields
     if ( $fields !== null ) {
       $this->fields = $fields;
@@ -246,6 +253,7 @@ abstract class Query {
    *
    * @return array
    */
+  #[Pure]
   public function compiledVariables ( array $variables = null ): array {
     return default_if_null( $variables, [] );
   }
@@ -254,6 +262,7 @@ abstract class Query {
    * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response );
@@ -263,10 +272,11 @@ abstract class Query {
    * @param ResponseInterface $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponseRaw ( ResponseInterface $response ): Response {
     return $this->createResponse( $response->getBody()
-        ->getContents() );
+      ->getContents() );
   }
 
   /**
@@ -274,7 +284,7 @@ abstract class Query {
    */
   public function uri (): ?string {
     return $this->client()
-        ->getUri();
+      ->getUri();
   }
 
   /**
