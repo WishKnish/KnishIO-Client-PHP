@@ -64,13 +64,7 @@ class QueryToken extends Query {
 
   // Fields
   protected array $fields = [
-    'slug',
-    'name',
-    'fungibility',
-    'supply',
-    'decimals',
-    'amount',
-    'icon',
+    'slug', 'name', 'fungibility', 'supply', 'decimals', 'amount', 'icon',
   ];
 
   /**

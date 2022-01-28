@@ -72,6 +72,8 @@ abstract class BaseException extends LogicException implements IException {
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
+   *
+   * @noinspection PhpPureAttributeCanBeAddedInspection
    */
   public function __construct ( string $message, int $code = 0, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );

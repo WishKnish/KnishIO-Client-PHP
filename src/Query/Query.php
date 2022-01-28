@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use JetBrains\PhpStorm\Pure;
@@ -175,10 +176,10 @@ abstract class Query {
 
   /**
    * @param string $json
-   * !!! DEBUG FUCNTION
+   * !!! DEBUG FUNCTION
    *
    * @return string
-   * @throws GuzzleException
+   * @throws GuzzleException|JsonException|Exception
    */
   public static function getProposeMoleculeUri ( string $json ): string {
     $client = new KnishIOClient( url() . '/graphql' );
@@ -212,11 +213,7 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->uri() . str_replace(
-        [ '@name', '@mutation', '@vars', '@fields', ],
-        [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ],
-        '?query=@mutation{@name(@vars)@fields}'
-    );
+    return $this->uri() . str_replace( [ '@name', '@mutation', '@vars', '@fields', ], [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ], '?query=@mutation{@name(@vars)@fields}' );
   }
 
   /**

@@ -116,9 +116,7 @@ class Crypto {
    * @param string $key
    *
    * @return string
-   * @throws JsonException
-   * @throws ReflectionException
-   * @throws SodiumException
+   * @throws JsonException|SodiumException|Exception
    */
   public static function encryptMessage ( mixed $message, string $key ): string {
     return ( new Soda( static::$characters ) )->encrypt( $message, $key );
@@ -132,7 +130,7 @@ class Crypto {
    * @param string $publicKey
    *
    * @return mixed
-   * @throws ReflectionException|SodiumException|JsonException
+   * @throws SodiumException|JsonException|Exception
    */
   public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ): mixed {
     return ( new Soda( static::$characters ) )->decrypt( $encrypted, $privateKey, $publicKey );
@@ -144,7 +142,7 @@ class Crypto {
    * @param string|null $key
    *
    * @return string|null
-   * @throws Exception|ReflectionException
+   * @throws Exception
    */
   public static function generateEncPrivateKey ( string $key = null ): ?string {
     return ( new Soda( static::$characters ) )->generatePrivateKey( $key );
@@ -156,7 +154,7 @@ class Crypto {
    * @param string $key
    *
    * @return string|null
-   * @throws ReflectionException|SodiumException
+   * @throws SodiumException|Exception
    */
   public static function generateEncPublicKey ( string $key ): ?string {
     return ( new Soda( static::$characters ) )->generatePublicKey( $key );

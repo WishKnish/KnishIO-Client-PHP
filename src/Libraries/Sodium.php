@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
-use ReflectionException;
 use ReflectionExtension;
 use ReflectionFunction;
 use RuntimeException;
@@ -62,39 +61,26 @@ use RuntimeException;
 class Sodium {
 
   /**
-   * @throws ReflectionException
    * @throws Exception
    */
   public static function libsodium2sodium (): void {
-
     if ( extension_loaded( 'libsodium' ) ) {
 
       $sodium = new ReflectionExtension( 'libsodium' );
 
       foreach ( $sodium->getConstants() as $primaryName => $value ) {
-
         if ( stripos( $primaryName, 'SODIUM_' ) !== 0 ) {
-
           $name = strtoupper( str_replace( '\\', '_', $primaryName ) );
-
           if ( !defined( $name ) ) {
-
             define( $name, $value );
-
           }
-
         }
-
       }
 
       foreach ( $sodium->getFunctions() as $primaryName => $launch ) {
-
         if ( stripos( $primaryName, 'sodium_' ) !== 0 ) {
-
-          static::createFunctionAlias( $launch, lcfirst( str_replace( '\\', '_', $primaryName ) ) );
-
+          self::createFunctionAlias( $launch, lcfirst( str_replace( '\\', '_', $primaryName ) ) );
         }
-
       }
 
     }
@@ -115,36 +101,26 @@ class Sodium {
   private static function createFunctionAlias ( ReflectionFunction $functionReflection, string $aliasName ): void {
 
     if ( !function_exists( $aliasName ) ) {
-
       $functionName = $functionReflection->getName();
-
       if ( !str_starts_with( $functionName, '\\' ) ) {
-
         $functionName = '\\' . $functionName;
-
       }
 
       $function = $aliasName . '(';
       $needComma = false;
 
       foreach ( $functionReflection->getParameters() as $param ) {
-
         if ( $needComma ) {
-
           $function .= ',';
-
         }
 
         if ( $param->isPassedByReference() ) {
-
           $function .= '&';
-
         }
 
         $function .= '$' . $param->getName();
 
         if ( $param->isDefaultValueAvailable() ) {
-
           $val = $param->getDefaultValue();
 
           if ( is_string( $val ) ) {
@@ -152,22 +128,16 @@ class Sodium {
           }
 
           $function .= ' = ' . $val;
-
         }
         else if ( in_array( $functionName, [ '\Sodium\hex2bin', '\Sodium\memzero', ], true ) && $param->getPosition() === 1 ) {
 
           if ( '\Sodium\memzero' === $functionName ) {
-
             $function .= " = null";
-
           }
 
           if ( '\Sodium\hex2bin' === $functionName ) {
-
             $function .= " = ''";
-
           }
-
         }
 
         $needComma = true;
@@ -178,8 +148,6 @@ class Sodium {
       eval( $function );
 
     }
-
   }
-
 }
 

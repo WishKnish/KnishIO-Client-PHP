@@ -397,10 +397,8 @@ class TokenUnitTransactionTest extends TestCase {
   private function claimShadowWallet ( KnishIOClient $client, string $tokenSlug ): void {
 
     // Get shadow wallets
-    $shadowWallets = $client->queryShadowWallets( $tokenSlug );
-
     // Init recipient query
-    foreach ( $shadowWallets as $shadowWallet ) {
+    foreach ( $client->queryShadowWallets( $tokenSlug ) as $shadowWallet ) {
       $client->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
     }
   }

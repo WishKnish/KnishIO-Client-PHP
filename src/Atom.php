@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client;
 
 use ArrayObject;
 use Exception;
-use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -93,8 +92,8 @@ class Atom {
   /**
    * Atom constructor.
    *
-   * @param string $position
-   * @param string $walletAddress
+   * @param string|null $position
+   * @param string|null $walletAddress
    * @param string $isotope
    * @param string|null $token
    * @param string|null $value
@@ -142,7 +141,7 @@ class Atom {
 
       foreach ( $atomData as $name => $value ) {
 
-        // All nullable values does not hashing (only custom keys)
+        // All null values not in custom keys list won't get hashed
         if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
           continue;
         }
@@ -153,9 +152,7 @@ class Atom {
         }
 
         if ( $name === 'meta' ) {
-          $list = $value;
-
-          foreach ( $list as $meta ) {
+          foreach ( $value as $meta ) {
 
             if ( isset( $meta[ 'value' ] ) ) {
 
@@ -173,7 +170,6 @@ class Atom {
       }
 
     }
-
 
     switch ( $output ) {
       case 'hex':
@@ -234,7 +230,6 @@ class Atom {
    * @param string $property
    * @param $value
    *
-   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {

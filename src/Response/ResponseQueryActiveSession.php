@@ -65,7 +65,7 @@ class ResponseQueryActiveSession extends Response {
 
     // Prepare active user list
     $activeUsers = [];
-    foreach( $list as $item ) {
+    foreach ( $list as $item ) {
       if ( $jsonData = array_get( $item, 'jsonData' ) ) {
         $item[ 'jsonData' ] = json_decode( $jsonData, true );
       }

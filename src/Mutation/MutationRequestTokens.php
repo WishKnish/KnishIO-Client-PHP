@@ -67,8 +67,7 @@ class MutationRequestTokens extends MutationProposeMolecule {
    * @param string|null $batchId
    *
    * @return MutationRequestTokens
-   * @throws JsonException
-   * @throws Exception
+   * @throws JsonException|Exception
    */
   public function fillMolecule ( string $tokenSlug, $requestedAmount, string $metaType, string $metaId, array $metas = null, ?string $batchId = null ): MutationRequestTokens {
     // Default metas value

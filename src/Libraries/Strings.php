@@ -119,7 +119,7 @@ class Strings {
 
     // Make sure we are not trying to convert out of the symbol table range
     if ( $fromBase > mb_strlen( $srcSymbolTable ) || $toBase > mb_strlen( $destSymbolTable ) ) {
-      error_log( 'Can\'t convert ' . $src . ' to base ' . $toBase . ' greater than symbol table length. src-table: ' . mb_strlen( $srcSymbolTable ) . ' dest-table: ' . mb_strlen( $destSymbolTable ) );
+      // error_log( 'Can\'t convert ' . $src . ' to base ' . $toBase . ' greater than symbol table length. src-table: ' . mb_strlen( $srcSymbolTable ) . ' dest-table: ' . mb_strlen( $destSymbolTable ) );
       return false;
     }
 

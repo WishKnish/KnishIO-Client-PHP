@@ -64,8 +64,7 @@ class MutationTransferTokens extends MutationProposeMolecule {
    * @param $amount
    *
    * @return MutationTransferTokens
-   * @throws JsonException
-   * @throws Exception
+   * @throws JsonException|Exception
    */
   public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
     $this->molecule->initValue( $toWallet, $amount );

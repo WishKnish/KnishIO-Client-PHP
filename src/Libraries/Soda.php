@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
 use JsonException;
-use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
@@ -73,7 +72,7 @@ class Soda {
    *
    * @param string|null $characters
    *
-   * @throws ReflectionException
+   * @throws Exception
    */
   public function __construct ( string $characters = null ) {
     $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
@@ -111,13 +110,7 @@ class Soda {
   public function decrypt ( string $encrypted, string $privateKey, string $publicKey ): mixed {
 
     // Get decrypted string
-    $decrypted = sodium_crypto_box_seal_open(
-      $this->decode( $encrypted ),
-      sodium_crypto_box_keypair_from_secretkey_and_publickey(
-        $this->decode( $privateKey ),
-        $this->decode( $publicKey )
-      )
-    );
+    $decrypted = sodium_crypto_box_seal_open( $this->decode( $encrypted ), sodium_crypto_box_keypair_from_secretkey_and_publickey( $this->decode( $privateKey ), $this->decode( $publicKey ) ) );
 
     return json_decode( $decrypted, true, 512, JSON_THROW_ON_ERROR );
   }

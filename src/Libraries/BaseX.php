@@ -21,9 +21,7 @@ class BaseX {
     $base58 = [ 'BITCOIN', 'FLICKR', 'RIPPLE', 'IPFS' ];
     $base64 = [ 'BASE64' ];
     $config = [
-      "characters" => B58::GMP,
-      "check" => false,
-      "version" => 0x00,
+      "characters" => B58::GMP, "check" => false, "version" => 0x00,
     ];
 
     $cloneOptions = ( new ArrayObject( $options ) )->getArrayCopy();

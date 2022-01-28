@@ -155,8 +155,7 @@ class Cipher {
 
             // Full request context
             $content = [
-              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
-              'variables' => [
+              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }', 'variables' => [
                 'Hash' => json_encode( $encryptedMessage, JSON_THROW_ON_ERROR ),
               ],
             ];
@@ -165,8 +164,7 @@ class Cipher {
             $content = Utils::streamFor( json_encode( $content, JSON_THROW_ON_ERROR ) );
 
             // Send a request
-            return $handler( $request->withBody( $content ), $options )
-              ->then( $this->response( $options ) );
+            return $handler( $request->withBody( $content ), $options )->then( $this->response( $options ) );
           }
 
           throw new InvalidRequestException();

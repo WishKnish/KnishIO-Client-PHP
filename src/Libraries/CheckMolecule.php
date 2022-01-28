@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
@@ -90,17 +91,11 @@ class CheckMolecule {
     $verification_methods = [ 'molecularHash', 'ots', 'isotopeM', 'isotopeP', 'isotopeR', 'isotopeC', 'isotopeV', 'isotopeT', 'isotopeI', 'isotopeU', 'index', 'batchId', ];
 
     foreach ( $verification_methods as $method ) {
-
-      switch ( $method ) {
-        case 'isotopeV':
-        {
-          static::{$method}( $molecule, $fromWallet );
-          break;
-        }
-        default:
-        {
-          static::{$method}( $molecule );
-        }
+      if( $method === 'isotopeV' ) {
+        static::{$method}( $molecule, $fromWallet );
+      }
+      else {
+        static::{$method}( $molecule );
       }
     }
 
@@ -150,43 +145,58 @@ class CheckMolecule {
    * @throws JsonException
    */
   public static function isotopeR ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     /** @var Atom $atom */
     foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
 
       $metas = Meta::aggregateMeta( $atom->meta );
 
-      foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
-        if ( !array_key_exists( $key, $metas ) ) {
-          throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+      if ( array_key_exists( 'policy', $metas ) ) {
+        $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
+
+        if ( !array_every( array_keys( $policy ), static fn( $value ) => in_array( $value, [
+          'read', 'write'
+        ], true ) ) ) {
+          throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
       }
 
-      $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
+      if ( array_key_exists( 'rule', $metas ) ) {
 
-      if ( $conditions === null ) {
-        throw new MetaMissingException( 'Invalid format for conditions.' );
-      }
-
-      foreach ( $conditions as $condition ) {
-        $keys = array_keys( $condition );
-
-        if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-          throw new MetaMissingException( 'Missing field in conditions.' );
-        }
-      }
-
-      if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-        $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
-
-        if ( $callbacks === null ) {
-          throw new MetaMissingException( 'Invalid format for callback.' );
+        foreach ( [
+          'callback', 'conditions', 'rule',
+        ] as $key ) {
+          if ( !array_key_exists( $key, $metas ) ) {
+            throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+          }
         }
 
-        foreach ( $callbacks as $callback ) {
-          if ( !array_key_exists( 'action', $callback ) ) {
-            throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+        $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
+
+        if ( $conditions === null ) {
+          throw new MetaMissingException( 'Invalid format for conditions.' );
+        }
+
+        if ( is_array( $conditions ) ) {
+          foreach ( $conditions as $condition ) {
+            $keys = array_keys( $condition );
+
+            if ( count( array_intersect( $keys, [
+                'key', 'value', 'comparison',
+              ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+              throw new MetaMissingException( 'Missing field in conditions.' );
+            }
+          }
+        }
+
+        if ( !in_array( strtolower( $metas[ 'callback' ] ), [
+          'reject', 'unseat',
+        ], true ) ) {
+          $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
+
+          if ( $callbacks === null ) {
+            throw new MetaMissingException( 'Invalid format for callback.' );
           }
         }
       }
@@ -201,7 +211,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function continuId ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     /** @var Atom $atom */
     $atom = reset( $molecule->atoms );
@@ -219,8 +229,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function index ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     foreach ( $molecule->atoms as $atom ) {
 
@@ -238,8 +247,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeT ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms T
 
@@ -291,8 +299,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeC ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms C
 
@@ -317,8 +324,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeI ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms I
 
@@ -343,8 +349,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeU ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms U
 
@@ -369,8 +374,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeM ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Select all atoms M
 
@@ -400,8 +404,7 @@ class CheckMolecule {
    * @return bool
    */
   public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null ): bool {
-
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     $isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
 
@@ -509,11 +512,10 @@ class CheckMolecule {
    * @param MoleculeStructure $molecule
    *
    * @return bool
-   * @throws MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
-   * @throws Exception
+   * @throws MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException|Exception
    */
   public static function molecularHash ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {
       throw new MolecularHashMismatchException();
@@ -534,7 +536,7 @@ class CheckMolecule {
    * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
    */
   public static function ots ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+    self::missing( $molecule );
 
     // Determine first atom
     /** @var Atom $firstAtom */

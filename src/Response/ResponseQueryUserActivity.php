@@ -58,9 +58,9 @@ class ResponseQueryUserActivity extends Response {
   protected string $dataKey = 'data.UserActivity';
 
   /**
-   * @return mixed|string|null
+   * @return mixed
    */
-  public function payload () {
+  public function payload (): mixed {
 
     /*
     const data = JSON.parse( JSON.stringify( this.data() ) );

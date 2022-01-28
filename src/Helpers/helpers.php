@@ -134,13 +134,24 @@ if ( !function_exists( 'array_get' ) ) {
    * @return mixed
    */
   function array_get ( ArrayAccess|array|null $array, string $keys, mixed $default = null ): mixed {
-    $expKeys = explode( '.', $keys );
-    foreach ( $expKeys as $key ) {
+    foreach ( explode( '.', $keys ) as $key ) {
       if ( !array_has( $array, $key ) ) {
         return $default;
       }
       $array = $array[ $key ];
     }
     return $array;
+  }
+}
+
+if ( !function_exists( 'array_every' ) ) {
+  function array_every( array $array, callable $callable ): bool {
+    foreach ( $array as $value ) {
+      if ( !$callable( $value ) ) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
