@@ -94,12 +94,12 @@ class MutationProposeMoleculeStructure extends Query {
   }
 
   /**
-   * @param array|null $variables
+   * @param array $variables
    *
    * @return array
    */
   #[Pure]
-  public function compiledVariables ( array $variables = null ): array {
+  public function compiledVariables ( array $variables = [] ): array {
     // Default variables
     $variables = parent::compiledVariables( $variables );
 

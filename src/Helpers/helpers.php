@@ -79,22 +79,6 @@ if ( !function_exists( 'array_unpacking' ) ) {
 
 }
 
-if ( !function_exists( 'default_if_null' ) ) {
-
-  /**
-   * Get a default value if the passed value is null
-   *
-   * @param mixed $value
-   * @param mixed $default
-   *
-   * @return mixed
-   */
-  function default_if_null ( mixed $value, mixed $default ): mixed {
-    return $value ?? $default;
-  }
-
-}
-
 if ( !function_exists( 'array_has' ) ) {
   /**
    * Check if an item or items exist in an array using "dot" notation.

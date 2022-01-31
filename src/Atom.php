@@ -49,8 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use ArrayObject;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -197,26 +197,20 @@ class Atom {
   }
 
   /**
-   * @param array|null $atoms
+   * @param array $atoms
    *
    * @return array
    */
-  public static function sortAtoms ( array $atoms = null ): array {
-    $atoms = default_if_null( $atoms, [] );
+  public static function sortAtoms ( array $atoms = [] ): array {
 
-    $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
-
-    usort( $atomList, static function ( self $first, self $second ) {
-
-      if ( $first->index === $second->index ) {
+    usort($atoms, static function ( $atom1, $atom2 ) {
+      if ( $atom1->index === $atom2->index ) {
         return 0;
       }
+      return $atom1->index < $atom2->index ? -1 : 1;
+    });
 
-      return $first->index < $second->index ? -1 : 1;
-
-    } );
-
-    return $atomList;
+    return $atoms;
   }
 
   /**

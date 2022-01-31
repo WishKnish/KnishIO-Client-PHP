@@ -86,14 +86,14 @@ abstract class Query {
   protected Response $response;
 
   /**
-   * @var array|null
-   */
-  protected ?array $variables;
-
-  /**
    * @var string
    */
   protected static string $default_query;
+
+  /**
+   * @var array|null
+   */
+  protected array $variables;
 
   /**
    * @var array
@@ -131,16 +131,14 @@ abstract class Query {
   }
 
   /**
-   * Create new request
-   *
-   * @param array|null $variables
+   * @param array $variables
    * @param array|null $fields
    * @param array $headers
    *
    * @return Request
    * @throws JsonException
    */
-  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ): Request {
+  public function createRequest ( array $variables = [], array $fields = null, array $headers = [] ): Request {
 
     // Default value of variables
     $this->variables = $this->compiledVariables( $variables );
@@ -151,13 +149,14 @@ abstract class Query {
   }
 
   /**
-   * @param array|null $variables
+   * @param array $variables
    * @param array|null $fields
    *
    * @return Response
-   * @throws GuzzleException|JsonException
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function execute ( array $variables = null, array $fields = null ): Response {
+  public function execute ( array $variables = [], array $fields = null ): Response {
 
     // Set a request
     $this->request = $this->createRequest( $variables, $fields );
@@ -192,13 +191,13 @@ abstract class Query {
    * !!! DEBUG FUCNTION
    *
    * @param string $name
-   * @param array|string|null $variables
+   * @param array|string $variables
    * @param array|null $fields
    *
    * @return string
    * @throws JsonException
    */
-  public function getQueryUri ( string $name, array|string $variables = null, array $fields = null ): string {
+  public function getQueryUri ( string $name, array|string $variables = [], array $fields = null ): string {
 
     // Compile variables
     if ( is_string( $variables ) ) {
@@ -225,7 +224,7 @@ abstract class Query {
    * @return array|string
    */
   public function compiledQuery ( array $fields = null ): array|string {
-    // Fields
+    // Overwrite default fields value
     if ( $fields !== null ) {
       $this->fields = $fields;
     }
@@ -249,13 +248,13 @@ abstract class Query {
   }
 
   /**
-   * @param array|null $variables
+   * @param array $variables
    *
    * @return array
    */
   #[Pure]
-  public function compiledVariables ( array $variables = null ): array {
-    return default_if_null( $variables, [] );
+  public function compiledVariables ( array $variables = [] ): array {
+    return $variables;
   }
 
   /**

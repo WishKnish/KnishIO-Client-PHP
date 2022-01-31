@@ -212,7 +212,7 @@ class KnishIOClient {
       $this->authTokenObjects[ $uri ] = null; // @todo remove this code if it is not required!
     }
 
-    $this->client = default_if_null( $client, new HttpClient( $this->getRandomUri() ) );
+    $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
   }
 
@@ -607,16 +607,15 @@ class KnishIOClient {
   /**
    * @param $token
    * @param $amount
-   * @param array|null $meta
+   * @param array $meta
    * @param string|null $batchId
    * @param array $units
    *
    * @return Response
-   * @throws ReflectionException|GuzzleException|Exception
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function createToken ( $token, $amount, array $meta = null, ?string $batchId = null, array $units = [] ): Response {
-    $meta = default_if_null( $meta, [] );
-
+  public function createToken ( $token, $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
       // Generate batch ID if it does not pass
@@ -760,16 +759,15 @@ class KnishIOClient {
    * @param $token
    * @param $amount
    * @param null $to
-   * @param array|null $meta
+   * @param array $meta
    * @param string|null $batchId
    * @param array $units
    *
    * @return Response
-   * @throws GuzzleException|Exception
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function requestTokens ( $token, $amount, $to = null, array $meta = null, ?string $batchId = null, array $units = [] ): Response {
-    $meta = default_if_null( $meta, [] );
-
+  public function requestTokens ( $token, $amount, $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // Get a token & init is Stackable flag for batch ID initialization
     $tokenResponse = $this->createQuery( QueryToken::class )
