@@ -67,17 +67,13 @@ class Crypto {
   private static string $characters = 'BASE64';
 
   /**
-   * Generates a secret based on an optional seed
-   *
    * @param string|null $seed
-   * @param int|null $length
+   * @param int $length
    *
    * @return string
    * @throws Exception
    */
-  public static function generateSecret ( string $seed = null, int $length = null ): string {
-    $length = default_if_null( $length, 2048 );
-
+  public static function generateSecret ( string $seed = null, int $length = 2048 ): string {
     return in_array( $seed, [ null, '' ], true ) ? Strings::randomString( $length ) : bin2hex( Shake256::hash( $seed, $length / 4 ) );
   }
 
