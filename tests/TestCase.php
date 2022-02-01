@@ -82,19 +82,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
   }
 
   /**
-   * Clear data test
+   * Call third-party tests
    *
+   * @param string $class
+   * @param string $test
+   * @param string $test_dir
    */
-  protected function callThirdPartyTest ( $class, $test, $test_dir ): void {
-
-    // PHP version
-    $this->output( [ 'PHP Version: ' . PHP_VERSION ] );
-
-    // PHP version comparing
-    if ( version_compare( PHP_VERSION, '7.0.0' ) <= 0 ) {
-      $this->output( [ "PHP version is less than 7.0.0. Skip '$test' test.", "  -- DB must be cleaned manually", "  -- OR should call $class::$test server unit test instead.", ] );
-      return;
-    }
+  protected function callThirdPartyTest ( string $class, string $test, string $test_dir ): void {
 
     // Server test filepath
     $server_test_filepath = $test_dir . class_basename( $class ) . '.php';
@@ -103,19 +97,15 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
     if ( !$server_test_filepath || !file_exists( $server_test_filepath ) ) {
       print_r( "SERVER_TEST_FILE is not defined. Test do not clean up.\r\n" );
     }
-    else {
 
-      // Create & run a unit test command
+    // Create & run a unit test command
+    else {
       $command = new Command();
       $command->run( [ 'phpunit', '--configuration', __DIR__ . '/../' . 'phpunit.xml', '--filter', '/(::' . $test . ')( .*)?$/', $class, $server_test_filepath, '--teamcity', ], false );
     }
+
     $this->assertEquals( true, true );
   }
 
-  /**
-   */
-  protected function callServerCleanup ( $class ): void {
-    $this->callThirdPartyTest( $class, 'testClearAll', getenv( 'SERVER_TEST_PATH' ) );
-  }
 
 }
