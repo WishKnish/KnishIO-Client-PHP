@@ -99,7 +99,7 @@ class MutationProposeMoleculeStructure extends Query {
    * @return array
    */
   #[Pure]
-  public function compiledVariables ( array $variables = [] ): array {
+  public function compiledVariables ( array $variables ): array {
     // Default variables
     $variables = parent::compiledVariables( $variables );
 
