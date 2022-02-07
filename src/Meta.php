@@ -68,7 +68,7 @@ class Meta {
   public string $modelId;
   public array $meta;
   public string $snapshotMolecule;
-  public int $createdAt;
+  public string $createdAt;
 
   /**
    * Meta constructor.

@@ -66,7 +66,7 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * @property string $token
  * @property string|null $key
  * @property string|null $address
- * @property int|float $balance
+ * @property float $balance
  * @property array $molecules
  * @property string|null $bundle
  * @property string|null $privkey
@@ -92,9 +92,9 @@ class Wallet {
   public array $tokenUnits = [];
 
   /**
-   * @var int|float
+   * @var float
    */
-  public int|float $balance = 0;
+  public float $balance = 0;
 
   /**
    * @var string|null

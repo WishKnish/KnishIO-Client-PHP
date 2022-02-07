@@ -12,7 +12,7 @@ use JetBrains\PhpStorm\Pure;
 class AuthToken {
 
   protected string $token;
-  protected ?int $expiresAt;
+  protected ?string $expiresAt;
   protected string $pubkey;
   protected bool $encrypt;
 
@@ -130,9 +130,9 @@ class AuthToken {
   }
 
   /**
-   * @return int
+   * @return string
    */
-  public function getExpireInterval (): int {
+  public function getExpireInterval (): string {
     if ( !$this->expiresAt ) {
       return -1;
     }

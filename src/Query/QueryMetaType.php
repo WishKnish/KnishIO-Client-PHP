@@ -76,7 +76,7 @@ class QueryMetaType extends Query {
    *
    * @return array
    */
-  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = null ): array {
+  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -95,9 +95,7 @@ class QueryMetaType extends Query {
       $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
     }
 
-    if ( $latest ) {
-      $variables[ 'latest' ] = true;
-    }
+    $variables[ 'latest' ] = $latest;
 
     return $variables;
   }

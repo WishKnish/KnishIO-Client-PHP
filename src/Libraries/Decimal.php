@@ -74,7 +74,7 @@ use JetBrains\PhpStorm\Pure;
 class Decimal {
 
   // Value determines by min sql decimal precision
-  public static int $multiplier = 10 ** 18;
+  public static float $multiplier = 10 ** 18;
 
   /**
    * @param float $val

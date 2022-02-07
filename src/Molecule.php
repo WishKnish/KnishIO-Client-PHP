@@ -317,14 +317,14 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param float|int $amount
+   * @param float $amount
    * @param string $token
    * @param array $metas
    *
    * @return $this
    * @throws JsonException
    */
-  public function replenishTokens ( float|int $amount, string $token, array $metas ): Molecule {
+  public function replenishTokens ( float $amount, string $token, array $metas ): Molecule {
 
     $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
     $aggregateMeta[ 'action' ] = 'add';
@@ -360,13 +360,13 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param float|int $amount
+   * @param float $amount
    * @param string|null $walletBundle
    *
    * @return $this
-   * @throws BalanceInsufficientException|JsonException
+   * @throws JsonException
    */
-  public function burnToken ( float|int $amount, string $walletBundle = null ): Molecule {
+  public function burnToken ( float $amount, string $walletBundle = null ): Molecule {
 
     if ( $amount < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
@@ -417,12 +417,12 @@ class Molecule extends MoleculeStructure {
    * regenerated wallet receiving the remainder
    *
    * @param Wallet $recipientWallet
-   * @param float|int $value
+   * @param float $value
    *
    * @return $this
-   * @throws BalanceInsufficientException|JsonException
+   * @throws JsonException
    */
-  public function initValue ( Wallet $recipientWallet, float|int $value ): Molecule {
+  public function initValue ( Wallet $recipientWallet, float $value ): Molecule {
 
     if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
@@ -562,12 +562,12 @@ class Molecule extends MoleculeStructure {
    * Initialize a C-type molecule to issue a new type of token
    *
    * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
-   * @param float|integer $amount - how many of the token we are initially issuing (for fungible tokens only)
+   * @param float $amount - how many of the token we are initially issuing (for fungible tokens only)
    * @param array $meta - additional fields to configure the token
    *
    * @return self
    */
-  public function initTokenCreation ( Wallet $recipientWallet, float|int $amount, array $meta ): Molecule {
+  public function initTokenCreation ( Wallet $recipientWallet, float $amount, array $meta ): Molecule {
 
     $this->molecularHash = null;
 
@@ -737,7 +737,7 @@ class Molecule extends MoleculeStructure {
 
   /**
    * @param string $token
-   * @param float|int $amount
+   * @param float $amount
    * @param string $metaType
    * @param string $metaId
    * @param array $meta
@@ -746,7 +746,7 @@ class Molecule extends MoleculeStructure {
    * @return $this
    * @throws JsonException
    */
-  public function initTokenRequest ( string $token, float|int $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
+  public function initTokenRequest ( string $token, float $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
 
     $this->molecularHash = null;
 
