@@ -60,7 +60,7 @@ use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
 class QueryActiveSession extends Query {
 
   // Query
-  protected static string $default_query = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
+  protected static string $defaultQuery = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
 	 	@fields
 	 }';
 

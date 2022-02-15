@@ -61,7 +61,7 @@ class QueryContinuId extends Query {
   /**
    * @var string
    */
-  protected static string $default_query = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
+  protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
     	@fields
     }';
 

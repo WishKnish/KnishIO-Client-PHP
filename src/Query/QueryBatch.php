@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseBatch;
  */
 class QueryBatch extends Query {
   // Query
-  protected static string $default_query = 'query( $batchId: String ) { Batch( batchId: $batchId )
+  protected static string $defaultQuery = 'query( $batchId: String ) { Batch( batchId: $batchId )
 		@fields
 	}';
 
