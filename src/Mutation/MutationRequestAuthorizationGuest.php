@@ -54,7 +54,7 @@ use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
 
 class MutationRequestAuthorizationGuest extends Mutation {
   // Query
-  protected static string $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
+  protected static string $defaultQuery = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
 
   // Fields
   protected array $fields = [

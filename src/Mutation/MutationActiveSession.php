@@ -55,7 +55,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 class MutationActiveSession extends Mutation {
 
   // Query
-  protected static string $default_query = 'mutation( $bundleHash: String!,
+  protected static string $defaultQuery = 'mutation( $bundleHash: String!,
       $metaType: String!,
       $metaId: String!,
       $ipAddress: String,
