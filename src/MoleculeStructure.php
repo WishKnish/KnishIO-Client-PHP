@@ -78,6 +78,29 @@ class MoleculeStructure {
 
 
   /**
+   * @param string $isotope
+   * @param array $atoms
+   *
+   * @return array
+   */
+  public static function isotopeFilter ( string $isotope, array $atoms ): array {
+    return array_filter( $atoms, static function ( Atom $atom ) use ( $isotope ) {
+      return ( $isotope === $atom->isotope );
+    } );
+  }
+
+
+  /**
+   * @param string $isotope
+   *
+   * @return array
+   */
+  public function getIsotopes( string $isotope ): array {
+    return static::isotopeFilter( $isotope, $this->atoms );
+  }
+
+
+  /**
    * @return string
    */
   public function logString(): string {
@@ -182,10 +205,11 @@ class MoleculeStructure {
   /**
    * @param Wallet|null $senderWallet
    *
-   * @return bool
+   * @throws \JsonException
    */
-  public function check ( Wallet $senderWallet = null ): bool {
-    return CheckMolecule::verify( $this, $senderWallet );
+  public function check ( Wallet $senderWallet = null ): void {
+    ( new CheckMolecule( $this ) )
+      ->verify( $senderWallet );
   }
 
   /**
