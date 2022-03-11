@@ -185,7 +185,7 @@ abstract class Query {
    * @throws GuzzleException
    */
   public static function getProposeMoleculeUri ( string $json ): string {
-    $client = new KnishIOClient( url() . '/graphql' );
+    $client = new KnishIOClient( url( '' ) . '/graphql' );
     $molecule = Molecule::jsonToObject( $json );
     $query = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
     return $query->getQueryUri( 'ProposeMolecule', $query->compiledVariables( [] ) );
@@ -216,11 +216,13 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->uri() . str_replace(
-        [ '@name', '@mutation', '@vars', '@fields', ],
-        [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ],
-        '?query=@mutation{@name(@vars)@fields}'
-      );
+    $queryUri = str_replace(
+      [ '@name', '@mutation', '@vars', '@fields', ],
+      [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ],
+      '?query=@mutation{@name(@vars)@fields}&noMiddleware=true'
+    );
+
+    return $this->uri() . $queryUri;
   }
 
   /**

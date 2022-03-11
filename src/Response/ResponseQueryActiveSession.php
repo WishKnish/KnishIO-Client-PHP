@@ -55,6 +55,9 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseQueryActiveSession extends Response {
 
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.ActiveUser';
 
   /**

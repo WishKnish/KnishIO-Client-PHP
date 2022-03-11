@@ -112,7 +112,8 @@ class Crypto {
    * @param string $key
    *
    * @return string
-   * @throws JsonException|SodiumException|Exception
+   * @throws JsonException
+   * @throws SodiumException
    */
   public static function encryptMessage ( mixed $message, string $key ): string {
     return ( new Soda( static::$characters ) )->encrypt( $message, $key );

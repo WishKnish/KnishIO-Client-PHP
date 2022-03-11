@@ -52,6 +52,10 @@ namespace WishKnish\KnishIO\Client\Mutation;
 use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseAccessToken;
 
+/**
+ * Class MutationAccessToken
+ * @package WishKnish\KnishIO\Client\Mutation
+ */
 class MutationAccessToken extends Mutation {
   // Query
   protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';

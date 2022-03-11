@@ -58,10 +58,20 @@ use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMolecule extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.ProposeMolecule';
 
+  /**
+   * @var mixed
+   */
   protected mixed $payload;
 
+  /**
+   * @var MoleculeStructure
+   */
   protected MoleculeStructure $clientMolecule;
 
   /**

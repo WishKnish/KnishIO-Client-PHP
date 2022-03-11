@@ -298,12 +298,12 @@ class Wallet {
   }
 
   /**
-   * @param mixed $code
+   * @param string $code
    *
    * @return bool
    */
-  public static function isBundleHash ( mixed $code ): bool {
-    return is_string( $code ) && mb_strlen( $code ) === 64 && ctype_xdigit( $code );
+  public static function isBundleHash ( string $code ): bool {
+    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
   }
 
   /**
@@ -395,7 +395,6 @@ class Wallet {
    * @throws JsonException
    * @throws ReflectionException
    * @throws SodiumException
-   * @throws Exception
    */
   public function decryptBinary ( array|string $message ): mixed {
     $decrypt = $this->decryptMyMessage( $message );
@@ -413,10 +412,12 @@ class Wallet {
 
   /**
    * @param mixed $message
-   * @param string ...$pubkeys
+   * @param mixed ...$pubkeys
    *
    * @return array
-   * @throws ReflectionException|Exception
+   * @throws JsonException
+   * @throws ReflectionException
+   * @throws SodiumException
    */
   public function encryptMyMessage ( mixed $message, ...$pubkeys ): array {
 
@@ -442,7 +443,6 @@ class Wallet {
    * @throws JsonException
    * @throws ReflectionException
    * @throws SodiumException
-   * @throws Exception
    */
   public function decryptMyMessage ( array|string $message ): mixed {
 
