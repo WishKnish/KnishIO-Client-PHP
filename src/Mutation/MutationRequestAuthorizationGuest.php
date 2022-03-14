@@ -49,25 +49,24 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorizationGuest;
-use WishKnish\KnishIO\Client\Wallet;
 
 class MutationRequestAuthorizationGuest extends Mutation {
   // Query
-  protected static string $default_query = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
+  protected static string $defaultQuery = 'mutation( $cellSlug: String, $pubkey: String, $encrypt: Boolean ) { AccessToken( cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt ) @fields }';
 
   // Fields
   protected array $fields = [
-      'token',
-      'expiresAt',
-      'pubkey',
+    'token',
+    'expiresAt',
+    'pubkey',
 
-      // Deprecated fields
-      'time',
-      'key',
-      'encrypt',
+    // Deprecated fields
+    'time',
+    'key',
+    'encrypt',
   ];
-
 
   /**
    * Create a response
@@ -75,6 +74,7 @@ class MutationRequestAuthorizationGuest extends Mutation {
    * @param $response
    *
    * @return ResponseRequestAuthorizationGuest
+   * @throws JsonException
    */
   public function createResponse ( $response ): ResponseRequestAuthorizationGuest {
     return new ResponseRequestAuthorizationGuest( $this, $response );

@@ -50,8 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
@@ -82,191 +81,181 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule {
 
   /**
+   * CheckMolecule constructor.
+   *
    * @param MoleculeStructure $molecule
+   */
+  public function __construct(
+    private MoleculeStructure $molecule
+  )
+  {
+    // No molecular hash?
+    if ( $molecule->molecularHash === null ) {
+      throw new MolecularHashMissingException();
+    }
+
+    // No atoms?
+    if ( empty( $molecule->atoms ) ) {
+      throw new AtomsMissingException();
+    }
+  }
+
+  /**
    * @param Wallet|null $fromWallet
    *
-   * @return bool
+   * @throws JsonException
    */
-  public static function verify ( MoleculeStructure $molecule, Wallet $fromWallet = null ): bool {
-    $verification_methods = [ 'molecularHash', 'ots', 'isotopeM', 'isotopeP', 'isotopeR', 'isotopeC', 'isotopeV', 'isotopeT', 'isotopeI', 'isotopeU', 'index', 'batchId', ];
-
-    foreach ( $verification_methods as $method ) {
-
-      switch ( $method ) {
-        case 'isotopeV':
-        {
-          static::{$method}( $molecule, $fromWallet );
-          break;
-        }
-        default:
-        {
-          static::{$method}( $molecule );
-        }
-      }
-    }
-
-    return true;
+  public function verify ( Wallet $fromWallet = null ): void {
+    $this->molecularHash();
+    $this->ots();
+    $this->isotopeM();
+    $this->isotopeP();
+    $this->isotopeR();
+    $this->isotopeC();
+    $this->isotopeV( $fromWallet );
+    $this->isotopeT();
+    $this->isotopeI();
+    $this->isotopeU();
+    $this->index();
+    $this->batchId();
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
-   * @throws Exception
+   * Check batch ID
    */
-  public static function batchId ( MoleculeStructure $molecule ): bool {
+  public function batchId (): void {
 
-    if ( count( $molecule->atoms ) > 0 ) {
+    /** @var Atom $sourceAtom */
+    $sourceAtom = $this->molecule->atoms[ 0 ];
+    if ( $sourceAtom->isotope === 'V' && $sourceAtom->batchId !== null ) {
 
-      /** @var Atom $subscription */
-      $subscription = $molecule->atoms[ 0 ];
+      /** @var Atom[] $atoms */
+      $atoms = $this->molecule->getIsotopes( 'V' );
+      $remainderAtom = $atoms[ count( $atoms ) - 1 ];
 
-      if ( $subscription->isotope === 'V' && $subscription->batchId !== null ) {
-
-        /** @var Atom[] $atoms */
-        $atoms = static::isotopeFilter( 'V', $molecule->atoms );
-        $remainder = $atoms[ count( $atoms ) - 1 ];
-
-        if ( $subscription->batchId !== $remainder->batchId ) {
-          throw new BatchIdException( 'Source batch ID is not equal to the remainder one.' );
-        }
-
-        array_walk( $atoms, static function ( Atom $atom ) {
-          if ( $atom->batchId === null ) {
-            throw new BatchIdException( 'Batch ID can not be null.' );
-          }
-        } );
+      if ( $sourceAtom->batchId !== $remainderAtom->batchId ) {
+        throw new BatchIdException( 'Source batch ID is not equal to the remainder one.' );
       }
 
-      return true;
+      array_walk( $atoms, static function ( Atom $atom ) {
+        if ( $atom->batchId === null ) {
+          throw new BatchIdException( 'Batch ID can not be null.' );
+        }
+      } );
     }
-
-    throw new BatchIdException();
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * @throws JsonException
    */
-  public static function isotopeR ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+  public function isotopeR (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'R', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'R' ) as $atom ) {
 
       $metas = Meta::aggregateMeta( $atom->meta );
 
-      foreach ( [ 'callback', 'conditions', 'rule', ] as $key ) {
-        if ( !array_key_exists( $key, $metas ) ) {
-          throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+      if ( array_key_exists( 'policy', $metas ) ) {
+        $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
+
+        if ( !array_every( array_keys( $policy ), static fn( $value ) => in_array( $value, [
+          'read', 'write'
+        ], true ) ) ) {
+          throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
       }
 
-      $conditions = json_decode( $metas[ 'conditions' ], true );
+      if ( array_key_exists( 'rule', $metas ) ) {
 
-      if ( $conditions === null ) {
-        throw new MetaMissingException( 'Invalid format for conditions.' );
-      }
-
-      foreach ( $conditions as $condition ) {
-        $keys = array_keys( $condition );
-
-        if ( count( array_intersect( $keys, [ 'key', 'value', 'comparison', ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-          throw new MetaMissingException( 'Missing field in conditions.' );
-        }
-      }
-
-      if ( !in_array( strtolower( $metas[ 'callback' ] ), [ 'reject', 'unseat', ], true ) ) {
-        $callbacks = json_decode( $metas[ 'callback' ], true );
-
-        if ( $callbacks === null ) {
-          throw new MetaMissingException( 'Invalid format for callback.' );
+        foreach ( [
+          'callback', 'conditions', 'rule',
+        ] as $key ) {
+          if ( !array_key_exists( $key, $metas ) ) {
+            throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+          }
         }
 
-        foreach ( $callbacks as $callback ) {
-          foreach ( [ 'action', ] as $key ) {
-            if ( !array_key_exists( $key, $callback ) ) {
-              throw new MetaMissingException( 'Missing \'' . $key . '\' field in callback.' );
+        $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
+
+        if ( $conditions === null ) {
+          throw new MetaMissingException( 'Invalid format for conditions.' );
+        }
+
+        if ( is_array( $conditions ) ) {
+          foreach ( $conditions as $condition ) {
+            $keys = array_keys( $condition );
+
+            if ( count( array_intersect( $keys, [
+                'key', 'value', 'comparison',
+              ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
+              throw new MetaMissingException( 'Missing field in conditions.' );
             }
+          }
+        }
+
+        if ( !in_array( strtolower( $metas[ 'callback' ] ), [
+          'reject', 'unseat',
+        ], true ) ) {
+          $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
+
+          if ( $callbacks === null ) {
+            throw new MetaMissingException( 'Invalid format for callback.' );
           }
         }
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check ContinuID
    */
-  public static function continuId ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+  public function continuId (): void {
 
     /** @var Atom $atom */
-    $atom = reset( $molecule->atoms );
+    $atom = reset( $this->molecule->atoms );
 
-    if ( $atom->token === 'USER' && count( static::isotopeFilter( 'I', $molecule->atoms ) ) < 1 ) {
+    if ( $atom->token === 'USER' && count( $this->molecule->getIsotopes( 'I' ) ) < 1 ) {
       throw new AtomsMissingException( 'Missing atom ContinuID' );
     }
 
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check index
    */
-  public static function index ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    foreach ( $molecule->atoms as $atom ) {
-
+  public function index (): void {
+    foreach ( $this->molecule->atoms as $atom ) {
       if ( null === $atom->index ) {
         throw new AtomIndexException();
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope T
    */
-  public static function isotopeT ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    // Select all atoms T
+  public function isotopeT (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'T', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'T' ) as $atom ) {
 
       $meta = Meta::aggregateMeta( $atom->meta );
       $metaType = strtolower( ( string ) $atom->metaType );
 
-      if ( $metaType === 'wallet' ) {
-
-        foreach ( [ 'position', 'bundle' ] as $key ) {
-
+      // Check required meta keys closure
+      $checkRequiredMetaKeys = static function ( array $keys ) use ( $meta ) {
+        foreach ( $keys as $key ) {
           if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
             throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
           }
         }
+      };
+
+      if ( $metaType === 'wallet' ) {
+        $checkRequiredMetaKeys( [ 'position', 'bundle' ] );
       }
 
-      foreach ( [ 'token', ] as $key ) {
-
-        if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
-          throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-        }
-      }
+      $checkRequiredMetaKeys( [ 'token' ] );
 
       if ( $atom->token !== 'USER' ) {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
@@ -276,32 +265,22 @@ class CheckMolecule {
         throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope P
    */
-  public static function isotopeP ( MoleculeStructure $molecule ): bool {
-    return static::isotopeC( $molecule );
+  public function isotopeP (): void {
+    $this->isotopeC();
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope C
    */
-  public static function isotopeC ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    // Select all atoms C
+  public function isotopeC (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'C', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'C' ) as $atom ) {
 
       if ( $atom->token !== 'USER' ) {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
@@ -311,23 +290,15 @@ class CheckMolecule {
         throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope I
    */
-  public static function isotopeI ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    // Select all atoms I
+  public function isotopeI (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'I', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'I' ) as $atom ) {
 
       if ( $atom->token !== 'USER' ) {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
@@ -337,23 +308,15 @@ class CheckMolecule {
         throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope U
    */
-  public static function isotopeU ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    // Select all atoms U
+  public function isotopeU (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'U', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
       /* if ( $atom->token !== 'AUTH' ) {
           throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
@@ -363,23 +326,15 @@ class CheckMolecule {
         throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-
-    return true;
   }
 
   /**
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
+   * Check isotope M
    */
-  public static function isotopeM ( MoleculeStructure $molecule ): bool {
-
-    static::missing( $molecule );
-
-    // Select all atoms M
+  public function isotopeM (): void {
 
     /** @var Atom $atom */
-    foreach ( static::isotopeFilter( 'M', $molecule->atoms ) as $atom ) {
+    foreach ( $this->molecule->getIsotopes( 'M' ) as $atom ) {
 
       if ( empty( $atom->meta ) ) {
         throw new MetaMissingException();
@@ -389,8 +344,6 @@ class CheckMolecule {
         throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
     }
-
-    return true;
   }
 
   /**
@@ -398,25 +351,20 @@ class CheckMolecule {
    * 1. we're sending and receiving the same token
    * 2. we're only subtracting on the first atom
    *
-   * @param MoleculeStructure $molecule
    * @param Wallet|null $senderWallet
-   *
-   * @return bool
    */
-  public static function isotopeV ( MoleculeStructure $molecule, Wallet $senderWallet = null ): bool {
+  public function isotopeV ( Wallet $senderWallet = null ): void {
 
-    static::missing( $molecule );
-
-    $isotopeV = static::isotopeFilter( 'V', $molecule->atoms );
+    $isotopeV = $this->molecule->getIsotopes( 'V' );
 
     // Select all atoms V
     if ( empty( $isotopeV ) ) {
-      return true;
+      return;
     }
 
     // Grabbing the first atom
     /** @var Atom $firstAtom */
-    $firstAtom = reset( $molecule->atoms );
+    $firstAtom = reset( $this->molecule->atoms );
 
     // if there are only two atoms, then this is the burning of tokens
     if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
@@ -432,7 +380,7 @@ class CheckMolecule {
         throw new TransferMalformedException();
       }
 
-      return true;
+      return;
     }
 
     // Looping through each V-isotope atom
@@ -445,7 +393,7 @@ class CheckMolecule {
     }
 
     /** @var Atom $vAtom */
-    foreach ( $molecule->atoms as $index => $vAtom ) {
+    foreach ( $this->molecule->atoms as $index => $vAtom ) {
 
       // Not V? Next...
       if ( $vAtom->isotope !== 'V' ) {
@@ -502,28 +450,17 @@ class CheckMolecule {
     else if ( !Decimal::equal( $value, 0.0 ) ) {
       throw new TransferWalletException();
     }
-
-    // Looks like we passed all the tests!
-    return true;
   }
 
   /**
    * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
    *
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
-   * @throws ReflectionException|MolecularHashMissingException|AtomsMissingException|MolecularHashMismatchException
+   * @throws Exception
    */
-  public static function molecularHash ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
-
-    if ( $molecule->molecularHash !== Atom::hashAtoms( $molecule->atoms ) ) {
+  public function molecularHash (): void {
+    if ( $this->molecule->molecularHash !== Atom::hashAtoms( $this->molecule->atoms ) ) {
       throw new MolecularHashMismatchException();
     }
-
-    // Looks like we passed all the tests!
-    return true;
   }
 
   /**
@@ -531,23 +468,19 @@ class CheckMolecule {
    * of signature fragments Om and a molecular hash Hm into a single-use wallet address to be matched against
    * the sender’s address.
    *
-   * @param MoleculeStructure $molecule
-   *
-   * @return bool
    * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
    */
-  public static function ots ( MoleculeStructure $molecule ): bool {
-    static::missing( $molecule );
+  public function ots (): void {
 
     // Determine first atom
     /** @var Atom $firstAtom */
-    $firstAtom = reset( $molecule->atoms );
+    $firstAtom = reset( $this->molecule->atoms );
 
     // Rebuilding OTS out of all the atoms
     $ots = '';
 
     /** @var Atom $atom */
-    foreach ( $molecule->atoms as $atom ) {
+    foreach ( $this->molecule->atoms as $atom ) {
       $ots .= $atom->otsFragment;
     }
 
@@ -564,7 +497,7 @@ class CheckMolecule {
     }
 
     // Key fragments
-    $keyFragments = $molecule->signatureFragments( $ots, false );
+    $keyFragments = $this->molecule->signatureFragments( $ots, false );
 
     // Absorb the hashed Kk into the sponge to receive the digest Dk
     $digest = bin2hex( Shake256::hash( $keyFragments, 1024 ) );
@@ -576,35 +509,6 @@ class CheckMolecule {
     if ( $address !== $firstAtom->walletAddress ) {
       throw new SignatureMismatchException();
     }
-
-    // Looks like we passed all the tests!
-    return true;
   }
 
-  /**
-   * @param string $isotope
-   * @param array $atoms
-   *
-   * @return array
-   */
-  public static function isotopeFilter ( string $isotope, array $atoms ): array {
-    return array_filter( $atoms, static function ( Atom $atom ) use ( $isotope ) {
-      return $isotope === $atom->isotope;
-    } );
-  }
-
-  /**
-   * @param MoleculeStructure $molecule
-   */
-  private static function missing ( MoleculeStructure $molecule ): void {
-    // No molecular hash?
-    if ( $molecule->molecularHash === null ) {
-      throw new MolecularHashMissingException();
-    }
-
-    // No atoms?
-    if ( empty( $molecule->atoms ) ) {
-      throw new AtomsMissingException();
-    }
-  }
 }

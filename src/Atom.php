@@ -49,9 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use ArrayObject;
 use Exception;
-use ReflectionException;
+use JsonException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -93,8 +92,8 @@ class Atom {
   /**
    * Atom constructor.
    *
-   * @param string $position
-   * @param string $walletAddress
+   * @param string|null $position
+   * @param string|null $walletAddress
    * @param string $isotope
    * @param string|null $token
    * @param string|null $value
@@ -126,59 +125,51 @@ class Atom {
    * @param array $atoms
    * @param string $output
    *
-   * @return array[]|string|string[]|null
-   * @throws ReflectionException|Exception
+   * @return array|string|null
+   * @throws Exception
    */
-  public static function hashAtoms ( array $atoms, string $output = 'base17' ) {
+  public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
 
     foreach ( $atomList as $atom ) {
 
-      $atom_data = get_object_vars( $atom );
+      $atomData = get_object_vars( $atom );
 
       $molecularSponge->absorb( $numberOfAtoms );
 
-      foreach ( $atom_data as $name => $value ) {
+      foreach ( $atomData as $name => $value ) {
 
-        // Old atoms support (without batch_id field)
-        if ( $value === null && in_array( $name, [ 'batchId', 'pubkey', 'characters', ], true ) ) {
+        // All null values not in custom keys list won't get hashed
+        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
           continue;
         }
 
+        // Excluded keys
         if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
           continue;
         }
 
         if ( $name === 'meta' ) {
-          $list = $value;
-
-          foreach ( $list as $meta ) {
+          foreach ( $value as $meta ) {
 
             if ( isset( $meta[ 'value' ] ) ) {
 
               $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
               $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+
             }
           }
-          $atom->$name = $list;
 
           continue;
         }
 
-        if ( in_array( $name, [ 'position', 'walletAddress', 'isotope', ], true ) ) {
-          $molecularSponge->absorb( ( string ) $value );
-          continue;
-        }
-
-        if ( $value !== null ) {
-          $molecularSponge->absorb( ( string ) $value );
-        }
-
+        // Absorb value as string
+        $molecularSponge->absorb( ( string ) $value );
       }
-    }
 
+    }
     switch ( $output ) {
       case 'hex':
       {
@@ -205,26 +196,20 @@ class Atom {
   }
 
   /**
-   * @param array|null $atoms
+   * @param array $atoms
    *
    * @return array
    */
-  public static function sortAtoms ( array $atoms = null ): array {
-    $atoms = default_if_null( $atoms, [] );
+  public static function sortAtoms ( array $atoms = [] ): array {
 
-    $atomList = ( new ArrayObject( $atoms ) )->getArrayCopy();
-
-    usort( $atomList, static function ( self $first, self $second ) {
-
-      if ( $first->index === $second->index ) {
+    usort($atoms, static function ( $atom1, $atom2 ) {
+      if ( $atom1->index === $atom2->index ) {
         return 0;
       }
+      return $atom1->index < $atom2->index ? -1 : 1;
+    });
 
-      return $first->index < $second->index ? -1 : 1;
-
-    } );
-
-    return $atomList;
+    return $atoms;
   }
 
   /**
@@ -238,6 +223,7 @@ class Atom {
    * @param string $property
    * @param $value
    *
+   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {

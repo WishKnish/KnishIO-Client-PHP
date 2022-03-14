@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseBatch;
 
 /**
@@ -57,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseBatch;
  */
 class QueryBatch extends Query {
   // Query
-  protected static string $default_query = 'query( $batchId: String ) { Batch( batchId: $batchId )
+  protected static string $defaultQuery = 'query( $batchId: String ) { Batch( batchId: $batchId )
 		@fields
 	}';
 
@@ -68,6 +69,7 @@ class QueryBatch extends Query {
    * @param string $response
    *
    * @return ResponseBatch
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseBatch {
     return new ResponseBatch( $this, $response );

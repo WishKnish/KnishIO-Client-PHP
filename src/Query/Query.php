@@ -49,14 +49,16 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
-use Psr\Http\Message\RequestInterface;
+use JetBrains\PhpStorm\Pure;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\KnishIOClient;
+use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
-use function GuzzleHttp\json_encode;
 
 /**
  * Class Query
@@ -64,9 +66,14 @@ use function GuzzleHttp\json_encode;
  */
 abstract class Query {
   /**
-   * @var Client
+   * @var HttpClientInterface
    */
-  protected $client;
+  protected HttpClientInterface $client;
+
+  /**
+   * @var string
+   */
+  protected string $query;
 
   /**
    * @var Request
@@ -76,22 +83,27 @@ abstract class Query {
   /**
    * @var Response
    */
-  protected Response $response;
-
-  /**
-   * @var array|null
-   */
-  protected ?array $variables;
+  protected ?Response $response = null;
 
   /**
    * @var string
    */
-  protected static string $default_query;
+  protected static string $defaultQuery;
+
+  /**
+   * @var array|null
+   */
+  protected array $variables;
 
   /**
    * @var array
    */
   protected array $fields;
+
+  /**
+   * @var bool
+   */
+  protected bool $isMutation = false;
 
   /**
    * Query constructor.
@@ -101,7 +113,7 @@ abstract class Query {
    */
   public function __construct ( HttpClientInterface $client, string $query = null ) {
     $this->client = $client;
-    $this->query = $query ?? static::$default_query;
+    $this->query = $query ?? static::$defaultQuery;
   }
 
   /**
@@ -114,26 +126,31 @@ abstract class Query {
   /**
    * @return Response
    */
-  public function response (): Response {
+  public function response (): ?Response {
     return $this->response;
   }
 
   /**
-   * Create new request
-   *
    * @param array|null $variables
    * @param array|null $fields
+   * @param array $headers
    *
-   * @return RequestInterface
+   * @return Request
+   * @throws JsonException
    */
-  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ) {
+  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ): Request {
 
     // Default value of variables
-    $this->variables = $this->compiledVariables( $variables );
+    $this->variables = $this->compiledVariables( $variables ?? [] );
 
     // Create a request
-    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [ 'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables, ] ) );
-
+    return new Request( 'POST', $this->uri(),
+      array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ),
+      json_encode( [
+        'query' => $this->compiledQuery( $fields ),
+        'variables' => $this->variables,
+      ], JSON_THROW_ON_ERROR )
+    );
   }
 
   /**
@@ -142,6 +159,7 @@ abstract class Query {
    *
    * @return Response
    * @throws GuzzleException
+   * @throws JsonException
    */
   public function execute ( array $variables = null, array $fields = null ): Response {
 
@@ -160,39 +178,61 @@ abstract class Query {
   }
 
   /**
+   * @param string $json
+   * !!! DEBUG FUNCTION
+   *
+   * @return string
+   * @throws GuzzleException
+   */
+  public static function getProposeMoleculeUri ( string $json ): string {
+    $client = new KnishIOClient( url( '' ) . '/graphql' );
+    $molecule = Molecule::jsonToObject( $json );
+    $query = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->getQueryUri( 'ProposeMolecule', $query->compiledVariables( [] ) );
+  }
+
+  /**
    * Debug info => get an uri to execute GraphQL directly from it
+   * !!! DEBUG FUNCTION
    *
    * @param string $name
-   * @param array|string|null $variables
+   * @param array|string $variables
    * @param array|null $fields
    *
    * @return string
+   * @throws JsonException
    */
-  public function getQueryUri ( string $name, $variables = null, array $fields = null ): string {
+  public function getQueryUri ( string $name, array|string $variables, array $fields = null ): string {
 
     // Compile variables
     if ( is_string( $variables ) ) {
-      $variables = json_decode( trim( $variables ), true );
+      $variables = json_decode( trim( $variables ), true, 512, JSON_THROW_ON_ERROR );
     }
     $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables ) );
+    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables, JSON_THROW_ON_ERROR ) );
     $variables = substr( $variables, 1, -1 );
 
     // Compile fields
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->uri() . str_replace( [ '@name', '@vars', '@fields', ], [ $name, $variables, $fields, ], '?query={@name(@vars)@fields}' );
+    $queryUri = str_replace(
+      [ '@name', '@mutation', '@vars', '@fields', ],
+      [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ],
+      '?query=@mutation{@name(@vars)@fields}&noMiddleware=true'
+    );
+
+    return $this->uri() . $queryUri;
   }
 
   /**
    * @param array|null $fields
    *
-   * @return array|string|string[]
+   * @return array|string
    */
-  public function compiledQuery ( array $fields = null ) {
-    // Fields
-    if ( $fields !== null ) {
+  public function compiledQuery ( array $fields = null ): array|string {
+    // Overwrite default fields value
+    if ( $fields ) {
       $this->fields = $fields;
     }
 
@@ -215,18 +255,19 @@ abstract class Query {
   }
 
   /**
-   * @param array|null $variables
+   * @param array $variables
    *
    * @return array
    */
-  public function compiledVariables ( array $variables = null ): array {
-    return default_if_null( $variables, [] );
+  public function compiledVariables ( array $variables ): array {
+    return $variables;
   }
 
   /**
    * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response );
@@ -236,10 +277,11 @@ abstract class Query {
    * @param ResponseInterface $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponseRaw ( ResponseInterface $response ): Response {
     return $this->createResponse( $response->getBody()
-        ->getContents() );
+      ->getContents() );
   }
 
   /**
@@ -247,7 +289,7 @@ abstract class Query {
    */
   public function uri (): ?string {
     return $this->client()
-        ->getUri();
+      ->getUri();
   }
 
   /**

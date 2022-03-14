@@ -47,34 +47,34 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
-
-use JsonException;
-use WishKnish\KnishIO\Client\Response\Response;
+namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class QueryToken
- * @package WishKnish\KnishIO\Client\Query
+ * Class ResponseQueryUserActivity
+ * @package WishKnish\KnishIO\Client\Response
  */
-class QueryToken extends Query {
-  // Query
-  protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
-	 	@fields
-	 }';
-
-  // Fields
-  protected array $fields = [
-    'slug', 'name', 'fungibility', 'supply', 'decimals', 'amount', 'icon',
-  ];
+class ResponseQueryUserActivity extends Response {
 
   /**
-   * @param string $response
-   *
-   * @return Response
-   * @throws JsonException
+   * @var string
    */
-  public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.Token' );
+  protected string $dataKey = 'data.UserActivity';
+
+  /**
+   * @return mixed
+   */
+  public function payload (): mixed {
+
+    /*
+    const data = JSON.parse( JSON.stringify( this.data() ) );
+    if ( data.instances ) {
+    for ( const datum of data.instances ) {
+            datum.jsonData = JSON.parse( datum.jsonData );
+          }
+    }
+    */
+
+    return $this->data();
   }
 
 }

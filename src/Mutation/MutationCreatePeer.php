@@ -49,7 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use ReflectionException;
+use JsonException;
 
 /**
  * Class MutationCreatePeer
@@ -60,18 +60,19 @@ class MutationCreatePeer extends MutationProposeMolecule {
   /**
    * @param string $slug
    * @param string $host
+   * @param string|null $peerId
    * @param string|null $name
    * @param array $cellSlugs
    *
-   * @return MutationCreatePeer
-   * @throws ReflectionException
+   * @return $this
+   * @throws JsonException
    */
-  public function fillMolecule ( string $slug, string $host, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
-    // Set name as slug if it does not defined
+  public function fillMolecule ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
+    // Set name as slug if it is not defined
     $name = $name ?: $slug;
 
     // Fill the molecule
-    $this->molecule->initPeerCreation( $slug, $host, $name, $cellSlugs );
+    $this->molecule->initPeerCreation( $slug, $host, $peerId, $name, $cellSlugs );
     $this->molecule->sign();
     $this->molecule->check();
 

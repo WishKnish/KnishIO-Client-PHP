@@ -51,20 +51,22 @@ namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
 
 /**
- * Class QueryToken
+ * Class QueryActiveSession
  * @package WishKnish\KnishIO\Client\Query
  */
-class QueryToken extends Query {
+class QueryActiveSession extends Query {
+
   // Query
-  protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
+  protected static string $defaultQuery = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
 	 	@fields
 	 }';
 
   // Fields
   protected array $fields = [
-    'slug', 'name', 'fungibility', 'supply', 'decimals', 'amount', 'icon',
+    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
   ];
 
   /**
@@ -74,7 +76,7 @@ class QueryToken extends Query {
    * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.Token' );
+    return new ResponseQueryActiveSession( $this, $response );
   }
 
 }

@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use BI\BigInteger;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * Class Str
@@ -104,9 +105,9 @@ class Strings {
    * @param string|null $srcSymbolTable
    * @param string|null $destSymbolTable
    *
-   * @return string
+   * @return bool|int|string
    */
-  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, string $srcSymbolTable = null, string $destSymbolTable = null ) {
+  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, string $srcSymbolTable = null, string $destSymbolTable = null ): bool|int|string {
     // The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
     $baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 
@@ -118,7 +119,7 @@ class Strings {
 
     // Make sure we are not trying to convert out of the symbol table range
     if ( $fromBase > mb_strlen( $srcSymbolTable ) || $toBase > mb_strlen( $destSymbolTable ) ) {
-      error_log( 'Can\'t convert ' . $src . ' to base ' . $toBase . ' greater than symbol table length. src-table: ' . mb_strlen( $srcSymbolTable ) . ' dest-table: ' . mb_strlen( $destSymbolTable ) );
+      // error_log( 'Can\'t convert ' . $src . ' to base ' . $toBase . ' greater than symbol table length. src-table: ' . mb_strlen( $srcSymbolTable ) . ' dest-table: ' . mb_strlen( $destSymbolTable ) );
       return false;
     }
 
@@ -132,7 +133,7 @@ class Strings {
     for ( $i = 0, $length = mb_strlen( $src ); $i < $length; $i++ ) {
 
       $value = $value->mul( $bigIntegerFromBase )
-          ->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
+        ->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
     }
 
     if ( $value->cmp( $bigIntegerZero ) <= 0 ) {
@@ -187,6 +188,7 @@ class Strings {
    *
    * @return string
    */
+  #[Pure]
   public static function base64ToHex ( string $str ): string {
     return bin2hex( base64_decode( $str ) );
   }

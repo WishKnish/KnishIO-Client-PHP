@@ -67,10 +67,18 @@ class Meta {
   public string $modelType;
   public string $modelId;
   public array $meta;
-  public $snapshotMolecule;
-  public int $createdAt;
+  public string $snapshotMolecule;
+  public string $createdAt;
 
-  public function __construct ( $modelType, $modelId, $meta, $snapshotMolecule = null ) {
+  /**
+   * Meta constructor.
+   *
+   * @param string $modelType
+   * @param string $modelId
+   * @param array $meta
+   * @param string|null $snapshotMolecule
+   */
+  public function __construct ( string $modelType, string $modelId, array $meta, string $snapshotMolecule = null ) {
     $this->modelType = $modelType;
     $this->modelId = $modelId;
     $this->meta = $meta;
@@ -86,31 +94,20 @@ class Meta {
   public static function normalizeMeta ( array $meta ): array {
     $result = [];
     foreach ( $meta as $key => $value ) {
-      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => strval( $value ), ];
+      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => (string) $value, ];
     }
     return $result;
   }
 
   /**
-   * @param array|object $meta
+   * @param array $meta
    *
    * @return array
    */
-  public static function aggregateMeta ( $meta ): array {
+  public static function aggregateMeta ( array $meta ): array {
     $aggregate = [];
-    if ( count( $meta ) ) {
-      foreach ( $meta as $metaEntry ) {
-        if ( is_object( $metaEntry ) ) {
-          $metaKey = $metaEntry->key;
-          $metaValue = $metaEntry->value;
-        }
-        else {
-          $metaKey = $metaEntry[ 'key' ];
-          $metaValue = $metaEntry[ 'value' ];
-        }
-
-        $aggregate[ $metaKey ] = $metaValue;
-      }
+    foreach ( $meta as $metaEntry ) {
+      $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
     }
     return $aggregate;
   }

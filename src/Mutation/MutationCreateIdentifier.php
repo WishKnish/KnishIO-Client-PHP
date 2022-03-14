@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use Exception;
-use ReflectionException;
 
 /**
  * Class MutationCreateIdentifier
@@ -64,7 +63,6 @@ class MutationCreateIdentifier extends MutationProposeMolecule {
    * @param $code
    *
    * @return MutationCreateIdentifier
-   * @throws ReflectionException
    * @throws Exception
    */
   public function fillMolecule ( $type, $contact, $code ): MutationCreateIdentifier {

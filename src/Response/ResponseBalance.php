@@ -57,12 +57,16 @@ use WishKnish\KnishIO\Client\Wallet;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseBalance extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.Balance';
 
   /**
    * Get a payload
    *
-   * @return Wallet
+   * @return Wallet|null
    * @throws Exception
    */
   public function payload (): ?Wallet {

@@ -58,6 +58,7 @@ use Exception;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseContinuId extends Response {
+
   /**
    * @var string
    */
@@ -71,6 +72,7 @@ class ResponseContinuId extends Response {
    * @throws Exception
    */
   public function payload (): ?Wallet {
+
     // Check response
     $data = $this->data();
     if ( $data !== null ) {

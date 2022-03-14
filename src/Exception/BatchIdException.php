@@ -63,7 +63,7 @@ class BatchIdException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Incorrect BatchId', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

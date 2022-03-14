@@ -65,6 +65,8 @@ dd([
 ]);
 */
 
+use JetBrains\PhpStorm\Pure;
+
 /**
  * Class Decimal
  * @package WishKnish\KnishIO\Client\Libraries
@@ -72,14 +74,14 @@ dd([
 class Decimal {
 
   // Value determines by min sql decimal precision
-  public static int $multiplier = 10 ** 18;
+  public static float $multiplier = 10 ** 18;
 
   /**
-   * @param $val
+   * @param float $val
    *
-   * @return float|int
+   * @return float
    */
-  public static function val ( $val ) {
+  public static function val ( float $val ): float {
     if ( abs( $val * static::$multiplier ) < 1 ) {
       return 0.0;
     }
@@ -94,6 +96,7 @@ class Decimal {
    *
    * @return int
    */
+  #[Pure]
   public static function cmp ( float $val1, float $val2 ): int {
     $val1 = static::val( $val1 ) * static::$multiplier;
     $val2 = static::val( $val2 ) * static::$multiplier;
@@ -113,6 +116,7 @@ class Decimal {
    *
    * @return bool
    */
+  #[Pure]
   public static function equal ( $val1, $val2 ): bool {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }

@@ -79,32 +79,16 @@ if ( !function_exists( 'array_unpacking' ) ) {
 
 }
 
-if ( !function_exists( 'default_if_null' ) ) {
-
-  /**
-   * Get a default value if the passed value is null
-   *
-   * @param $value
-   * @param $default
-   *
-   * @return mixed
-   */
-  function default_if_null ( $value, $default ) {
-    return $value ?? $default;
-  }
-
-}
-
 if ( !function_exists( 'array_has' ) ) {
   /**
    * Check if an item or items exist in an array using "dot" notation.
    *
-   * @param ArrayAccess|array $array
-   * @param string|array $keys
+   * @param ArrayAccess|array|null $array
+   * @param array|string $keys
    *
    * @return bool
    */
-  function array_has ( $array, $keys ): bool {
+  function array_has ( ArrayAccess|array|null $array, array|string $keys ): bool {
     if ( !is_array( $array ) ) {
       return false;
     }
@@ -124,23 +108,41 @@ if ( !function_exists( 'array_has' ) ) {
 }
 
 if ( !function_exists( 'array_get' ) ) {
+
   /**
    * Get an item from an array using "dot" notation.
    *
-   * @param ArrayAccess|array $array
+   * @param ArrayAccess|array|null $array
    * @param string $keys
-   * @param mixed $default
+   * @param mixed|null $default
    *
    * @return mixed
    */
-  function array_get ( $array, string $keys, $default = null ) {
-    $expKeys = explode( '.', $keys );
-    foreach ( $expKeys as $key ) {
+  function array_get ( ArrayAccess|array|null $array, string $keys, mixed $default = null ): mixed {
+    foreach ( explode( '.', $keys ) as $key ) {
       if ( !array_has( $array, $key ) ) {
         return $default;
       }
       $array = $array[ $key ];
     }
     return $array;
+  }
+}
+
+if ( !function_exists( 'array_every' ) ) {
+
+  /**
+   * @param array $array
+   * @param callable $callable
+   *
+   * @return bool
+   */
+  function array_every( array $array, callable $callable ): bool {
+    foreach ( $array as $value ) {
+      if ( !$callable( $value ) ) {
+        return false;
+      }
+    }
+    return true;
   }
 }

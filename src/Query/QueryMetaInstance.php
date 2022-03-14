@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -57,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\Response;
  */
 class QueryMetaInstance extends Query {
   // Query
-  protected static string $default_query = 'query( $metaType: String!, $metaIds: [ String! ], $keys: [ String! ], $values: [ String! ], $filter: [ MetaFilter! ], $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean) { MetaInstance( metaType: $metaType, metaIds: $metaIds, keys: $keys, values: $values, filter: $filter, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas )
+  protected static string $defaultQuery = 'query( $metaType: String!, $metaIds: [ String! ], $keys: [ String! ], $values: [ String! ], $filter: [ MetaFilter! ], $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean) { MetaInstance( metaType: $metaType, metaIds: $metaIds, keys: $keys, values: $values, filter: $filter, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas )
 		@fields
 	}';
 
@@ -68,6 +69,7 @@ class QueryMetaInstance extends Query {
    * @param string $response
    *
    * @return Response
+   * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
     return new Response( $this, $response, 'data.MetaInstance' );

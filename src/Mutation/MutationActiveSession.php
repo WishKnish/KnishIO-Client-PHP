@@ -47,24 +47,40 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
 use WishKnish\KnishIO\Client\Response\Response;
 
-/**
- * Class QueryToken
- * @package WishKnish\KnishIO\Client\Query
- */
-class QueryToken extends Query {
+class MutationActiveSession extends Mutation {
+
   // Query
-  protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
-	 	@fields
-	 }';
+  protected static string $defaultQuery = 'mutation( $bundleHash: String!,
+      $metaType: String!,
+      $metaId: String!,
+      $ipAddress: String,
+      $browser: String,
+      $osCpu: String,
+      $resolution: String,
+      $timeZone: String,
+      $json: String ) {
+        ActiveSession(
+          bundleHash: $bundleHash,
+          metaType: $metaType,
+          metaId: $metaId,
+          ipAddress: $ipAddress,
+          browser: $browser,
+          osCpu: $osCpu,
+          resolution: $resolution,
+          timeZone: $timeZone,
+          json: $json
+        )
+          @fields
+      }';
 
   // Fields
   protected array $fields = [
-    'slug', 'name', 'fungibility', 'supply', 'decimals', 'amount', 'icon',
+    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
   ];
 
   /**
@@ -74,7 +90,7 @@ class QueryToken extends Query {
    * @throws JsonException
    */
   public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.Token' );
+    return new Response( $this, $response, 'data.ActiveSession' );
   }
-
 }
+

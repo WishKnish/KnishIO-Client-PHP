@@ -63,7 +63,7 @@ class UnauthenticatedException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Unauthenticated.', $code = 2, $previous = null ) {
+  public function __construct ( string $message = 'Unauthenticated.', int $code = 2, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

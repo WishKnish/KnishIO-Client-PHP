@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 
 /**
@@ -60,7 +61,7 @@ class QueryContinuId extends Query {
   /**
    * @var string
    */
-  protected static string $default_query = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
+  protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
     	@fields
     }';
 
@@ -73,6 +74,7 @@ class QueryContinuId extends Query {
    * @param string $response
    *
    * @return ResponseContinuId
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseContinuId {
     return new ResponseContinuId( $this, $response );

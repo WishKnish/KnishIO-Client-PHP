@@ -49,7 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Mutation;
 
-use ReflectionException;
+use Exception;
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -62,14 +63,12 @@ class MutationCreateToken extends MutationProposeMolecule {
   /**
    * @param Wallet $recipientWallet
    * @param $amount
-   * @param array|null $meta
+   * @param array $meta
    *
-   * @return MutationCreateToken
-   * @throws ReflectionException
+   * @return $this
+   * @throws Exception
    */
-  public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = null ): MutationCreateToken {
-    // Default metas value
-    $meta = default_if_null( $meta, [] );
+  public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = [] ): MutationCreateToken {
 
     // Fill the molecule
     $this->molecule->initTokenCreation( $recipientWallet, $amount, $meta );
@@ -85,8 +84,9 @@ class MutationCreateToken extends MutationProposeMolecule {
    * @param string $response
    *
    * @return ResponseTokenCreate
+   * @throws JsonException
    */
-  public function createResponse ( $response ): ResponseTokenCreate {
+  public function createResponse ( string $response ): ResponseTokenCreate {
     return new ResponseTokenCreate( $this, $response );
   }
 

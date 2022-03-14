@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseMetaType;
 
 /**
@@ -57,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaType;
  */
 class QueryMetaType extends Query {
   // Query
-  protected static string $default_query = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean, $latest: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas, latest: $latest )
+  protected static string $defaultQuery = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean, $latest: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas, latest: $latest )
 		@fields
 	}';
 
@@ -67,15 +68,15 @@ class QueryMetaType extends Query {
   /**
    * Builds a GraphQL-friendly variables object based on input fields
    *
-   * @param string|array|null $metaType
-   * @param string|array|null $metaId
-   * @param string|array|null $key
-   * @param string|array|null $value
+   * @param array|string|null $metaType
+   * @param array|string|null $metaId
+   * @param array|string|null $key
+   * @param array|string|null $value
    * @param bool $latest
    *
    * @return array
    */
-  public static function createVariables ( $metaType = null, $metaId = null, $key = null, $value = null, bool $latest = null ): array {
+  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -94,9 +95,7 @@ class QueryMetaType extends Query {
       $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
     }
 
-    if ( $latest ) {
-      $variables[ 'latest' ] = true;
-    }
+    $variables[ 'latest' ] = $latest;
 
     return $variables;
   }
@@ -105,6 +104,7 @@ class QueryMetaType extends Query {
    * @param string $response
    *
    * @return ResponseMetaType
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseMetaType {
     return new ResponseMetaType( $this, $response );

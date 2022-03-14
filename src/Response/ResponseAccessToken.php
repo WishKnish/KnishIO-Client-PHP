@@ -49,49 +49,51 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
+/**
+ * Class ResponseAccessToken
+ * @package WishKnish\KnishIO\Client\Response
+ */
 class ResponseAccessToken extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.AccessToken';
 
+  /**
+   * @return string
+   */
   public function reason (): string {
     return 'Invalid response from server';
   }
 
+  /**
+   * @return bool
+   */
   public function success (): bool {
     return $this->payload() !== null;
   }
 
-  public function payload () {
+  /**
+   * @return mixed
+   */
+  public function payload (): mixed {
     return $this->data();
   }
 
   /**
-   * Payload key
-   *
-   * @param $key
-   *
-   * @return mixed
+   * @return string|null
    */
-  private function payloadKey ( $key ) {
-    if ( !array_has( $this->payload(), $key ) ) {
-      throw new InvalidResponseException( 'ResponseAccessToken: \'' . $key . '\' key is not found in the payload.' );
-    }
-    return array_get( $this->payload(), $key );
+  public function token (): ?string {
+    return array_get( $this->payload(), 'token' );
   }
 
   /**
-   * Token
+   * @return int|null
    */
-  public function token () {
-    return $this->payloadKey( 'token' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function time () {
-    return $this->payloadKey( 'time' );
+  public function time (): ?int {
+    return array_get( $this->payload(), 'time' );
   }
 
 }

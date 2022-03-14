@@ -68,7 +68,7 @@ class BalanceInsufficientException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'Insufficient balance for requested transfer', $code = 1, $previous = null ) {
+  public function __construct ( string $message = 'Insufficient balance for requested transfer', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

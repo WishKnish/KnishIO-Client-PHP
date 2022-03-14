@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseBalance;
 
 /**
@@ -57,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseBalance;
  */
 class QueryBalance extends Query {
   // Query
-  protected static string $default_query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
+  protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
 	 	@fields
 	 }';
 
@@ -70,6 +71,7 @@ class QueryBalance extends Query {
    * @param string $response
    *
    * @return ResponseBalance
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseBalance {
     return new ResponseBalance( $this, $response );

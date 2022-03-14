@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 
 /**
@@ -57,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletList;
  */
 class QueryWalletList extends Query {
   // Query
-  protected static string $default_query = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
+  protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
 	 	@fields
 	}';
 
@@ -68,6 +69,7 @@ class QueryWalletList extends Query {
    * @param string $response
    *
    * @return ResponseWalletList
+   * @throws JsonException
    */
   public function createResponse ( string $response ): ResponseWalletList {
     return new ResponseWalletList( $this, $response );

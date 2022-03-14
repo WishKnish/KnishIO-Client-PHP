@@ -54,19 +54,37 @@ namespace WishKnish\KnishIO\Client\Response;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMetaType extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.MetaType';
 
   /**
-   * @return mixed|null
+   * @return array|array[]
    */
-  public function payload () {
+  public function payload (): array {
     $data = $this->data();
-
     if ( !$data ) {
-      return null;
+      return [];
     }
 
-    return $data[ 0 ][ 'instances' ];
+    $result = [
+      'instances' => [],
+      'instanceCount' => [],
+      'paginatorInfo' => [],
+    ];
+
+    $metaData = $data[ 0 ];
+
+    // Duplicate logic from js (@todo $result = $data[ 0 ]?)
+    foreach ( $result as $key => $value ) {
+      if ( $responseValue = array_get( $metaData, $key ) ) {
+        $result[ $key ] = $responseValue;
+      }
+    }
+
+    return $result;
   }
 
 }

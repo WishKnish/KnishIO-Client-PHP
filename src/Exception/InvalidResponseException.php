@@ -68,7 +68,7 @@ class InvalidResponseException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( $message = 'GraphQL did not provide a valid response.', $code = 2, $previous = null ) {
+  public function __construct ( string $message = 'GraphQL did not provide a valid response.', int $code = 2, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }
