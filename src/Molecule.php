@@ -294,15 +294,13 @@ class Molecule extends MoleculeStructure {
    */
   public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
 
-    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
-
-    foreach ( [ 'conditions', 'callback', 'rule', ] as $k ) {
-      if ( !array_key_exists( $k, $meta ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
+    foreach ( [ 'conditions', 'callback', 'rule', ] as $key ) {
+      if ( !array_key_exists( $key, $meta ) ) {
+        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
 
-      if ( is_array( $aggregateMeta[ $k ] ) ) {
-        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_UNESCAPED_SLASHES );
+      if ( is_array( $meta[ $key ] ) ) {
+        $meta[ $key ] = json_encode( $meta[ $key ], JSON_UNESCAPED_SLASHES );
       }
     }
 
@@ -326,11 +324,10 @@ class Molecule extends MoleculeStructure {
    */
   public function replenishTokens ( float $amount, string $token, array $metas ): Molecule {
 
-    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
-    $aggregateMeta[ 'action' ] = 'add';
+    $metas[ 'action' ] = 'add';
 
     foreach ( [ 'address', 'position', 'batchId' ] as $key ) {
-      if ( !array_key_exists( $key, $aggregateMeta ) ) {
+      if ( !array_key_exists( $key, $metas ) ) {
         throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
     }
@@ -347,7 +344,7 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->batchId,
       'token',
       $token,
-      $this->finalMetas( $this->contextMetas( $aggregateMeta ) ),
+      $this->finalMetas( $this->contextMetas( $metas ) ),
       null,
       $this->generateIndex()
     );

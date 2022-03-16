@@ -153,7 +153,7 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'R' ) as $atom ) {
 
-      $metas = Meta::aggregateMeta( $atom->meta );
+      $metas = $atom->aggregatedMeta();
 
       if ( array_key_exists( 'policy', $metas ) ) {
         $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
@@ -239,7 +239,7 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'T' ) as $atom ) {
 
-      $meta = Meta::aggregateMeta( $atom->meta );
+      $meta = $atom->aggregatedMeta();
       $metaType = strtolower( ( string ) $atom->metaType );
 
       // Check required meta keys closure
