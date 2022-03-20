@@ -315,16 +315,17 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
+   * @param string $tokenSlug
    * @param float $amount
-   * @param string $token
    * @param array $metas
    *
    * @return $this
    * @throws JsonException
    */
-  public function replenishTokens ( float $amount, string $token, array $metas ): Molecule {
+  public function replenishTokens ( string $tokenSlug, float $amount, array $metas ): Molecule {
 
-    $metas[ 'action' ] = 'add';
+    $metas[ 'tokenSlug' ] = $tokenSlug;
+    $metas[ 'action' ] = 'replenish';
 
     foreach ( [ 'address', 'position', 'batchId' ] as $key ) {
       if ( !array_key_exists( $key, $metas ) ) {
@@ -342,8 +343,8 @@ class Molecule extends MoleculeStructure {
       'USER',
       $amount,
       $this->sourceWallet->batchId,
-      'token',
-      $token,
+      'wallet',
+      $metas[ 'address' ],
       $this->finalMetas( $this->contextMetas( $metas ) ),
       null,
       $this->generateIndex()
