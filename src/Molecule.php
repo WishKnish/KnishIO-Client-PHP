@@ -322,7 +322,7 @@ class Molecule extends MoleculeStructure {
    * @return $this
    * @throws JsonException
    */
-  public function replenishTokens ( string $tokenSlug, float $amount, array $metas ): Molecule {
+  public function replenishTokensOld ( string $tokenSlug, float $amount, array $metas ): Molecule {
 
     $metas[ 'tokenSlug' ] = $tokenSlug;
     $metas[ 'action' ] = 'replenish';
@@ -352,6 +352,55 @@ class Molecule extends MoleculeStructure {
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
+    $this->atoms = Atom::sortAtoms( $this->atoms );
+
+    return $this;
+  }
+
+  /**
+   * @param float $amount
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function replenishToken( float $amount ) {
+
+    if ( $amount < 0.0 ) {
+      throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
+    }
+
+    $this->molecularHash = null;
+
+    // Initializing a new Atom to remove tokens from source
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      -$amount,
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
+    $walletBundle = $this->remainderWallet->bundle;
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance + $amount,
+      $this->remainderWallet->batchId,
+      $walletBundle ? 'walletBundle' : null,
+      $walletBundle,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
+      null,
+      $this->generateIndex()
+    );
+
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
     return $this;
