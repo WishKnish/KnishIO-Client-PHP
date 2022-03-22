@@ -281,14 +281,6 @@ class Wallet {
     $remainderWallet->tokenUnits = $remainderTokenUnits;
   }
 
-  /**
-   * @param array $units
-   * @param Wallet $remainderWallet
-   */
-  public function mergeUnits ( array $units ): void {
-    $this->tokenUnits = array_merge( $units, $this->tokenUnits );
-  }
-
     /**
    * @param string $secret
    *

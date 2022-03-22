@@ -1018,20 +1018,19 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param float $amount
-   * @param array $units
+   * @param array $tokenUnits
    * @param Wallet|null $sourceWallet
    *
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function replenishToken ( string $tokenSlug, float $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function replenishToken ( string $tokenSlug, float $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
         ->payload();
-
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
     }
@@ -1040,24 +1039,9 @@ class KnishIOClient {
     $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $remainderWallet->initBatchId( $fromWallet, true );
 
-    // Calculate amount & set meta key
-    if ( count( $units ) > 0 ) {
-
-      // Can't burn stackable units AND provide amount
-      if ( $amount > 0 ) {
-        throw new StackableUnitAmountException();
-      }
-
-      // Calculating amount based on Unit IDs
-      $amount = count( $units );
-
-      // Merge token units
-      $remainderWallet->mergeUnits( $units );
-    }
-
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-    $molecule->replenishToken( $amount );
+    $molecule->replenishToken( $amount, $tokenUnits );
     $molecule->sign();
     $molecule->check();
 
