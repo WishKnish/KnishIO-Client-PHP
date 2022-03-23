@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
 /**
  * Class ResponseRequestAuthorizationGuest
@@ -57,6 +56,9 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
  */
 class ResponseRequestAuthorizationGuest extends Response {
 
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.AccessToken';
 
   /**
@@ -81,46 +83,31 @@ class ResponseRequestAuthorizationGuest extends Response {
   }
 
   /**
-   * Payload key
-   *
-   * @param string $key
-   *
-   * @return mixed
+   * @return string|null
    */
-  private function payloadKey ( string $key ): mixed {
-    if ( !array_has( $this->payload(), $key ) ) {
-      throw new InvalidResponseException( 'ResponseRequestAuthorizationGuest: \'' . $key . '\' key is not found in the payload.' );
-    }
-    return array_get( $this->payload(), $key );
+  public function token (): ?string {
+    return array_get( $this->payload(), 'token' );
   }
 
   /**
-   * Token
-   *
-   * @return string
+   * @return int|null
    */
-  public function token (): string {
-    return $this->payloadKey( 'token' );
+  public function time (): ?int {
+    return array_get( $this->payload(), 'time' );
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function time (): mixed {
-    return $this->payloadKey( 'time' );
+  public function pubkey (): ?string {
+    return array_get( $this->payload(), 'key' );
   }
 
   /**
-   * @return string
+   * @return bool|null
    */
-  public function pubkey (): string {
-    return $this->payloadKey( 'key' );
+  public function encrypt (): ?bool {
+    return array_get( $this->payload(), 'encrypt' );
   }
 
-  /**
-   * @return bool
-   */
-  public function encrypt (): bool {
-    return $this->payloadKey( 'encrypt' );
-  }
 }

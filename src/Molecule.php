@@ -144,7 +144,7 @@ class Molecule extends MoleculeStructure {
   /**
    * Encrypt message by source wallet
    *
-   * @param array $data @todo mixed? it must be a strict type!
+   * @param array $data
    * @param array $shared_wallets
    *
    * @return array

@@ -108,6 +108,7 @@ if ( !function_exists( 'array_has' ) ) {
 }
 
 if ( !function_exists( 'array_get' ) ) {
+
   /**
    * Get an item from an array using "dot" notation.
    *

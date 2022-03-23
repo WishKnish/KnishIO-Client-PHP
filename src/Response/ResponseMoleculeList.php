@@ -56,6 +56,10 @@ use WishKnish\KnishIO\Client\MoleculeStructure;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseMoleculeList extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.Molecule';
 
   /**

@@ -85,7 +85,7 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure {
   }
 
   /**
-   * @return mixed
+   * @return Wallet
    */
   public function remainderWallet (): Wallet {
     return $this->remainderWallet;

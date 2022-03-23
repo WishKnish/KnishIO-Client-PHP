@@ -58,47 +58,31 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 class ResponseRequestAuthorization extends ResponseMolecule {
 
   /**
-   * Payload key
-   *
-   * @param $key
-   *
-   * @return mixed
+   * @return string|null
    */
-  private function payloadKey ( $key ): mixed {
-    if ( !array_has( $this->payload, $key ) ) {
-      throw new InvalidResponseException( 'ResponseRequestAuthorization: \'' . $key . '\' key is not found in the payload.' );
-    }
-    return array_get( $this->payload, $key );
+  public function token (): ?string {
+    return array_get( $this->payload, 'token' );
   }
 
   /**
-   * Access token value
-   *
-   * @return string
+   * @return int|null
    */
-  public function token (): string {
-    return $this->payloadKey( 'token' );
+  public function time (): ?int {
+    return array_get( $this->payload, 'time' );
   }
 
   /**
-   * @return mixed
+   * @return string|null
    */
-  public function time (): mixed {
-    return $this->payloadKey( 'time' );
+  public function pubkey (): ?string {
+    return array_get( $this->payload, 'key' );
   }
 
   /**
-   * @return string
+   * @return bool|null
    */
-  public function pubkey (): string {
-    return $this->payloadKey( 'key' );
-  }
-
-  /**
-   * @return bool
-   */
-  public function encrypt (): bool {
-    return $this->payloadKey( 'encrypt' );
+  public function encrypt (): ?bool {
+    return array_get( $this->payload, 'encrypt' );
   }
 
 }

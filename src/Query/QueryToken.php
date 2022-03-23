@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\Response;
  */
 class QueryToken extends Query {
   // Query
-  protected static string $default_query = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
+  protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
 	 	@fields
 	 }';
 

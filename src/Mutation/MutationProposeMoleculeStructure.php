@@ -62,7 +62,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMolecule;
  */
 class MutationProposeMoleculeStructure extends Query {
   // Query
-  protected static string $default_query = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
+  protected static string $defaultQuery = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
 		@fields
 	}';
 

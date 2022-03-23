@@ -144,6 +144,7 @@ class Response {
    * @return mixed
    */
   public function data (): mixed {
+
     // For the root class
     if ( !$this->dataKey ) {
       return $this->response;

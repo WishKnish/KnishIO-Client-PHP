@@ -83,12 +83,12 @@ abstract class Query {
   /**
    * @var Response
    */
-  protected Response $response;
+  protected ?Response $response = null;
 
   /**
    * @var string
    */
-  protected static string $default_query;
+  protected static string $defaultQuery;
 
   /**
    * @var array|null
@@ -113,7 +113,7 @@ abstract class Query {
    */
   public function __construct ( HttpClientInterface $client, string $query = null ) {
     $this->client = $client;
-    $this->query = $query ?? static::$default_query;
+    $this->query = $query ?? static::$defaultQuery;
   }
 
   /**
@@ -126,7 +126,7 @@ abstract class Query {
   /**
    * @return Response
    */
-  public function response (): Response {
+  public function response (): ?Response {
     return $this->response;
   }
 
@@ -185,15 +185,15 @@ abstract class Query {
    * @throws GuzzleException
    */
   public static function getProposeMoleculeUri ( string $json ): string {
-    $client = new KnishIOClient( url() . '/graphql' );
+    $client = new KnishIOClient( url( '' ) . '/graphql' );
     $molecule = Molecule::jsonToObject( $json );
     $query = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
-    return $query->getQueryUri( 'ProposeMolecule' );
+    return $query->getQueryUri( 'ProposeMolecule', $query->compiledVariables( [] ) );
   }
 
   /**
    * Debug info => get an uri to execute GraphQL directly from it
-   * !!! DEBUG FUCNTION
+   * !!! DEBUG FUNCTION
    *
    * @param string $name
    * @param array|string $variables
@@ -216,11 +216,13 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    return $this->uri() . str_replace(
-        [ '@name', '@mutation', '@vars', '@fields', ],
-        [ $name, ( $this->isMutation ? 'mutation' : '' ), $variables, $fields, ],
-        '?query=@mutation{@name(@vars)@fields}'
-      );
+    $queryUri = str_replace(
+      [ '@name', '@mutation', '@vars', '@fields', ],
+      [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ],
+      '?query=@mutation{@name(@vars)@fields}&noMiddleware=true'
+    );
+
+    return $this->uri() . $queryUri;
   }
 
   /**

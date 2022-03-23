@@ -61,7 +61,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 class QueryUserActivity extends Query {
 
   // Query
-  protected static string $default_query = 'query(
+  protected static string $defaultQuery = 'query(
     $bundleHash:String,
     $metaType: String,
     $metaId: String,
@@ -110,7 +110,7 @@ class QueryUserActivity extends Query {
     parent::__construct( $client, $query );
 
     $this->client = $client;
-    $this->query = $query ?? static::$default_query;
+    $this->query = $query ?? static::$defaultQuery;
 
     // Generate instance cascade fields
     $this->fields[ 'instanceCount' ] = $this->instanceCountFields;

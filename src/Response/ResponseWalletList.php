@@ -57,6 +57,10 @@ use WishKnish\KnishIO\Client\Wallet;
  * @package WishKnish\KnishIO\Client\Response
  */
 class ResponseWalletList extends Response {
+
+  /**
+   * @var string
+   */
   protected string $dataKey = 'data.Wallet';
 
   /**

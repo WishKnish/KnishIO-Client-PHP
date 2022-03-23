@@ -12,7 +12,7 @@ use JetBrains\PhpStorm\Pure;
 class AuthToken {
 
   protected string $token;
-  protected ?string $expiresAt;
+  protected string $expiresAt;
   protected string $pubkey;
   protected bool $encrypt;
 
@@ -68,7 +68,7 @@ class AuthToken {
    */
   public function __construct (
     string $token,
-    mixed $expiresAt, // @todo string?
+    string $expiresAt,
     string $pubkey,
     bool $encrypt
   ) {
@@ -86,7 +86,7 @@ class AuthToken {
   }
 
   /**
-   * @return mixed
+   * @return Wallet
    */
   public function getWallet (): Wallet {
     return $this->wallet;
@@ -116,14 +116,14 @@ class AuthToken {
   }
 
   /**
-   * @return mixed
+   * @return string
    */
   public function getToken (): string {
     return $this->token;
   }
 
   /**
-   * @return mixed
+   * @return string
    */
   public function getPubkey (): string {
     return $this->pubkey;
