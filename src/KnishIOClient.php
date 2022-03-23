@@ -1045,8 +1045,8 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
-
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
+      ->execute();
   }
 
   /**
