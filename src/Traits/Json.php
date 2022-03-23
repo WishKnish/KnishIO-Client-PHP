@@ -73,10 +73,6 @@ trait Json {
    * @return static
    */
   public static function arrayToObject ( array $data, $object = null ): static {
-    if ( static::class === Rule::class ) {
-      dump($data);
-      dump($object);
-    }
     $object = $object ?? new static();
     foreach ( $data as $property => $value ) {
 

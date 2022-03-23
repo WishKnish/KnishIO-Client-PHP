@@ -665,8 +665,7 @@ class KnishIOClient {
 
     // Init a molecule
     $query->fillMolecule( $metaType, $metaId, $rule, $policy );
-    dump($query->molecule());
-    dd(1);
+
     // Execute a query
     return $query->execute();
   }

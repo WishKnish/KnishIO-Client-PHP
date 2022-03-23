@@ -832,7 +832,7 @@ class Molecule extends MoleculeStructure {
     // Determine first atom
     /** @var Atom $firstAtom */
     $firstAtom = reset( $this->atoms );
-dd($firstAtom);
+
     // Generate the private signing key for this molecule
     $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $firstAtom->position );
 
