@@ -163,40 +163,27 @@ class CheckMolecule {
       }
 
       if ( array_key_exists( 'rule', $metas ) ) {
+        $rules = json_decode( $metas[ 'rule' ], true, 512, JSON_THROW_ON_ERROR );
 
-        foreach ( [
-          'callback', 'conditions', 'rule',
-        ] as $key ) {
-          if ( !array_key_exists( $key, $metas ) ) {
-            throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
-          }
-        }
-
-        $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
-
-        if ( $conditions === null ) {
+        if ( $rules === null ) {
           throw new MetaMissingException( 'Invalid format for conditions.' );
         }
 
-        if ( is_array( $conditions ) ) {
-          foreach ( $conditions as $condition ) {
-            $keys = array_keys( $condition );
-
-            if ( count( array_intersect( $keys, [
-                'key', 'value', 'comparison',
-              ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-              throw new MetaMissingException( 'Missing field in conditions.' );
-            }
-          }
+        if ( !is_array( $rules ) ) {
+          throw new MetaMissingException( 'Incorrect rule format!' );
         }
 
-        if ( !in_array( strtolower( $metas[ 'callback' ] ), [
-          'reject', 'unseat',
-        ], true ) ) {
-          $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
+        if ( empty( $rules ) ) {
+          throw new MetaMissingException( 'No rules!' );
+        }
 
-          if ( $callbacks === null ) {
-            throw new MetaMissingException( 'Invalid format for callback.' );
+        foreach ( $rules as $rule) {
+          foreach ( [
+            'key', 'value', 'callback',
+          ] as $key ) {
+            if ( !array_key_exists( $key, $rule ) ) {
+              throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+            }
           }
         }
       }

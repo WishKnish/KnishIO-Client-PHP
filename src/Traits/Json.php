@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Traits;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use WishKnish\KnishIO\Client\Instance\Rules\Rule;
 
 /**
  * Trait Json
@@ -72,6 +73,10 @@ trait Json {
    * @return static
    */
   public static function arrayToObject ( array $data, $object = null ): static {
+    if ( static::class === Rule::class ) {
+      dump($data);
+      dump($object);
+    }
     $object = $object ?? new static();
     foreach ( $data as $property => $value ) {
 

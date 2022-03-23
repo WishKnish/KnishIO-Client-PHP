@@ -65,6 +65,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
+use WishKnish\KnishIO\Client\Mutation\MutationCreateRule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -87,7 +88,6 @@ use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
@@ -648,6 +648,26 @@ class KnishIOClient {
     $query->fillMolecule( $recipientWallet, $amount, $meta );
 
     // Return a query execution result
+    return $query->execute();
+  }
+
+  /**
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function createRule ( string $metaType, string $metaId, array $rule, array $policy = [] ): Response {
+    // Create a custom molecule
+    $molecule = $this->createMolecule( $this->getSecret(), $this->getSourceWallet() );
+
+    // Create & execute a query
+    /** @var MutationCreateRule $query */
+    $query = $this->createMoleculeMutation( MutationCreateRule::class, $molecule );
+
+    // Init a molecule
+    $query->fillMolecule( $metaType, $metaId, $rule, $policy );
+    dump($query->molecule());
+    dd(1);
+    // Execute a query
     return $query->execute();
   }
 

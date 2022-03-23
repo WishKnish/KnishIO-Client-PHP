@@ -287,26 +287,39 @@ class Molecule extends MoleculeStructure {
   /**
    * @param string $metaType
    * @param string $metaId
-   * @param array $meta
+   * @param array $rule
+   * @param array $policy
    *
    * @return $this
    * @throws JsonException
    */
-  public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
+  public function createRule ( string $metaType, string $metaId, array $rule, array $policy = [] ): Molecule {
+    $_rules = [];
 
-    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
-
-    foreach ( [ 'conditions', 'callback', 'rule', ] as $k ) {
-      if ( !array_key_exists( $k, $meta ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
-      }
-
-      if ( is_array( $aggregateMeta[ $k ] ) ) {
-        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_UNESCAPED_SLASHES );
-      }
+    foreach ( $rule as $_rule ) {
+      $_rules[] =  $_rule instanceof Instance\Rules\Rule ? $_rule : Instance\Rules\Rule::arrayToObject( $_rule );
     }
 
-    $this->addAtom( new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'R', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $aggregateMeta, $this->sourceWallet ), null, $this->generateIndex() ) );
+    $rules = [
+      'rule' => json_encode( $_rules, JSON_THROW_ON_ERROR )
+    ];
+    $policies = Meta::policy( $rules, $policy);
+
+    $this->addAtom(
+      new Atom(
+        $this->sourceWallet->position,
+        $this->sourceWallet->address,
+        'R',
+        $this->sourceWallet->token,
+        null,
+        null,
+        $metaType,
+        $metaId,
+        array_merge_recursive( $rules, $policies ),
+        null,
+        $this->generateIndex()
+      )
+    );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -819,7 +832,7 @@ class Molecule extends MoleculeStructure {
     // Determine first atom
     /** @var Atom $firstAtom */
     $firstAtom = reset( $this->atoms );
-
+dd($firstAtom);
     // Generate the private signing key for this molecule
     $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $firstAtom->position );
 
