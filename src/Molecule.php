@@ -257,13 +257,6 @@ class Molecule extends MoleculeStructure {
   public function addUserRemainderAtom ( Wallet $userRemainderWallet ): Molecule {
     $this->molecularHash = null;
 
-    // Metas
-    $metas = $this->finalMetas( [], $userRemainderWallet );
-
-    // Add token unit metas if it exists in remainder wallet
-    $this->tokenUnitMetas( $userRemainderWallet, $metas );
-
-
     // Remainder atom
     $this->atoms[] = new Atom(
       $userRemainderWallet->position,
@@ -274,7 +267,7 @@ class Molecule extends MoleculeStructure {
       null,
       static::continuIdMetaType(),
       $userRemainderWallet->bundle,
-      $metas,
+      $this->finalMetas( [], $userRemainderWallet ),
       null,
       $this->generateIndex()
     );
@@ -322,7 +315,7 @@ class Molecule extends MoleculeStructure {
    * @return $this
    * @throws JsonException
    */
-  public function replenishToken( float $amount, array $tokenUnits = [] ) {
+  public function replenishToken( float $amount, array $tokenUnits = [] ): Molecule {
 
     if ( $amount < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
@@ -341,9 +334,6 @@ class Molecule extends MoleculeStructure {
       // Override first atom'a token units to replenish values
       $this->sourceWallet->tokenUnits = $tokenUnits;
       $this->sourceWallet->balance = count( $this->sourceWallet->tokenUnits );
-
-      // Override amount value
-      $amount = count( $tokenUnits );
     }
 
     // Update wallet's balances
@@ -360,7 +350,7 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->address,
       'V',
       $this->sourceWallet->token,
-      $amount,
+      $this->sourceWallet->balance,
       $this->sourceWallet->batchId,
       null,
       null,
