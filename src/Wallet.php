@@ -281,7 +281,7 @@ class Wallet {
     $remainderWallet->tokenUnits = $remainderTokenUnits;
   }
 
-  /**
+    /**
    * @param string $secret
    *
    * @throws Exception

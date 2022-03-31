@@ -257,13 +257,6 @@ class Molecule extends MoleculeStructure {
   public function addUserRemainderAtom ( Wallet $userRemainderWallet ): Molecule {
     $this->molecularHash = null;
 
-    // Metas
-    $metas = $this->finalMetas( [], $userRemainderWallet );
-
-    // Add token unit metas if it exists in remainder wallet
-    $this->tokenUnitMetas( $userRemainderWallet, $metas );
-
-
     // Remainder atom
     $this->atoms[] = new Atom(
       $userRemainderWallet->position,
@@ -274,7 +267,7 @@ class Molecule extends MoleculeStructure {
       null,
       static::continuIdMetaType(),
       $userRemainderWallet->bundle,
-      $metas,
+      $this->finalMetas( [], $userRemainderWallet ),
       null,
       $this->generateIndex()
     );
@@ -294,15 +287,13 @@ class Molecule extends MoleculeStructure {
    */
   public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
 
-    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $meta ) );
-
-    foreach ( [ 'conditions', 'callback', 'rule', ] as $k ) {
-      if ( !array_key_exists( $k, $meta ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $k . '" in meta' );
+    foreach ( [ 'conditions', 'callback', 'rule', ] as $key ) {
+      if ( !array_key_exists( $key, $meta ) ) {
+        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
 
-      if ( is_array( $aggregateMeta[ $k ] ) ) {
-        $aggregateMeta[ $k ] = json_encode( $aggregateMeta[ $k ], JSON_UNESCAPED_SLASHES );
+      if ( is_array( $meta[ $key ] ) ) {
+        $meta[ $key ] = json_encode( $meta[ $key ], JSON_UNESCAPED_SLASHES );
       }
     }
 
@@ -316,23 +307,39 @@ class Molecule extends MoleculeStructure {
 
   }
 
+
   /**
    * @param float $amount
-   * @param string $token
-   * @param array $metas
+   * @param array $tokenUnits
    *
    * @return $this
    * @throws JsonException
    */
-  public function replenishTokens ( float $amount, string $token, array $metas ): Molecule {
+  public function replenishToken( float $amount, array $tokenUnits = [] ): Molecule {
 
-    $aggregateMeta = Meta::aggregateMeta( Meta::normalizeMeta( $metas ) );
-    $aggregateMeta[ 'action' ] = 'add';
+    if ( $amount < 0.0 ) {
+      throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
+    }
 
-    foreach ( [ 'address', 'position', 'batchId' ] as $key ) {
-      if ( !array_key_exists( $key, $aggregateMeta ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-      }
+    // Special code for the token unit logic
+    if ( $tokenUnits ) {
+
+      // Prepare token units to formatted style
+      $tokenUnits = Wallet::getTokenUnits( $tokenUnits );
+
+      // Merge token units with source wallet & new items
+      $this->remainderWallet->tokenUnits = array_merge( $this->sourceWallet->tokenUnits, $tokenUnits );
+      $this->remainderWallet->balance = count( $this->remainderWallet->tokenUnits );
+
+      // Override first atom'a token units to replenish values
+      $this->sourceWallet->tokenUnits = $tokenUnits;
+      $this->sourceWallet->balance = count( $this->sourceWallet->tokenUnits );
+    }
+
+    // Update wallet's balances
+    else {
+      $this->remainderWallet->balance = $this->sourceWallet->balance + $amount;
+      $this->sourceWallet->balance = $amount;
     }
 
     $this->molecularHash = null;
@@ -341,19 +348,32 @@ class Molecule extends MoleculeStructure {
     $this->atoms[] = new Atom(
       $this->sourceWallet->position,
       $this->sourceWallet->address,
-      'C',
-      'USER',
-      $amount,
+      'V',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance,
       $this->sourceWallet->batchId,
-      'token',
-      $token,
-      $this->finalMetas( $this->contextMetas( $aggregateMeta ) ),
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
       null,
       $this->generateIndex()
     );
 
-    // User remainder atom
-    $this->addUserRemainderAtom( $this->remainderWallet );
+    $walletBundle = $this->remainderWallet->bundle;
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      $this->remainderWallet->balance,
+      $this->remainderWallet->batchId,
+      $walletBundle ? 'walletBundle' : null,
+      $walletBundle,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
+      null,
+      $this->generateIndex()
+    );
+
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
     return $this;
