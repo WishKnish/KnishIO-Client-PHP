@@ -235,15 +235,21 @@ class Wallet {
   public function tokenUnitsJson (): ?string {
 
     if ( $this->hasTokenUnits() ) {
-
-      $result = array_map( static function ( $tokenUnit ) {
-        return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
-      }, $this->tokenUnits, [] );
-
-      return json_encode( $result, JSON_THROW_ON_ERROR );
+      return json_encode( $this->getRawTokenUnits(), JSON_THROW_ON_ERROR );
     }
 
     return null;
+  }
+
+  /**
+   * @return array
+   */
+  public function getRawTokenUnits(): array {
+    $rawTokenUnits = [];
+    foreach( $this->tokenUnits as $tokenUnit ) {
+      $rawTokenUnits[] = array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+    }
+    return $rawTokenUnits;
   }
 
   /**
