@@ -191,12 +191,16 @@ class Wallet {
 
       // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
       if ( !is_array( $unitData ) ) {
-        $result[] = [ 'id' => $unitData, 'name' => null, 'metas' => [], ];
+        $result[] = [ 'id' => $unitData, 'name' => null, 'fragmentZone' => null, ];
       }
 
       // Standard token unit format
       else {
-        $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
+        $result[] = [
+          'id' => array_get( $unitData, 0 ),
+          'name' => array_get( $unitData, 1 ),
+          'fragmentZone' => array_get( $unitData, 2 ),
+        ];
       }
     }
     return $result;
@@ -247,7 +251,7 @@ class Wallet {
   public function getRawTokenUnits(): array {
     $rawTokenUnits = [];
     foreach( $this->tokenUnits as $tokenUnit ) {
-      $rawTokenUnits[] = array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
+      $rawTokenUnits[] = [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ], $tokenUnit[ 'fragmentZone' ], ];
     }
     return $rawTokenUnits;
   }

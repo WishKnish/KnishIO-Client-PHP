@@ -637,6 +637,11 @@ class KnishIOClient {
       }
     }
 
+    // Set default decimals value
+    if ( !array_has( $meta, 'decimals' ) ) {
+      $meta[ 'decimals' ] = 0;
+    }
+
     // Recipient wallet
     $recipientWallet = new Wallet( $this->getSecret(), $token, null, $batchId );
 
