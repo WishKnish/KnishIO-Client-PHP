@@ -63,7 +63,7 @@ class QueryBalance extends Query {
 	 }';
 
   // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', 'tokenUnits' => [ 'id', 'name', 'metas', ], ];
+  protected array $fields = [ 'address', 'bundleHash', 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', 'tokenUnits' => [ 'id', 'name', 'fragmentZone', 'metas', ], ];
 
   /**
    * Create a response
