@@ -171,7 +171,7 @@ class KnishIOClient {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {

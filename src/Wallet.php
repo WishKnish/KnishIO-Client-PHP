@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use BI\BigInteger;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use ReflectionException;
 use SodiumException;
@@ -186,21 +187,22 @@ class Wallet {
    */
   public static function getTokenUnits ( array $unitsData ): array {
     $result = [];
-
     foreach ( $unitsData as $unitData ) {
+
+      Log::info( '$unitsData', $unitsData );
 
       // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
       if ( !is_array( $unitData ) ) {
-        $result[] = [ 'id' => $unitData, 'name' => null, 'fragmentZone' => null, ];
+        $result[] = new TokenUnit( $unitData );
       }
 
       // Standard token unit format
       else {
-        $result[] = [
-          'id' => array_get( $unitData, 0 ),
-          'name' => array_get( $unitData, 1 ),
-          'fragmentZone' => array_get( $unitData, 2 ),
-        ];
+        $result[] = new TokenUnit(
+          array_get( $unitData, 0 ),
+          array_get( $unitData, 1 ),
+          array_get( $unitData, 2, [] )
+        );
       }
     }
     return $result;
@@ -233,25 +235,12 @@ class Wallet {
   }
 
   /**
-   * @return string|null
-   * @throws JsonException
-   */
-  public function tokenUnitsJson (): ?string {
-
-    if ( $this->hasTokenUnits() ) {
-      return json_encode( $this->getRawTokenUnits(), JSON_THROW_ON_ERROR );
-    }
-
-    return null;
-  }
-
-  /**
    * @return array
    */
-  public function getRawTokenUnits(): array {
+  public function getTokenUnitsData(): array {
     $rawTokenUnits = [];
     foreach( $this->tokenUnits as $tokenUnit ) {
-      $rawTokenUnits[] = [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ], $tokenUnit[ 'fragmentZone' ], ];
+      $rawTokenUnits[] = $tokenUnit->getData();
     }
     return $rawTokenUnits;
   }
