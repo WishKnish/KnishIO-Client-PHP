@@ -229,7 +229,7 @@ class Molecule extends MoleculeStructure {
    */
   protected function tokenUnitMetas ( Wallet $wallet, array $metas = [] ): array {
     // Add token units meta key
-    if ( $wallet->hasTokenUnits() ) {
+    if ( $wallet->tokenUnits ) {
       $metas[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
     }
     return $metas;

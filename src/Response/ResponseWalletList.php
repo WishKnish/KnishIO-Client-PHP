@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use Exception;
+use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -92,7 +93,21 @@ class ResponseWalletList extends Response {
     if ( array_has( $data, 'molecules' ) ) {
       $wallet->molecules = $data[ 'molecules' ];
     }
-    $wallet->tokenUnits = array_get( $data, 'tokenUnits', [] );
+
+    // Get token units from the response
+    $tokenUnits = array_get( $data, 'tokenUnits', [] );
+    foreach( $tokenUnits as $tokenUnit ) {
+      $tokenUnitMetas = array_get( $tokenUnit, 'metas', [] );
+      dump( $tokenUnit );
+      if ( $tokenUnitMetas ) {
+        $tokenUnitMetas = json_decode( $tokenUnitMetas, true );
+      }
+      $wallet->tokenUnits[] = new TokenUnit(
+        array_get( $tokenUnit, 'id' ),
+        array_get( $tokenUnit, 'name' ),
+        $tokenUnitMetas,
+      );
+    }
 
     $wallet->balance = $data[ 'amount' ];
     $wallet->pubkey = $data[ 'pubkey' ];

@@ -189,8 +189,6 @@ class Wallet {
     $result = [];
     foreach ( $unitsData as $unitData ) {
 
-      Log::info( '$unitsData', $unitsData );
-
       // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
       if ( !is_array( $unitData ) ) {
         $result[] = new TokenUnit( $unitData );
@@ -261,7 +259,7 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {
