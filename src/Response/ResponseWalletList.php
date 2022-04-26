@@ -97,16 +97,7 @@ class ResponseWalletList extends Response {
     // Get token units from the response
     $tokenUnits = array_get( $data, 'tokenUnits', [] );
     foreach( $tokenUnits as $tokenUnit ) {
-      $tokenUnitMetas = array_get( $tokenUnit, 'metas', [] );
-      dump( $tokenUnit );
-      if ( $tokenUnitMetas ) {
-        $tokenUnitMetas = json_decode( $tokenUnitMetas, true );
-      }
-      $wallet->tokenUnits[] = new TokenUnit(
-        array_get( $tokenUnit, 'id' ),
-        array_get( $tokenUnit, 'name' ),
-        $tokenUnitMetas,
-      );
+      $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
     }
 
     $wallet->balance = $data[ 'amount' ];

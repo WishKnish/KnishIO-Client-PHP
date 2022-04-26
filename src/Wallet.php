@@ -188,20 +188,7 @@ class Wallet {
   public static function getTokenUnits ( array $unitsData ): array {
     $result = [];
     foreach ( $unitsData as $unitData ) {
-
-      // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
-      if ( !is_array( $unitData ) ) {
-        $result[] = new TokenUnit( $unitData );
-      }
-
-      // Standard token unit format
-      else {
-        $result[] = new TokenUnit(
-          array_get( $unitData, 0 ),
-          array_get( $unitData, 1 ),
-          array_get( $unitData, 2, [] )
-        );
-      }
+      $result[] = TokenUnit::createFromDB( $unitData );
     }
     return $result;
   }
@@ -226,19 +213,12 @@ class Wallet {
   }
 
   /**
-   * @return bool
-   */
-  public function hasTokenUnits (): bool {
-    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
-  }
-
-  /**
    * @return array
    */
   public function getTokenUnitsData(): array {
     $rawTokenUnits = [];
     foreach( $this->tokenUnits as $tokenUnit ) {
-      $rawTokenUnits[] = $tokenUnit->getData();
+      $rawTokenUnits[] = $tokenUnit->toRawData();
     }
     return $rawTokenUnits;
   }
