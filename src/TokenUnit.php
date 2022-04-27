@@ -2,12 +2,15 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
+
 
 /**
  * Class TokenUnit
  * @package WishKnish\KnishIO\Client
  */
 class TokenUnit {
+
 
   /**
    * @param array $data
@@ -19,8 +22,15 @@ class TokenUnit {
     if ( $metas ) {
       $metas = json_decode( $metas, true, JSON_THROW_ON_ERROR );
     }
+
+    // Get token unit ID
+    $tokenUnitId = array_get( $data, 'id' );
+    if ( !is_string( $tokenUnitId ) || !$tokenUnitId ) {
+      throw new WrongTokenUnitFormatException();
+    }
+
     return new self(
-      array_get( $data, 'id' ),
+      $tokenUnitId,
       array_get( $data, 'name' ),
       $metas,
     );
@@ -38,9 +48,15 @@ class TokenUnit {
       return new self( $data );
     }
 
+    // Get token unit ID
+    $tokenUnitId = array_get( $data, 0 );
+    if ( !is_string( $tokenUnitId ) || !$tokenUnitId ) {
+      throw new WrongTokenUnitFormatException();
+    }
+
     // Standard token unit format
     return new self(
-      array_get( $data, 0 ),
+      $tokenUnitId,
       array_get( $data, 1 ),
       array_get( $data, 2, [] )
     );
