@@ -11,7 +11,6 @@ use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
  */
 class TokenUnit {
 
-
   /**
    * @param array $data
    *

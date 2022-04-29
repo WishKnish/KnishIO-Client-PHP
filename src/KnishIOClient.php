@@ -1055,6 +1055,53 @@ class KnishIOClient {
   }
 
   /**
+   *
+   */
+  public function fuseToken( Wallet|string $recipient, string $tokenSlug, array $fusedTokenUnits, ?Wallet $sourceWallet = null  ) {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
+        ->payload();
+    if ( $fromWallet === null ) {
+      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
+    }
+
+    $recipientWallet = $recipient;
+    if ( !$recipientWallet instanceof Wallet ) {
+
+      // Get final bundle hash
+      $bundleHash = Wallet::isBundleHash( $recipient ) ? $recipient : Crypto::generateBundleHash( $recipient );
+
+      // try to get a valid wallet
+      $recipientWallet = $this->queryBalance( $tokenSlug, $bundleHash )
+        ->payload();
+
+      // Has not wallet yet - create it
+      if ( $recipientWallet === null ) {
+        $recipientWallet = Wallet::create( $recipient, $tokenSlug );
+      }
+    }
+
+    // Compute the batch ID for the recipient
+    // (typically used by stackable tokens)
+    $recipientWallet->initBatchId( $fromWallet );
+
+    // Remainder wallet
+    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet->initBatchId( $fromWallet, true );
+
+    // Burn tokens
+    $molecule = $this->createMolecule( null, $fromWallet );
+    $molecule->fuseToken( $fusedTokenUnits );
+    $molecule->sign();
+    $molecule->check();
+
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
+      ->execute();
+  }
+
+  /**
    * @return Wallet
    * @throws JsonException|GuzzleException
    */

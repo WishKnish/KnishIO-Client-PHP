@@ -228,9 +228,13 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    */
   protected function tokenUnitMetas ( Wallet $wallet, array $metas = [] ): array {
-    // Add token units meta key
+    // Add regular token units meta key
     if ( $wallet->tokenUnits ) {
-      $metas[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+      $metas[ 'tokenUnits' ] = json_encode( $wallet->getRegularTokenUnitsData(), JSON_THROW_ON_ERROR );
+    }
+    // Add fused token units meta key
+    if ( $wallet->fusedTokenUnits ) {
+      $metas[ 'fusedTokenUnits' ] = json_encode( $wallet->getFusedTokenUnitsData(), JSON_THROW_ON_ERROR );
     }
     return $metas;
   }
@@ -377,6 +381,26 @@ class Molecule extends MoleculeStructure {
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
     return $this;
+  }
+
+
+  public function fuseToken( array $tokenUnits ) {
+
+    // Special code for the token unit logic
+    if ( $tokenUnits ) {
+
+      // Prepare token units to formatted style
+      $tokenUnits = Wallet::getTokenUnits( $tokenUnits );
+
+      // Merge token units with source wallet & new items
+      $this->remainderWallet->fuseTokenUnits = $tokenUnits;
+      $this->remainderWallet->balance = 1;
+
+      // Override first atom'a token units to replenish values
+      $this->sourceWallet->tokenUnits = $tokenUnits;
+      $this->sourceWallet->balance = -count( $tokenUnits );
+    }
+
   }
 
   /**
