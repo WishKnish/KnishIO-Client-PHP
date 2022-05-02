@@ -1055,7 +1055,14 @@ class KnishIOClient {
   }
 
   /**
+   * @param Wallet|string $recipient
+   * @param string $tokenSlug
+   * @param array $fusedTokenUnits
+   * @param Wallet|null $sourceWallet
    *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
    */
   public function fuseToken( Wallet|string $recipient, string $tokenSlug, array $fusedTokenUnits, ?Wallet $sourceWallet = null  ) {
 
@@ -1066,21 +1073,28 @@ class KnishIOClient {
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
     }
+    if ( !$fromWallet->tokenUnits ) {
+      throw new TransferWalletException( 'Source wallet does not have token units.' );
+    }
+    if ( !$fusedTokenUnits ) {
+      throw new TransferWalletException( 'Fused token unit list is empty.' );
+    }
 
-    $recipientWallet = $recipient;
-    if ( !$recipientWallet instanceof Wallet ) {
-
-      // Get final bundle hash
-      $bundleHash = Wallet::isBundleHash( $recipient ) ? $recipient : Crypto::generateBundleHash( $recipient );
-
-      // try to get a valid wallet
-      $recipientWallet = $this->queryBalance( $tokenSlug, $bundleHash )
-        ->payload();
-
-      // Has not wallet yet - create it
-      if ( $recipientWallet === null ) {
-        $recipientWallet = Wallet::create( $recipient, $tokenSlug );
+    // Check fused token units
+    $sourceTokenUnitIds = [];
+    foreach( $fromWallet->tokenUnits as $tokenUnit ) {
+      $sourceTokenUnitIds[] = $tokenUnit->id;
+    }
+    foreach( $fusedTokenUnits as $fusedTokenUnitId ) {
+      if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds ) ) {
+        throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
       }
+    }
+
+    // Generate new recipient wallet
+    $recipientWallet = $recipient;
+    if ( is_string( $recipient ) ) {
+      $recipientWallet = Wallet::create( $recipient, $tokenSlug );
     }
 
     // Compute the batch ID for the recipient
@@ -1093,7 +1107,7 @@ class KnishIOClient {
 
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet );
-    $molecule->fuseToken( $fusedTokenUnits );
+    $molecule->fuseToken( $recipientWallet, $fusedTokenUnits );
     $molecule->sign();
     $molecule->check();
 

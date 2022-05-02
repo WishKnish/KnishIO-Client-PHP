@@ -383,24 +383,81 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-
-  public function fuseToken( array $tokenUnits ) {
+  /**
+   * @param Wallet $recipientWallet
+   * @param array $fusedTokenUnits
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function fuseToken( Wallet $recipientWallet, array $fusedTokenUnits ): Molecule {
 
     // Special code for the token unit logic
-    if ( $tokenUnits ) {
+    if ( $fusedTokenUnits ) {
 
       // Prepare token units to formatted style
-      $tokenUnits = Wallet::getTokenUnits( $tokenUnits );
+      $tokenUnits = Wallet::getTokenUnits( $fusedTokenUnits );
+
+      // Set fused tokens for recipient wallet
+      $recipientWallet->fusedTokenUnits = $tokenUnits;
+      $recipientWallet->balance = 1;
+
+      // Get remainder token units
+      $remainderTokenUnits = [];
+      foreach( $this->sourceWallet->tokenUnits as $tokenUnit ) {
+        if ( !in_array( $tokenUnit->id, $fusedTokenUnits ) ) {
+          $remainderTokenUnits[] = $tokenUnit->id;
+        }
+      }
 
       // Merge token units with source wallet & new items
-      $this->remainderWallet->fuseTokenUnits = $tokenUnits;
-      $this->remainderWallet->balance = 1;
-
-      // Override first atom'a token units to replenish values
-      $this->sourceWallet->tokenUnits = $tokenUnits;
-      $this->sourceWallet->balance = -count( $tokenUnits );
+      $this->remainderWallet->fuseTokenUnits = $remainderTokenUnits;
+      $this->remainderWallet->balance = count( $remainderTokenUnits );
     }
 
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'F',
+      $this->sourceWallet->token,
+      -count( $tokenUnits ),
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+    $this->atoms[] = new Atom(
+      $recipientWallet->position,
+      $recipientWallet->address,
+      'F',
+      $recipientWallet->token,
+      count( $recipientWallet->tokenUnits ),
+      $recipientWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'F',
+      $this->remainderWallet->token,
+      count( $this->remainderWallet->tokenUnits ),
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
+    $this->atoms = Atom::sortAtoms( $this->atoms );
+
+    return $this;
   }
 
   /**
