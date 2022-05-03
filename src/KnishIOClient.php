@@ -1064,7 +1064,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function fuseToken( Wallet|string $recipient, string $tokenSlug, array $fusedTokenUnits, ?Wallet $sourceWallet = null  ) {
+  public function fuseToken( Wallet|string $recipient, string $tokenSlug, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1076,7 +1076,7 @@ class KnishIOClient {
     if ( !$fromWallet->tokenUnits ) {
       throw new TransferWalletException( 'Source wallet does not have token units.' );
     }
-    if ( !$fusedTokenUnits ) {
+    if ( !$fusedTokenUnitIds ) {
       throw new TransferWalletException( 'Fused token unit list is empty.' );
     }
 
@@ -1085,7 +1085,7 @@ class KnishIOClient {
     foreach( $fromWallet->tokenUnits as $tokenUnit ) {
       $sourceTokenUnitIds[] = $tokenUnit->id;
     }
-    foreach( $fusedTokenUnits as $fusedTokenUnitId ) {
+    foreach( $fusedTokenUnitIds as $fusedTokenUnitId ) {
       if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds ) ) {
         throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
       }
@@ -1096,18 +1096,29 @@ class KnishIOClient {
     if ( is_string( $recipient ) ) {
       $recipientWallet = Wallet::create( $recipient, $tokenSlug );
     }
-
-    // Compute the batch ID for the recipient
-    // (typically used by stackable tokens)
+    // Set batch ID
     $recipientWallet->initBatchId( $fromWallet );
 
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $remainderWallet->initBatchId( $fromWallet, true );
 
-    // Burn tokens
-    $molecule = $this->createMolecule( null, $fromWallet );
-    $molecule->fuseToken( $recipientWallet, $fusedTokenUnits );
+
+    // Split token units (fused)
+    $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
+
+    // Set recipient fused token units
+    $recipientWallet->fusedTokenUnits = $fromWallet->tokenUnits;
+
+    // Create a molecule
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
+
+    // Burn token units
+    $molecule->burnToken( count( $fusedTokenUnitIds ) );
+
+    // Fuse token units
+    $molecule->fuseToken( $fromWallet->tokenUnits, $recipientWallet );
+
     $molecule->sign();
     $molecule->check();
 
