@@ -400,8 +400,8 @@ class Molecule extends MoleculeStructure {
       $recipientWallet->token,
       count( $tokenUnits ),
       $recipientWallet->batchId,
-      null,
-      null,
+      'walletBundle',
+      $recipientWallet->bundle,
       $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ) ),
       null,
       $this->generateIndex()
