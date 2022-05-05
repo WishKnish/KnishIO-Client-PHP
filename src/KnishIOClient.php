@@ -1112,13 +1112,7 @@ class KnishIOClient {
 
     // Create a molecule
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-
-    // Burn token units
-    $molecule->burnToken( count( $fusedTokenUnitIds ) );
-
-    // Fuse token units
     $molecule->fuseToken( $fromWallet->tokenUnits, $recipientWallet );
-
     $molecule->sign();
     $molecule->check();
 

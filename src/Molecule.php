@@ -363,7 +363,6 @@ class Molecule extends MoleculeStructure {
       $this->generateIndex()
     );
 
-    $walletBundle = $this->remainderWallet->bundle;
     $this->atoms[] = new Atom(
       $this->remainderWallet->position,
       $this->remainderWallet->address,
@@ -371,8 +370,8 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->token,
       $this->remainderWallet->balance,
       $this->remainderWallet->batchId,
-      $walletBundle ? 'walletBundle' : null,
-      $walletBundle,
+      'walletBundle',
+      $this->sourceWallet->bundle,
       $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
       null,
       $this->generateIndex()
@@ -392,17 +391,55 @@ class Molecule extends MoleculeStructure {
    */
   public function fuseToken( array $tokenUnits, Wallet $recipientWallet ): Molecule {
 
+    // Calculate amount
+    $amount = count( $tokenUnits );
+
+    if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
+      throw new BalanceInsufficientException();
+    }
+
+    $this->molecularHash = null;
+
+    // Initializing a new Atom to remove tokens from source
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      -$amount,
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
     // Add F isotope for fused tokens creation
     $this->atoms[] = new Atom(
       $recipientWallet->position,
       $recipientWallet->address,
       'F',
       $recipientWallet->token,
-      count( $tokenUnits ),
+      1,
       $recipientWallet->batchId,
       'walletBundle',
       $recipientWallet->bundle,
       $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance - $amount,
+      $this->remainderWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
       null,
       $this->generateIndex()
     );
@@ -414,18 +451,17 @@ class Molecule extends MoleculeStructure {
 
   /**
    * @param float $amount
-   * @param string|null $walletBundle
    *
    * @return $this
    * @throws JsonException
    */
-  public function burnToken ( float $amount, string $walletBundle = null ): Molecule {
+  public function burnToken ( float $amount ): Molecule {
 
     if ( $amount < 0.0 ) {
       throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
     }
 
-    if ( Decimal::cmp( 0.0, $this->sourceWallet->balance - $amount ) > 0 ) {
+    if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
     }
 
@@ -453,8 +489,8 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->token,
       $this->sourceWallet->balance - $amount,
       $this->remainderWallet->batchId,
-      $walletBundle ? 'walletBundle' : null,
-      $walletBundle,
+      'walletBundle',
+      $this->sourceWallet->bundle,
       $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
       null,
       $this->generateIndex()

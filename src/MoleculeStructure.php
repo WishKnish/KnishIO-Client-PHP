@@ -84,9 +84,13 @@ class MoleculeStructure {
    * @return array
    */
   public static function isotopeFilter ( string $isotope, array $atoms ): array {
-    return array_filter( $atoms, static function ( Atom $atom ) use ( $isotope ) {
-      return ( $isotope === $atom->isotope );
-    } );
+    $result = [];
+    foreach( $atoms as $atom ) {
+      if ( $atom->isotope === $isotope ) {
+        $result[] = $atom;
+      }
+    }
+    return $result;
   }
 
 
