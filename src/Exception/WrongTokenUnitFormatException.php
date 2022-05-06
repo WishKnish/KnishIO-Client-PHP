@@ -47,32 +47,23 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use Throwable;
 
 /**
- * Class QueryBalance
- * @package WishKnish\KnishIO\Client\Query
+ * Class WrongTokenUnitFormatException
+ * @package WishKnish\KnishIO\Client\Exception
  */
-class QueryWalletList extends Query {
-  // Query
-  protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $token: String, $position: String, $unspent: Boolean ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position, unspent: $unspent )
-	 	@fields
-	}';
-
-  // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', ];
-
+class WrongTokenUnitFormatException extends BaseException {
   /**
-   * @param string $response
+   * WrongTokenTypeException constructor.
    *
-   * @return ResponseWalletList
-   * @throws JsonException
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public function createResponse ( string $response ): ResponseWalletList {
-    return new ResponseWalletList( $this, $response );
+  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
-
 }

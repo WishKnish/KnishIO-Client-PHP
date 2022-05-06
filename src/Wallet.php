@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use BI\BigInteger;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use ReflectionException;
 use SodiumException;
@@ -90,6 +91,11 @@ class Wallet {
    * @var array
    */
   public array $tokenUnits = [];
+
+  /**
+   * @var array
+   */
+  public array $fusedTokenUnits = [];
 
   /**
    * @var float
@@ -186,20 +192,23 @@ class Wallet {
    */
   public static function getTokenUnits ( array $unitsData ): array {
     $result = [];
-
     foreach ( $unitsData as $unitData ) {
-
-      // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
-      if ( !is_array( $unitData ) ) {
-        $result[] = [ 'id' => $unitData, 'name' => null, 'metas' => [], ];
-      }
-
-      // Standard token unit format
-      else {
-        $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
-      }
+      $result[] = TokenUnit::createFromDB( $unitData );
     }
     return $result;
+  }
+
+  /**
+   * @param array $tokenUnits
+   *
+   * @return array
+   */
+  public static function getTokenUnitsData( array $tokenUnits ): array {
+    $rawTokenUnits = [];
+    foreach( $tokenUnits as $tokenUnit ) {
+      $rawTokenUnits[] = $tokenUnit->toRawData();
+    }
+    return $rawTokenUnits;
   }
 
   /**
@@ -222,28 +231,17 @@ class Wallet {
   }
 
   /**
-   * @return bool
+   * @return array
    */
-  public function hasTokenUnits (): bool {
-    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
+  public function getRegularTokenUnitsData(): array {
+    return static::getTokenUnitsData( $this->tokenUnits );
   }
 
   /**
-   * @return string|null
-   * @throws JsonException
+   * @return array
    */
-  public function tokenUnitsJson (): ?string {
-
-    if ( $this->hasTokenUnits() ) {
-
-      $result = array_map( static function ( $tokenUnit ) {
-        return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
-      }, $this->tokenUnits, [] );
-
-      return json_encode( $result, JSON_THROW_ON_ERROR );
-    }
-
-    return null;
+  public function getFusedTokenUnitsData(): array {
+    return static::getTokenUnitsData( $this->fusedTokenUnits );
   }
 
   /**
@@ -262,7 +260,7 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {
