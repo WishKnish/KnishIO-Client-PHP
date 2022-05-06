@@ -1057,14 +1057,15 @@ class KnishIOClient {
   /**
    * @param Wallet|string $recipient
    * @param string $tokenSlug
-   * @param array $fusedTokenUnits
+   * @param TokenUnit $newTokenUnit
+   * @param array $fusedTokenUnitIds
    * @param Wallet|null $sourceWallet
    *
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function fuseToken( Wallet|string $recipient, string $tokenSlug, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
+  public function fuseToken( Wallet|string $recipient, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1107,8 +1108,9 @@ class KnishIOClient {
     // Split token units (fused)
     $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
 
-    // Set recipient fused token units
-    $recipientWallet->fusedTokenUnits = $fromWallet->tokenUnits;
+    // Set recipient new fused token unit
+    $newTokenUnit->metas[ 'fusedTokenUnits' ] = $fromWallet->tokenUnits;
+    $recipientWallet->tokenUnits = [ $newTokenUnit ];
 
     // Create a molecule
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
