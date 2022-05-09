@@ -86,7 +86,7 @@ class TokenUnit {
   /**
    * @return array
    */
-  public function toRawData(): array {
+  public function toData(): array {
     return [ $this->id, $this->name, $this->metas, ];
   }
 
@@ -107,7 +107,7 @@ class TokenUnit {
    * @throws \JsonException
    */
   public function __toString (): string {
-    return json_encode( $this->toRawData(), JSON_THROW_ON_ERROR );
+    return json_encode( $this->toData(), JSON_THROW_ON_ERROR );
   }
 
 }
