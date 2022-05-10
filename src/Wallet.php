@@ -93,11 +93,6 @@ class Wallet {
   public array $tokenUnits = [];
 
   /**
-   * @var array
-   */
-  public array $fusedTokenUnits = [];
-
-  /**
    * @var float
    */
   public float $balance = 0;
@@ -199,19 +194,6 @@ class Wallet {
   }
 
   /**
-   * @param array $tokenUnits
-   *
-   * @return array
-   */
-  public static function getTokenUnitsData( array $tokenUnits ): array {
-    $rawTokenUnits = [];
-    foreach( $tokenUnits as $tokenUnit ) {
-      $rawTokenUnits[] = $tokenUnit->toRawData();
-    }
-    return $rawTokenUnits;
-  }
-
-  /**
    * @return bool
    */
   public function isShadow (): bool {
@@ -233,15 +215,12 @@ class Wallet {
   /**
    * @return array
    */
-  public function getRegularTokenUnitsData(): array {
-    return static::getTokenUnitsData( $this->tokenUnits );
-  }
-
-  /**
-   * @return array
-   */
-  public function getFusedTokenUnitsData(): array {
-    return static::getTokenUnitsData( $this->fusedTokenUnits );
+  public function getTokenUnitsData(): array {
+    $result = [];
+    foreach( $this->tokenUnits as $tokenUnit ) {
+      $result[] = $tokenUnit->toData();
+    }
+    return $result;
   }
 
   /**

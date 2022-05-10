@@ -100,12 +100,6 @@ class ResponseWalletList extends Response {
       $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
     }
 
-    // Get token units from the response
-    $fusedTokenUnits = array_get( $data, 'fusedTokenUnits', [] );
-    foreach( $fusedTokenUnits as $tokenUnit ) {
-      $wallet->fusedTokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
-    }
-
     $wallet->balance = $data[ 'amount' ];
     $wallet->pubkey = $data[ 'pubkey' ];
     $wallet->createdAt = $data[ 'createdAt' ];
