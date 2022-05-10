@@ -216,11 +216,11 @@ class Wallet {
    * @return array
    */
   public function getTokenUnitsData(): array {
-    $rawTokenUnits = [];
+    $result = [];
     foreach( $this->tokenUnits as $tokenUnit ) {
-      $rawTokenUnits[] = $tokenUnit->toData();
+      $result[] = $tokenUnit->toData();
     }
-    return $rawTokenUnits;
+    return $result;
   }
 
   /**

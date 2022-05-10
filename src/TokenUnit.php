@@ -12,6 +12,26 @@ use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
 class TokenUnit {
 
   /**
+   * @param mixed $id
+   * @param mixed $name
+   * @param mixed $metas
+   *
+   * @return static
+   */
+  public static function create( mixed $id, mixed $name, mixed $metas ): self {
+    if ( !is_string( $id ) || !$id ) {
+      throw new WrongTokenUnitFormatException( 'Invalid token unit ID format: non-empty string expected.' );
+    }
+    if ( !is_string( $name ) && !is_null( $name ) ) {
+      throw new WrongTokenUnitFormatException( 'Invalid token unit Name format: string OR null expected.' );
+    }
+    if ( !is_array( $metas ) ) {
+      throw new WrongTokenUnitFormatException( 'Invalid token unit Metas format: array expected.' );
+    }
+    return new self( $id, $name, $metas );
+  }
+
+  /**
    * @param array $data
    *
    * @return static
@@ -28,7 +48,8 @@ class TokenUnit {
       throw new WrongTokenUnitFormatException();
     }
 
-    return new self(
+    // Create a new token unit
+    return static::create(
       $tokenUnitId,
       array_get( $data, 'name' ),
       $metas,
@@ -54,7 +75,7 @@ class TokenUnit {
     }
 
     // Standard token unit format
-    return new self(
+    return static::create(
       $tokenUnitId,
       array_get( $data, 1 ),
       array_get( $data, 2, [] )
