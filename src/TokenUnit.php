@@ -107,6 +107,13 @@ class TokenUnit {
   /**
    * @return array
    */
+  public function getFusedTokenUnits(): array {
+    return array_get( $this->metas, 'fusedTokenUnits', [] );
+  }
+
+  /**
+   * @return array
+   */
   public function toData(): array {
     return [ $this->id, $this->name, $this->metas, ];
   }

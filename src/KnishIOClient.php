@@ -1109,7 +1109,7 @@ class KnishIOClient {
     $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
 
     // Set recipient new fused token unit
-    $newTokenUnit->metas[ 'fusedTokenUnits' ] = $fromWallet->tokenUnits;
+    $newTokenUnit->metas[ 'fusedTokenUnits' ] = $fromWallet->getTokenUnitsData();
     $recipientWallet->tokenUnits = [ $newTokenUnit ];
 
     // Create a molecule
