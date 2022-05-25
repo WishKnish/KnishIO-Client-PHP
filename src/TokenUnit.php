@@ -12,6 +12,19 @@ use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
 class TokenUnit {
 
   /**
+   * @param array $tokenUnits
+   *
+   * @return array
+   */
+  public static function getListGraphQLResponse( array $tokenUnits ): array {
+    $result = [];
+    foreach( $tokenUnits as $tokenUnit ) {
+      $result[] = $tokenUnit->toGraphQLResponse();
+    }
+    return $result;
+  }
+
+  /**
    * @param mixed $id
    * @param mixed $name
    * @param mixed $metas
