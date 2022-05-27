@@ -105,14 +105,23 @@ class HttpClient extends Client implements HttpClientInterface {
     parent::__construct( $config );
   }
 
+  /**
+   *
+   */
   public function enableEncryption (): void {
     $this->config[ 'encrypt' ] = true;
   }
 
+  /**
+   *
+   */
   public function disableEncryption (): void {
     $this->config[ 'encrypt' ] = false;
   }
 
+  /**
+   * @return bool
+   */
   public function hasEncryption (): bool {
     return $this->config[ 'encrypt' ];
   }

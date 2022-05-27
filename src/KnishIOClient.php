@@ -171,7 +171,7 @@ class KnishIOClient {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {
@@ -637,6 +637,11 @@ class KnishIOClient {
       }
     }
 
+    // Set default decimals value
+    if ( !array_has( $meta, 'decimals' ) ) {
+      $meta[ 'decimals' ] = 0;
+    }
+
     // Recipient wallet
     $recipientWallet = new Wallet( $this->getSecret(), $token, null, $batchId );
 
@@ -1032,6 +1037,108 @@ class KnishIOClient {
 
     return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
 
+  }
+
+  /**
+   * @param string $tokenSlug
+   * @param float $amount
+   * @param array $tokenUnits
+   * @param Wallet|null $sourceWallet
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function replenishToken ( string $tokenSlug, float $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
+        ->payload();
+    if ( $fromWallet === null ) {
+      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
+    }
+
+    // Remainder wallet
+    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet->initBatchId( $fromWallet, true );
+
+    // Burn tokens
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
+    $molecule->replenishToken( $amount, $tokenUnits );
+    $molecule->sign();
+    $molecule->check();
+
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
+      ->execute();
+  }
+
+  /**
+   * @param Wallet|string $recipient
+   * @param string $tokenSlug
+   * @param TokenUnit $newTokenUnit
+   * @param array $fusedTokenUnitIds
+   * @param Wallet|null $sourceWallet
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function fuseToken( Wallet|string $recipient, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
+        ->payload();
+    if ( $fromWallet === null ) {
+      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
+    }
+    if ( !$fromWallet->tokenUnits ) {
+      throw new TransferWalletException( 'Source wallet does not have token units.' );
+    }
+    if ( !$fusedTokenUnitIds ) {
+      throw new TransferWalletException( 'Fused token unit list is empty.' );
+    }
+
+    // Check fused token units
+    $sourceTokenUnitIds = [];
+    foreach( $fromWallet->tokenUnits as $tokenUnit ) {
+      $sourceTokenUnitIds[] = $tokenUnit->id;
+    }
+    foreach( $fusedTokenUnitIds as $fusedTokenUnitId ) {
+      if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds ) ) {
+        throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
+      }
+    }
+
+    // Generate new recipient wallet
+    $recipientWallet = $recipient;
+    if ( is_string( $recipient ) ) {
+      $recipientWallet = Wallet::create( $recipient, $tokenSlug );
+    }
+    // Set batch ID
+    $recipientWallet->initBatchId( $fromWallet );
+
+    // Remainder wallet
+    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet->initBatchId( $fromWallet, true );
+
+
+    // Split token units (fused)
+    $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
+
+    // Set recipient new fused token unit
+    $newTokenUnit->metas[ 'fusedTokenUnits' ] = $fromWallet->getTokenUnitsData();
+    $recipientWallet->tokenUnits = [ $newTokenUnit ];
+
+    // Create a molecule
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
+    $molecule->fuseToken( $fromWallet->tokenUnits, $recipientWallet );
+    $molecule->sign();
+    $molecule->check();
+
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
+      ->execute();
   }
 
   /**
