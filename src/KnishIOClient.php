@@ -67,6 +67,7 @@ use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
+use WishKnish\KnishIO\Client\Mutation\MutationTradeTokens;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
@@ -968,6 +969,41 @@ class KnishIOClient {
 
     // Execute a query
     return $query->execute();
+  }
+
+  /**
+   * @param string $tokenSlug
+   * @param float $amount
+   * @param array $tokenTradeRates
+   * @param Wallet|null $sourceWallet
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function tradeToken( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug, $this->getBundle() )
+        ->payload();
+    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
+      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
+    }
+
+    // Remainder wallet
+    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet->initBatchId( $fromWallet, true );
+
+    // Create a molecule with custom source wallet
+    $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
+
+    // Create a query
+    /** @var MutationTradeTokens $query */
+    $query = $this->createMoleculeMutation( MutationTradeTokens::class, $molecule );
+
+    // Init a molecule
+    $query->fillMolecule( $amount, $tokenTradeRates );
   }
 
   /**

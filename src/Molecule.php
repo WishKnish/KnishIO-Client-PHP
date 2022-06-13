@@ -566,6 +566,72 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
+   * Initialize trade buffer (VBV molecule)
+   *
+   * @param float $amount
+   * @param array $tokenTradeRates
+   *
+   * @return Molecule
+   */
+  public function initTradeBuffer ( float $amount, array $tokenTradeRates ): Molecule {
+
+    if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
+      throw new BalanceInsufficientException();
+    }
+
+    $this->molecularHash = null;
+
+    // Initializing a new Atom to remove tokens from source
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      -$amount,
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
+    // Initializing a new Atom to add tokens to recipient
+    $this->atoms[] = new Atom(
+      null,
+      null,
+      'B',
+      $this->sourceWallet->token,
+      $amount,
+      null,
+      null,
+      null,
+      $this->finalMetas( [ 'tradePairs' => $tokenTradeRates, ] ),
+      null,
+      $this->generateIndex()
+    );
+
+    // Initializing a new Atom to deposit remainder in a new wallet
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance - $amount,
+      $this->remainderWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
+      null,
+      $this->generateIndex()
+    );
+
+    $this->atoms = Atom::sortAtoms( $this->atoms );
+
+    return $this;
+  }
+
+  /**
    * @param Wallet $newWallet
    *
    * @return $this
