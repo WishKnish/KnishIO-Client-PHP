@@ -66,8 +66,9 @@ use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
+use WishKnish\KnishIO\Client\Mutation\MutationDepositBufferToken;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
-use WishKnish\KnishIO\Client\Mutation\MutationTradeTokens;
+use WishKnish\KnishIO\Client\Mutation\MutationWithdrawBufferToken;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
@@ -424,19 +425,24 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param string|null $bundleHash
+   * @param string $type
    *
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryBalance ( string $tokenSlug, string $bundleHash = null ): Response {
+  public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): Response {
 
     // Create a query
     /** @var QueryBalance $query */
     $query = $this->createQuery( QueryBalance::class );
 
     // Execute the query
-    return $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, ] );
+    return $query->execute( [
+      'bundleHash' => $bundleHash ?: $this->getBundle(),
+      'token' => $tokenSlug,
+      'type' => $type,
+    ] );
   }
 
   /**
@@ -981,7 +987,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function tradeToken( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
+  public function depositBufferToken( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -998,12 +1004,48 @@ class KnishIOClient {
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
 
-    // Create a query
-    /** @var MutationTradeTokens $query */
-    $query = $this->createMoleculeMutation( MutationTradeTokens::class, $molecule );
+    // Create a mutation
+    /** @var MutationDepositBufferToken $query */
+    $query = $this->createMoleculeMutation( MutationDepositBufferToken::class, $molecule );
 
-    // Init a molecule
+    // Init a molecule & execute it
     $query->fillMolecule( $amount, $tokenTradeRates );
+    return $query->execute();
+  }
+
+  /**
+   * @param string $tokenSlug
+   * @param float $amount
+   * @param Wallet|null $sourceWallet
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function withdrawBufferToken( string $tokenSlug, float $amount, ?Wallet $sourceWallet = null ): Response {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug, $this->getBundle(), 'buffer' )
+        ->payload();
+    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
+      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
+    }
+
+    // Remainder wallet
+    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet->initBatchId( $fromWallet, true );
+
+    // Create a molecule with custom source wallet
+    $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
+
+    // Create a mutation
+    /** @var MutationWithdrawBufferToken $query */
+    $query = $this->createMoleculeMutation( MutationWithdrawBufferToken::class, $molecule );
+
+    // Init a molecule & execute it
+    $query->fillMolecule( $amount );
+    return $query->execute();
   }
 
   /**

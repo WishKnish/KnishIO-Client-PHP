@@ -566,18 +566,20 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Initialize trade buffer (VBV molecule)
+   * Initialize deposit buffer (VBV molecule)
    *
    * @param float $amount
    * @param array $tokenTradeRates
    *
    * @return Molecule
    */
-  public function initTradeBuffer ( float $amount, array $tokenTradeRates ): Molecule {
+  public function initDepositBuffer ( float $amount, array $tokenTradeRates ): Molecule {
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
     }
+
+    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
 
     $this->molecularHash = null;
 
@@ -598,15 +600,15 @@ class Molecule extends MoleculeStructure {
 
     // Initializing a new Atom to add tokens to recipient
     $this->atoms[] = new Atom(
-      null,
-      null,
+      $bufferWallet->position,
+      $bufferWallet->address,
       'B',
       $this->sourceWallet->token,
       $amount,
-      null,
-      null,
-      null,
-      $this->finalMetas( [ 'tradePairs' => $tokenTradeRates, ] ),
+      $bufferWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas( [ 'tradePairs' => json_encode( $tokenTradeRates ), ], $bufferWallet ),
       null,
       $this->generateIndex()
     );
@@ -616,6 +618,74 @@ class Molecule extends MoleculeStructure {
       $this->remainderWallet->position,
       $this->remainderWallet->address,
       'V',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance - $amount,
+      $this->remainderWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
+      null,
+      $this->generateIndex()
+    );
+
+    $this->atoms = Atom::sortAtoms( $this->atoms );
+
+    return $this;
+  }
+
+  /**
+   * Initialize withdraw buffer (BVB molecule)
+   *
+   * @param float $amount
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function initWithdrawBuffer ( float $amount ): Molecule {
+
+    if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
+      throw new BalanceInsufficientException();
+    }
+
+    $recipientWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+
+    $this->molecularHash = null;
+
+    // Initializing a new Atom to remove tokens from source
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'B',
+      $this->sourceWallet->token,
+      -$amount,
+      $this->sourceWallet->batchId,
+      null,
+      null,
+      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      null,
+      $this->generateIndex()
+    );
+
+    // Initializing a new Atom to add tokens to recipient
+    $this->atoms[] = new Atom(
+      $recipientWallet->position,
+      $recipientWallet->address,
+      'V',
+      $this->sourceWallet->token,
+      $amount,
+      $recipientWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ), $recipientWallet ),
+      null,
+      $this->generateIndex()
+    );
+
+    // Initializing a new Atom to deposit remainder in a new wallet
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'B',
       $this->sourceWallet->token,
       $this->sourceWallet->balance - $amount,
       $this->remainderWallet->batchId,

@@ -47,34 +47,29 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseBalance;
 
 /**
- * Class QueryBalance
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationWithdrawBufferToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryBalance extends Query {
-  // Query
-  protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $type: String, $token: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, type: $type, token: $token, position: $position )
-	 	@fields
-	 }';
-
-  // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', 'tokenUnits' => [ 'id', 'name', 'metas', ], ];
+class MutationWithdrawBufferToken extends MutationProposeMolecule {
 
   /**
-   * Create a response
+   * @param float $amount
+   * @param array $tokenTradeRates
    *
-   * @param string $response
-   *
-   * @return ResponseBalance
+   * @return $this
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseBalance {
-    return new ResponseBalance( $this, $response );
+  public function fillMolecule ( float $amount ): self {
+    $this->molecule->initWithdrawBuffer( $amount );
+    $this->molecule->sign();
+    $this->molecule->check();
+
+    return $this;
   }
 
 }

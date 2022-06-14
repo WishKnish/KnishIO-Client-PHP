@@ -51,12 +51,11 @@ namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
 
-
 /**
- * Class MutationTradeTokens
+ * Class MutationDepositBufferToken
  * @package WishKnish\KnishIO\Client\Mutation
  */
-class MutationTradeTokens extends MutationProposeMolecule {
+class MutationDepositBufferToken extends MutationProposeMolecule {
 
   /**
    * @param float $amount
@@ -65,8 +64,8 @@ class MutationTradeTokens extends MutationProposeMolecule {
    * @return $this
    * @throws JsonException
    */
-  public function fillMolecule ( float $amount, array $tokenTradeRates ): MutationTradeTokens {
-    $this->molecule->initTradeBuffer( $amount, $tokenTradeRates );
+  public function fillMolecule ( float $amount, array $tokenTradeRates ): self {
+    $this->molecule->initDepositBuffer( $amount, $tokenTradeRates );
     $this->molecule->sign();
     $this->molecule->check();
 
