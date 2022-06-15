@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
@@ -112,7 +113,7 @@ class CheckMolecule {
     $this->isotopeP();
     $this->isotopeR();
     $this->isotopeC();
-    $this->isotopeV( $fromWallet );
+    $this->isotopeVB( $fromWallet );
     $this->isotopeT();
     $this->isotopeI();
     $this->isotopeU();
@@ -347,30 +348,31 @@ class CheckMolecule {
   }
 
   /**
-   * Verification of V-isotope molecules checks to make sure that:
+   * Verification of V, B isotope molecules checks to make sure that:
    * 1. we're sending and receiving the same token
    * 2. we're only subtracting on the first atom
    *
    * @param Wallet|null $senderWallet
    */
-  public function isotopeV ( Wallet $senderWallet = null ): void {
+  public function isotopeVB ( Wallet $senderWallet = null ): void {
 
-    $isotopeV = $this->molecule->getIsotopes( 'V' );
+    // Get atoms with V OR B isotopes
+    $atoms = $this->molecule->getIsotopes( [ 'V', 'B' ] );
 
-    // Select all atoms V
-    if ( empty( $isotopeV ) ) {
+    // V & B isotopes does not found
+    if ( !$atoms ) {
       return;
     }
 
     // Grabbing the first atom
     /** @var Atom $firstAtom */
-    $firstAtom = reset( $this->molecule->atoms );
+    $firstAtom = $atoms[ 0 ];
 
     // if there are only two atoms, then this is the burning of tokens
-    if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+    if ( count( $atoms ) === 2 ) {
 
       /** @var Atom $endAtom */
-      $endAtom = end( $isotopeV );
+      $endAtom = end( $atoms );
 
       if ( $firstAtom->token !== $endAtom->token ) {
         throw new TransferMismatchedException();
@@ -393,12 +395,7 @@ class CheckMolecule {
     }
 
     /** @var Atom $vAtom */
-    foreach ( $this->molecule->atoms as $index => $vAtom ) {
-
-      // Not V? Next...
-      if ( $vAtom->isotope !== 'V' ) {
-        continue;
-      }
+    foreach ( $atoms as $index => $vAtom ) {
 
       // Making sure we're in integer land
       $value = 1.0 * $vAtom->value;
@@ -446,7 +443,8 @@ class CheckMolecule {
         throw new TransferRemainderException();
       }
 
-    } // No senderWallet, but have a remainder?
+    }
+    // No senderWallet, but have a remainder?
     else if ( !Decimal::equal( $value, 0.0 ) ) {
       throw new TransferWalletException();
     }
