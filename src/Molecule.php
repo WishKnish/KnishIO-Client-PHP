@@ -661,7 +661,12 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->batchId,
       null,
       null,
-      $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ),
+      $this->finalMetas(
+        array_merge(
+          $this->tokenUnitMetas( $this->sourceWallet ),
+          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+        ),
+      ),
       null,
       $this->generateIndex()
     );
@@ -681,7 +686,7 @@ class Molecule extends MoleculeStructure {
       $this->generateIndex()
     );
 
-    // Initializing a new Atom to deposit remainder in a new wallet
+    // Initializing a new Atom to withdraw remainder in a new wallet
     $this->atoms[] = new Atom(
       $this->remainderWallet->position,
       $this->remainderWallet->address,
@@ -691,7 +696,13 @@ class Molecule extends MoleculeStructure {
       $this->remainderWallet->batchId,
       'walletBundle',
       $this->sourceWallet->bundle,
-      $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ),
+      $this->finalMetas(
+        array_merge(
+          $this->tokenUnitMetas( $this->remainderWallet ),
+          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+        ),
+        $this->remainderWallet
+      ),
       null,
       $this->generateIndex()
     );

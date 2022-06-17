@@ -93,6 +93,11 @@ class Wallet {
   public array $tokenUnits = [];
 
   /**
+   * @var array
+   */
+  public array $tradePairs = [];
+
+  /**
    * @var float
    */
   public float $balance = 0;
