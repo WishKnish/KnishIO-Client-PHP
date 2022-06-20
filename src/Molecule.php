@@ -579,7 +579,9 @@ class Molecule extends MoleculeStructure {
       throw new BalanceInsufficientException();
     }
 
+    // Create a buffer wallet
     $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+    $bufferWallet->tradePairs = $tokenTradeRates;
 
     $this->molecularHash = null;
 
@@ -608,7 +610,7 @@ class Molecule extends MoleculeStructure {
       $bufferWallet->batchId,
       'walletBundle',
       $this->sourceWallet->bundle,
-      $this->finalMetas( [ 'tradePairs' => json_encode( $tokenTradeRates ), ], $bufferWallet ),
+      $this->finalMetas( [ 'tradePairs' => json_encode( $bufferWallet->tradePairs ), ], $bufferWallet ),
       null,
       $this->generateIndex()
     );
