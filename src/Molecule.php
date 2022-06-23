@@ -639,17 +639,21 @@ class Molecule extends MoleculeStructure {
    * Initialize withdraw buffer (BVB molecule)
    *
    * @param float $amount
+   * @param Wallet|null $recipientWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWithdrawBuffer ( float $amount ): Molecule {
+  public function initWithdrawBuffer ( float $amount, Wallet $recipientWallet = null ): Molecule {
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
     }
 
-    $recipientWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+    // Create a recipient wallet if it has not passed (create a regular wallet)
+    if ( !$recipientWallet ) {
+      $recipientWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+    }
 
     $this->molecularHash = null;
 
