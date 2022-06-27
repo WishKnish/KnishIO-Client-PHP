@@ -640,11 +640,12 @@ class Molecule extends MoleculeStructure {
    *
    * @param float $amount
    * @param Wallet|null $recipientWallet
+   * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWithdrawBuffer ( float $amount, Wallet $recipientWallet = null ): Molecule {
+  public function initWithdrawBuffer ( float $amount, Wallet $recipientWallet = null, ?Wallet $signingWallet = null ): Molecule {
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
@@ -657,6 +658,18 @@ class Molecule extends MoleculeStructure {
 
     $this->molecularHash = null;
 
+    // First atom metas
+    $firstAtomMetas = $this->finalMetas(
+      array_merge(
+        $this->tokenUnitMetas( $this->sourceWallet ),
+        [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ), ]
+      ),
+    );
+    // Special key for custom signing wallet
+    if ( $signingWallet ) {
+      $firstAtomMetas[ 'signingPosition' ] = $signingWallet->position;
+    }
+
     // Initializing a new Atom to remove tokens from source
     $this->atoms[] = new Atom(
       $this->sourceWallet->position,
@@ -667,12 +680,7 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->batchId,
       null,
       null,
-      $this->finalMetas(
-        array_merge(
-          $this->tokenUnitMetas( $this->sourceWallet ),
-          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
-        ),
-      ),
+      $firstAtomMetas,
       null,
       $this->generateIndex()
     );
@@ -1037,10 +1045,9 @@ class Molecule extends MoleculeStructure {
    * @param bool $anonymous
    * @param bool $compressed
    *
-   * @return string|null
-   * @throws Exception|AtomsMissingException
+   * @throws Exception
    */
-  public function sign ( bool $anonymous = false, bool $compressed = true ): ?string {
+  public function sign ( bool $anonymous = false, bool $compressed = true ): void {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
         return !( $atom instanceof Atom );
       } ) ) ) {
@@ -1054,12 +1061,23 @@ class Molecule extends MoleculeStructure {
     $this->atoms = Atom::sortAtoms( $this->atoms );
     $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
+
     // Determine first atom
     /** @var Atom $firstAtom */
     $firstAtom = reset( $this->atoms );
 
+    // Set signing position from the first atom
+    $signingPosition = $firstAtom->position;
+
+    // Try to get custom signing position from the metas (local molecule with server secret)
+    $metas = $firstAtom->aggregatedMeta();
+    if ( array_get( $metas, 'signingPosition' ) ) {
+      $signingPosition = array_get( $metas, 'signingPosition' );
+    }
+
+
     // Generate the private signing key for this molecule
-    $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $firstAtom->position );
+    $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $signingPosition );
 
     // Building a one-time-signature
     $signatureFragments = $this->signatureFragments( $key );
@@ -1071,15 +1089,9 @@ class Molecule extends MoleculeStructure {
 
     // Chunking the signature across multiple atoms
     $chunkedSignature = Strings::chunkSubstr( $signatureFragments, ceil( mb_strlen( $signatureFragments ) / count( $this->atoms ) ) );
-    $lastPosition = null;
-
     foreach ( $chunkedSignature as $chunkCount => $chunk ) {
-
       $this->atoms[ $chunkCount ]->otsFragment = $chunk;
-      $lastPosition = $this->atoms[ $chunkCount ]->position;
     }
-
-    return $lastPosition;
   }
 
   /**

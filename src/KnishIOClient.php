@@ -1016,13 +1016,19 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param float $amount
+   * @param Wallet $signingWallet
    * @param Wallet|null $sourceWallet
    *
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function withdrawBufferToken( string $tokenSlug, float $amount, ?Wallet $sourceWallet = null ): Response {
+  public function withdrawBufferToken(
+    string $tokenSlug,
+    float $amount,
+    ?Wallet $sourceWallet = null,
+    ?Wallet $signingWallet = null
+  ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1044,7 +1050,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationWithdrawBufferToken::class, $molecule );
 
     // Init a molecule & execute it
-    $query->fillMolecule( $amount );
+    $query->fillMolecule( $amount, $signingWallet );
     return $query->execute();
   }
 
