@@ -79,6 +79,7 @@ class Molecule extends MoleculeStructure {
 
   private string $secret;
   private ?Wallet $sourceWallet;
+  private ?Wallet $signingWallet; // For most usage it is a sourceWallet
   private Wallet $remainderWallet;
 
   /**
@@ -103,6 +104,9 @@ class Molecule extends MoleculeStructure {
 
     $this->secret = $secret;
     $this->sourceWallet = $sourceWallet;
+
+    // Set signing wallet as source one
+    $this->signingWallet = $sourceWallet;
 
     if ( $remainderWallet || $sourceWallet ) {
       $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
@@ -132,6 +136,24 @@ class Molecule extends MoleculeStructure {
    */
   public function sourceWallet (): ?Wallet {
     return $this->sourceWallet;
+  }
+
+  /**
+   * Set a signing wallet
+   *
+   * @param Wallet $wallet
+   */
+  public function setSigningWallet ( Wallet $wallet ): void {
+    $this->signingWallet = $wallet;
+  }
+
+  /**
+   * Get a signing wallet
+   *
+   * @return Wallet|null
+   */
+  public function signingWallet (): ?Wallet {
+    return $this->signingWallet;
   }
 
   /**
@@ -665,9 +687,18 @@ class Molecule extends MoleculeStructure {
         [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ), ]
       ),
     );
-    // Special key for custom signing wallet
+
+    // Signing wallet custom logic
     if ( $signingWallet ) {
-      $firstAtomMetas[ 'signingPosition' ] = $signingWallet->position;
+
+      // Overwrite a signing wallet property
+      $this->setSigningWallet( $signingWallet );
+
+      // Set a metas signing position for molecule correct reconciliation
+      $firstAtomMetas[ 'signingPosition' ] = json_encode( [
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+      ] );
     }
 
     // Initializing a new Atom to remove tokens from source
@@ -1070,9 +1101,8 @@ class Molecule extends MoleculeStructure {
     $signingPosition = $firstAtom->position;
 
     // Try to get custom signing position from the metas (local molecule with server secret)
-    $metas = $firstAtom->aggregatedMeta();
-    if ( array_get( $metas, 'signingPosition' ) ) {
-      $signingPosition = array_get( $metas, 'signingPosition' );
+    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
+      $signingPosition = array_get( json_decode( $signingWallet ), 'position' );
     }
 
 

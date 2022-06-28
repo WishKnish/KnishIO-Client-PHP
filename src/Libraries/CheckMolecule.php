@@ -503,8 +503,19 @@ class CheckMolecule {
     // Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
     $address = bin2hex( Shake256::hash( $digest, 32 ) );
 
+    // Get a signing address
+    $singingAddress = $firstAtom->walletAddress;
+
+    dump( array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) );
+
+    // Try to get custom signing position from the metas (local molecule with server secret)
+    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
+      $singingAddress = array_get( json_decode( $signingWallet ), 'address' );
+      dd( $signingWallet );
+    }
+
     // Check the first atom's wallet: is what the molecule must be signed with
-    if ( $address !== $firstAtom->walletAddress ) {
+    if ( $address !== $singingAddress ) {
       throw new SignatureMismatchException();
     }
   }
