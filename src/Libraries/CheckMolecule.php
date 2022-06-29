@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Exception;
-use Illuminate\Support\Facades\Log;
 use JsonException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\AtomIndexException;
@@ -70,7 +69,6 @@ use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
-use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -414,7 +412,10 @@ class CheckMolecule {
         }
 
         // Cannot be sending and receiving from the same address
-        if ( $vAtom->walletAddress === $firstAtom->walletAddress ) {
+        if (
+          $vAtom->walletAddress === $firstAtom->walletAddress && // Check wallet address
+          !( $firstAtom->isotope === 'B' && $vAtom->isotope === 'B' ) // BVB transaction, do not check wallet address
+        ) {
           throw new TransferToSelfException();
         }
       }
@@ -506,12 +507,9 @@ class CheckMolecule {
     // Get a signing address
     $singingAddress = $firstAtom->walletAddress;
 
-    dump( array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) );
-
     // Try to get custom signing position from the metas (local molecule with server secret)
     if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-      $singingAddress = array_get( json_decode( $signingWallet ), 'address' );
-      dd( $signingWallet );
+      $singingAddress = array_get( json_decode( $signingWallet, true ), 'address' );
     }
 
     // Check the first atom's wallet: is what the molecule must be signed with

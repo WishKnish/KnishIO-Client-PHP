@@ -139,15 +139,6 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Set a signing wallet
-   *
-   * @param Wallet $wallet
-   */
-  public function setSigningWallet ( Wallet $wallet ): void {
-    $this->signingWallet = $wallet;
-  }
-
-  /**
    * Get a signing wallet
    *
    * @return Wallet|null
@@ -692,10 +683,10 @@ class Molecule extends MoleculeStructure {
     if ( $signingWallet ) {
 
       // Overwrite a signing wallet property
-      $this->setSigningWallet( $signingWallet );
+      $this->signingWallet = $signingWallet;
 
       // Set a metas signing position for molecule correct reconciliation
-      $firstAtomMetas[ 'signingPosition' ] = json_encode( [
+      $firstAtomMetas[ 'signingWallet' ] = json_encode( [
         'address' => $signingWallet->address,
         'position' => $signingWallet->position,
       ] );
@@ -1102,7 +1093,7 @@ class Molecule extends MoleculeStructure {
 
     // Try to get custom signing position from the metas (local molecule with server secret)
     if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-      $signingPosition = array_get( json_decode( $signingWallet ), 'position' );
+      $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
     }
 
 
