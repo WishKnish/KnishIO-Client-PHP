@@ -652,21 +652,16 @@ class Molecule extends MoleculeStructure {
    * Initialize withdraw buffer (BVB molecule)
    *
    * @param float $amount
-   * @param Wallet|null $recipientWallet
+   * @param array $recipientWallets
    * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWithdrawBuffer ( float $amount, Wallet $recipientWallet = null, ?Wallet $signingWallet = null ): Molecule {
+  public function initWithdrawBuffer ( float $amount, array $recipientWallets = [], ?Wallet $signingWallet = null ): Molecule {
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
-    }
-
-    // Create a recipient wallet if it has not passed (create a regular wallet)
-    if ( !$recipientWallet ) {
-      $recipientWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
     }
 
     $this->molecularHash = null;
@@ -700,27 +695,29 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet->token,
       -$amount,
       $this->sourceWallet->batchId,
-      null,
-      null,
+      'walletBundle',
+      $this->sourceWallet->bundle,
       $firstAtomMetas,
       null,
       $this->generateIndex()
     );
 
     // Initializing a new Atom to add tokens to recipient
-    $this->atoms[] = new Atom(
-      $recipientWallet->position,
-      $recipientWallet->address,
-      'V',
-      $this->sourceWallet->token,
-      $amount,
-      $recipientWallet->batchId,
-      'walletBundle',
-      $this->sourceWallet->bundle,
-      $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ), $recipientWallet ),
-      null,
-      $this->generateIndex()
-    );
+    foreach( $recipientWallets as $recipientWallet ) {
+      $this->atoms[] = new Atom(
+        $recipientWallet->position,
+        $recipientWallet->address,
+        'V',
+        $this->sourceWallet->token,
+        ( count( $recipientWallets ) === 1 ) ? $amount : $recipientWallet->balance,
+        $recipientWallet->batchId,
+        'walletBundle',
+        $recipientWallet->bundle,
+        $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ), $recipientWallet ),
+        null,
+        $this->generateIndex()
+      );
+    }
 
     // Initializing a new Atom to withdraw remainder in a new wallet
     $this->atoms[] = new Atom(

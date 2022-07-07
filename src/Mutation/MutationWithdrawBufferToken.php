@@ -60,13 +60,14 @@ class MutationWithdrawBufferToken extends MutationProposeMolecule {
 
   /**
    * @param float $amount
+   * @param Wallet $recipientWallet
    * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function fillMolecule ( float $amount, ?Wallet $signingWallet = null ): self {
-    $this->molecule->initWithdrawBuffer( $amount, $signingWallet );
+  public function fillMolecule ( float $amount, Wallet $recipientWallet, ?Wallet $signingWallet = null ): self {
+    $this->molecule->initWithdrawBuffer( $amount, [ $recipientWallet ], $signingWallet );
     $this->molecule->sign();
     $this->molecule->check( $this->molecule->sourceWallet() );
 

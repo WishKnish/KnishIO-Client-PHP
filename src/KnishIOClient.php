@@ -1038,6 +1038,9 @@ class KnishIOClient {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
     }
 
+    // Create recipient shadow wallet
+    $recipientWallet = Wallet::create( $this->getBundle(), $tokenSlug );
+
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $this->remainderWallet->initBatchId( $fromWallet, true );
@@ -1050,7 +1053,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationWithdrawBufferToken::class, $molecule );
 
     // Init a molecule & execute it
-    $query->fillMolecule( $amount, $signingWallet );
+    $query->fillMolecule( $amount, $recipientWallet, $signingWallet );
     return $query->execute();
   }
 
