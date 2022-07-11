@@ -877,16 +877,17 @@ class KnishIOClient {
    */
   public function claimShadowWallets ( string $token ): array {
     // Get shadow wallet list
-    $shadowWallets = $this->queryShadowWallets( $token );
+    $wallets = $this->queryShadowWallets( $token );
 
     // Check shadow wallets
+    $shadowWallets = [];
+    foreach ( $wallets as $wallet ) {
+      if ( $wallet->isShadow() ) {
+        $shadowWallets[] = $wallet;
+      }
+    }
     if ( !$shadowWallets ) {
       throw new WalletShadowException();
-    }
-    foreach ( $shadowWallets as $shadowWallet ) {
-      if ( !$shadowWallet->isShadow() ) {
-        throw new WalletShadowException();
-      }
     }
 
     // Claim shadow wallet list
