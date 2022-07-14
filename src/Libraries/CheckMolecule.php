@@ -68,6 +68,7 @@ use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
+use WishKnish\KnishIO\Client\Instance\Rules\Rule;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
@@ -168,26 +169,16 @@ class CheckMolecule {
       if ( array_key_exists( 'rule', $metas ) ) {
         $rules = json_decode( $metas[ 'rule' ], true, 512, JSON_THROW_ON_ERROR );
 
-        if ( $rules === null ) {
-          throw new MetaMissingException( 'Invalid format for conditions.' );
+        if ( !is_array( $rules ) ) {
+          throw new MetaMissingException( 'Mixing rules with politics!' );
         }
 
-        if ( !is_array( $rules ) ) {
+        if ( count( $rules ) < 1 ) {
           throw new MetaMissingException( 'Incorrect rule format!' );
         }
 
-        if ( empty( $rules ) ) {
-          throw new MetaMissingException( 'No rules!' );
-        }
-
-        foreach ( $rules as $rule) {
-          foreach ( [
-            'key', 'value', 'callback',
-          ] as $key ) {
-            if ( !array_key_exists( $key, $rule ) ) {
-              throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
-            }
-          }
+        foreach ( $rules as $rule ) {
+          Rule::arrayToObject( $rule );
         }
       }
     }

@@ -52,7 +52,6 @@ namespace WishKnish\KnishIO\Client\Traits;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-use WishKnish\KnishIO\Client\Instance\Rules\Rule;
 
 /**
  * Trait Json
