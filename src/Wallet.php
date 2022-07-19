@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client;
 
 use BI\BigInteger;
 use Exception;
-use Illuminate\Support\Facades\Log;
 use JsonException;
 use ReflectionException;
 use SodiumException;

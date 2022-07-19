@@ -55,6 +55,7 @@ use JsonException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
+use WishKnish\KnishIO\Client\Exception\SigningWalletException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -545,8 +546,8 @@ class Molecule extends MoleculeStructure {
 
     // Initializing a new Atom to add tokens to recipient
     $this->atoms[] = new Atom(
-      $recipientWallet->position,
-      $recipientWallet->address,
+      null,
+      null,
       'V',
       $this->sourceWallet->token,
       $value,
@@ -1093,6 +1094,10 @@ class Molecule extends MoleculeStructure {
       $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
     }
 
+    // Signing position is required
+    if ( !$signingPosition ) {
+      throw new SigningWalletException();
+    }
 
     // Generate the private signing key for this molecule
     $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $signingPosition );
