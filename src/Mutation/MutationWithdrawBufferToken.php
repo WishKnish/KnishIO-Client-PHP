@@ -59,15 +59,14 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationWithdrawBufferToken extends MutationProposeMolecule {
 
   /**
-   * @param float $amount
-   * @param Wallet $recipientWallet
+   * @param array $recipients: key/value array: key - bundle hash, value - amount
    * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function fillMolecule ( float $amount, Wallet $recipientWallet, ?Wallet $signingWallet = null ): self {
-    $this->molecule->initWithdrawBuffer( $amount, [ $recipientWallet ], $signingWallet );
+  public function fillMolecule ( array $recipients, ?Wallet $signingWallet = null ): self {
+    $this->molecule->initWithdrawBuffer( $recipients, $signingWallet );
     $this->molecule->sign();
     $this->molecule->check( $this->molecule->sourceWallet() );
 

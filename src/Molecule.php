@@ -650,17 +650,20 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Initialize withdraw buffer (BVB molecule)
+   * Initialize withdraw buffer (BVB molecule OR BV..VB combination)
    *
-   * @param float $amount
-   * @param array $recipientWallets
+   * @param array $recipients
    * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWithdrawBuffer ( float $amount, array $recipientWallets = [], ?Wallet $signingWallet = null ): Molecule {
+  public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
 
+    // Get the final sum of the recipients amount
+    $amount = array_sum( $recipients );
+
+    // Check sender's wallet balance
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
       throw new BalanceInsufficientException();
     }
@@ -704,17 +707,17 @@ class Molecule extends MoleculeStructure {
     );
 
     // Initializing a new Atom to add tokens to recipient
-    foreach( $recipientWallets as $recipientWallet ) {
+    foreach( $recipients as $recipientBundle => $recipientAmount ) {
       $this->atoms[] = new Atom(
-        $recipientWallet->position,
-        $recipientWallet->address,
+        null,
+        null,
         'V',
         $this->sourceWallet->token,
-        ( count( $recipientWallets ) === 1 ) ? $amount : $recipientWallet->balance,
-        $recipientWallet->batchId,
+        $recipientAmount,
+        $this->sourceWallet->batchId ? Crypto::generateBatchId() : null,
         'walletBundle',
-        $recipientWallet->bundle,
-        $this->finalMetas( $this->tokenUnitMetas( $recipientWallet ), $recipientWallet ),
+        $recipientBundle,
+        [],
         null,
         $this->generateIndex()
       );
