@@ -174,7 +174,7 @@ class Wallet {
    * @throws Exception
    */
   public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
-    $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
+    $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
     $position = $secret ? static::generateWalletPosition() : null;
 
@@ -276,15 +276,6 @@ class Wallet {
       $this->getMyEncPublicKey();
 
     }
-  }
-
-  /**
-   * @param string $code
-   *
-   * @return bool
-   */
-  public static function isBundleHash ( string $code ): bool {
-    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
   }
 
   /**

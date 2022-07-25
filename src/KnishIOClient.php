@@ -809,7 +809,7 @@ class KnishIOClient {
       if ( is_string( $to ) ) {
 
         // Bundle: set metaType
-        if ( Wallet::isBundleHash( $to ) ) {
+        if ( Crypto::isBundleHash( $to ) ) {
           $metaType = 'walletBundle';
           $metaId = $to;
         } // Secret: create a new wallet (not shadow)
@@ -899,9 +899,9 @@ class KnishIOClient {
   }
 
   /**
-   * @param Wallet|string $recipient
+   * @param string $secretOrBundle
    * @param string $token
-   * @param float $amount
+   * @param float|int $amount
    * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
@@ -910,7 +910,13 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function transferToken ( Wallet|string $recipient, string $token, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function transferToken ( string $bundleHash, string $token, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
+
+    // Check bundle hash is secret has passed
+    if ( !Crypto::isBundleHash( $bundleHash ) ) {
+      throw new WalletShadowException( 'Wrong bundle hash has been passed.' );
+    }
+
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -919,6 +925,7 @@ class KnishIOClient {
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
+
       // Can't move stackable units AND provide amount
       if ( $amount > 0 ) {
         throw new StackableUnitAmountException();
@@ -931,32 +938,18 @@ class KnishIOClient {
       throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
     }
 
-    $recipientWallet = $recipient;
 
-    if ( !$recipientWallet instanceof Wallet ) {
+    // Create a recipient wallet
+    $recipientWallet = Wallet::create( $bundleHash, $token );
 
-      // Get final bundle hash
-      $bundleHash = Wallet::isBundleHash( $recipient ) ? $recipient : Crypto::generateBundleHash( $recipient );
-
-      // try to get a valid wallet
-      $recipientWallet = $this->queryBalance( $token, $bundleHash )
-        ->payload();
-
-      // Has not wallet yet - create it
-      if ( $recipientWallet === null ) {
-        $recipientWallet = Wallet::create( $recipient, $token );
-      }
-    }
-
-
-    // Compute the batch ID for the recipient
-    // (typically used by stackable tokens)
+    // Compute the batch ID for the recipient (typically used by stackable tokens)
     if ( $batchId !== null ) {
       $recipientWallet->batchId = $batchId;
     }
     else {
       $recipientWallet->initBatchId( $fromWallet );
     }
+
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->getSecret(), $token, $fromWallet->batchId, $fromWallet->characters );
@@ -1017,8 +1010,8 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param float $amount
-   * @param Wallet $signingWallet
    * @param Wallet|null $sourceWallet
+   * @param Wallet|null $signingWallet
    *
    * @return Response
    * @throws GuzzleException
@@ -1051,7 +1044,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationWithdrawBufferToken::class, $molecule );
 
     // Init a molecule & execute it
-    $query->fillMolecule( $amount, [ $this->getBundle() => $amount, ], $signingWallet );
+    $query->fillMolecule( [ $this->getBundle() => $amount, ], $signingWallet );
     return $query->execute();
   }
 
@@ -1140,7 +1133,7 @@ class KnishIOClient {
   }
 
   /**
-   * @param Wallet|string $recipient
+   * @param string $bundleHash
    * @param string $tokenSlug
    * @param TokenUnit $newTokenUnit
    * @param array $fusedTokenUnitIds
@@ -1150,7 +1143,13 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function fuseToken( Wallet|string $recipient, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
+  public function fuseToken( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
+
+    // Check bundle hash is secret has passed
+    if ( !Crypto::isBundleHash( $bundleHash ) ) {
+      throw new WalletShadowException( 'Wrong bundle hash has been passed.' );
+    }
+
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1177,12 +1176,8 @@ class KnishIOClient {
       }
     }
 
-    // Generate new recipient wallet
-    $recipientWallet = $recipient;
-    if ( is_string( $recipient ) ) {
-      $recipientWallet = Wallet::create( $recipient, $tokenSlug );
-    }
-    // Set batch ID
+    // Generate new recipient wallet & set the batch ID
+    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug );
     $recipientWallet->initBatchId( $fromWallet );
 
     // Remainder wallet
