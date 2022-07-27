@@ -362,7 +362,7 @@ class KnishIOClient {
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
     if ( $sourceWallet === null &&
       $this->remainderWallet &&
-      $this->remainderWallet->token !== 'AUTH' &&
+      $this->remainderWallet->token === 'USER' &&
       $this->lastMoleculeQuery
     ) {
 
