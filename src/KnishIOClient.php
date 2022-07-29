@@ -1033,8 +1033,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $this->remainderWallet->initBatchId( $fromWallet, true );
+    $this->remainderWallet = $fromWallet;
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
