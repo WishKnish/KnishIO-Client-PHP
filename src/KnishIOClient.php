@@ -89,7 +89,6 @@ use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
@@ -446,6 +445,35 @@ class KnishIOClient {
   }
 
   /**
+   * @param string $tokenSlug
+   * @param float $amount
+   * @param string $type
+   *
+   * @return Wallet
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function querySourceWallet( string $tokenSlug, float $amount, string $type = 'regular' ): Wallet {
+
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundle(), $type )
+        ->payload();
+
+    // Check source wallet balance
+    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
+      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance.' );
+    }
+
+    // Check shadow wallet
+    if ( !$fromWallet->position || !$fromWallet->address ) {
+      throw new TransferBalanceException( 'Source wallet can not be a shadow wallet.' );
+    }
+
+    return $fromWallet;
+  }
+
+  /**
    * @param array|string $metaType
    * @param array|string|null $metaId
    * @param array|string|null $key
@@ -610,7 +638,7 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $token
+   * @param string $tokenSlug
    * @param float $amount
    * @param array $meta
    * @param string|null $batchId
@@ -620,7 +648,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function createToken ( string $token, float $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function createToken ( string $tokenSlug, float $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
       // Generate batch ID if it does not pass
@@ -650,7 +678,7 @@ class KnishIOClient {
     }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->getSecret(), $token, null, $batchId );
+    $recipientWallet = new Wallet( $this->getSecret(), $tokenSlug, null, $batchId );
 
     // Create a query
     /** @var MutationCreateToken $query */
@@ -711,13 +739,14 @@ class KnishIOClient {
 
   /**
    * @param string|null $bundleHash
-   * @param string|null $token
+   * @param string|null $tokenSlug
    * @param bool $unspent
    *
    * @return array|null
-   * @throws GuzzleException|Exception
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function queryWallets ( ?string $bundleHash = null, ?string $token = null, bool $unspent = true ): ?array {
+  public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
 
     /**
      * @var QueryWalletList $query
@@ -727,7 +756,7 @@ class KnishIOClient {
     /**
      * @var ResponseWalletList $response
      */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $token, 'unspent' => $unspent, ] );
+    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'unspent' => $unspent, ] );
 
     return $response->getWallets();
   }
@@ -767,7 +796,7 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $token
+   * @param string $tokenSlug
    * @param float $amount
    * @param Wallet|string|null $to
    * @param array $meta
@@ -778,11 +807,11 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function requestTokens ( string $token, float $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function requestTokens ( string $tokenSlug, float $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // Get a token & init is Stackable flag for batch ID initialization
     $tokenResponse = $this->createQuery( QueryToken::class )
-      ->execute( [ 'slug' => $token ] );
+      ->execute( [ 'slug' => $tokenSlug ] );
     $isStackable = array_get( $tokenResponse->data(), '0.fungibility' ) === 'stackable';
 
     // NON-stackable tokens & batch ID is NOT NULL - error
@@ -814,7 +843,7 @@ class KnishIOClient {
           $metaId = $to;
         } // Secret: create a new wallet (not shadow)
         else {
-          $to = Wallet::create( $to, $token );
+          $to = Wallet::create( $to, $tokenSlug );
         }
       }
 
@@ -841,7 +870,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $token, $amount, $metaType, $metaId, $meta, $batchId );
+    $query->fillMolecule( $tokenSlug, $amount, $metaType, $metaId, $meta, $batchId );
 
     // Return a query execution result
     return $query->execute();
@@ -850,34 +879,34 @@ class KnishIOClient {
   /**
    * Claim a shadow wallet
    *
-   * @param string $token
+   * @param string $tokenSlug
    * @param string|null $batchId
    * @param null $molecule
    *
    * @return Response
    * @throws Exception|GuzzleException
    */
-  public function claimShadowWallet ( string $token, ?string $batchId = null, $molecule = null ): Response {
+  public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
     /**
      * Create a query
      * @var MutationClaimShadowWallet $query
      */
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-    $query->fillMolecule( $token, $batchId );
+    $query->fillMolecule( $tokenSlug, $batchId );
 
     // Return a response
     return $query->execute();
   }
 
   /**
-   * @param string $token
+   * @param string $tokenSlug
    *
    * @return array
    * @throws Exception|GuzzleException
    */
-  public function claimShadowWallets ( string $token ): array {
+  public function claimShadowWallets ( string $tokenSlug ): array {
     // Get shadow wallet list
-    $wallets = $this->queryShadowWallets( $token );
+    $wallets = $this->queryShadowWallets( $tokenSlug );
 
     // Check shadow wallets
     $shadowWallets = [];
@@ -893,14 +922,14 @@ class KnishIOClient {
     // Claim shadow wallet list
     $responses = [];
     foreach ( $shadowWallets as $shadowWallet ) {
-      $responses[] = $this->claimShadowWallet( $token, $shadowWallet->batchId );
+      $responses[] = $this->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
     }
     return $responses;
   }
 
   /**
    * @param string $secretOrBundle
-   * @param string $token
+   * @param string $tokenSlug
    * @param float|int $amount
    * @param string|null $batchId
    * @param array $units
@@ -910,18 +939,12 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function transferToken ( string $bundleHash, string $token, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function transferToken ( string $bundleHash, string $tokenSlug, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
       throw new WalletShadowException( 'Wrong bundle hash has been passed.' );
     }
-
-
-    // Get a from wallet
-    /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->getBundle() )
-        ->payload();
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
@@ -934,13 +957,13 @@ class KnishIOClient {
       $amount = count( $units );
     }
 
-    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
-      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
-    }
+    // Get a from wallet
+    /** @var Wallet|null $fromWallet */
+    $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
 
     // Create a recipient wallet
-    $recipientWallet = Wallet::create( $bundleHash, $token );
+    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug );
 
     // Compute the batch ID for the recipient (typically used by stackable tokens)
     if ( $batchId !== null ) {
@@ -952,7 +975,7 @@ class KnishIOClient {
 
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->getSecret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $this->remainderWallet->initBatchId( $fromWallet, true );
 
     $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
@@ -985,11 +1008,7 @@ class KnishIOClient {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug, $this->getBundle() )
-        ->payload();
-    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
-      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
-    }
+    $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
@@ -1026,11 +1045,7 @@ class KnishIOClient {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug, $this->getBundle(), 'buffer' )
-        ->payload();
-    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
-      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance' );
-    }
+    $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount, 'buffer' );
 
     // Remainder wallet
     $this->remainderWallet = $fromWallet;
@@ -1048,7 +1063,7 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $token
+   * @param string $tokenSlug
    * @param float $amount
    * @param array $units
    * @param Wallet|null $sourceWallet
@@ -1057,19 +1072,14 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function burnToken ( string $token, float $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function burnToken ( string $tokenSlug, float $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $token, $this->getBundle() )
-        ->payload();
-
-    if ( $fromWallet === null ) {
-      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
-    }
+    $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->getSecret(), $token, $fromWallet->batchId, $fromWallet->characters );
+    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $remainderWallet->initBatchId( $fromWallet, true );
 
     // Calculate amount & set meta key
