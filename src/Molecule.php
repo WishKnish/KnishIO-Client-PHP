@@ -808,7 +808,7 @@ class Molecule extends MoleculeStructure {
     $this->atoms[] = new Atom(
       $this->sourceWallet->position,
       $this->sourceWallet->address,
-      'P',
+      'C',
       $this->sourceWallet->token,
       null,
       $this->sourceWallet->batchId,
