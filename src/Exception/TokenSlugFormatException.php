@@ -47,32 +47,23 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Mutation;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use Exception;
-use JsonException;
-use WishKnish\KnishIO\Client\Wallet;
+use Throwable;
 
 /**
- * Class MutationTransferTokens
- * @package WishKnish\KnishIO\Client\Mutation
+ * Class TokenSlugFormatException
+ * @package WishKnish\KnishIO\Client\Exception
  */
-class MutationTransferTokens extends MutationProposeMolecule {
-
+class TokenSlugFormatException extends BaseException {
   /**
-   * @param Wallet $toWallet
-   * @param $amount
+   * TokenSlugFormatException constructor.
    *
-   * @return MutationTransferTokens
-   * @throws JsonException
-   * @throws Exception
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
-    $this->molecule->initValue( $toWallet, $amount );
-    $this->molecule->sign();
-    $this->molecule->check( $this->molecule->sourceWallet() );
-
-    return $this;
+  public function __construct ( string $message = 'Token slug format is incorrect.', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
-
 }

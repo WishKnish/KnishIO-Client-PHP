@@ -56,12 +56,13 @@ use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\SigningWalletException;
+use WishKnish\KnishIO\Client\Exception\TokenSlugFormatException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
-
+use WishKnish\KnishIO\Models\Token;
 
 /**
  * Class Molecule
@@ -80,7 +81,6 @@ class Molecule extends MoleculeStructure {
 
   private string $secret;
   private ?Wallet $sourceWallet;
-  private ?Wallet $signingWallet; // For most usage it is a sourceWallet
   private Wallet $remainderWallet;
 
   /**
@@ -105,9 +105,6 @@ class Molecule extends MoleculeStructure {
 
     $this->secret = $secret;
     $this->sourceWallet = $sourceWallet;
-
-    // Set signing wallet as source one
-    $this->signingWallet = $sourceWallet;
 
     if ( $remainderWallet || $sourceWallet ) {
       $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
@@ -137,15 +134,6 @@ class Molecule extends MoleculeStructure {
    */
   public function sourceWallet (): ?Wallet {
     return $this->sourceWallet;
-  }
-
-  /**
-   * Get a signing wallet
-   *
-   * @return Wallet|null
-   */
-  public function signingWallet (): ?Wallet {
-    return $this->signingWallet;
   }
 
   /**
@@ -678,16 +666,13 @@ class Molecule extends MoleculeStructure {
       ),
     );
 
-    // Signing wallet custom logic
+    // Set a metas signing wallet data for molecule reconciliation ability
     if ( $signingWallet ) {
-
-      // Overwrite a signing wallet property
-      $this->signingWallet = $signingWallet;
-
-      // Set a metas signing position for molecule correct reconciliation
       $firstAtomMetas[ 'signingWallet' ] = json_encode( [
         'address' => $signingWallet->address,
         'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
       ] );
     }
 
@@ -834,7 +819,9 @@ class Molecule extends MoleculeStructure {
    * @param float $amount - how many of the token we are initially issuing (for fungible tokens only)
    * @param array $meta - additional fields to configure the token
    *
-   * @return self
+   * @return $this
+   * @throws JsonException
+   * @throws TokenSlugFormatException
    */
   public function initTokenCreation ( Wallet $recipientWallet, float $amount, array $meta ): Molecule {
 
@@ -849,6 +836,12 @@ class Molecule extends MoleculeStructure {
       if ( empty( $has ) && !array_key_exists( $walletKey, $meta ) ) {
         $meta[ $walletKey ] = $recipientWallet->{strtolower( substr( $walletKey, 6 ) )};
       }
+    }
+
+    // Check right token slug format
+    $correctTokenSlug = Token::toSlug( $recipientWallet->token );
+    if ( $recipientWallet->token !== $correctTokenSlug ) {
+      throw new TokenSlugFormatException( 'Token slug format is incorrect: given = "' . $recipientWallet->token . '", expected = "' . $correctTokenSlug . '"' );
     }
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
@@ -1093,7 +1086,7 @@ class Molecule extends MoleculeStructure {
     $signingPosition = $firstAtom->position;
 
     // Try to get custom signing position from the metas (local molecule with server secret)
-    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
+    if ( false && $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
       $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
     }
 
