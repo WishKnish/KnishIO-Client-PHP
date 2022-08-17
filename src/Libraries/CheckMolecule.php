@@ -514,7 +514,6 @@ class CheckMolecule {
 
     // Check the first atom's wallet: is what the molecule must be signed with
     if ( $address !== $signingAddress ) {
-      dump( [ $signingWallet, $address, $signingAddress ] );
       throw new SignatureMismatchException();
     }
   }
