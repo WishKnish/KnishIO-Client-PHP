@@ -1086,7 +1086,7 @@ class Molecule extends MoleculeStructure {
     $signingPosition = $firstAtom->position;
 
     // Try to get custom signing position from the metas (local molecule with server secret)
-    if ( false && $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
+    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
       $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
     }
 
