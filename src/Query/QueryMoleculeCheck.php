@@ -47,98 +47,37 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
-use WishKnish\KnishIO\Client\MoleculeStructure;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
+use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
 /**
- * Class ResponseMolecule
- * @package WishKnish\KnishIO\Client\Response
+ * Class QueryCheckMolecule
+ * @package WishKnish\KnishIO\Client\Query
  */
-class ResponseMolecule extends Response {
+class QueryMoleculeCheck extends Query {
 
   /**
    * @var string
    */
-  protected string $dataKey = 'data.ProposeMolecule';
+  protected static string $defaultQuery = 'query( $molecule: MoleculeInput! ) { MoleculeCheck( molecule: $molecule )
+		@fields
+	}';
 
   /**
-   * @var mixed
+   * @var array|string[]
    */
-  protected mixed $payload;
-
-
-  /**
-   * Initialization
-   */
-  public function init (): void {
-
-    // Get a json payload
-    $payload_json = array_get( $this->data(), 'payload' );
-
-    // Decode payload
-    try {
-      $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
-    }
-    catch ( JsonException $e ) {
-      // Unable to decode JSON response?
-      /** @TODO Add proper handing of JSON errors */
-    }
-  }
+  protected array $fields = [ 'molecularHash', 'status', 'reason', 'payload', 'createdAt', 'receivedAt', ];
 
   /**
-   * @return MoleculeStructure|null
-   */
-  public function molecule (): ?MoleculeStructure {
-    if ( !$data = $this->data() ) {
-      return null;
-    }
-
-    $molecule = new MoleculeStructure();
-    $molecule->molecularHash = array_get( $data, 'molecularHash' );
-    $molecule->status = array_get( $data, 'status' );
-    $molecule->createdAt = array_get( $data, 'createdAt' );
-
-    return $molecule;
-  }
-
-  /**
-   * @return string
-   */
-  public function getMolecularHash(): string {
-    return array_get( $this->data(), 'molecularHash' );
-  }
-
-  /**
-   * Success?
+   * @param string $response
    *
-   * @return bool
+   * @return ResponseMolecule
+   * @throws JsonException
    */
-  public function success (): bool {
-    return ( $this->status() === 'accepted' );
-  }
-
-  /**
-   * @return string
-   */
-  public function status (): string {
-    return array_get( $this->data(), 'status', 'rejected' );
-  }
-
-  /**
-   * @return string
-   */
-  public function reason (): string {
-    return array_get( $this->data(), 'reason', 'Invalid response from server' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function payload (): mixed {
-    return $this->payload;
+  public function createResponse ( string $response ): ResponseMolecule {
+    return new ResponseMolecule( $this, $response );
   }
 
 }
