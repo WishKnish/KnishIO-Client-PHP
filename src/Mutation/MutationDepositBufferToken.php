@@ -47,36 +47,29 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 
 /**
- * Class QueryContinuId
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationDepositBufferToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryContinuId extends Query {
-  // Query
-  /**
-   * @var string
-   */
-  protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
-    	@fields
-    }';
-
-  // Fields
-  protected array $fields = [ 'type', 'address', 'bundleHash', 'tokenSlug', 'position', 'batchId', 'characters', 'pubkey', 'amount', 'createdAt', ];
+class MutationDepositBufferToken extends MutationProposeMolecule {
 
   /**
-   * Create a response
+   * @param float $amount
+   * @param array $tokenTradeRates
    *
-   * @param string $response
-   *
-   * @return ResponseContinuId
+   * @return $this
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseContinuId {
-    return new ResponseContinuId( $this, $response );
+  public function fillMolecule ( float $amount, array $tokenTradeRates ): self {
+    $this->molecule->initDepositBuffer( $amount, $tokenTradeRates );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
+
+    return $this;
   }
+
 }

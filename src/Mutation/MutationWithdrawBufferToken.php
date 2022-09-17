@@ -47,36 +47,30 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Query;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseContinuId;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
- * Class QueryContinuId
- * @package WishKnish\KnishIO\Client\Query
+ * Class MutationWithdrawBufferToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class QueryContinuId extends Query {
-  // Query
-  /**
-   * @var string
-   */
-  protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
-    	@fields
-    }';
-
-  // Fields
-  protected array $fields = [ 'type', 'address', 'bundleHash', 'tokenSlug', 'position', 'batchId', 'characters', 'pubkey', 'amount', 'createdAt', ];
+class MutationWithdrawBufferToken extends MutationProposeMolecule {
 
   /**
-   * Create a response
+   * @param array $recipients: key/value array: key - bundle hash, value - amount
+   * @param Wallet|null $signingWallet
    *
-   * @param string $response
-   *
-   * @return ResponseContinuId
+   * @return $this
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseContinuId {
-    return new ResponseContinuId( $this, $response );
+  public function fillMolecule ( array $recipients, ?Wallet $signingWallet = null ): self {
+    $this->molecule->initWithdrawBuffer( $recipients, $signingWallet );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
+
+    return $this;
   }
+
 }

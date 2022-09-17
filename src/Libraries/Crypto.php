@@ -106,6 +106,15 @@ class Crypto {
   }
 
   /**
+   * @param string $code
+   *
+   * @return bool
+   */
+  public static function isBundleHash ( string $code ): bool {
+    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
+  }
+
+  /**
    * Encrypts the given message or data with the recipient's public key
    *
    * @param mixed $message

@@ -69,7 +69,6 @@ use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
-use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -112,7 +111,7 @@ class CheckMolecule {
     $this->isotopeP();
     $this->isotopeR();
     $this->isotopeC();
-    $this->isotopeV( $fromWallet );
+    $this->isotopeVB( $fromWallet );
     $this->isotopeT();
     $this->isotopeI();
     $this->isotopeU();
@@ -347,30 +346,31 @@ class CheckMolecule {
   }
 
   /**
-   * Verification of V-isotope molecules checks to make sure that:
+   * Verification of V, B isotope molecules checks to make sure that:
    * 1. we're sending and receiving the same token
    * 2. we're only subtracting on the first atom
    *
    * @param Wallet|null $senderWallet
    */
-  public function isotopeV ( Wallet $senderWallet = null ): void {
+  public function isotopeVB ( Wallet $senderWallet = null ): void {
 
-    $isotopeV = $this->molecule->getIsotopes( 'V' );
+    // Get atoms with V OR B isotopes
+    $atoms = $this->molecule->getIsotopes( [ 'V', 'B' ] );
 
-    // Select all atoms V
-    if ( empty( $isotopeV ) ) {
+    // V & B isotopes does not found
+    if ( !$atoms ) {
       return;
     }
 
     // Grabbing the first atom
     /** @var Atom $firstAtom */
-    $firstAtom = reset( $this->molecule->atoms );
+    $firstAtom = $atoms[ 0 ];
 
     // if there are only two atoms, then this is the burning of tokens
-    if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+    if ( count( $atoms ) === 2 ) {
 
       /** @var Atom $endAtom */
-      $endAtom = end( $isotopeV );
+      $endAtom = end( $atoms );
 
       if ( $firstAtom->token !== $endAtom->token ) {
         throw new TransferMismatchedException();
@@ -393,12 +393,7 @@ class CheckMolecule {
     }
 
     /** @var Atom $vAtom */
-    foreach ( $this->molecule->atoms as $index => $vAtom ) {
-
-      // Not V? Next...
-      if ( $vAtom->isotope !== 'V' ) {
-        continue;
-      }
+    foreach ( $atoms as $index => $vAtom ) {
 
       // Making sure we're in integer land
       $value = 1.0 * $vAtom->value;
@@ -417,7 +412,10 @@ class CheckMolecule {
         }
 
         // Cannot be sending and receiving from the same address
-        if ( $vAtom->walletAddress === $firstAtom->walletAddress ) {
+        if (
+          $vAtom->walletAddress === $firstAtom->walletAddress && // Check wallet address
+          !( $firstAtom->isotope === 'B' && $vAtom->isotope === 'B' ) // BVB transaction, do not check wallet address
+        ) {
           throw new TransferToSelfException();
         }
       }
@@ -446,7 +444,8 @@ class CheckMolecule {
         throw new TransferRemainderException();
       }
 
-    } // No senderWallet, but have a remainder?
+    }
+    // No senderWallet, but have a remainder?
     else if ( !Decimal::equal( $value, 0.0 ) ) {
       throw new TransferWalletException();
     }
@@ -505,8 +504,16 @@ class CheckMolecule {
     // Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
     $address = bin2hex( Shake256::hash( $digest, 32 ) );
 
+    // Get a signing address
+    $signingAddress = $firstAtom->walletAddress;
+
+    // Try to get custom signing position from the metas (local molecule with server secret)
+    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
+      $signingAddress = array_get( json_decode( $signingWallet, true ), 'address' );
+    }
+
     // Check the first atom's wallet: is what the molecule must be signed with
-    if ( $address !== $firstAtom->walletAddress ) {
+    if ( $address !== $signingAddress ) {
       throw new SignatureMismatchException();
     }
   }

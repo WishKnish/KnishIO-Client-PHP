@@ -76,31 +76,35 @@ class MoleculeStructure {
   public string $createdAt;
   public array $atoms = [];
 
-
   /**
-   * @param string $isotope
+   * @param string|array $isotopes
    * @param array $atoms
    *
    * @return array
    */
-  public static function isotopeFilter ( string $isotope, array $atoms ): array {
+  public static function isotopeFilter ( string|array $isotopes, array $atoms ): array {
+    if ( is_string( $isotopes ) ) {
+      $isotopes = [ $isotopes ];
+    }
     $result = [];
     foreach( $atoms as $atom ) {
-      if ( $atom->isotope === $isotope ) {
+      if ( in_array( $atom->isotope, $isotopes ) ) {
         $result[] = $atom;
       }
     }
     return $result;
   }
 
-
   /**
-   * @param string $isotope
+   * @param string|array $isotopes
    *
    * @return array
    */
-  public function getIsotopes( string $isotope ): array {
-    return static::isotopeFilter( $isotope, $this->atoms );
+  public function getIsotopes( string|array $isotopes ): array {
+    if ( is_string( $isotopes ) ) {
+      $isotopes = [ $isotopes ];
+    }
+    return static::isotopeFilter( $isotopes, $this->atoms );
   }
 
 
