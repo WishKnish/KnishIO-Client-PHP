@@ -65,16 +65,8 @@ class QueryWalletBundle extends Query {
 
   // Fields
   protected array $fields = [
-    'bundleHash',
-    'slug',
-    'metas' => [
-      'molecularHash',
-      'position',
-      'metaType',
-      'metaId',
-      'key',
-      'value',
-      'createdAt',
+    'bundleHash', 'slug', 'metas' => [
+      'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt',
     ], //	'molecules',
     //	'wallets',
     'createdAt',

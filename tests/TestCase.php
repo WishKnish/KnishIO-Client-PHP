@@ -58,8 +58,6 @@ use PHPUnit\TextUI\Command;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-
-
   /**
    * Before execute
    *
@@ -67,7 +65,6 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
    */
   protected function beforeExecute (): void {
   }
-
 
   /**
    * Output
@@ -106,6 +103,5 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
     $this->assertEquals( true, true );
   }
-
 
 }

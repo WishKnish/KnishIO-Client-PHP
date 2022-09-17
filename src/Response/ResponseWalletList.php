@@ -96,13 +96,13 @@ class ResponseWalletList extends Response {
 
     // Get token units from the response
     $tokenUnits = array_get( $data, 'tokenUnits', [] );
-    foreach( $tokenUnits as $tokenUnit ) {
+    foreach ( $tokenUnits as $tokenUnit ) {
       $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
     }
 
     // Set trade pairs
     $tradePairs = array_get( $data, 'tradePairs', [] );
-    foreach( $tradePairs as $tradePair ) {
+    foreach ( $tradePairs as $tradePair ) {
       $wallet->tradePairs[ $tradePair[ 'tokenSlug' ] ] = $tradePair[ 'amount' ];
     }
 

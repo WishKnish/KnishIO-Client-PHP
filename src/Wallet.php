@@ -219,9 +219,9 @@ class Wallet {
   /**
    * @return array
    */
-  public function getTokenUnitsData(): array {
+  public function getTokenUnitsData (): array {
     $result = [];
-    foreach( $this->tokenUnits as $tokenUnit ) {
+    foreach ( $this->tokenUnits as $tokenUnit ) {
       $result[] = $tokenUnit->toData();
     }
     return $result;
@@ -262,7 +262,7 @@ class Wallet {
     $remainderWallet->tokenUnits = $remainderTokenUnits;
   }
 
-    /**
+  /**
    * @param string $secret
    *
    * @throws Exception

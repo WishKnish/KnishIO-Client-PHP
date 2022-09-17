@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client\Query;
 
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
-use JetBrains\PhpStorm\Pure;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
@@ -144,13 +143,9 @@ abstract class Query {
     $this->variables = $this->compiledVariables( $variables ?? [] );
 
     // Create a request
-    return new Request( 'POST', $this->uri(),
-      array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ),
-      json_encode( [
-        'query' => $this->compiledQuery( $fields ),
-        'variables' => $this->variables,
-      ], JSON_THROW_ON_ERROR )
-    );
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [
+        'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables,
+      ], JSON_THROW_ON_ERROR ) );
   }
 
   /**
@@ -216,11 +211,7 @@ abstract class Query {
     $fields = $fields ?? $this->fields;
     $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
 
-    $queryUri = str_replace(
-      [ '@name', '@mutation', '@vars', '@fields', ],
-      [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ],
-      '?query=@mutation{@name(@vars)@fields}&noMiddleware=true'
-    );
+    $queryUri = str_replace( [ '@name', '@mutation', '@vars', '@fields', ], [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ], '?query=@mutation{@name(@vars)@fields}&noMiddleware=true' );
 
     return $this->uri() . $queryUri;
   }

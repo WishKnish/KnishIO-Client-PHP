@@ -130,5 +130,4 @@ class Decimal {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }
 
-
 }

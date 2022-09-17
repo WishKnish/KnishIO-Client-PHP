@@ -50,14 +50,15 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use JsonException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use WishKnish\KnishIO\Client\Libraries\Crypto;
 
 /**
  * Class MoleculeStructure
@@ -87,7 +88,7 @@ class MoleculeStructure {
       $isotopes = [ $isotopes ];
     }
     $result = [];
-    foreach( $atoms as $atom ) {
+    foreach ( $atoms as $atom ) {
       if ( in_array( $atom->isotope, $isotopes ) ) {
         $result[] = $atom;
       }
@@ -100,20 +101,18 @@ class MoleculeStructure {
    *
    * @return array
    */
-  public function getIsotopes( string|array $isotopes ): array {
+  public function getIsotopes ( string|array $isotopes ): array {
     if ( is_string( $isotopes ) ) {
       $isotopes = [ $isotopes ];
     }
     return static::isotopeFilter( $isotopes, $this->atoms );
   }
 
-
   /**
    * @return string
    */
-  public function logString(): string {
-    return $this->molecularHash .
-      ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+  public function logString (): string {
+    return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
   }
 
   /**
@@ -213,11 +212,10 @@ class MoleculeStructure {
   /**
    * @param Wallet|null $senderWallet
    *
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function check ( Wallet $senderWallet = null ): void {
-    ( new CheckMolecule( $this ) )
-      ->verify( $senderWallet );
+    ( new CheckMolecule( $this ) )->verify( $senderWallet );
   }
 
   /**

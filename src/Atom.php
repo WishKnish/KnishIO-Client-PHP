@@ -202,12 +202,12 @@ class Atom {
    */
   public static function sortAtoms ( array $atoms = [] ): array {
 
-    usort($atoms, static function ( $atom1, $atom2 ) {
+    usort( $atoms, static function ( $atom1, $atom2 ) {
       if ( $atom1->index === $atom2->index ) {
         return 0;
       }
       return $atom1->index < $atom2->index ? -1 : 1;
-    });
+    } );
 
     return $atoms;
   }

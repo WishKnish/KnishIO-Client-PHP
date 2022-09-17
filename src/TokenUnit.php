@@ -2,8 +2,8 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
-
 
 /**
  * Class TokenUnit
@@ -16,9 +16,9 @@ class TokenUnit {
    *
    * @return array
    */
-  public static function getListGraphQLResponse( array $tokenUnits ): array {
+  public static function getListGraphQLResponse ( array $tokenUnits ): array {
     $result = [];
-    foreach( $tokenUnits as $tokenUnit ) {
+    foreach ( $tokenUnits as $tokenUnit ) {
       $result[] = $tokenUnit->toGraphQLResponse();
     }
     return $result;
@@ -31,7 +31,7 @@ class TokenUnit {
    *
    * @return static
    */
-  public static function create( mixed $id, mixed $name, mixed $metas ): self {
+  public static function create ( mixed $id, mixed $name, mixed $metas ): self {
     if ( !is_string( $id ) || !$id ) {
       throw new WrongTokenUnitFormatException( 'Invalid token unit ID format: non-empty string expected.' );
     }
@@ -49,7 +49,7 @@ class TokenUnit {
    *
    * @return static
    */
-  public static function createFromGraphQL( array $data ): self {
+  public static function createFromGraphQL ( array $data ): self {
     $metas = array_get( $data, 'metas', [] );
     if ( $metas ) {
       $metas = json_decode( $metas, true, JSON_THROW_ON_ERROR );
@@ -65,7 +65,7 @@ class TokenUnit {
     return static::create(
       $tokenUnitId,
       array_get( $data, 'name' ),
-      $metas,
+      $metas
     );
   }
 
@@ -74,7 +74,7 @@ class TokenUnit {
    *
    * @return static
    */
-  public static function createFromDB( array|string $data ): self {
+  public static function createFromDB ( array|string $data ): self {
 
     // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
     if ( !is_array( $data ) ) {
@@ -88,11 +88,7 @@ class TokenUnit {
     }
 
     // Standard token unit format
-    return static::create(
-      $tokenUnitId,
-      array_get( $data, 1 ),
-      array_get( $data, 2, [] )
-    );
+    return static::create( $tokenUnitId, array_get( $data, 1 ), array_get( $data, 2, [] ) );
   }
 
   /**
@@ -102,50 +98,44 @@ class TokenUnit {
    * @param string|null $name
    * @param array $metas
    */
-  public function __construct(
-    public string $id,
-    public ?string $name = null,
-    public array $metas = []
-  ) {
+  public function __construct ( public string $id, public ?string $name = null, public array $metas = [] ) {
 
   }
 
   /**
    * @return int|null
    */
-  public function getFragmentZone(): ?int {
+  public function getFragmentZone (): ?int {
     return array_get( $this->metas, 'fragmentZone' );
   }
 
   /**
    * @return array
    */
-  public function getFusedTokenUnits(): array {
+  public function getFusedTokenUnits (): array {
     return array_get( $this->metas, 'fusedTokenUnits', [] );
   }
 
   /**
    * @return array
    */
-  public function toData(): array {
+  public function toData (): array {
     return [ $this->id, $this->name, $this->metas, ];
   }
 
   /**
    * @return array
-   * @throws \JsonException
+   * @throws JsonException
    */
-  public function toGraphQLResponse(): array {
+  public function toGraphQLResponse (): array {
     return [
-      'id' => $this->id,
-      'name' => $this->name,
-      'metas' => json_encode( $this->metas, JSON_THROW_ON_ERROR ),
+      'id' => $this->id, 'name' => $this->name, 'metas' => json_encode( $this->metas, JSON_THROW_ON_ERROR ),
     ];
   }
 
   /**
    * @return string
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function __toString (): string {
     return json_encode( $this->toData(), JSON_THROW_ON_ERROR );

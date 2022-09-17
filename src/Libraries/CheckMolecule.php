@@ -84,10 +84,7 @@ class CheckMolecule {
    *
    * @param MoleculeStructure $molecule
    */
-  public function __construct(
-    private MoleculeStructure $molecule
-  )
-  {
+  public function __construct ( private MoleculeStructure $molecule ) {
     // No molecular hash?
     if ( $molecule->molecularHash === null ) {
       throw new MolecularHashMissingException();
@@ -412,8 +409,7 @@ class CheckMolecule {
         }
 
         // Cannot be sending and receiving from the same address
-        if (
-          $vAtom->walletAddress === $firstAtom->walletAddress && // Check wallet address
+        if ( $vAtom->walletAddress === $firstAtom->walletAddress && // Check wallet address
           !( $firstAtom->isotope === 'B' && $vAtom->isotope === 'B' ) // BVB transaction, do not check wallet address
         ) {
           throw new TransferToSelfException();
