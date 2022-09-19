@@ -62,7 +62,7 @@ use Throwable;
  */
 class TransferWalletException extends BaseException {
   /**
-   * TransferRemainderException constructor.
+   * TransferWalletException constructor.
    *
    * @param string $message
    * @param int $code

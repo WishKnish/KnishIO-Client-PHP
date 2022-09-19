@@ -52,18 +52,23 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class WrongTokenUnitFormatException
+ * Interface BaseExceptionInterface
  * @package WishKnish\KnishIO\Client\Exception
  */
-class WrongTokenUnitFormatException extends BaseException {
-  /**
-   * WrongTokenTypeException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
-  }
+interface BaseExceptionInterface {
+  public function getMessage ();
+
+  public function getCode ();
+
+  public function getFile ();
+
+  public function getLine ();
+
+  public function getTrace ();
+
+  public function getTraceAsString ();
+
+  public function __toString ();
+
+  public function __construct ( string $message, int $code = 0, Throwable $previous = null );
 }

@@ -65,8 +65,6 @@ dd([
 ]);
 */
 
-use JetBrains\PhpStorm\Pure;
-
 /**
  * Class Decimal
  * @package WishKnish\KnishIO\Client\Libraries
@@ -105,7 +103,6 @@ class Decimal {
    *
    * @return int
    */
-  #[Pure]
   public static function cmp ( float $val1, float $val2 ): int {
     $val1 = static::val( $val1 ) * static::multiplier();
     $val2 = static::val( $val2 ) * static::multiplier();
@@ -125,7 +122,6 @@ class Decimal {
    *
    * @return bool
    */
-  #[Pure]
   public static function equal ( float $val1, float $val2 ): bool {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }

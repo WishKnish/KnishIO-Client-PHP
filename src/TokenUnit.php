@@ -3,7 +3,7 @@
 namespace WishKnish\KnishIO\Client;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Exception\WrongTokenUnitFormatException;
+use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
 
 /**
  * Class TokenUnit
@@ -33,13 +33,13 @@ class TokenUnit {
    */
   public static function create ( mixed $id, mixed $name, mixed $metas ): self {
     if ( !is_string( $id ) || !$id ) {
-      throw new WrongTokenUnitFormatException( 'Invalid token unit ID format: non-empty string expected.' );
+      throw new TokenUnitFormatException( 'Invalid token unit ID format: non-empty string expected.' );
     }
     if ( !is_string( $name ) && !is_null( $name ) ) {
-      throw new WrongTokenUnitFormatException( 'Invalid token unit Name format: string OR null expected.' );
+      throw new TokenUnitFormatException( 'Invalid token unit Name format: string OR null expected.' );
     }
     if ( !is_array( $metas ) ) {
-      throw new WrongTokenUnitFormatException( 'Invalid token unit Metas format: array expected.' );
+      throw new TokenUnitFormatException( 'Invalid token unit Metas format: array expected.' );
     }
     return new self( $id, $name, $metas );
   }
@@ -58,7 +58,7 @@ class TokenUnit {
     // Get token unit ID
     $tokenUnitId = array_get( $data, 'id' );
     if ( !is_string( $tokenUnitId ) || !$tokenUnitId ) {
-      throw new WrongTokenUnitFormatException();
+      throw new TokenUnitFormatException();
     }
 
     // Create a new token unit
@@ -84,7 +84,7 @@ class TokenUnit {
     // Get token unit ID
     $tokenUnitId = array_get( $data, 0 );
     if ( !is_string( $tokenUnitId ) || !$tokenUnitId ) {
-      throw new WrongTokenUnitFormatException();
+      throw new TokenUnitFormatException();
     }
 
     // Standard token unit format

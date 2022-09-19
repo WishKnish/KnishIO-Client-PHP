@@ -53,16 +53,16 @@ use Exception;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
 use ReflectionException;
-use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
-use WishKnish\KnishIO\Client\Exception\BalanceInsufficientException;
+use SodiumException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
-use WishKnish\KnishIO\Client\Exception\NegativeMeaningException;
-use WishKnish\KnishIO\Client\Exception\SigningWalletException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\Exception\TokenSlugFormatException;
+use WishKnish\KnishIO\Client\Exception\TransferAmountException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
-use WishKnish\KnishIO\Models\Token;
 
 /**
  * Class Molecule
@@ -150,7 +150,9 @@ class Molecule extends MoleculeStructure {
    * @param array $shared_wallets
    *
    * @return array
+   * @throws JsonException
    * @throws ReflectionException
+   * @throws SodiumException
    */
   public function encryptMessage ( array $data, array $shared_wallets = [] ): array {
     // Merge all args to the common list
@@ -197,13 +199,14 @@ class Molecule extends MoleculeStructure {
    * @param Wallet|null $wallet
    *
    * @return array
-   * @throws JsonException
    */
   protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
     $wallet = $wallet ?: $this->sourceWallet;
 
-    $metas[ 'pubkey' ] = $wallet->pubkey;
-    $metas[ 'characters' ] = $wallet->characters;
+    if( $wallet ) {
+      $metas[ 'pubkey' ] = $wallet->pubkey;
+      $metas[ 'characters' ] = $wallet->characters;
+    }
 
     return $metas;
   }
@@ -253,7 +256,6 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $userRemainderWallet
    *
    * @return self
-   * @throws JsonException
    */
   public function addUserRemainderAtom ( Wallet $userRemainderWallet ): Molecule {
     $this->molecularHash = null;
@@ -272,7 +274,6 @@ class Molecule extends MoleculeStructure {
    * @param array $meta
    *
    * @return $this
-   * @throws JsonException
    */
   public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
 
@@ -286,7 +287,7 @@ class Molecule extends MoleculeStructure {
       }
     }
 
-    $this->addAtom( new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'R', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $aggregateMeta, $this->sourceWallet ), null, $this->generateIndex() ) );
+    $this->addAtom( new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'R', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $meta, $this->sourceWallet ), null, $this->generateIndex() ) );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -306,7 +307,7 @@ class Molecule extends MoleculeStructure {
   public function replenishToken ( float $amount, array $tokenUnits = [] ): Molecule {
 
     if ( $amount < 0.0 ) {
-      throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
+      throw new TransferAmountException( 'Number of tokens being replenished must be a positive value.' );
     }
 
     // Special code for the token unit logic
@@ -319,7 +320,7 @@ class Molecule extends MoleculeStructure {
       $this->remainderWallet->tokenUnits = array_merge( $this->sourceWallet->tokenUnits, $tokenUnits );
       $this->remainderWallet->balance = count( $this->remainderWallet->tokenUnits );
 
-      // Override first atom'a token units to replenish values
+      // Override first atom's token units to replenish values
       $this->sourceWallet->tokenUnits = $tokenUnits;
       $this->sourceWallet->balance = count( $this->sourceWallet->tokenUnits );
     }
@@ -355,7 +356,7 @@ class Molecule extends MoleculeStructure {
     $amount = count( $tokenUnits );
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
-      throw new BalanceInsufficientException();
+      throw new TransferBalanceException();
     }
 
     $this->molecularHash = null;
@@ -382,11 +383,11 @@ class Molecule extends MoleculeStructure {
   public function burnToken ( float $amount ): Molecule {
 
     if ( $amount < 0.0 ) {
-      throw new NegativeMeaningException( 'It is impossible to use a negative value for the number of tokens' );
+      throw new TransferAmountException( 'Number of tokens being burned must be a positive value.' );
     }
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
-      throw new BalanceInsufficientException();
+      throw new TransferBalanceException();
     }
 
     $this->molecularHash = null;
@@ -414,7 +415,7 @@ class Molecule extends MoleculeStructure {
   public function initValue ( Wallet $recipientWallet, float $value ): Molecule {
 
     if ( Decimal::cmp( $value, $this->sourceWallet->balance ) > 0 ) {
-      throw new BalanceInsufficientException();
+      throw new TransferBalanceException();
     }
 
     $this->molecularHash = null;
@@ -440,11 +441,13 @@ class Molecule extends MoleculeStructure {
    * @param array $tokenTradeRates
    *
    * @return Molecule
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function initDepositBuffer ( float $amount, array $tokenTradeRates ): Molecule {
 
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
-      throw new BalanceInsufficientException();
+      throw new TransferBalanceException();
     }
 
     // Create a buffer wallet
@@ -483,7 +486,7 @@ class Molecule extends MoleculeStructure {
 
     // Check sender's wallet balance
     if ( Decimal::cmp( $amount, $this->sourceWallet->balance ) > 0 ) {
-      throw new BalanceInsufficientException();
+      throw new TransferBalanceException();
     }
 
     $this->molecularHash = null;
@@ -521,7 +524,6 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $newWallet
    *
    * @return $this
-   * @throws JsonException
    */
   public function initWalletCreation ( Wallet $newWallet ): Molecule {
     $this->molecularHash = null;
@@ -547,7 +549,6 @@ class Molecule extends MoleculeStructure {
    * @param array $cellSlugs
    *
    * @return $this
-   * @throws JsonException
    */
   public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
     $this->molecularHash = null;
@@ -576,7 +577,6 @@ class Molecule extends MoleculeStructure {
    * @param array $meta - additional fields to configure the token
    *
    * @return $this
-   * @throws JsonException
    * @throws TokenSlugFormatException
    */
   public function initTokenCreation ( Wallet $recipientWallet, float $amount, array $meta ): Molecule {
@@ -592,12 +592,6 @@ class Molecule extends MoleculeStructure {
       if ( empty( $has ) && !array_key_exists( $walletKey, $meta ) ) {
         $meta[ $walletKey ] = $recipientWallet->{strtolower( substr( $walletKey, 6 ) )};
       }
-    }
-
-    // Check right token slug format
-    $correctTokenSlug = Token::toSlug( $recipientWallet->token );
-    if ( $recipientWallet->token !== $correctTokenSlug ) {
-      throw new TokenSlugFormatException( 'Token slug format is incorrect: given = "' . $recipientWallet->token . '", expected = "' . $correctTokenSlug . '"' );
     }
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
@@ -617,7 +611,6 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $wallet
    *
    * @return $this
-   * @throws JsonException
    */
   public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
 
@@ -643,7 +636,6 @@ class Molecule extends MoleculeStructure {
    * @param string $code
    *
    * @return self
-   * @throws Exception
    */
   public function initIdentifierCreation ( string $type, string $contact, string $code ): Molecule {
     $this->molecularHash = null;
@@ -667,7 +659,6 @@ class Molecule extends MoleculeStructure {
    * @param string $metaId
    *
    * @return $this
-   * @throws JsonException
    */
   public function initMeta ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
@@ -689,7 +680,6 @@ class Molecule extends MoleculeStructure {
    * @param string $metaId
    *
    * @return $this
-   * @throws JsonException
    */
   public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
     $this->molecularHash = null;
@@ -714,7 +704,6 @@ class Molecule extends MoleculeStructure {
    * @param string|null $batchId
    *
    * @return $this
-   * @throws JsonException
    */
   public function initTokenRequest ( string $token, float $amount, string $metaType, string $metaId, array $meta = [], ?string $batchId = null ): Molecule {
 
@@ -756,14 +745,12 @@ class Molecule extends MoleculeStructure {
    *
    * @param bool $anonymous
    * @param bool $compressed
-   *
-   * @throws Exception
    */
   public function sign ( bool $anonymous = false, bool $compressed = true ): void {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
         return !( $atom instanceof Atom );
       } ) ) ) {
-      throw new AtomsMissingException();
+      throw new MoleculeAtomsMissingException();
     }
 
     if ( !$anonymous ) {
@@ -787,7 +774,7 @@ class Molecule extends MoleculeStructure {
 
     // Signing position is required
     if ( !$signingPosition ) {
-      throw new SigningWalletException();
+      throw new WalletSignatureException();
     }
 
     // Generate the private signing key for this molecule

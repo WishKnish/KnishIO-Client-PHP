@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
 use desktopd\SHA3\Sponge as SHA3;
 use Exception;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 
 /*
 
@@ -98,24 +99,28 @@ class Shake256 {
    * @param int $length
    *
    * @return string
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function hash ( $data, int $length ): string {
 
-    // Using sha3 php extension
-    if ( static::usingExt() ) {
-      return shake256( $data, $length, true );
+    try {
+      // Using sha3 php extension
+      if ( static::usingExt() ) {
+        return shake256( $data, $length, true );
+      }
+
+      return SHA3::init( SHA3::SHAKE256 )
+        ->absorb( $data )
+        ->squeeze( $length );
     }
-
-    return SHA3::init( SHA3::SHAKE256 )
-      ->absorb( $data )
-      ->squeeze( $length );
-
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+    }
   }
 
   /**
    * @return SHA3|DesktopdSha3
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function init (): DesktopdSha3|SHA3 {
 
@@ -124,7 +129,12 @@ class Shake256 {
       return DesktopdSha3::init( DesktopdSha3::SHAKE256 );
     }
 
-    return SHA3::init( SHA3::SHAKE256 );
+    try {
+      return SHA3::init( SHA3::SHAKE256 );
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+    }
   }
 
 }

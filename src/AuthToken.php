@@ -48,10 +48,10 @@ class AuthToken {
   /**
    * AuthToken constructor.
    *
-   * @param $token
-   * @param $expiresAt
-   * @param $pubkey
-   * @param $encrypt
+   * @param string $token
+   * @param string $expiresAt
+   * @param string $pubkey
+   * @param bool $encrypt
    */
   public function __construct ( string $token, string $expiresAt, string $pubkey, bool $encrypt ) {
     $this->token = $token;

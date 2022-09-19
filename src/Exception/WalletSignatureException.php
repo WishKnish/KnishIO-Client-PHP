@@ -52,18 +52,19 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class BatchIdException
+ * Class WalletSignatureException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class BatchIdException extends BaseException {
+class WalletSignatureException extends BaseException {
+
   /**
-   * BatchIdException constructor.
+   * WalletSignatureException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Signing wallet is invalid.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

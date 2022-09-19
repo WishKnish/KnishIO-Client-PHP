@@ -89,7 +89,7 @@ class MoleculeStructure {
     }
     $result = [];
     foreach ( $atoms as $atom ) {
-      if ( in_array( $atom->isotope, $isotopes ) ) {
+      if ( in_array( $atom->isotope, $isotopes, true ) ) {
         $result[] = $atom;
       }
     }
@@ -238,7 +238,6 @@ class MoleculeStructure {
    * @param bool $encode
    *
    * @return string
-   * @throws Exception
    */
   public function signatureFragments ( string $key, bool $encode = true ): string {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
@@ -279,16 +278,15 @@ class MoleculeStructure {
   }
 
   /**
-   * @param string $json
+   * @param string $string
    * @param string|null $secret
    *
    * @return MoleculeStructure
-   * @throws Exception
    */
-  public static function jsonToObject ( string $json, string $secret = null ): static {
+  public static function jsonToObject ( string $string, string $secret = null ): static {
     $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
+    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
 
     foreach ( $object->atoms as $idx => $atom ) {
       $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

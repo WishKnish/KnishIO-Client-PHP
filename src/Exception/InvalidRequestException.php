@@ -62,7 +62,7 @@ use Throwable;
  */
 class InvalidRequestException extends BaseException {
   /**
-   * InvalidResponseException constructor.
+   * InvalidRequestException constructor.
    *
    * @param string $message
    * @param int $code

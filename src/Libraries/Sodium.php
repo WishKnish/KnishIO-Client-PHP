@@ -49,10 +49,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use Exception;
 use ReflectionExtension;
 use ReflectionFunction;
-use RuntimeException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 
 /**
  * Class Sodium
@@ -61,7 +60,7 @@ use RuntimeException;
 class Sodium {
 
   /**
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function libsodium2sodium (): void {
     if ( extension_loaded( 'libsodium' ) ) {
@@ -85,7 +84,7 @@ class Sodium {
 
     }
     else {
-      throw new RuntimeException( 'Sodium extension is required.' );
+      throw new CryptoException( 'Sodium extension is required.' );
     }
 
   }

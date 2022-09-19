@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use Exception;
+use SodiumException;
 use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -69,7 +70,7 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return Wallet
-   * @throws Exception
+   * @throws SodiumException
    */
   public static function toClientWallet ( array $data, string $secret = null ): Wallet {
 
@@ -118,7 +119,7 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return array|null
-   * @throws Exception
+   * @throws SodiumException
    */
   public function getWallets ( ?string $secret = null ): ?array {
     // Get data
