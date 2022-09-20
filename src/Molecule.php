@@ -287,7 +287,19 @@ class Molecule extends MoleculeStructure {
       }
     }
 
-    $this->addAtom( new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'R', $this->sourceWallet->token, null, null, $metaType, $metaId, $this->finalMetas( $meta, $this->sourceWallet ), null, $this->generateIndex() ) );
+    $this->addAtom( new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'R',
+      $this->sourceWallet->token,
+      null,
+      null,
+      $metaType,
+      $metaId,
+      $this->finalMetas( $meta, $this->sourceWallet ),
+      null,
+      $this->generateIndex()
+    ) );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );
@@ -583,14 +595,15 @@ class Molecule extends MoleculeStructure {
 
     $this->molecularHash = null;
 
-    foreach ( [ 'walletAddress', 'walletPosition', 'walletPubkey', 'walletCharacters' ] as $walletKey ) {
-
-      $has = array_filter( $meta, static function ( $token ) use ( $walletKey ) {
-        return is_array( $token ) && array_key_exists( 'key', $token ) && $walletKey === $token[ 'key' ];
-      } );
-
-      if ( empty( $has ) && !array_key_exists( $walletKey, $meta ) ) {
-        $meta[ $walletKey ] = $recipientWallet->{strtolower( substr( $walletKey, 6 ) )};
+    // Fill metas with wallet property
+    foreach ( [
+      'walletAddress' => 'address',
+      'walletPosition' => 'position',
+      'walletPubkey' => 'pubkey',
+      'walletCharacters' => 'characters',
+    ] as $metaKey => $walletProperty ) {
+      if ( !array_get( $meta, $metaKey ) ) {
+        $meta[ $metaKey ] = $recipientWallet->$walletProperty;
       }
     }
 

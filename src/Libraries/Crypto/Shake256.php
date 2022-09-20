@@ -83,15 +83,6 @@ dd ('OK');
  */
 class Shake256 {
 
-  protected static bool $useExt = true;
-
-  /**
-   * @return bool
-   */
-  public static function usingExt (): bool {
-    return static::$useExt && function_exists( 'shake256' );
-  }
-
   /**
    * Shake256 hashing
    *
@@ -104,11 +95,6 @@ class Shake256 {
   public static function hash ( $data, int $length ): string {
 
     try {
-      // Using sha3 php extension
-      if ( static::usingExt() ) {
-        return shake256( $data, $length, true );
-      }
-
       return SHA3::init( SHA3::SHAKE256 )
         ->absorb( $data )
         ->squeeze( $length );
@@ -119,16 +105,9 @@ class Shake256 {
   }
 
   /**
-   * @return SHA3|DesktopdSha3
-   * @throws CryptoException
+   * @return SHA3
    */
-  public static function init (): DesktopdSha3|SHA3 {
-
-    // Using sha3 php extension
-    if ( static::$useExt ) {
-      return DesktopdSha3::init( DesktopdSha3::SHAKE256 );
-    }
-
+  public static function init (): SHA3 {
     try {
       return SHA3::init( SHA3::SHAKE256 );
     }

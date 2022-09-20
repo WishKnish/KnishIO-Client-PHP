@@ -189,7 +189,7 @@ abstract class Query {
    *
    * @return string
    */
-  protected function compiledFields ( array $fields ): string {
+  public function compiledFields ( array $fields ): string {
     foreach ( $fields as $key => $field ) {
       if ( is_array( $field ) ) {
         $fields[ $key ] = $key . ' ' . $this->compiledFields( $field );
@@ -255,6 +255,13 @@ abstract class Query {
    */
   public function fields (): array {
     return $this->fields;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isMutation (): bool {
+    return $this->isMutation;
   }
 
 }

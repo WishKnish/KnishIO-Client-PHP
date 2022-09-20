@@ -94,6 +94,7 @@ use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Exceptions\TransferArgumentsException;
 
 /**
  * Class KnishIO
@@ -621,7 +622,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param int $amount
+   * @param float $amount
    * @param array $meta
    * @param string|null $batchId
    * @param array $units
@@ -631,7 +632,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function createToken ( string $tokenSlug, float $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
       // Generate batch ID if it does not pass
@@ -926,12 +927,13 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    * @throws SodiumException
+   * @throws TransferArgumentsException
    */
   public function transferToken ( string $bundleHash, string $tokenSlug, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
-      throw new WalletShadowException( 'Wrong bundle hash has been passed.' );
+      throw new TransferArgumentsException( 'Wrong bundle hash has been passed.' );
     }
 
     // Calculate amount & set meta key
