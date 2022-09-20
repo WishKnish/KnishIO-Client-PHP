@@ -53,6 +53,7 @@ use Exception;
 use JsonException;
 use ReflectionException;
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
@@ -71,7 +72,6 @@ class Crypto {
    * @param int $length
    *
    * @return string
-   * @throws Exception
    */
   public static function generateSecret ( string $seed = null, int $length = 2048 ): string {
     return in_array( $seed, [ null, '' ], true ) ? Strings::randomString( $length ) : bin2hex( Shake256::hash( $seed, $length / 4 ) );
@@ -82,7 +82,7 @@ class Crypto {
    * @param int|null $index
    *
    * @return string
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
 
@@ -99,7 +99,6 @@ class Crypto {
    * @param string $secret
    *
    * @return string
-   * @throws Exception
    */
   public static function generateBundleHash ( string $secret ): string {
     return bin2hex( Shake256::hash( $secret, 32 ) );
@@ -148,7 +147,7 @@ class Crypto {
    * @param string|null $key
    *
    * @return string|null
-   * @throws Exception
+   * @throws SodiumException
    */
   public static function generateEncPrivateKey ( string $key = null ): ?string {
     return ( new Soda( static::$characters ) )->generatePrivateKey( $key );

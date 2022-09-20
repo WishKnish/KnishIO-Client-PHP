@@ -50,50 +50,50 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
-use GuzzleHttp\Exception\GuzzleException;
-use WishKnish\KnishIO\Client\Exception\BatchIdException;
+use SodiumException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\TransferAmountException;
+use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
-use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
+use WishKnish\KnishIO\Client\HttpClient\HttpClient;
+use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
+use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
+use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
+use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationDepositBufferToken;
+use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
+use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorization;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
+use WishKnish\KnishIO\Client\Mutation\MutationRequestTokens;
+use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationWithdrawBufferToken;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
-use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorization;
-use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
-use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
-use WishKnish\KnishIO\Client\Mutation\MutationRequestTokens;
-use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
-use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
-use WishKnish\KnishIO\Client\HttpClient\HttpClient;
-use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
-
-
 
 /**
  * Class KnishIO
@@ -189,8 +189,6 @@ class KnishIOClient {
    * @param string|array $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
-   *
-   * @throws Exception
    */
   public function __construct ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
     $this->initialize( $uri, $client, $serverSdkVersion );
@@ -200,14 +198,16 @@ class KnishIOClient {
    * @param string|array $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
+   *
+   * @return void
    */
   public function initialize ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
 
     // Init uris
     $this->uris = is_array( $uri ) ? $uri : [ $uri ];
-    foreach( $this->uris as $uri ) {
-      $this->authTokenObjects[ $uri ] = null; // @todo remove this code if it is not required!
+    foreach ( $this->uris as $uriKey ) {
+      $this->authTokenObjects[ $uriKey ] = null; // @todo remove this code if it is not required!
     }
 
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
@@ -237,10 +237,15 @@ class KnishIOClient {
    * Get random uri from specified $this->uris
    *
    * @return string
-   * @throws Exception
+   * @throws CryptoException
    */
   public function getRandomUri (): string {
-    return $this->uris[ random_int(0, count( $this->uris ) - 1) ];
+    try {
+      return $this->uris[ random_int( 0, count( $this->uris ) - 1 ) ];
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+    }
   }
 
   /**
@@ -359,11 +364,7 @@ class KnishIOClient {
     $secret = $secret ?: $this->getSecret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if ( $sourceWallet === null &&
-      $this->remainderWallet &&
-      $this->remainderWallet->token === 'USER' &&
-      $this->lastMoleculeQuery
-    ) {
+    if ( $sourceWallet === null && $this->remainderWallet && $this->remainderWallet->token === 'USER' && $this->lastMoleculeQuery ) {
 
       /**
        * @var ResponseMolecule $response
@@ -438,9 +439,7 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute( [
-      'bundleHash' => $bundleHash ?: $this->getBundle(),
-      'token' => $tokenSlug,
-      'type' => $type,
+      'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'type' => $type,
     ] );
   }
 
@@ -453,21 +452,21 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function querySourceWallet( string $tokenSlug, float $amount, string $type = 'regular' ): Wallet {
+  public function querySourceWallet ( string $tokenSlug, float $amount, string $type = 'regular' ): Wallet {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundle(), $type )
-        ->payload();
+      ->payload();
 
     // Check source wallet balance
     if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
-      throw new TransferBalanceException( 'The transfer amount cannot be greater than the sender\'s balance.' );
+      throw new TransferAmountException( 'The transfer amount cannot be greater than the sender\'s balance.' );
     }
 
     // Check shadow wallet
     if ( !$fromWallet->position || !$fromWallet->address ) {
-      throw new TransferBalanceException( 'Source wallet can not be a shadow wallet.' );
+      throw new WalletShadowException( 'Source wallet can not be a shadow wallet.' );
     }
 
     return $fromWallet;
@@ -505,10 +504,11 @@ class KnishIOClient {
    */
   public function queryBatch ( string $batchId ): Response {
 
-    $query = $this->createQuery( QueryBatch::class );
-
     // Execute the query
-    return $query->execute( [ 'batchId' => $batchId ] );
+    return $this->createQuery( QueryBatch::class )
+      ->execute( [
+        'batchId' => $batchId
+      ] );
   }
 
   /**
@@ -530,116 +530,98 @@ class KnishIOClient {
     return $query->execute();
   }
 
-
   /**
    * Queries the ledger to retrieve a list of active sessions for the given MetaType
    *
-   * @param {string} bundleHash
-   * @param {string} metaType
-   * @param {string} metaId
-   * @return {Promise<*>}
+   * @param string $bundleHash
+   * @param string $metaType
+   * @param string $metaId
+   *
+   * @return Response {Promise<*>}
+   * @throws GuzzleException
+   * @throws JsonException
    */
   public function queryActiveSession ( string $bundleHash, string $metaType, string $metaId ): Response {
 
-    $query = $this->createQuery( QueryActiveSession::class );
-
     // Execute the query
-    return $query->execute( [
-      'bundleHash' => $bundleHash,
-      'metaType' => $metaType,
-      'metaId' => $metaId,
-    ] );
+    return $this->createQuery( QueryActiveSession::class )
+      ->execute( [
+        'bundleHash' => $bundleHash,
+        'metaType' => $metaType,
+        'metaId' => $metaId
+      ] );
   }
-
 
   /**
    * Builds and executes a molecule to declare an active session for the given MetaType
    *
-   * @param {string} bundle
-   * @param {string} metaType
-   * @param {string} metaId
-   * @param {string} ipAddress
-   * @param {string} browser
-   * @param {string} osCpu
-   * @param {string} resolution
-   * @param {string} timeZone
-   * @param {object|array} json
-   * @return {Promise<void>}
+   * @param string $bundle
+   * @param string $metaType
+   * @param string $metaId
+   * @param string $ipAddress
+   * @param string $browser
+   * @param string $osCpu
+   * @param string $resolution
+   * @param string $timeZone
+   * @param array $json
+   *
+   * @return Response {Promise<void>}
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function activeSession (
-    string $bundle,
-    string $metaType,
-    string $metaId,
-    string $ipAddress,
-    string $browser,
-    string $osCpu,
-    string $resolution,
-    string $timeZone,
-    array $json = []
-  ) {
-
-    $query = $this->createQuery( MutationActiveSession::class );
+  public function activeSession ( string $bundle, string $metaType, string $metaId, string $ipAddress, string $browser, string $osCpu, string $resolution, string $timeZone, array $json = [] ): Response {
 
     // Execute the query
-    return $query->execute( [
-      'bundleHash' => $bundle,
-      'metaType' => $metaType,
-      'metaId' => $metaId,
-      'ipAddress' => $ipAddress,
-      'browser' => $browser,
-      'osCpu' => $osCpu,
-      'resolution' => $resolution,
-      'timeZone' => $timeZone,
-      'json' => json_encode( $json )
-    ] );
+    return $this->createQuery( MutationActiveSession::class )
+      ->execute( [
+        'bundleHash' => $bundle,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+        'ipAddress' => $ipAddress,
+        'browser' => $browser,
+        'osCpu' => $osCpu,
+        'resolution' => $resolution,
+        'timeZone' => $timeZone,
+        'json' => json_encode( $json )
+      ] );
   }
-
 
   /**
    *
-   * @param {string} bundleHash
-   * @param {string} metaType
-   * @param {string} metaId
-   * @param {string} ipAddress
-   * @param {string} browser
-   * @param {string} osCpu
-   * @param {string} resolution
-   * @param {string} timeZone
-   * @param {Array} countBy
-   * @param {string} interval
-   * @return {Promise<*>}
+   * @param string $bundleHash
+   * @param string $metaType
+   * @param string $metaId
+   * @param string $ipAddress
+   * @param string $browser
+   * @param string $osCpu
+   * @param string $resolution
+   * @param string $timeZone
+   * @param array $countBy
+   * @param string $interval
+   *
+   * @return Response {Promise<*>}
+   * @throws GuzzleException
+   * @throws JsonException
    */
-  public function queryUserActivity (
-    string $bundleHash,
-    string $metaType,
-    string $metaId,
-    string $ipAddress,
-    string $browser,
-    string $osCpu,
-    string $resolution,
-    string $timeZone,
-    array $countBy,
-    string $interval
-  ) {
-    $query = $this->createQuery( QueryUserActivity::class );
-
-    return $query->execute( [
-      'bundleHash' => $bundleHash,
-      'metaType' => $metaType,
-      'metaId' => $metaId,
-      'ipAddress' => $ipAddress,
-      'browser' => $browser,
-      'osCpu' => $osCpu,
-      'resolution' => $resolution,
-      'timeZone' => $timeZone,
-      'countBy' => $countBy,
-      'interval' => $interval,
-    ] );
+  public function queryUserActivity ( string $bundleHash, string $metaType, string $metaId, string $ipAddress, string $browser, string $osCpu, string $resolution, string $timeZone, array $countBy, string $interval ): Response {
+    return $this->createQuery( QueryUserActivity::class )
+      ->execute( [
+        'bundleHash' => $bundleHash,
+        'metaType' => $metaType,
+        'metaId' => $metaId,
+        'ipAddress' => $ipAddress,
+        'browser' => $browser,
+        'osCpu' => $osCpu,
+        'resolution' => $resolution,
+        'timeZone' => $timeZone,
+        'countBy' => $countBy,
+        'interval' => $interval
+      ] );
   }
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param array $meta
    * @param string|null $batchId
    * @param array $units
@@ -647,8 +629,9 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
-  public function createToken ( string $tokenSlug, float $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
       // Generate batch ID if it does not pass
@@ -697,7 +680,9 @@ class KnishIOClient {
    * @param array $metadata
    *
    * @return Response
-   * @throws GuzzleException|JsonException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function createMeta ( string $metaType, string $metaId, array $metadata = [] ): Response {
 
@@ -745,6 +730,7 @@ class KnishIOClient {
    * @return array|null
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
 
@@ -806,6 +792,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function requestTokens ( string $tokenSlug, float $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -816,7 +803,7 @@ class KnishIOClient {
 
     // NON-stackable tokens & batch ID is NOT NULL - error
     if ( !$isStackable && $batchId !== null ) {
-      throw new BatchIdException( 'Expected Batch ID = null for non-stackable tokens.' );
+      throw new WalletBatchException( 'Expected Batch ID = null for non-stackable tokens.' );
     }
     // Stackable tokens & batch ID is NULL - generate new one
     if ( $isStackable && $batchId === null ) {
@@ -856,7 +843,7 @@ class KnishIOClient {
         // Set wallet metas
         $meta = array_merge( $meta, [ 'position' => $to->position, 'bundle' => $to->bundle, ] );
 
-        // Set metaId as an wallet address
+        // Set metaId as wallet address
         $metaId = $to->address;
       }
     }
@@ -928,9 +915,9 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $secretOrBundle
+   * @param string $bundleHash
    * @param string $tokenSlug
-   * @param float|int $amount
+   * @param float $amount
    * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
@@ -938,6 +925,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function transferToken ( string $bundleHash, string $tokenSlug, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
@@ -961,7 +949,6 @@ class KnishIOClient {
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
-
     // Create a recipient wallet
     $recipientWallet = Wallet::create( $bundleHash, $tokenSlug );
 
@@ -972,7 +959,6 @@ class KnishIOClient {
     else {
       $recipientWallet->initBatchId( $fromWallet );
     }
-
 
     // Remainder wallet
     $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
@@ -1003,8 +989,9 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
-  public function depositBufferToken( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
+  public function depositBufferToken ( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1036,12 +1023,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function withdrawBufferToken(
-    string $tokenSlug,
-    float $amount,
-    ?Wallet $sourceWallet = null,
-    ?Wallet $signingWallet = null
-  ): Response {
+  public function withdrawBufferToken ( string $tokenSlug, float $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1071,6 +1053,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function burnToken ( string $tokenSlug, float $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
@@ -1116,13 +1099,14 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function replenishToken ( string $tokenSlug, float $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-        ->payload();
+      ->payload();
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
     }
@@ -1137,8 +1121,7 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
-      ->execute();
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
   }
 
   /**
@@ -1151,19 +1134,19 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
-  public function fuseToken( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null  ) {
+  public function fuseToken ( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
       throw new WalletShadowException( 'Wrong bundle hash has been passed.' );
     }
 
-
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-        ->payload();
+      ->payload();
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
     }
@@ -1176,11 +1159,11 @@ class KnishIOClient {
 
     // Check fused token units
     $sourceTokenUnitIds = [];
-    foreach( $fromWallet->tokenUnits as $tokenUnit ) {
+    foreach ( $fromWallet->tokenUnits as $tokenUnit ) {
       $sourceTokenUnitIds[] = $tokenUnit->id;
     }
-    foreach( $fusedTokenUnitIds as $fusedTokenUnitId ) {
-      if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds ) ) {
+    foreach ( $fusedTokenUnitIds as $fusedTokenUnitId ) {
+      if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds, true ) ) {
         throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
       }
     }
@@ -1192,7 +1175,6 @@ class KnishIOClient {
     // Remainder wallet
     $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
     $remainderWallet->initBatchId( $fromWallet, true );
-
 
     // Split token units (fused)
     $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
@@ -1207,13 +1189,14 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )
-      ->execute();
+    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
   }
 
   /**
    * @return Wallet
-   * @throws JsonException|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function getSourceWallet (): Wallet {
     // Has a ContinuID wallet?
@@ -1260,9 +1243,7 @@ class KnishIOClient {
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
     $response = $query->execute( [
-      'cellSlug' => $cellSlug,
-      'pubkey' => $wallet->pubkey,
-      'encrypt' => $encrypt,
+      'cellSlug' => $cellSlug, 'pubkey' => $wallet->pubkey, 'encrypt' => $encrypt,
     ] );
 
     // Create & set an auth token object if there any data in payload (@todo add a key based check?)
@@ -1322,23 +1303,12 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function requestAuthToken( ?string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
-
-    // Response for request guest/profile auth token
-    $response = null;
-
+  public function requestAuthToken ( ?string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
     // Set a cell slug
     $this->setCellSlug( $cellSlug );
 
-    // Authorized user
-    if ( $secret ) {
-      $response = $this->requestProfileAuthToken( $secret, $encrypt );
-    }
-
-    // Guest
-    else {
-      $response = $this->requestGuestAuthToken( $cellSlug, $encrypt );
-    }
+    // Response for request guest/profile auth token
+    $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );
 
     // Switch encryption
     $this->switchEncryption( $encrypt );
@@ -1363,7 +1333,8 @@ class KnishIOClient {
     $this->authTokenObjects[ $this->uri() ] = $authToken;
 
     // Set auth data to apollo client
-    $this->client()->setAuthData( $authToken->getToken(), $authToken->getPubkey(), $authToken->getWallet() );
+    $this->client()
+      ->setAuthData( $authToken->getToken(), $authToken->getPubkey(), $authToken->getWallet() );
 
     // Save a full auth token object with expireAt key
     $this->authToken = $authToken;
@@ -1377,6 +1348,5 @@ class KnishIOClient {
   public function getAuthToken (): ?AuthToken {
     return $this->authToken;
   }
-
 
 }

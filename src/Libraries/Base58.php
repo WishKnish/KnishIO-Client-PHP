@@ -50,10 +50,10 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use Tuupola\Base58 as Base;
+use Tuupola\Base58\BaseEncoder;
 use Tuupola\Base58\BcmathEncoder;
 use Tuupola\Base58\GmpEncoder;
 use Tuupola\Base58\PhpEncoder;
-use Tuupola\Base58\BaseEncoder;
 
 /**
  * Class Base58

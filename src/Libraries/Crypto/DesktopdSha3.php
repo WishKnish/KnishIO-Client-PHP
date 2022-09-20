@@ -52,8 +52,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 /* -*- coding: utf-8; indent-tabs-mode: t; tab-width: 4 -*-
 vim: ts=4 noet ai */
 
-use Exception;
-use RuntimeException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 
 /**
  * Streamable SHA-3 for PHP 5.2+, with no lib/ext dependencies!
@@ -102,7 +101,7 @@ class DesktopdSha3 {
    * @param int|null $type
    *
    * @return DesktopdSha3
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function init ( int $type = null ): DesktopdSha3 {
     switch ( $type ) {
@@ -120,7 +119,7 @@ class DesktopdSha3 {
         return new self ( 1088, 512, 0x1f );
     }
 
-    throw new RuntimeException ( 'Invalid operation type' );
+    throw new CryptoException ( 'Invalid SHA3 operation type' );
   }
 
   /**
@@ -129,11 +128,11 @@ class DesktopdSha3 {
    * @param $data
    *
    * @return $this
-   * @throws Exception
+   * @throws CryptoException
    */
   public function absorb ( $data ): DesktopdSha3 {
     if ( self::PHASE_INPUT !== $this->phase ) {
-      throw new RuntimeException ( 'No more input accepted' );
+      throw new CryptoException ( 'No more SHA3 sponge input accepted' );
     }
 
     $rateInBytes = $this->rateInBytes;
@@ -166,12 +165,11 @@ class DesktopdSha3 {
    * @param int|null $length
    *
    * @return string
-   * @throws Exception
    */
   public function squeeze ( int $length = null ): string {
     $outputLength = $this->outputLength; // fixed length output
     if ( $length && 0 < $outputLength && $outputLength !== $length ) {
-      throw new RuntimeException ( 'Invalid length' );
+      throw new CryptoException ( 'Invalid SHA3 sponge output length' );
     }
 
     if ( self::PHASE_INPUT === $this->phase ) {
@@ -179,7 +177,7 @@ class DesktopdSha3 {
     }
 
     if ( self::PHASE_OUTPUT !== $this->phase ) {
-      throw new RuntimeException ( 'No more output allowed' );
+      throw new CryptoException ( 'No more SHA3 sponge output allowed' );
     }
     if ( 0 < $outputLength ) {
       $this->phase = self::PHASE_DONE;
@@ -226,10 +224,10 @@ class DesktopdSha3 {
    */
   public function __construct ( int $rate, int $capacity, int $suffix, int $length = 0 ) {
     if ( 1600 !== ( $rate + $capacity ) ) {
-      throw new Error ( 'Invalid parameters' );
+      throw new CryptoException ( 'Invalid SHA3 parameters' );
     }
     if ( 0 !== ( $rate % 8 ) ) {
-      throw new Error ( 'Invalid rate' );
+      throw new CryptoException ( 'Invalid SHA3 rate' );
     }
 
     $this->suffix = $suffix;

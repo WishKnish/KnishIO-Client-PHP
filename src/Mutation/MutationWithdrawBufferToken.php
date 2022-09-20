@@ -59,7 +59,7 @@ use WishKnish\KnishIO\Client\Wallet;
 class MutationWithdrawBufferToken extends MutationProposeMolecule {
 
   /**
-   * @param array $recipients: key/value array: key - bundle hash, value - amount
+   * @param array $recipients : key/value array: key - bundle hash, value - amount
    * @param Wallet|null $signingWallet
    *
    * @return $this

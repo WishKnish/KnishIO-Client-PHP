@@ -72,7 +72,6 @@ class Soda {
    *
    * @param string|null $characters
    *
-   * @throws Exception
    */
   public function __construct ( string $characters = null ) {
     $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
@@ -122,7 +121,6 @@ class Soda {
    *
    * @return string
    * @throws SodiumException
-   * @throws Exception
    */
   public function generatePrivateKey ( string $key ): string {
     return $this->encode( sodium_crypto_box_secretkey( Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES ) ) );

@@ -107,7 +107,7 @@ class ResponseMolecule extends Response {
   /**
    * @return string
    */
-  public function getMolecularHash(): string {
+  public function getMolecularHash (): string {
     return array_get( $this->data(), 'molecularHash' );
   }
 

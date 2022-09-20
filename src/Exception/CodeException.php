@@ -57,7 +57,7 @@ use Throwable;
  */
 class CodeException extends BaseException {
   /**
-   * BalanceInsufficientException constructor.
+   * CodeException constructor.
    *
    * @param string $message
    * @param int $code

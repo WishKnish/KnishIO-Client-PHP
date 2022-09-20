@@ -51,11 +51,11 @@ namespace WishKnish\KnishIO\Client\HttpClient;
 
 use ArrayObject;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Promise;
 use WishKnish\KnishIO\Client\Libraries\Cipher;
 use WishKnish\KnishIO\Client\Wallet;
 

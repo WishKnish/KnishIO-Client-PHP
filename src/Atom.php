@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
-use JsonException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -126,7 +126,7 @@ class Atom {
    * @param string $output
    *
    * @return array|string|null
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
@@ -137,7 +137,12 @@ class Atom {
 
       $atomData = get_object_vars( $atom );
 
-      $molecularSponge->absorb( $numberOfAtoms );
+      try {
+        $molecularSponge->absorb( $numberOfAtoms );
+      }
+      catch ( Exception $e ) {
+        throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+      }
 
       foreach ( $atomData as $name => $value ) {
 
@@ -156,8 +161,13 @@ class Atom {
 
             if ( isset( $meta[ 'value' ] ) ) {
 
-              $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-              $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+              try {
+                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+              }
+              catch ( Exception $e ) {
+                throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+              }
 
             }
           }
@@ -166,30 +176,40 @@ class Atom {
         }
 
         // Absorb value as string
-        $molecularSponge->absorb( ( string ) $value );
+        try {
+          $molecularSponge->absorb( ( string ) $value );
+        }
+        catch ( Exception $e ) {
+          throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+        }
       }
 
     }
-    switch ( $output ) {
-      case 'hex':
-      {
-        $target = bin2hex( $molecularSponge->squeeze( 32 ) );
-        break;
+    try {
+      switch ( $output ) {
+        case 'hex':
+        {
+          $target = bin2hex( $molecularSponge->squeeze( 32 ) );
+          break;
+        }
+        case 'array':
+        {
+          $target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
+          break;
+        }
+        case 'base17':
+        {
+          $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+          break;
+        }
+        default:
+        {
+          $target = null;
+        }
       }
-      case 'array':
-      {
-        $target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
-        break;
-      }
-      case 'base17':
-      {
-        $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
-        break;
-      }
-      default:
-      {
-        $target = null;
-      }
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException($e->getMessage(), $e->getCode(), $e);
     }
 
     return $target;
@@ -202,12 +222,12 @@ class Atom {
    */
   public static function sortAtoms ( array $atoms = [] ): array {
 
-    usort($atoms, static function ( $atom1, $atom2 ) {
+    usort( $atoms, static function ( $atom1, $atom2 ) {
       if ( $atom1->index === $atom2->index ) {
         return 0;
       }
       return $atom1->index < $atom2->index ? -1 : 1;
-    });
+    } );
 
     return $atoms;
   }
@@ -223,7 +243,6 @@ class Atom {
    * @param string $property
    * @param $value
    *
-   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
