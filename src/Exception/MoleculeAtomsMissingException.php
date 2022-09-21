@@ -52,23 +52,23 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Interface IException
+ * Class MoleculeAtomsMissingException
  * @package WishKnish\KnishIO\Client\Exception
+ *
+ * @property string $message
+ * @property integer $code
+ * @property string $file
+ * @property integer $line
  */
-interface IException {
-  public function getMessage ();
-
-  public function getCode ();
-
-  public function getFile ();
-
-  public function getLine ();
-
-  public function getTrace ();
-
-  public function getTraceAsString ();
-
-  public function __toString ();
-
-  public function __construct ( string $message, int $code = 0, Throwable $previous = null );
+class MoleculeAtomsMissingException extends BaseException {
+  /**
+   * MoleculeAtomsMissingException constructor.
+   *
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
+   */
+  public function __construct ( string $message = 'The molecule does not contain atoms', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
+  }
 }

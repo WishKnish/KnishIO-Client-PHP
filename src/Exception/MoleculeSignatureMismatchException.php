@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class AtomIndexException
+ * Class MoleculeSignatureMismatchException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -60,15 +60,15 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class AtomIndexException extends BaseException {
+class MoleculeSignatureMismatchException extends BaseException {
   /**
-   * AtomIndexException constructor.
+   * MoleculeSignatureMismatchException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'There is an atom without an index', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'OTS mismatch', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

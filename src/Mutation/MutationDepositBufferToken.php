@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
+use SodiumException;
 
 /**
  * Class MutationDepositBufferToken
@@ -58,13 +59,14 @@ use JsonException;
 class MutationDepositBufferToken extends MutationProposeMolecule {
 
   /**
-   * @param float $amount
+   * @param int $amount
    * @param array $tokenTradeRates
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
-  public function fillMolecule ( float $amount, array $tokenTradeRates ): self {
+  public function fillMolecule ( int $amount, array $tokenTradeRates ): self {
     $this->molecule->initDepositBuffer( $amount, $tokenTradeRates );
     $this->molecule->sign();
     $this->molecule->check( $this->molecule->sourceWallet() );

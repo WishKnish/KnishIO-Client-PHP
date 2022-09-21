@@ -26,12 +26,7 @@ class AuthToken {
    * @return static
    */
   public static function create ( array $data, Wallet $wallet, bool $encrypt ): self {
-    $authToken = new static (
-      $data[ 'token' ],
-      $data[ 'expiresAt' ],
-      $data[ 'pubkey' ],
-      $encrypt,
-    );
+    $authToken = new static ( $data[ 'token' ], $data[ 'expiresAt' ], $data[ 'pubkey' ], $encrypt, );
     $authToken->setWallet( $wallet );
     return $authToken;
   }
@@ -44,34 +39,21 @@ class AuthToken {
    * @throws Exception
    */
   public static function restore ( array $snapshot, string $secret ): self {
-    $wallet = new Wallet (
-      $secret,
-      'AUTH',
-      array_get( $snapshot, 'wallet.position' ),
-      null,
-      array_get( $snapshot, 'wallet.characters' )
-    );
+    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
     return static::create( [
-      'token' => array_get( $snapshot, 'token' ),
-      'expiresAt' => array_get( $snapshot, 'expiresAt' ),
-      'pubkey' => array_get( $snapshot, 'pubkey' ),
+      'token' => array_get( $snapshot, 'token' ), 'expiresAt' => array_get( $snapshot, 'expiresAt' ), 'pubkey' => array_get( $snapshot, 'pubkey' ),
     ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
 
   /**
    * AuthToken constructor.
    *
-   * @param $token
-   * @param $expiresAt
-   * @param $pubkey
-   * @param $encrypt
+   * @param string $token
+   * @param string $expiresAt
+   * @param string $pubkey
+   * @param bool $encrypt
    */
-  public function __construct (
-    string $token,
-    string $expiresAt,
-    string $pubkey,
-    bool $encrypt
-  ) {
+  public function __construct ( string $token, string $expiresAt, string $pubkey, bool $encrypt ) {
     $this->token = $token;
     $this->expiresAt = $expiresAt;
     $this->pubkey = $pubkey;
@@ -96,21 +78,12 @@ class AuthToken {
    * @return array
    */
   #[ArrayShape( [
-    'token' => "string",
-    'expiresAt' => "int|null",
-    'pubkey' => "string",
-    'encrypt' => "bool",
-    'wallet' => "array"
+    'token' => "string", 'expiresAt' => "int|null", 'pubkey' => "string", 'encrypt' => "bool", 'wallet' => "array"
   ] )]
   public function getSnapshot (): array {
     return [
-      'token' => $this->token,
-      'expiresAt' => $this->expiresAt,
-      'pubkey' => $this->pubkey,
-      'encrypt' => $this->encrypt,
-      'wallet' => [
-        'position' => $this->wallet->position,
-        'characters' => $this->wallet->characters,
+      'token' => $this->token, 'expiresAt' => $this->expiresAt, 'pubkey' => $this->pubkey, 'encrypt' => $this->encrypt, 'wallet' => [
+        'position' => $this->wallet->position, 'characters' => $this->wallet->characters,
       ],
     ];
   }
@@ -154,15 +127,11 @@ class AuthToken {
    */
   #[Pure]
   #[ArrayShape( [
-    'token' => "mixed|string",
-    'pubkey' => "mixed|string",
-    'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+    'token' => "mixed|string", 'pubkey' => "mixed|string", 'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
   ] )]
   public function getAuthData (): array {
     return [
-      'token' => $this->getToken(),
-      'pubkey' => $this->getPubkey(),
-      'wallet' => $this->getWallet(),
+      'token' => $this->getToken(), 'pubkey' => $this->getPubkey(), 'wallet' => $this->getWallet(),
     ];
   }
 

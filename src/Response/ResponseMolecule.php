@@ -69,26 +69,6 @@ class ResponseMolecule extends Response {
    */
   protected mixed $payload;
 
-  /**
-   * @var MoleculeStructure
-   */
-  protected MoleculeStructure $clientMolecule;
-
-  /**
-   * Response constructor.
-   *
-   * @param MutationProposeMoleculeStructure|null $query
-   * @param string $json
-   *
-   * @throws JsonException
-   */
-  public function __construct ( ?MutationProposeMoleculeStructure $query, string $json ) {
-    parent::__construct( $query, $json );
-
-    if ( $query !== null ) {
-      $this->clientMolecule = $query->moleculeStructure();
-    }
-  }
 
   /**
    * Initialization
@@ -106,15 +86,6 @@ class ResponseMolecule extends Response {
       // Unable to decode JSON response?
       /** @TODO Add proper handing of JSON errors */
     }
-  }
-
-  /**
-   * Get a client molecule
-   *
-   * @return MoleculeStructure
-   */
-  public function clientMolecule (): MoleculeStructure {
-    return $this->clientMolecule;
   }
 
   /**
@@ -136,7 +107,7 @@ class ResponseMolecule extends Response {
   /**
    * @return string
    */
-  public function getMolecularHash(): string {
+  public function getMolecularHash (): string {
     return array_get( $this->data(), 'molecularHash' );
   }
 

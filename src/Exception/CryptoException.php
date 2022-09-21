@@ -52,19 +52,18 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class SigningWalletException
+ * Class CryptoException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class SigningWalletException extends BaseException {
-
+class CryptoException extends BaseException {
   /**
-   * SigningWalletException constructor.
+   * CryptoException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Signing wallet is invalid.', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Error thrown by key cryptographic functions.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

@@ -49,8 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-
 /**
  * Class ResponseRequestAuthorization
  * @package WishKnish\KnishIO\Client\Response
