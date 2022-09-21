@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use Exception;
 use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
@@ -142,7 +141,6 @@ class Soda {
    * @param string $key
    *
    * @return string
-   * @throws Exception
    */
   public function shortHash ( string $key ): string {
     return $this->encode( Shake256::hash( $key, 8 ) );
