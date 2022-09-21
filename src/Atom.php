@@ -260,4 +260,11 @@ class Atom {
     }
   }
 
+  /**
+   * @return int
+   */
+  public function getValue(): int {
+    return $this->value * 1;
+  }
+
 }

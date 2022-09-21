@@ -446,14 +446,14 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param string $type
    *
    * @return Wallet
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function querySourceWallet ( string $tokenSlug, float $amount, string $type = 'regular' ): Wallet {
+  public function querySourceWallet ( string $tokenSlug, int $amount, string $type = 'regular' ): Wallet {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -461,7 +461,7 @@ class KnishIOClient {
       ->payload();
 
     // Check source wallet balance
-    if ( $fromWallet === null || Decimal::cmp( $fromWallet->balance, $amount ) < 0 ) {
+    if ( !$fromWallet || !$fromWallet->hasEnoughBalance( $amount ) ) {
       throw new TransferAmountException( 'The transfer amount cannot be greater than the sender\'s balance.' );
     }
 
@@ -622,7 +622,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param array $meta
    * @param string|null $batchId
    * @param array $units
@@ -632,7 +632,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function createToken ( string $tokenSlug, float $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
     if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
       // Generate batch ID if it does not pass
@@ -784,7 +784,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param Wallet|string|null $to
    * @param array $meta
    * @param string|null $batchId
@@ -795,7 +795,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function requestTokens ( string $tokenSlug, float $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function requestTokens ( string $tokenSlug, int $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // Get a token & init is Stackable flag for batch ID initialization
     $tokenResponse = $this->createQuery( QueryToken::class )
@@ -918,7 +918,7 @@ class KnishIOClient {
   /**
    * @param string $bundleHash
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param string|null $batchId
    * @param array $units
    * @param Wallet|null $sourceWallet
@@ -929,7 +929,7 @@ class KnishIOClient {
    * @throws SodiumException
    * @throws TransferArgumentsException
    */
-  public function transferToken ( string $bundleHash, string $tokenSlug, float $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function transferToken ( string $bundleHash, string $tokenSlug, int $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
@@ -984,7 +984,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param array $tokenTradeRates
    * @param Wallet|null $sourceWallet
    *
@@ -993,7 +993,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function depositBufferToken ( string $tokenSlug, float $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
+  public function depositBufferToken ( string $tokenSlug, int $amount, array $tokenTradeRates, ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1017,7 +1017,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param Wallet|null $sourceWallet
    * @param Wallet|null $signingWallet
    *
@@ -1025,7 +1025,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function withdrawBufferToken ( string $tokenSlug, float $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
+  public function withdrawBufferToken ( string $tokenSlug, int $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1048,7 +1048,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param array $units
    * @param Wallet|null $sourceWallet
    *
@@ -1057,7 +1057,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function burnToken ( string $tokenSlug, float $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
+  public function burnToken ( string $tokenSlug, int $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -1094,7 +1094,7 @@ class KnishIOClient {
 
   /**
    * @param string $tokenSlug
-   * @param float $amount
+   * @param int $amount
    * @param array $tokenUnits
    * @param Wallet|null $sourceWallet
    *
@@ -1103,7 +1103,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function replenishToken ( string $tokenSlug, float $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
+  public function replenishToken ( string $tokenSlug, int $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */

@@ -59,14 +59,14 @@ use SodiumException;
 class MutationDepositBufferToken extends MutationProposeMolecule {
 
   /**
-   * @param float $amount
+   * @param int $amount
    * @param array $tokenTradeRates
    *
    * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function fillMolecule ( float $amount, array $tokenTradeRates ): self {
+  public function fillMolecule ( int $amount, array $tokenTradeRates ): self {
     $this->molecule->initDepositBuffer( $amount, $tokenTradeRates );
     $this->molecule->sign();
     $this->molecule->check( $this->molecule->sourceWallet() );

@@ -373,7 +373,7 @@ class CheckMolecule {
         throw new TransferMismatchedException();
       }
 
-      if ( $endAtom->value < 0 ) {
+      if ( $endAtom->getValue() < 0 ) {
         throw new TransferMalformedException();
       }
 
@@ -381,19 +381,19 @@ class CheckMolecule {
     }
 
     // Looping through each V-isotope atom
-    $sum = 0.0;
-    $value = 0.0;
+    $sum = 0;
+    $value = 0;
 
     // Check sender atom
-    if ( Decimal::cmp( $firstAtom->value, 0.0 ) >= 0 ) {
-      throw new TransferMalformedException( 'Sender can\'t send negative value.' );
+    if ( $firstAtom->getValue() >= 0 ) {
+      throw new TransferMalformedException( 'Sender can\'t send negative value or zero.' );
     }
 
     /** @var Atom $vAtom */
     foreach ( $atoms as $index => $vAtom ) {
 
       // Making sure we're in integer land
-      $value = 1.0 * $vAtom->value;
+      $value = $vAtom->getValue();
 
       // Making sure all V atoms of the same token
       if ( $vAtom->token !== $firstAtom->token ) {
@@ -404,7 +404,7 @@ class CheckMolecule {
       if ( $index > 0 ) {
 
         // Negative V atom in a non-primary position?
-        if ( Decimal::cmp( $value, 0.0 ) < 0 ) {
+        if ( $value < 0 ) {
           throw new TransferMalformedException();
         }
 
@@ -421,28 +421,28 @@ class CheckMolecule {
     }
 
     // Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-    if ( !Decimal::equal( $sum, $value ) ) {
+    if ( $sum !== $value ) {
       throw new TransferUnbalancedException();
     }
 
     // If we're provided with a senderWallet argument, we can perform additional checks
     if ( $senderWallet ) {
 
-      $remainder = $senderWallet->balance + $firstAtom->value;
+      $remainder = $senderWallet->balance + $firstAtom->getValue();
 
       // Is there enough balance to send?
-      if ( Decimal::cmp( $remainder, 0 ) < 0 ) {
+      if ( $remainder < 0 ) {
         throw new TransferBalanceException();
       }
 
       // Does the remainder match what should be there in the source wallet, if provided?
-      if ( !Decimal::equal( $remainder, $sum ) ) {
+      if ( $remainder !== $sum ) {
         throw new TransferRemainderException();
       }
 
     }
     // No senderWallet, but have a remainder?
-    else if ( !Decimal::equal( $value, 0.0 ) ) {
+    else if ( $value !== 0 ) {
       throw new TransferWalletException();
     }
   }

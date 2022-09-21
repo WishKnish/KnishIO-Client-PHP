@@ -90,7 +90,7 @@ class Decimal {
    */
   public static function val ( float $val ): float {
     if ( abs( $val * static::multiplier() ) < 1 ) {
-      return 0.0;
+      return 0;
     }
     return $val;
   }

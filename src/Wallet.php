@@ -56,6 +56,7 @@ use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
@@ -98,9 +99,9 @@ class Wallet {
   public array $tradePairs = [];
 
   /**
-   * @var float
+   * @var int
    */
-  public float $balance = 0;
+  public int $balance = 0;
 
   /**
    * @var string|null
@@ -498,6 +499,15 @@ class Wallet {
     catch ( Exception $e ) {
       throw new CryptoException($e->getMessage(), $e->getCode(), $e);
     }
+  }
+
+  /**
+   * @param int $amount
+   *
+   * @return void
+   */
+  public function hasEnoughBalance( int $amount ): bool {
+    return $this->balance >= $amount;
   }
 
 }
