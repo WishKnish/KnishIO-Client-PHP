@@ -54,19 +54,19 @@ use GuzzleHttp\Exception\GuzzleException;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
 use SodiumException;
-use WishKnish\KnishIO\Client\Exception\CryptoException;
-use WishKnish\KnishIO\Client\Exception\TransferAmountException;
-use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
+use WishKnish\KnishIO\Client\Exception\TransferAmountException;
+use WishKnish\KnishIO\Client\Exception\TransferBundleException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
+use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
@@ -94,7 +94,6 @@ use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWalletList;
-use WishKnish\KnishIO\Exceptions\TransferArgumentsException;
 
 /**
  * Class KnishIO
@@ -245,7 +244,7 @@ class KnishIOClient {
       return $this->uris[ random_int( 0, count( $this->uris ) - 1 ) ];
     }
     catch ( Exception $e ) {
-      throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
     }
   }
 
@@ -785,7 +784,7 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param int $amount
-   * @param Wallet|string|null $to
+   * @param string|null $recipientBundle
    * @param array $meta
    * @param string|null $batchId
    * @param array $units
@@ -793,9 +792,8 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
-   * @throws SodiumException
    */
-  public function requestTokens ( string $tokenSlug, int $amount, Wallet|string $to = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // Get a token & init is Stackable flag for batch ID initialization
     $tokenResponse = $this->createQuery( QueryToken::class )
@@ -811,46 +809,27 @@ class KnishIOClient {
       $batchId = Crypto::generateBatchId();
     }
 
+    // Are we requesting units rather than amounts?
     if ( count( $units ) > 0 ) {
+
+      // Can't specify units and amount simultaneously
       if ( $amount > 0 ) {
         throw new StackableUnitAmountException();
       }
 
+      // Amount will equal number of units being requested
       $amount = count( $units );
+
+      // Specify specific units to request
       $meta[ 'tokenUnits' ] = json_encode( $units );
     }
 
-    if ( $to !== null ) {
-
-      // Is a string? $to is bundle or secret
-      if ( is_string( $to ) ) {
-
-        // Bundle: set metaType
-        if ( Crypto::isBundleHash( $to ) ) {
-          $metaType = 'walletBundle';
-          $metaId = $to;
-        } // Secret: create a new wallet (not shadow)
-        else {
-          $to = Wallet::create( $to, $tokenSlug );
-        }
-      }
-
-      // Is a wallet object?
-      if ( $to instanceof Wallet ) {
-
-        // Meta type: wallet
-        $metaType = 'wallet';
-
-        // Set wallet metas
-        $meta = array_merge( $meta, [ 'position' => $to->position, 'bundle' => $to->bundle, ] );
-
-        // Set metaId as wallet address
-        $metaId = $to->address;
-      }
+    // No bundle? Use our own
+    if ( $recipientBundle === null ) {
+      $recipientBundle = $this->getBundle();
     }
-    else {
-      $metaType = 'walletBundle';
-      $metaId = $this->getBundle();
+    else if ( !Crypto::isBundleHash( $recipientBundle ) ) {
+      throw new TransferBundleException();
     }
 
     // Create a query
@@ -858,7 +837,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $tokenSlug, $amount, $metaType, $metaId, $meta, $batchId );
+    $query->fillMolecule( $tokenSlug, $amount, 'walletBundle', $recipientBundle, $meta, $batchId );
 
     // Return a query execution result
     return $query->execute();
@@ -927,13 +906,12 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    * @throws SodiumException
-   * @throws TransferArgumentsException
    */
   public function transferToken ( string $bundleHash, string $tokenSlug, int $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
-      throw new TransferArgumentsException( 'Wrong bundle hash has been passed.' );
+      throw new TransferBundleException();
     }
 
     // Calculate amount & set meta key
