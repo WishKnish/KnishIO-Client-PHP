@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use JsonException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
 
 /**
  * Class ResponseMolecule
@@ -68,7 +67,6 @@ class ResponseMolecule extends Response {
    * @var mixed
    */
   protected mixed $payload;
-
 
   /**
    * Initialization

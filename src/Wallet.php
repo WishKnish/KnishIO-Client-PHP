@@ -56,7 +56,6 @@ use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
-use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
@@ -157,7 +156,6 @@ class Wallet {
    * @var string|null
    */
   public ?string $createdAt = null;
-
 
   /**
    * Wallet constructor.
@@ -497,16 +495,16 @@ class Wallet {
       return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
     }
     catch ( Exception $e ) {
-      throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
     }
   }
 
   /**
    * @param int $amount
    *
-   * @return void
+   * @return bool
    */
-  public function hasEnoughBalance( int $amount ): bool {
+  public function hasEnoughBalance ( int $amount ): bool {
     return $this->balance >= $amount;
   }
 

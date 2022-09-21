@@ -141,7 +141,7 @@ class Atom {
         $molecularSponge->absorb( $numberOfAtoms );
       }
       catch ( Exception $e ) {
-        throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
       }
 
       foreach ( $atomData as $name => $value ) {
@@ -166,7 +166,7 @@ class Atom {
                 $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
               }
               catch ( Exception $e ) {
-                throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+                throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
               }
 
             }
@@ -180,7 +180,7 @@ class Atom {
           $molecularSponge->absorb( ( string ) $value );
         }
         catch ( Exception $e ) {
-          throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+          throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
         }
       }
 
@@ -209,7 +209,7 @@ class Atom {
       }
     }
     catch ( Exception $e ) {
-      throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
     }
 
     return $target;
@@ -263,7 +263,7 @@ class Atom {
   /**
    * @return int
    */
-  public function getValue(): int {
+  public function getValue (): int {
     return $this->value * 1;
   }
 
