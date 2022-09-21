@@ -47,96 +47,28 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use JsonException;
-use WishKnish\KnishIO\Client\MoleculeStructure;
+use Throwable;
 
 /**
- * Class ResponseMolecule
- * @package WishKnish\KnishIO\Client\Response
+ * Class TransferBundleException
+ * @package WishKnish\KnishIO\Client\Exception
+ *
+ * @property string $message
+ * @property integer $code
+ * @property string $file
+ * @property integer $line
  */
-class ResponseMolecule extends Response {
-
+class TransferBundleException extends BaseException {
   /**
-   * @var string
-   */
-  protected string $dataKey = 'data.ProposeMolecule';
-
-  /**
-   * @var mixed
-   */
-  protected mixed $payload;
-
-  /**
-   * Initialization
-   */
-  public function init (): void {
-
-    // Get a json payload
-    $payload_json = array_get( $this->data(), 'payload' );
-
-    // Decode payload
-    try {
-      $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
-    }
-    catch ( JsonException $e ) {
-      // Unable to decode JSON response?
-      /** @TODO Add proper handing of JSON errors */
-    }
-  }
-
-  /**
-   * @return MoleculeStructure|null
-   */
-  public function molecule (): ?MoleculeStructure {
-    if ( !$data = $this->data() ) {
-      return null;
-    }
-
-    $molecule = new MoleculeStructure();
-    $molecule->molecularHash = array_get( $data, 'molecularHash' );
-    $molecule->status = array_get( $data, 'status' );
-    $molecule->createdAt = array_get( $data, 'createdAt' );
-
-    return $molecule;
-  }
-
-  /**
-   * @return string
-   */
-  public function getMolecularHash (): string {
-    return array_get( $this->data(), 'molecularHash' );
-  }
-
-  /**
-   * Success?
+   * TransferBundleException constructor.
    *
-   * @return bool
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public function success (): bool {
-    return ( $this->status() === 'accepted' );
+  public function __construct ( string $message = 'An invalid recipient wallet bundle was provided.', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
-
-  /**
-   * @return string
-   */
-  public function status (): string {
-    return array_get( $this->data(), 'status', 'rejected' );
-  }
-
-  /**
-   * @return string
-   */
-  public function reason (): string {
-    return array_get( $this->data(), 'reason', 'Invalid response from server' );
-  }
-
-  /**
-   * @return mixed
-   */
-  public function payload (): mixed {
-    return $this->payload;
-  }
-
 }

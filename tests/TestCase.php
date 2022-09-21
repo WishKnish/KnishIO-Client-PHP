@@ -1,4 +1,5 @@
-<?php /** @noinspection ForgottenDebugOutputInspection */
+<?php
+/** @noinspection ForgottenDebugOutputInspection */
 
 /*
                                (
@@ -78,31 +79,4 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
     }
     echo $info . "\r\n\r\n";
   }
-
-  /**
-   * Call third-party tests
-   *
-   * @param string $class
-   * @param string $test
-   * @param string $test_dir
-   */
-  protected function callThirdPartyTest ( string $class, string $test, string $test_dir ): void {
-
-    // Server test filepath
-    $server_test_filepath = $test_dir . class_basename( $class ) . '.php';
-
-    // File does not exist
-    if ( !$server_test_filepath || !file_exists( $server_test_filepath ) ) {
-      print_r( "SERVER_TEST_FILE is not defined. Test do not clean up.\r\n" );
-    }
-
-    // Create & run a unit test command
-    else {
-      $command = new Command();
-      $command->run( [ 'phpunit', '--configuration', __DIR__ . '/../' . 'phpunit.xml', '--filter', '/(::' . $test . ')( .*)?$/', $class, $server_test_filepath, '--teamcity', ], false );
-    }
-
-    $this->assertEquals( true, true );
-  }
-
 }

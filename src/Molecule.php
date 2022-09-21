@@ -54,14 +54,13 @@ use JetBrains\PhpStorm\Pure;
 use JsonException;
 use ReflectionException;
 use SodiumException;
-use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
-use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
-use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\TokenSlugFormatException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
-use WishKnish\KnishIO\Client\Libraries\Decimal;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
@@ -203,7 +202,7 @@ class Molecule extends MoleculeStructure {
   protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
     $wallet = $wallet ?: $this->sourceWallet;
 
-    if( $wallet ) {
+    if ( $wallet ) {
       $metas[ 'pubkey' ] = $wallet->pubkey;
       $metas[ 'characters' ] = $wallet->characters;
     }

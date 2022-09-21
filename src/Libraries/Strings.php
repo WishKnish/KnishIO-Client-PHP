@@ -94,7 +94,7 @@ class Strings {
         return random_int( 0, 255 );
       }
       catch ( Exception $e ) {
-        throw new CryptoException($e->getMessage(), $e->getCode(), $e);
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
       }
     }, array_pad( [], $length, 0 ) );
     return implode( array_map( static function ( $int ) use ( $alphabet ) {
