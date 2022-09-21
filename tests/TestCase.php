@@ -52,7 +52,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 use Exception;
-use PHPUnit\TextUI\Command;
 
 /**
  * Class TestCase

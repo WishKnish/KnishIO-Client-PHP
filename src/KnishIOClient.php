@@ -296,7 +296,7 @@ class KnishIOClient {
   /**
    * @param string $secret
    *
-   * @throws Exception
+   * @return void
    */
   public function setSecret ( string $secret ): void {
     $this->secret = $secret;
@@ -357,7 +357,9 @@ class KnishIOClient {
    * @param Wallet|null $remainderWallet
    *
    * @return Molecule
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function createMolecule ( string $secret = null, Wallet $sourceWallet = null, Wallet $remainderWallet = null ): Molecule {
 
@@ -401,7 +403,9 @@ class KnishIOClient {
    * @param Molecule|null $molecule
    *
    * @return MutationProposeMolecule
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
 
@@ -500,7 +504,8 @@ class KnishIOClient {
    * @param string $batchId
    *
    * @return Response
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
    */
   public function queryBatch ( string $batchId ): Response {
 
@@ -848,10 +853,12 @@ class KnishIOClient {
    *
    * @param string $tokenSlug
    * @param string|null $batchId
-   * @param null $molecule
+   * @param $molecule
    *
    * @return Response
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
     /**
@@ -869,7 +876,9 @@ class KnishIOClient {
    * @param string $tokenSlug
    *
    * @return array
-   * @throws Exception|GuzzleException
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function claimShadowWallets ( string $tokenSlug ): array {
     // Get shadow wallet list

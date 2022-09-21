@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
 use JetBrains\PhpStorm\Pure;
 use JsonException;
 use ReflectionException;
@@ -97,7 +96,7 @@ class Molecule extends MoleculeStructure {
    * @param Wallet|null $remainderWallet
    * @param string|null $cellSlug
    *
-   * @throws Exception
+   * @throws SodiumException
    */
   public function __construct ( string $secret, ?Wallet $sourceWallet = null, ?Wallet $remainderWallet = null, ?string $cellSlug = null ) {
     parent::__construct( $cellSlug );

@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
 use JsonException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -129,7 +128,6 @@ class MoleculeStructure {
    * @param int $index
    *
    * @return string
-   * @throws Exception
    */
   public function getBatchId ( int $index ): string {
     $molecularHash = Atom::hashAtoms( $this->atoms );

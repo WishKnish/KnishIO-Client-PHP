@@ -49,7 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use Exception;
 use JsonException;
 use ReflectionException;
 use SodiumException;
@@ -135,7 +134,8 @@ class Crypto {
    * @param string $publicKey
    *
    * @return mixed
-   * @throws SodiumException|JsonException|Exception
+   * @throws JsonException
+   * @throws SodiumException
    */
   public static function decryptMessage ( string $encrypted, string $privateKey, string $publicKey ): mixed {
     return ( new Soda( static::$characters ) )->decrypt( $encrypted, $privateKey, $publicKey );
@@ -159,7 +159,7 @@ class Crypto {
    * @param string $key
    *
    * @return string|null
-   * @throws SodiumException|Exception
+   * @throws SodiumException
    */
   public static function generateEncPublicKey ( string $key ): ?string {
     return ( new Soda( static::$characters ) )->generatePublicKey( $key );
@@ -183,7 +183,6 @@ class Crypto {
    * @param string $key
    *
    * @return string
-   * @throws ReflectionException|Exception
    */
   public static function hashShare ( string $key ): string {
     return ( new Soda( static::$characters ) )->shortHash( $key );
