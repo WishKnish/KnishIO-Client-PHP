@@ -44,7 +44,7 @@
     "simplito/bigint-wrapper-php" : "^1.0",
     "symfony/serializer" : "^5.0",
     "symfony/polyfill-mbstring" : "^1.24",
-    "guzzlehttp/guzzle" : "^7.4",
+    "guzzlehttp/guzzle" : "^7.5",
     "tuupola/base58" : "^2.1",
     "webonyx/graphql-php" : "^14.11"
   },
