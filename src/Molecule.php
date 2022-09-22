@@ -515,15 +515,57 @@ class Molecule extends MoleculeStructure {
     }
 
     // Initializing a new Atom to remove tokens from source
-    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'B', $this->sourceWallet->token, -$amount, $this->sourceWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $firstAtomMetas, null, $this->generateIndex() );
+    $this->atoms[] = new Atom(
+      $this->sourceWallet->position,
+      $this->sourceWallet->address,
+      'B',
+      $this->sourceWallet->token,
+      -$amount,
+      $this->sourceWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $firstAtomMetas,
+      null,
+      $this->generateIndex()
+    );
 
     // Initializing a new Atom to add tokens to recipient
     foreach ( $recipients as $recipientBundle => $recipientAmount ) {
-      $this->atoms[] = new Atom( null, null, 'V', $this->sourceWallet->token, $recipientAmount, $this->sourceWallet->batchId ? Crypto::generateBatchId() : null, 'walletBundle', $recipientBundle, [], null, $this->generateIndex() );
+      $this->atoms[] = new Atom(
+        null,
+        null,
+        'V',
+        $this->sourceWallet->token,
+        $recipientAmount,
+        $this->sourceWallet->batchId ? Crypto::generateBatchId() : null,
+        'walletBundle',
+        $recipientBundle,
+        [],
+        null,
+        $this->generateIndex()
+      );
     }
 
     // Initializing a new Atom to withdraw remainder in a new wallet
-    $this->atoms[] = new Atom( $this->remainderWallet->position, $this->remainderWallet->address, 'B', $this->sourceWallet->token, $this->sourceWallet->balance - $amount, $this->remainderWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( array_merge( $this->tokenUnitMetas( $this->remainderWallet ), [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ] ), $this->remainderWallet ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom(
+      $this->remainderWallet->position,
+      $this->remainderWallet->address,
+      'B',
+      $this->sourceWallet->token,
+      $this->sourceWallet->balance - $amount,
+      $this->remainderWallet->batchId,
+      'walletBundle',
+      $this->sourceWallet->bundle,
+      $this->finalMetas(
+        array_merge(
+          $this->tokenUnitMetas( $this->remainderWallet ),
+          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+        ),
+        $this->remainderWallet
+      ),
+      null,
+      $this->generateIndex()
+    );
 
     $this->atoms = Atom::sortAtoms( $this->atoms );
 
