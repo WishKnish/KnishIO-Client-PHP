@@ -800,6 +800,14 @@ class KnishIOClient {
    */
   public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
+    // No bundle? Use our own
+    $recipientBundle = $recipientBundle ?? $this->getBundle();
+
+    // Check recipient bundle
+    if ( !Crypto::isBundleHash( $recipientBundle ) ) {
+      throw new TransferBundleException();
+    }
+
     // Get a token & init is Stackable flag for batch ID initialization
     $tokenResponse = $this->createQuery( QueryToken::class )
       ->execute( [ 'slug' => $tokenSlug ] );
@@ -827,14 +835,6 @@ class KnishIOClient {
 
       // Specify specific units to request
       $meta[ 'tokenUnits' ] = json_encode( $units );
-    }
-
-    // No bundle? Use our own
-    if ( $recipientBundle === null ) {
-      $recipientBundle = $this->getBundle();
-    }
-    else if ( !Crypto::isBundleHash( $recipientBundle ) ) {
-      throw new TransferBundleException();
     }
 
     // Create a query
