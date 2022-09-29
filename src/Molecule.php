@@ -559,7 +559,7 @@ class Molecule extends MoleculeStructure {
       $this->finalMetas(
         array_merge(
           $this->tokenUnitMetas( $this->remainderWallet ),
-          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+          [ 'tradePairs' => json_encode( $this->remainderWallet->tradePairs ) ]
         ),
         $this->remainderWallet
       ),
