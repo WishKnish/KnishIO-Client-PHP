@@ -972,7 +972,7 @@ class KnishIOClient {
   /**
    * @param string $tokenSlug
    * @param int $amount
-   * @param array $tradingRates
+   * @param array $tradeRates
    * @param Wallet|null $sourceWallet
    *
    * @return Response
@@ -980,7 +980,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function depositBufferToken ( string $tokenSlug, int $amount, array $tradingRates, ?Wallet $sourceWallet = null ): Response {
+  public function depositBufferToken ( string $tokenSlug, int $amount, array $tradeRates, ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
@@ -998,7 +998,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationDepositBufferToken::class, $molecule );
 
     // Init a molecule & execute it
-    $query->fillMolecule( $amount, $tradingRates );
+    $query->fillMolecule( $amount, $tradeRates );
     return $query->execute();
   }
 
