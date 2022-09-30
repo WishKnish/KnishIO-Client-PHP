@@ -100,10 +100,10 @@ class ResponseWalletList extends Response {
       $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
     }
 
-    // Set trade pairs
-    $tradePairs = array_get( $data, 'tradePairs', [] );
-    foreach ( $tradePairs as $tradePair ) {
-      $wallet->tradePairs[ $tradePair[ 'tokenSlug' ] ] = $tradePair[ 'amount' ];
+    // Set trading pairs
+    $tradingPairs = array_get( $data, 'tradingPairs', [] );
+    foreach ( $tradingPairs as $tradingPair ) {
+      $wallet->tradingPairs[ $tradingPair[ 'tokenSlug' ] ] = $tradingPair[ 'amount' ];
     }
 
     $wallet->type = $data[ 'type' ];

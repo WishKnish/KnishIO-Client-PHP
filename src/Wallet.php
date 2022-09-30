@@ -95,7 +95,7 @@ class Wallet {
   /**
    * @var array
    */
-  public array $tradePairs = [];
+  public array $tradingPairs = [];
 
   /**
    * @var int

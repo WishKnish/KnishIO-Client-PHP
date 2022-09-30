@@ -445,16 +445,14 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Initialize deposit buffer (VBV molecule)
-   *
    * @param int $amount
-   * @param array $tokenTradeRates
+   * @param array $tradingRates
    *
-   * @return Molecule
+   * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initDepositBuffer ( int $amount, array $tokenTradeRates ): Molecule {
+  public function initDepositBuffer ( int $amount, array $tradingPairs ): Molecule {
 
     if ( !$this->sourceWallet->hasEnoughBalance( $amount ) ) {
       throw new TransferBalanceException();
@@ -462,7 +460,7 @@ class Molecule extends MoleculeStructure {
 
     // Create a buffer wallet
     $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
-    $bufferWallet->tradePairs = $tokenTradeRates;
+    $bufferWallet->tradingPairs = $tradingPairs;
 
     $this->molecularHash = null;
 
@@ -470,7 +468,7 @@ class Molecule extends MoleculeStructure {
     $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'V', $this->sourceWallet->token, -$amount, $this->sourceWallet->batchId, null, null, $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ), null, $this->generateIndex() );
 
     // Initializing a new Atom to add tokens to recipient
-    $this->atoms[] = new Atom( $bufferWallet->position, $bufferWallet->address, 'B', $this->sourceWallet->token, $amount, $bufferWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( [ 'tradePairs' => json_encode( $bufferWallet->tradePairs ), ], $bufferWallet ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom( $bufferWallet->position, $bufferWallet->address, 'B', $this->sourceWallet->token, $amount, $bufferWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( [ 'tradingPairs' => json_encode( $bufferWallet->tradingPairs ), ], $bufferWallet ), null, $this->generateIndex() );
 
     // Initializing a new Atom to deposit remainder in a new wallet
     $this->atoms[] = new Atom( $this->remainderWallet->position, $this->remainderWallet->address, 'V', $this->sourceWallet->token, $this->sourceWallet->balance - $amount, $this->remainderWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ), null, $this->generateIndex() );
@@ -504,7 +502,7 @@ class Molecule extends MoleculeStructure {
     // First atom metas
     $firstAtomMetas = $this->finalMetas( array_merge(
       $this->tokenUnitMetas( $this->sourceWallet ),
-      [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+      [ 'tradingPairs' => json_encode( $this->sourceWallet->tradingPairs ) ]
     ) );
 
     // Set a metas signing wallet data for molecule reconciliation ability
@@ -559,7 +557,7 @@ class Molecule extends MoleculeStructure {
       $this->finalMetas(
         array_merge(
           $this->tokenUnitMetas( $this->remainderWallet ),
-          [ 'tradePairs' => json_encode( $this->remainderWallet->tradePairs ) ]
+          [ 'tradingPairs' => json_encode( $this->remainderWallet->tradingPairs ) ]
         ),
         $this->remainderWallet
       ),
