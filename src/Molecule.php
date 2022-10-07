@@ -780,7 +780,7 @@ class Molecule extends MoleculeStructure {
   public function initAuthorization ( array $meta = [] ): Molecule {
     $this->molecularHash = null;
 
-    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'U', $this->sourceWallet->token, null, $this->sourceWallet->batchId, null, null, $this->finalMetas( $meta ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'U', 'AUTH', null, $this->sourceWallet->batchId, null, null, $this->finalMetas( $meta ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );

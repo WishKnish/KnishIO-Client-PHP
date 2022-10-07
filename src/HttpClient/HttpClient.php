@@ -68,7 +68,7 @@ class HttpClient extends Client implements HttpClientInterface {
   /**
    * @var string|null
    */
-  private ?string $xAuthToken;
+  private ?string $authToken;
 
   /**
    * @var string
@@ -95,7 +95,7 @@ class HttpClient extends Client implements HttpClientInterface {
   public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
     $this->setUri( $uri );
     $this->cipher = new Cipher();
-    $this->xAuthToken = null;
+    $this->authToken = null;
     $this->config = [ 'base_uri' => $uri, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
 
     // Merge config
@@ -172,14 +172,14 @@ class HttpClient extends Client implements HttpClientInterface {
    * @param string $authToken
    */
   public function setAuthToken ( string $authToken ): void {
-    $this->xAuthToken = $authToken;
+    $this->authToken = $authToken;
   }
 
   /**
    * @return string|null
    */
   public function getAuthToken (): ?string {
-    return $this->xAuthToken;
+    return $this->authToken;
   }
 
   /**
