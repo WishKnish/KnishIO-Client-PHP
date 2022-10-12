@@ -64,7 +64,7 @@ class QueryBalance extends Query {
 
   // Fields
   protected array $fields = [
-    'type', 'address', 'bundleHash', 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', 'tokenUnits' => [ 'id', 'name', 'metas', ], 'tradePairs' => [ 'tokenSlug', 'amount', ],
+    'type', 'address', 'bundleHash', 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', 'tokenUnits' => [ 'id', 'name', 'metas', ], 'tradeRates' => [ 'tokenSlug', 'amount', ],
   ];
 
   /**

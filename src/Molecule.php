@@ -142,28 +142,6 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Encrypt message by source wallet
-   *
-   * @param array $data
-   * @param array $shared_wallets
-   *
-   * @return array
-   * @throws JsonException
-   * @throws ReflectionException
-   * @throws SodiumException
-   */
-  public function encryptMessage ( array $data, array $shared_wallets = [] ): array {
-    // Merge all args to the common list
-    $pubkeys = [];
-    foreach ( $shared_wallets as $shared_wallet ) {
-      $pubkeys[] = $shared_wallet->pubkey;
-    }
-
-    // Call Wallet::encryptMyMessage function
-    return $this->sourceWallet->encryptMyMessage( $data, $this->sourceWallet->pubkey, ...$pubkeys );
-  }
-
-  /**
    * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
    *
    * @return self
@@ -445,16 +423,14 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Initialize deposit buffer (VBV molecule)
-   *
    * @param int $amount
-   * @param array $tokenTradeRates
+   * @param array $tradeRates
    *
-   * @return Molecule
+   * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initDepositBuffer ( int $amount, array $tokenTradeRates ): Molecule {
+  public function initDepositBuffer ( int $amount, array $tradeRates ): Molecule {
 
     if ( !$this->sourceWallet->hasEnoughBalance( $amount ) ) {
       throw new TransferBalanceException();
@@ -462,7 +438,7 @@ class Molecule extends MoleculeStructure {
 
     // Create a buffer wallet
     $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
-    $bufferWallet->tradePairs = $tokenTradeRates;
+    $bufferWallet->tradeRates = $tradeRates;
 
     $this->molecularHash = null;
 
@@ -470,7 +446,7 @@ class Molecule extends MoleculeStructure {
     $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'V', $this->sourceWallet->token, -$amount, $this->sourceWallet->batchId, null, null, $this->finalMetas( $this->tokenUnitMetas( $this->sourceWallet ) ), null, $this->generateIndex() );
 
     // Initializing a new Atom to add tokens to recipient
-    $this->atoms[] = new Atom( $bufferWallet->position, $bufferWallet->address, 'B', $this->sourceWallet->token, $amount, $bufferWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( [ 'tradePairs' => json_encode( $bufferWallet->tradePairs ), ], $bufferWallet ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom( $bufferWallet->position, $bufferWallet->address, 'B', $this->sourceWallet->token, $amount, $bufferWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( [ 'tradeRates' => json_encode( $bufferWallet->tradeRates ), ], $bufferWallet ), null, $this->generateIndex() );
 
     // Initializing a new Atom to deposit remainder in a new wallet
     $this->atoms[] = new Atom( $this->remainderWallet->position, $this->remainderWallet->address, 'V', $this->sourceWallet->token, $this->sourceWallet->balance - $amount, $this->remainderWallet->batchId, 'walletBundle', $this->sourceWallet->bundle, $this->finalMetas( $this->tokenUnitMetas( $this->remainderWallet ), $this->remainderWallet ), null, $this->generateIndex() );
@@ -504,7 +480,7 @@ class Molecule extends MoleculeStructure {
     // First atom metas
     $firstAtomMetas = $this->finalMetas( array_merge(
       $this->tokenUnitMetas( $this->sourceWallet ),
-      [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+      [ 'tradeRates' => json_encode( $this->sourceWallet->tradeRates ) ]
     ) );
 
     // Set a metas signing wallet data for molecule reconciliation ability
@@ -559,7 +535,7 @@ class Molecule extends MoleculeStructure {
       $this->finalMetas(
         array_merge(
           $this->tokenUnitMetas( $this->remainderWallet ),
-          [ 'tradePairs' => json_encode( $this->sourceWallet->tradePairs ) ]
+          [ 'tradeRates' => json_encode( $this->remainderWallet->tradeRates ) ]
         ),
         $this->remainderWallet
       ),
@@ -782,7 +758,7 @@ class Molecule extends MoleculeStructure {
   public function initAuthorization ( array $meta = [] ): Molecule {
     $this->molecularHash = null;
 
-    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'U', $this->sourceWallet->token, null, $this->sourceWallet->batchId, null, null, $this->finalMetas( $meta ), null, $this->generateIndex() );
+    $this->atoms[] = new Atom( $this->sourceWallet->position, $this->sourceWallet->address, 'U', 'AUTH', null, $this->sourceWallet->batchId, null, null, $this->finalMetas( $meta ), null, $this->generateIndex() );
 
     // User remainder atom
     $this->addUserRemainderAtom( $this->remainderWallet );

@@ -64,16 +64,6 @@ class ResponseQueryUserActivity extends Response {
    * @return mixed
    */
   public function payload (): mixed {
-
-    /*
-    const data = JSON.parse( JSON.stringify( this.data() ) );
-    if ( data.instances ) {
-    for ( const datum of data.instances ) {
-            datum.jsonData = JSON.parse( datum.jsonData );
-          }
-    }
-    */
-
     return $this->data();
   }
 

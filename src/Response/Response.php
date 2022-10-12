@@ -72,7 +72,7 @@ class Response {
   /**
    * @var string
    */
-  protected string $origin_response;
+  protected string $originResponse;
 
   /**
    * @var mixed
@@ -98,7 +98,7 @@ class Response {
     $this->query = $query;
 
     // Origin response
-    $this->origin_response = $json;
+    $this->originResponse = $json;
 
     // Json decode
     $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );

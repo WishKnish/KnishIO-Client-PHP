@@ -64,7 +64,7 @@ class QueryWalletList extends Query {
 
   // Fields
   protected array $fields = [
-    'type', 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenUnits' => [ 'id', 'name', 'metas', ], 'tradePairs' => [ 'tokenSlug', 'amount', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt',
+    'type', 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenUnits' => [ 'id', 'name', 'metas', ], 'tradeRates' => [ 'tokenSlug', 'amount', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt',
   ];
 
   /**

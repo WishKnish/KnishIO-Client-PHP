@@ -55,20 +55,13 @@ use Throwable;
  * Interface BaseExceptionInterface
  * @package WishKnish\KnishIO\Client\Exception
  */
-interface BaseExceptionInterface {
-  public function getMessage ();
+interface BaseExceptionInterface extends Throwable {
 
-  public function getCode ();
-
-  public function getFile ();
-
-  public function getLine ();
-
-  public function getTrace ();
-
-  public function getTraceAsString ();
-
-  public function __toString ();
-
+  /**
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
+   */
   public function __construct ( string $message, int $code = 0, Throwable $previous = null );
+
 }

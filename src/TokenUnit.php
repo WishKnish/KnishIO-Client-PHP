@@ -76,7 +76,7 @@ class TokenUnit {
    */
   public static function createFromDB ( array|string $data ): self {
 
-    // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
+    // !!! @todo supports wrong token creation with simple array: need to be deleted after db clearing
     if ( !is_array( $data ) ) {
       return new self( $data );
     }
