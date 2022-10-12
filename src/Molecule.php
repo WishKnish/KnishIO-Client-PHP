@@ -142,28 +142,6 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Encrypt message by source wallet
-   *
-   * @param array $data
-   * @param array $shared_wallets
-   *
-   * @return array
-   * @throws JsonException
-   * @throws ReflectionException
-   * @throws SodiumException
-   */
-  public function encryptMessage ( array $data, array $shared_wallets = [] ): array {
-    // Merge all args to the common list
-    $pubkeys = [];
-    foreach ( $shared_wallets as $shared_wallet ) {
-      $pubkeys[] = $shared_wallet->pubkey;
-    }
-
-    // Call Wallet::encryptMyMessage function
-    return $this->sourceWallet->encryptMyMessage( $data, $this->sourceWallet->pubkey, ...$pubkeys );
-  }
-
-  /**
    * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
    *
    * @return self

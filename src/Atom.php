@@ -114,7 +114,7 @@ class Atom {
 
     $this->metaType = $metaType;
     $this->metaId = $metaId;
-    $this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
+    $this->meta = $meta ? Meta::normalize( $meta ) : [];
 
     $this->index = $index;
     $this->otsFragment = $otsFragment;
@@ -236,7 +236,7 @@ class Atom {
    * @return array
    */
   public function aggregatedMeta (): array {
-    return Meta::aggregateMeta( $this->meta );
+    return Meta::aggregate( $this->meta );
   }
 
   /**
@@ -252,7 +252,7 @@ class Atom {
     if ( !$this->meta && $property === 'metasJson' ) {
       $metas = json_decode( $value, true );
       if ( $metas !== null ) {
-        $this->meta = Meta::normalizeMeta( $metas );
+        $this->meta = Meta::normalize( $metas );
       }
     } // Default meta set
     else {

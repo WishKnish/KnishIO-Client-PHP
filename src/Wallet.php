@@ -57,7 +57,9 @@ use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class Wallet
@@ -77,6 +79,7 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  *
  */
 class Wallet {
+
   /**
    * @var string|null
    */
@@ -150,6 +153,11 @@ class Wallet {
   /**
    * @var string|null
    */
+  public ?string $characters;
+
+  /**
+   * @var string|null
+   */
   private ?string $privkey = null;
 
   /**
@@ -158,32 +166,48 @@ class Wallet {
   public ?string $createdAt = null;
 
   /**
+   * @var Soda|null
+   */
+  protected ?Soda $soda = null;
+
+  /**
    * Wallet constructor.
    *
    * @param string|null $secret
    * @param string $token
    * @param string|null $position
    * @param string|null $batchId
-   * @param string|null $characters
+   * @param string $characters
    *
    * @throws SodiumException
    */
   public function __construct ( string $secret = null, string $token = 'USER', string $position = null, string $batchId = null, string $characters = null ) {
     $this->token = $token;
-    $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
     $this->batchId = $batchId;
     $this->characters = $characters ?? 'BASE64';
     $this->position = $position;
 
     if ( $secret ) {
 
+      // Set bundle from the secret
+      $this->bundle = Crypto::generateBundleHash( $secret );
+
       // Generate a position for non-shadow wallet if not initialized
       $this->position = $this->position ?? static::generateWalletPosition();
 
-      $this->prepareKeys( $secret );
+      // Key & address initialization
+      $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
+      $this->address = static::generateWalletAddress( $this->key );
 
+      // Soda object initialization
+      $this->soda = new Soda( $this->characters );
+
+      // Private & pubkey initialization
+      $this->privkey = $this->soda->generatePrivateKey( $this->key );
+      $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
     }
   }
+
 
   /**
    * @param string $secretOrBundle
@@ -282,22 +306,6 @@ class Wallet {
   }
 
   /**
-   * @param string $secret
-   *
-   * @throws SodiumException
-   */
-  public function prepareKeys ( string $secret ): void {
-    if ( $this->key === null && $this->address === null ) {
-
-      $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
-      $this->address = static::generateWalletAddress( $this->key );
-      $this->getMyEncPrivateKey();
-      $this->getMyEncPublicKey();
-
-    }
-  }
-
-  /**
    * @param int $saltLength
    *
    * @return string
@@ -338,46 +346,6 @@ class Wallet {
   }
 
   /**
-   * Derives a private key for encrypting data with this wallet's key
-   *
-   * @return string|null
-   * @throws SodiumException
-   */
-  public function getMyEncPrivateKey (): ?string {
-
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
-    }
-
-    if ( $this->privkey === null && $this->key !== null ) {
-      $this->privkey = Crypto::generateEncPrivateKey( $this->key );
-    }
-
-    return $this->privkey;
-  }
-
-  /**
-   * Derives a public key for encrypting data for this wallet's consumption
-   *
-   * @return string|null
-   * @throws SodiumException
-   */
-  public function getMyEncPublicKey (): ?string {
-
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
-    }
-
-    $privateKey = $this->getMyEncPrivateKey();
-
-    if ( $this->pubkey === null && $privateKey !== null ) {
-      $this->pubkey = Crypto::generateEncPublicKey( $privateKey );
-    }
-
-    return $this->pubkey;
-  }
-
-  /**
    * @param string $message
    * @param ...$pubkeys
    *
@@ -387,7 +355,7 @@ class Wallet {
    * @throws SodiumException
    */
   public function encryptBinary ( string $message, ...$pubkeys ): array {
-    return $this->encryptMyMessage( base64_encode( $message ), ...$pubkeys );
+    return $this->encryptMessage( base64_encode( $message ), ...$pubkeys );
   }
 
   /**
@@ -399,7 +367,7 @@ class Wallet {
    * @throws SodiumException
    */
   public function decryptBinary ( array|string $message ): mixed {
-    $decrypt = $this->decryptMyMessage( $message );
+    $decrypt = $this->decryptMessage( $message );
 
     if ( $decrypt !== null ) {
       $decrypt = base64_decode( $decrypt, true );
@@ -421,16 +389,16 @@ class Wallet {
    * @throws ReflectionException
    * @throws SodiumException
    */
-  public function encryptMyMessage ( mixed $message, ...$pubkeys ): array {
+  public function encryptMessage ( mixed $message, ...$pubkeys ): array {
 
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
+    if ( !$this->soda ) {
+      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
     }
 
     $encrypt = [];
-
     foreach ( $pubkeys as $pubkey ) {
-      $encrypt[ Crypto::hashShare( $pubkey ) ] = Crypto::encryptMessage( $message, $pubkey );
+      // $pubkey = $pubkey instanceof self ? $pubkey->pubkey : $pubkey; // Can use a list of wallets
+      $encrypt[ $this->soda->shortHash( $pubkey ) ] = $this->soda->encrypt( $message, $pubkey );
     }
 
     return $encrypt;
@@ -446,27 +414,25 @@ class Wallet {
    * @throws ReflectionException
    * @throws SodiumException
    */
-  public function decryptMyMessage ( array|string $message ): mixed {
+  public function decryptMessage ( array|string $message ): mixed {
 
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
+    if ( !$this->soda ) {
+      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
     }
-
-    $pubkey = $this->getMyEncPublicKey();
 
     $encrypted = $message;
     if ( is_array( $message ) ) {
 
-      $hash = Crypto::hashShare( $pubkey );
+      $hash = $this->soda->shortHash( $this->pubkey );
 
       if ( !array_key_exists( $hash, $message ) ) {
-        throw new CodeException( 'Wallet::decryptMyMessage - hash does not found for the wallet\'s pubkey.' );
+        throw new CodeException( 'Wallet::decryptMessage - hash does not found for the wallet\'s pubkey.' );
       }
 
       $encrypted = $message[ $hash ];
     }
 
-    return Crypto::decryptMessage( $encrypted, $this->getMyEncPrivateKey(), $pubkey );
+    return $this->soda->decrypt( $encrypted, $this->privkey, $this->pubkey );
   }
 
   /**
