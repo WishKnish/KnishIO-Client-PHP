@@ -68,7 +68,6 @@ class MoleculeStructure {
   use Json;
 
   public ?string $molecularHash;
-  public ?string $cellSlug;
   public ?string $counterparty = null;
   public ?string $bundle;
   public ?string $status;
@@ -199,12 +198,12 @@ class MoleculeStructure {
   }
 
   /**
-   * MoleculeStructure constructor.
-   *
    * @param string|null $cellSlug
    */
-  public function __construct ( string $cellSlug = null ) {
-    $this->cellSlug = $cellSlug;
+  public function __construct (
+    public ?string $cellSlug = null
+  ) {
+
   }
 
   /**

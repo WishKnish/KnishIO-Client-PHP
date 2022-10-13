@@ -74,24 +74,16 @@ use WishKnish\KnishIO\Client\Traits\Json;
  *
  */
 class Atom {
+
   use Json;
 
-  public ?string $position;
-  public ?string $walletAddress;
-  public string $isotope;
-  public ?string $token;
-  public ?string $value;
-  public ?string $batchId;
-  public ?string $metaType;
-  public ?string $metaId;
-  public array $meta = [];
-  public ?int $index;
-  public ?string $otsFragment;
+
+  /**
+   * @var string
+   */
   public string $createdAt;
 
   /**
-   * Atom constructor.
-   *
    * @param string|null $position
    * @param string|null $walletAddress
    * @param string $isotope
@@ -100,25 +92,74 @@ class Atom {
    * @param string|null $batchId
    * @param string|null $metaType
    * @param string|null $metaId
-   * @param array|null $meta
+   * @param array $meta
    * @param string|null $otsFragment
-   * @param integer|null $index
+   * @param int|null $index
    */
-  public function __construct ( ?string $position, ?string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
-    $this->position = $position;
-    $this->walletAddress = $walletAddress;
-    $this->isotope = $isotope;
-    $this->token = $token;
-    $this->value = $value;
-    $this->batchId = $batchId;
+  public function __construct (
+    public ?string $position,
+    public ?string $walletAddress,
+    public string $isotope,
+    public ?string $token = null,
+    public ?string $value = null,
+    public ?string $batchId = null,
+    public ?string $metaType = null,
+    public ?string $metaId = null,
+    public array $meta = [],
+    public ?string $otsFragment = null,
+    public ?int $index = null,
+  ) {
 
-    $this->metaType = $metaType;
-    $this->metaId = $metaId;
-    $this->meta = $meta ? Meta::normalize( $meta ) : [];
+    // Normalize meta
+    if ( $this->meta ) {
+      $this->meta = Meta::normalize( $this->meta );
+    }
 
-    $this->index = $index;
-    $this->otsFragment = $otsFragment;
+    // Set created at
     $this->createdAt = Strings::currentTimeMillis();
+  }
+
+  /**
+   * @param Wallet $wallet
+   * @param string $isotope
+   * @param int $value
+   * @param int $index
+   * @param string|null $metaType
+   * @param string|null $metaId
+   * @param array $metas
+   *
+   * @return static
+   * @throws \JsonException
+   */
+  public static function create(
+    Wallet $wallet,
+    string $isotope,
+    int $value,
+    string $metaType = null,
+    string $metaId = null,
+    array $metas = [],
+    int $index = null,
+  ): self {
+
+    // Add extra keys to the metas array
+    $metas = ( new AtomMeta( $metas ) )
+      ->addWallet( $wallet )
+      ->get();
+
+    // Create the final atom's object
+    return new Atom(
+      $wallet->position,
+      $wallet->address,
+      $isotope,
+      $wallet->token,
+      $value,
+      $wallet->batchId,
+      $metaType,
+      $metaId,
+      $metas,
+      null,
+      $index
+    );
   }
 
   /**
@@ -221,14 +262,9 @@ class Atom {
    * @return array
    */
   public static function sortAtoms ( array $atoms = [] ): array {
-
     usort( $atoms, static function ( $atom1, $atom2 ) {
-      if ( $atom1->index === $atom2->index ) {
-        return 0;
-      }
       return $atom1->index < $atom2->index ? -1 : 1;
     } );
-
     return $atoms;
   }
 

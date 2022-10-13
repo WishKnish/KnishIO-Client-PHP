@@ -59,7 +59,6 @@ use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
-use WishKnish\KnishIO\Helpers\TimeLogger;
 
 /**
  * Class Wallet
@@ -67,38 +66,21 @@ use WishKnish\KnishIO\Helpers\TimeLogger;
  *
  * @property string $position
  * @property string $token
+ * @property string|null $batchId
+ * @property string|null $characters
  * @property string|null $key
  * @property string|null $address
- * @property float $balance
- * @property array $molecules
+ * @property int $balance
+ * @property string|null $type
  * @property string|null $bundle
  * @property string|null $privkey
  * @property string|null $pubkey
- * @property string|null $batchId
- * @property string|null $characters
- *
+ * @property string|null $createdAt
+ * @property array $tokenUnits
+ * @property array $tradeRates
+ * @property Soda $soda
  */
 class Wallet {
-
-  /**
-   * @var string|null
-   */
-  public ?string $batchId = null;
-
-  /**
-   * @var array
-   */
-  public array $molecules = [];
-
-  /**
-   * @var array
-   */
-  public array $tokenUnits = [];
-
-  /**
-   * @var array
-   */
-  public array $tradeRates = [];
 
   /**
    * @var int
@@ -113,32 +95,12 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $position = null;
-
-  /**
-   * @var string|null
-   */
   public ?string $bundle = null;
 
   /**
    * @var string|null
    */
   public ?string $type = null;
-
-  /**
-   * @var string
-   */
-  public string $token;
-
-  /**
-   * @var string|null
-   */
-  public ?string $tokenName = null;
-
-  /**
-   * @var string|null
-   */
-  public ?string $tokenSupply = null;
 
   /**
    * @var string|null
@@ -153,11 +115,6 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $characters;
-
-  /**
-   * @var string|null
-   */
   private ?string $privkey = null;
 
   /**
@@ -166,26 +123,40 @@ class Wallet {
   public ?string $createdAt = null;
 
   /**
+   * @var array
+   */
+  public array $tokenUnits = [];
+
+  /**
+   * @var array
+   */
+  public array $tradeRates = [];
+
+  /**
    * @var Soda|null
    */
   protected ?Soda $soda = null;
 
+
   /**
-   * Wallet constructor.
-   *
    * @param string|null $secret
    * @param string $token
    * @param string|null $position
    * @param string|null $batchId
-   * @param string $characters
+   * @param string|null $characters
    *
    * @throws SodiumException
    */
-  public function __construct ( string $secret = null, string $token = 'USER', string $position = null, string $batchId = null, string $characters = null ) {
-    $this->token = $token;
-    $this->batchId = $batchId;
-    $this->characters = $characters ?? 'BASE64';
-    $this->position = $position;
+  public function __construct (
+    string $secret = null,
+    public string $token = 'USER',
+    public ?string $position = null,
+    public ?string $batchId = null,
+    public ?string $characters = null
+  ) {
+
+    $this->characters = $this->characters ?? 'BASE64';
+
 
     if ( $secret ) {
 
