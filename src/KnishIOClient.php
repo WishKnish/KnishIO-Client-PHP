@@ -847,7 +847,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $tokenSlug, $amount, 'walletBundle', $recipientBundle, $meta, $batchId );
+    $query->fillMolecule( $tokenSlug, $amount, $recipientBundle, $meta, $batchId );
 
     // Return a query execution result
     return $query->execute();

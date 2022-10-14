@@ -104,6 +104,24 @@ class AtomMeta {
   }
 
   /**
+   * @param Wallet $signingWallet
+   *
+   * @return $this
+   * @throws \JsonException
+   */
+  public function addSigningWallet( Wallet $signingWallet ): self {
+    $this->merge( [
+      'signingWallet' => json_encode( [
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
+      ], JSON_THROW_ON_ERROR ),
+    ] );
+    return $this;
+  }
+
+  /**
    * @return array
    */
   public function get(): array {

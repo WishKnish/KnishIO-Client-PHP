@@ -123,7 +123,6 @@ class Atom {
    * @param Wallet $wallet
    * @param string $isotope
    * @param int $value
-   * @param int $index
    * @param string|null $metaType
    * @param string|null $metaId
    * @param array $metas
@@ -134,17 +133,17 @@ class Atom {
   public static function create(
     Wallet $wallet,
     string $isotope,
-    int $value,
+    string $value = null,
     string $metaType = null,
     string $metaId = null,
-    array $metas = [],
-    int $index = null,
+    AtomMeta $meta = null,
+    string $batchId = null,
   ): self {
 
-    // Add extra keys to the metas array
-    $metas = ( new AtomMeta( $metas ) )
-      ->addWallet( $wallet )
-      ->get();
+    // If meta is not passed - create it
+    if ( !$meta ) {
+      $meta = new AtomMeta;
+    }
 
     // Create the final atom's object
     return new Atom(
@@ -153,12 +152,11 @@ class Atom {
       $isotope,
       $wallet->token,
       $value,
-      $wallet->batchId,
+      $batchId ?? $wallet->batchId,
       $metaType,
       $metaId,
-      $metas,
-      null,
-      $index
+      $meta->addWallet( $wallet )
+        ->get(),
     );
   }
 
