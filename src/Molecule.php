@@ -188,52 +188,7 @@ class Molecule extends MoleculeStructure {
 
     return $this;
   }
-
-  /**
-   * @param array $metas
-   * @param Wallet|null $wallet
-   *
-   * @return array
-   */
-  protected function finalMetas ( array $metas = [], Wallet $wallet = null ): array {
-    $wallet = $wallet ?: $this->sourceWallet;
-
-    if ( $wallet ) {
-      $metas[ 'pubkey' ] = $wallet->pubkey;
-      $metas[ 'characters' ] = $wallet->characters;
-    }
-
-    return $metas;
-  }
-
-  /**
-   * @param array $metas
-   * @param null $context
-   *
-   * @return array
-   */
-  protected function contextMetas ( array $metas = [], $context = null ): array {
-    // Add context key if it is enabled
-    if ( $context ) {
-      $metas[ 'context' ] = $context;
-    }
-    return $metas;
-  }
-
-  /**
-   * @param Wallet $wallet
-   * @param array $metas
-   *
-   * @return array
-   * @throws JsonException
-   */
-  protected function tokenUnitMetas ( Wallet $wallet, array $metas = [] ): array {
-    // Add regular token units meta key
-    if ( $wallet->tokenUnits ) {
-      $metas[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
-    }
-    return $metas;
-  }
+  
 
   /**
    * @param string $metaType
