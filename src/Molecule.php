@@ -188,7 +188,7 @@ class Molecule extends MoleculeStructure {
 
     return $this;
   }
-  
+
 
   /**
    * @param string $metaType

@@ -106,17 +106,12 @@ class HttpClient extends Client implements HttpClientInterface {
   }
 
   /**
+   * @param bool $encrypt
    *
+   * @return void
    */
-  public function enableEncryption (): void {
-    $this->config[ 'encrypt' ] = true;
-  }
-
-  /**
-   *
-   */
-  public function disableEncryption (): void {
-    $this->config[ 'encrypt' ] = false;
+  public function setEncryption( bool $encrypt ): void {
+    $this->config[ 'encrypt' ] = $encrypt;
   }
 
   /**
