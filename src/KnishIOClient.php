@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use JetBrains\PhpStorm\Pure;
 use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
@@ -142,46 +141,10 @@ class KnishIOClient {
   private array $uris = [];
 
   /**
-   * @var array
-   */
-  private array $authTokenObjects = [];
-
-  /**
    * @var AuthToken|null
    */
   private ?AuthToken $authToken;
 
-  /**
-   * @param Wallet $sourceWallet
-   * @param array|null $sendTokenUnits
-   *
-   * @return array
-   */
-  #[Pure]
-  public static function splitTokenUnits ( Wallet $sourceWallet, ?array $sendTokenUnits ): array {
-
-    // Not a token units transfer
-    if ( $sendTokenUnits === null ) {
-      return [ 0, [], [] ];
-    }
-
-    // Calculate amount
-    $amount = count( $sendTokenUnits );
-
-    // Init recipient & remainder token units
-    $recipientTokenUnits = [];
-    $remainderTokenUnits = [];
-    foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
-        $recipientTokenUnits[] = $tokenUnit;
-      }
-      else {
-        $remainderTokenUnits[] = $tokenUnit;
-      }
-    }
-
-    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
-  }
 
   /**
    * KnishIOClient constructor.
@@ -206,32 +169,11 @@ class KnishIOClient {
 
     // Init uris
     $this->uris = is_array( $uri ) ? $uri : [ $uri ];
-    foreach ( $this->uris as $uriKey ) {
-      $this->authTokenObjects[ $uriKey ] = null; // @todo remove this code if it is not required!
-    }
 
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
   }
 
-  /**
-   * @param bool $encrypt
-   *
-   * @return bool
-   */
-  public function switchEncryption ( bool $encrypt ): bool {
-    if ( $this->hasEncryption() === $encrypt ) {
-      return false;
-    }
-
-    if ( $encrypt ) {
-      $this->enableEncryption();
-    }
-    else {
-      $this->disableEncryption();
-    }
-    return true;
-  }
 
   /**
    * Get random uri from specified $this->uris
@@ -303,23 +245,6 @@ class KnishIOClient {
     $this->bundle = Crypto::generateBundleHash( $secret );
   }
 
-  /**
-   * @return bool
-   */
-  public function hasEncryption (): bool {
-    return $this->client()
-      ->hasEncryption();
-  }
-
-  public function enableEncryption (): void {
-    $this->client()
-      ->enableEncryption();
-  }
-
-  public function disableEncryption (): void {
-    $this->client()
-      ->disableEncryption();
-  }
 
   /**
    * @return string|null
@@ -847,7 +772,7 @@ class KnishIOClient {
     $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
     // Init a molecule
-    $query->fillMolecule( $tokenSlug, $amount, 'walletBundle', $recipientBundle, $meta, $batchId );
+    $query->fillMolecule( $tokenSlug, $amount, $recipientBundle, $meta, $batchId );
 
     // Return a query execution result
     return $query->execute();
@@ -1304,8 +1229,8 @@ class KnishIOClient {
     // Response for request guest/profile auth token
     $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );
 
-    // Switch encryption
-    $this->switchEncryption( $encrypt );
+    // Set encryption
+    $this->client()->setEncryption( $encrypt );
 
     // Return full response
     return $response;
@@ -1322,9 +1247,6 @@ class KnishIOClient {
     if ( !$authToken ) {
       return;
     }
-
-    // Save auth token object to global list
-    $this->authTokenObjects[ $this->uri() ] = $authToken;
 
     // Set auth data to apollo client
     $this->client()

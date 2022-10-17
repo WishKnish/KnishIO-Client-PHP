@@ -11,11 +11,9 @@ use SodiumException;
  */
 class AuthToken {
 
-  protected string $token;
-  protected string $expiresAt;
-  protected string $pubkey;
-  protected bool $encrypt;
-
+  /**
+   * @var Wallet|null
+   */
   protected ?Wallet $wallet;
 
   /**
@@ -46,18 +44,18 @@ class AuthToken {
   }
 
   /**
-   * AuthToken constructor.
-   *
    * @param string $token
    * @param string $expiresAt
    * @param string $pubkey
    * @param bool $encrypt
    */
-  public function __construct ( string $token, string $expiresAt, string $pubkey, bool $encrypt ) {
-    $this->token = $token;
-    $this->expiresAt = $expiresAt;
-    $this->pubkey = $pubkey;
-    $this->encrypt = $encrypt;
+  public function __construct (
+    protected string $token,
+    protected string $expiresAt,
+    protected string $pubkey,
+    protected bool $encrypt,
+  ) {
+
   }
 
   /**
@@ -78,7 +76,7 @@ class AuthToken {
    * @return array
    */
   #[ArrayShape( [
-    'token' => "string", 'expiresAt' => "int|null", 'pubkey' => "string", 'encrypt' => "bool", 'wallet' => "array"
+    'token' => "string", 'expiresAt' => "string", 'pubkey' => "string", 'encrypt' => "bool", 'wallet' => "array"
   ] )]
   public function getSnapshot (): array {
     return [
@@ -127,7 +125,7 @@ class AuthToken {
    */
   #[Pure]
   #[ArrayShape( [
-    'token' => "mixed|string", 'pubkey' => "mixed|string", 'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+    'token' => "string", 'pubkey' => "string", 'wallet' => "\WishKnish\KnishIO\Client\Wallet"
   ] )]
   public function getAuthData (): array {
     return [

@@ -47,35 +47,84 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Mutation;
-
-use JsonException;
+namespace WishKnish\KnishIO\Client;
 
 /**
- * Class MutationRequestTokens
- * @package WishKnish\KnishIO\Client\Mutation
+ *
  */
-class MutationRequestTokens extends MutationProposeMolecule {
+class AtomMeta {
 
   /**
-   * @param string $tokenSlug
-   * @param $requestedAmount
-   * @param string $metaType
-   * @param string $metaId
-   * @param array $metas
-   * @param string|null $batchId
+   * @param array $meta
+   */
+  public function __construct(
+    private array $meta = [],
+  ) {
+
+  }
+
+  /**
+   * @param array $meta
    *
    * @return $this
-   * @throws JsonException
    */
-  public function fillMolecule ( string $tokenSlug, $requestedAmount, string $recipientBundle, array $metas = [], ?string $batchId = null ): MutationRequestTokens {
-
-    // Fill the molecule
-    $this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $recipientBundle, $metas, $batchId );
-    $this->molecule->sign();
-    $this->molecule->check();
-
+  public function merge( array $meta ): self {
+    $this->meta = array_merge( $this->meta, $meta );
     return $this;
   }
 
+  /**
+   * @param string $context
+   *
+   * @return $this
+   */
+  public function addContext( string $context ): self {
+    $this->merge( [ 'context' => $context ] );
+    return $this;
+  }
+
+  /**
+   * @param Wallet $wallet
+   *
+   * @return void
+   */
+  public function addWallet( Wallet $wallet ): self {
+    $walletMeta = [
+      'pubkey' => $wallet->pubkey,
+      'characters' => $wallet->characters,
+    ];
+    if ( $wallet->tokenUnits ) {
+      $walletMeta[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+    }
+    if ( $wallet->tradeRates ) {
+      $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
+    }
+    $this->merge( $walletMeta );
+    return $this;
+  }
+
+  /**
+   * @param Wallet $signingWallet
+   *
+   * @return $this
+   * @throws \JsonException
+   */
+  public function addSigningWallet( Wallet $signingWallet ): self {
+    $this->merge( [
+      'signingWallet' => json_encode( [
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
+      ], JSON_THROW_ON_ERROR ),
+    ] );
+    return $this;
+  }
+
+  /**
+   * @return array
+   */
+  public function get(): array {
+    return $this->meta;
+  }
 }

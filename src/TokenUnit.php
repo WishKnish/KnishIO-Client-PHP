@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client;
 
+use JetBrains\PhpStorm\Pure;
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
 
@@ -10,6 +11,38 @@ use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
  * @package WishKnish\KnishIO\Client
  */
 class TokenUnit {
+
+  /**
+   * @param Wallet $sourceWallet
+   * @param array|null $sendTokenUnits
+   *
+   * @return array
+   */
+  #[Pure]
+  public static function split ( Wallet $sourceWallet, ?array $sendTokenUnits ): array {
+
+    // Not a token units transfer
+    if ( $sendTokenUnits === null ) {
+      return [ 0, [], [] ];
+    }
+
+    // Calculate amount
+    $amount = count( $sendTokenUnits );
+
+    // Init recipient & remainder token units
+    $recipientTokenUnits = [];
+    $remainderTokenUnits = [];
+    foreach ( $sourceWallet->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
+        $recipientTokenUnits[] = $tokenUnit;
+      }
+      else {
+        $remainderTokenUnits[] = $tokenUnit;
+      }
+    }
+
+    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
+  }
 
   /**
    * @param array $tokenUnits
