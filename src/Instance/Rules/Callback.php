@@ -13,7 +13,11 @@ class Callback implements JsonSerializable {
     public string $action,
     public ?string $metaType = null,
     public ?string $metaId = null,
-    public ?Meta $meta = null
+    public ?Meta $meta = null,
+    public ?string $address = null,
+    public ?string $token = null,
+    public ?string $amount = null,
+    public ?string $comparison = null
   ) {
   }
 
@@ -41,6 +45,22 @@ class Callback implements JsonSerializable {
       $callback->meta = $callback->meta instanceof Meta ? $callback->meta : Meta::arrayToObject( $data[ 'meta' ] );
     }
 
+    if ( array_key_exists('address', $data ) ) {
+      $callback->address = $data[ 'address' ];
+    }
+
+    if ( array_key_exists('token', $data ) ) {
+      $callback->token = $data[ 'token' ];
+    }
+
+    if ( array_key_exists('amount', $data ) ) {
+      $callback->amount = $data[ 'amount' ];
+    }
+
+    if ( array_key_exists('comparison', $data ) ) {
+      $callback->comparison = $data[ 'comparison' ];
+    }
+
     return $callback;
   }
 
@@ -64,7 +84,61 @@ class Callback implements JsonSerializable {
       $normalize[ 'meta' ] = is_array( $object->meta ) ? $object->meta : Meta::toArray( $object->meta );
     }
 
+    if ( $object->address ) {
+      $normalize[ 'address' ] = $object->address;
+    }
+
+    if ( $object->token ) {
+      $normalize[ 'token' ] = $object->token;
+    }
+
+    if ( $object->metaId ) {
+      $normalize[ 'amount' ] = $object->amount;
+    }
+
+    if ( $object->metaId ) {
+      $normalize[ 'comparison' ] = $object->comparison;
+    }
+
     return $normalize;
+  }
+
+  private function is ( string $type ): bool {
+    return strtolower( $this->action ) === strtolower( $type );
+  }
+
+  public function isReject (): bool {
+    return $this->is( 'reject' );
+  }
+
+  public function isMeta (): bool {
+    $prop = array_intersect(['action', 'metaId', 'metaType', 'meta'], array_keys($this->jsonSerialize()));
+
+    return count( $prop ) === 4 && $this->is( 'meta' );
+  }
+
+  public function isCollect (): bool {
+    $prop = array_intersect(['action', 'address', 'token', 'amount', 'comparison'], array_keys($this->jsonSerialize()));
+
+    return count( $prop ) === 5 && $this->is( 'collect' );
+  }
+
+  public function isBuffer (): bool {
+    $prop = array_intersect(['action', 'address', 'token', 'amount', 'comparison'], array_keys($this->jsonSerialize()));
+
+    return count( $prop ) === 5 && $this->is( 'buffer' );
+  }
+
+  public function isRemit (): bool {
+    $prop = array_intersect(['action', 'token', 'amount'], array_keys($this->jsonSerialize()));
+
+    return count( $prop ) === 3 && $this->is( 'buffer' );
+  }
+
+  public function isBurn (): bool {
+    $prop = array_intersect(['action', 'token', 'amount', 'comparison'], array_keys($this->jsonSerialize()));
+
+    return count( $prop ) === 4 && $this->is( 'buffer' );
   }
 
   /**

@@ -78,15 +78,17 @@ class MoleculeStructure {
 
 
   /**
-   * @param string $isotope
+   * @param string|array $isotope
    * @param array $atoms
    *
    * @return array
    */
-  public static function isotopeFilter ( string $isotope, array $atoms ): array {
+  public static function isotopeFilter ( string|array $isotope, array $atoms ): array {
     $result = [];
+    $search = is_array($isotope) ? $isotope : [ $isotope ];
+
     foreach( $atoms as $atom ) {
-      if ( $atom->isotope === $isotope ) {
+      if ( in_array( $atom->isotope, $search ) ) {
         $result[] = $atom;
       }
     }

@@ -121,6 +121,21 @@ class Atom {
     $this->createdAt = Strings::currentTimeMillis();
   }
 
+  private static function molecularHashSchema (): array {
+    return [
+      'position' => null,
+      'walletAddress' => null,
+      'isotope' => null,
+      'token' => null,
+      'value' => null,
+      'batchId' => null,
+      'metaType' => null,
+      'metaId' => null,
+      'meta' => null,
+      'createdAt' => null
+    ];
+  }
+
   /**
    * @param array $atoms
    * @param string $output
@@ -134,8 +149,7 @@ class Atom {
     $numberOfAtoms = count( $atomList );
 
     foreach ( $atomList as $atom ) {
-
-      $atomData = get_object_vars( $atom );
+      $atomData = array_merge(static::molecularHashSchema(), array_intersect_key( get_object_vars( $atom ), static::molecularHashSchema()));
 
       $molecularSponge->absorb( $numberOfAtoms );
 
@@ -223,7 +237,6 @@ class Atom {
    * @param string $property
    * @param $value
    *
-   * @throws JsonException
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
