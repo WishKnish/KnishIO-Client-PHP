@@ -51,11 +51,11 @@ namespace WishKnish\KnishIO\Client\HttpClient;
 
 use ArrayObject;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Promise;
 use WishKnish\KnishIO\Client\Libraries\Cipher;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -68,7 +68,7 @@ class HttpClient extends Client implements HttpClientInterface {
   /**
    * @var string|null
    */
-  private ?string $xAuthToken;
+  private ?string $authToken;
 
   /**
    * @var string
@@ -95,7 +95,7 @@ class HttpClient extends Client implements HttpClientInterface {
   public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
     $this->setUri( $uri );
     $this->cipher = new Cipher();
-    $this->xAuthToken = null;
+    $this->authToken = null;
     $this->config = [ 'base_uri' => $uri, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
 
     // Merge config
@@ -106,17 +106,12 @@ class HttpClient extends Client implements HttpClientInterface {
   }
 
   /**
+   * @param bool $encrypt
    *
+   * @return void
    */
-  public function enableEncryption (): void {
-    $this->config[ 'encrypt' ] = true;
-  }
-
-  /**
-   *
-   */
-  public function disableEncryption (): void {
-    $this->config[ 'encrypt' ] = false;
+  public function setEncryption( bool $encrypt ): void {
+    $this->config[ 'encrypt' ] = $encrypt;
   }
 
   /**
@@ -172,14 +167,14 @@ class HttpClient extends Client implements HttpClientInterface {
    * @param string $authToken
    */
   public function setAuthToken ( string $authToken ): void {
-    $this->xAuthToken = $authToken;
+    $this->authToken = $authToken;
   }
 
   /**
    * @return string|null
    */
   public function getAuthToken (): ?string {
-    return $this->xAuthToken;
+    return $this->authToken;
   }
 
   /**

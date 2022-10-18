@@ -52,23 +52,18 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class SignatureMalformedException
+ * Class TokenUnitFormatException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
-class SignatureMalformedException extends BaseException {
+class TokenUnitFormatException extends BaseException {
   /**
-   * SignatureMalformedException constructor.
+   * TokenUnitFormatException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'OTS malformed', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

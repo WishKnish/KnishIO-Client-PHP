@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
-use JsonException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -74,24 +74,16 @@ use WishKnish\KnishIO\Client\Traits\Json;
  *
  */
 class Atom {
+
   use Json;
 
-  public ?string $position;
-  public ?string $walletAddress;
-  public string $isotope;
-  public ?string $token;
-  public ?string $value;
-  public ?string $batchId;
-  public ?string $metaType;
-  public ?string $metaId;
-  public array $meta = [];
-  public ?int $index;
-  public ?string $otsFragment;
+
+  /**
+   * @var string
+   */
   public string $createdAt;
 
   /**
-   * Atom constructor.
-   *
    * @param string|null $position
    * @param string|null $walletAddress
    * @param string $isotope
@@ -100,24 +92,30 @@ class Atom {
    * @param string|null $batchId
    * @param string|null $metaType
    * @param string|null $metaId
-   * @param array|null $meta
+   * @param array $meta
    * @param string|null $otsFragment
-   * @param integer|null $index
+   * @param int|null $index
    */
-  public function __construct ( ?string $position, ?string $walletAddress, string $isotope, string $token = null, string $value = null, string $batchId = null, string $metaType = null, string $metaId = null, array $meta = null, string $otsFragment = null, int $index = null ) {
-    $this->position = $position;
-    $this->walletAddress = $walletAddress;
-    $this->isotope = $isotope;
-    $this->token = $token;
-    $this->value = $value;
-    $this->batchId = $batchId;
+  public function __construct (
+    public ?string $position,
+    public ?string $walletAddress,
+    public string $isotope,
+    public ?string $token = null,
+    public ?string $value = null,
+    public ?string $batchId = null,
+    public ?string $metaType = null,
+    public ?string $metaId = null,
+    public array $meta = [],
+    public ?string $otsFragment = null,
+    public ?int $index = null,
+  ) {
 
-    $this->metaType = $metaType;
-    $this->metaId = $metaId;
-    $this->meta = $meta ? Meta::normalizeMeta( $meta ) : [];
+    // Normalize meta
+    if ( $this->meta ) {
+      $this->meta = Meta::normalize( $this->meta );
+    }
 
-    $this->index = $index;
-    $this->otsFragment = $otsFragment;
+    // Set created at
     $this->createdAt = Strings::currentTimeMillis();
   }
 
@@ -137,11 +135,52 @@ class Atom {
   }
 
   /**
+   * @param Wallet $wallet
+   * @param string $isotope
+   * @param int $value
+   * @param string|null $metaType
+   * @param string|null $metaId
+   * @param array $metas
+   *
+   * @return static
+   * @throws \JsonException
+   */
+  public static function create(
+    Wallet $wallet,
+    string $isotope,
+    string $value = null,
+    string $metaType = null,
+    string $metaId = null,
+    AtomMeta $meta = null,
+    string $batchId = null,
+  ): self {
+
+    // If meta is not passed - create it
+    if ( !$meta ) {
+      $meta = new AtomMeta;
+    }
+
+    // Create the final atom's object
+    return new Atom(
+      $wallet->position,
+      $wallet->address,
+      $isotope,
+      $wallet->token,
+      $value,
+      $batchId ?? $wallet->batchId,
+      $metaType,
+      $metaId,
+      $meta->addWallet( $wallet )
+        ->get(),
+    );
+  }
+
+  /**
    * @param array $atoms
    * @param string $output
    *
    * @return array|string|null
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
@@ -151,7 +190,12 @@ class Atom {
     foreach ( $atomList as $atom ) {
       $atomData = array_merge(static::molecularHashSchema(), array_intersect_key( get_object_vars( $atom ), static::molecularHashSchema()));
 
-      $molecularSponge->absorb( $numberOfAtoms );
+      try {
+        $molecularSponge->absorb( $numberOfAtoms );
+      }
+      catch ( Exception $e ) {
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      }
 
       foreach ( $atomData as $name => $value ) {
 
@@ -170,8 +214,13 @@ class Atom {
 
             if ( isset( $meta[ 'value' ] ) ) {
 
-              $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-              $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+              try {
+                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+              }
+              catch ( Exception $e ) {
+                throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+              }
 
             }
           }
@@ -180,30 +229,40 @@ class Atom {
         }
 
         // Absorb value as string
-        $molecularSponge->absorb( ( string ) $value );
+        try {
+          $molecularSponge->absorb( ( string ) $value );
+        }
+        catch ( Exception $e ) {
+          throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+        }
       }
 
     }
-    switch ( $output ) {
-      case 'hex':
-      {
-        $target = bin2hex( $molecularSponge->squeeze( 32 ) );
-        break;
+    try {
+      switch ( $output ) {
+        case 'hex':
+        {
+          $target = bin2hex( $molecularSponge->squeeze( 32 ) );
+          break;
+        }
+        case 'array':
+        {
+          $target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
+          break;
+        }
+        case 'base17':
+        {
+          $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
+          break;
+        }
+        default:
+        {
+          $target = null;
+        }
       }
-      case 'array':
-      {
-        $target = str_split( bin2hex( $molecularSponge->squeeze( 32 ) ) );
-        break;
-      }
-      case 'base17':
-      {
-        $target = str_pad( Strings::charsetBaseConvert( bin2hex( $molecularSponge->squeeze( 32 ) ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ), 64, '0', STR_PAD_LEFT );
-        break;
-      }
-      default:
-      {
-        $target = null;
-      }
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
     }
 
     return $target;
@@ -215,14 +274,9 @@ class Atom {
    * @return array
    */
   public static function sortAtoms ( array $atoms = [] ): array {
-
-    usort($atoms, static function ( $atom1, $atom2 ) {
-      if ( $atom1->index === $atom2->index ) {
-        return 0;
-      }
+    usort( $atoms, static function ( $atom1, $atom2 ) {
       return $atom1->index < $atom2->index ? -1 : 1;
-    });
-
+    } );
     return $atoms;
   }
 
@@ -230,7 +284,7 @@ class Atom {
    * @return array
    */
   public function aggregatedMeta (): array {
-    return Meta::aggregateMeta( $this->meta );
+    return Meta::aggregate( $this->meta );
   }
 
   /**
@@ -246,12 +300,19 @@ class Atom {
     if ( !$this->meta && $property === 'metasJson' ) {
       $metas = json_decode( $value, true );
       if ( $metas !== null ) {
-        $this->meta = Meta::normalizeMeta( $metas );
+        $this->meta = Meta::normalize( $metas );
       }
     } // Default meta set
     else {
       $this->$property = $value;
     }
+  }
+
+  /**
+   * @return int
+   */
+  public function getValue (): int {
+    return $this->value * 1;
   }
 
 }

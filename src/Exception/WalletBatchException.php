@@ -52,23 +52,18 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class BalanceInsufficientException
+ * Class WalletBatchException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
-class BalanceInsufficientException extends BaseException {
+class WalletBatchException extends BaseException {
   /**
-   * BalanceInsufficientException constructor.
+   * WalletBatchException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Insufficient balance for requested transfer', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

@@ -65,16 +65,23 @@ dd([
 ]);
 */
 
-use JetBrains\PhpStorm\Pure;
-
 /**
  * Class Decimal
  * @package WishKnish\KnishIO\Client\Libraries
  */
 class Decimal {
 
-  // Value determines by min sql decimal precision
-  public static float $multiplier = 10 ** 18;
+  /**
+   * @var int
+   */
+  public static int $precision = 18;
+
+  /**
+   * @return float
+   */
+  public static function multiplier (): float {
+    return 10 ** static::$precision;
+  }
 
   /**
    * @param float $val
@@ -82,8 +89,8 @@ class Decimal {
    * @return float
    */
   public static function val ( float $val ): float {
-    if ( abs( $val * static::$multiplier ) < 1 ) {
-      return 0.0;
+    if ( abs( $val * static::multiplier() ) < 1 ) {
+      return 0;
     }
     return $val;
   }
@@ -96,10 +103,9 @@ class Decimal {
    *
    * @return int
    */
-  #[Pure]
   public static function cmp ( float $val1, float $val2 ): int {
-    $val1 = static::val( $val1 ) * static::$multiplier;
-    $val2 = static::val( $val2 ) * static::$multiplier;
+    $val1 = static::val( $val1 ) * static::multiplier();
+    $val2 = static::val( $val2 ) * static::multiplier();
 
     // Equal
     if ( abs( $val1 - $val2 ) < 1 ) {
@@ -111,13 +117,12 @@ class Decimal {
   }
 
   /**
-   * @param $val1
-   * @param $val2
+   * @param float $val1
+   * @param float $val2
    *
    * @return bool
    */
-  #[Pure]
-  public static function equal ( $val1, $val2 ): bool {
+  public static function equal ( float $val1, float $val2 ): bool {
     return ( static::cmp( $val1, $val2 ) === 0 );
   }
 

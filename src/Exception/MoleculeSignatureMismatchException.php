@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class SignatureMismatchException
+ * Class MoleculeSignatureMismatchException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -60,9 +60,9 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class SignatureMismatchException extends BaseException {
+class MoleculeSignatureMismatchException extends BaseException {
   /**
-   * SignatureMismatchException constructor.
+   * MoleculeSignatureMismatchException constructor.
    *
    * @param string $message
    * @param int $code

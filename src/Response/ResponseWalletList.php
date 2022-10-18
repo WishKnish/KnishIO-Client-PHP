@@ -49,7 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
-use Exception;
+use SodiumException;
 use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -69,7 +69,7 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return Wallet
-   * @throws Exception
+   * @throws SodiumException
    */
   public static function toClientWallet ( array $data, string $secret = null ): Wallet {
 
@@ -96,10 +96,17 @@ class ResponseWalletList extends Response {
 
     // Get token units from the response
     $tokenUnits = array_get( $data, 'tokenUnits', [] );
-    foreach( $tokenUnits as $tokenUnit ) {
+    foreach ( $tokenUnits as $tokenUnit ) {
       $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
     }
 
+    // Set trade rates
+    $tradeRates = array_get( $data, 'tradeRates', [] );
+    foreach ( $tradeRates as $tradeRate ) {
+      $wallet->tradeRates[ $tradeRate[ 'tokenSlug' ] ] = $tradeRate[ 'amount' ];
+    }
+
+    $wallet->type = $data[ 'type' ];
     $wallet->balance = $data[ 'amount' ];
     $wallet->pubkey = $data[ 'pubkey' ];
     $wallet->createdAt = $data[ 'createdAt' ];
@@ -111,7 +118,7 @@ class ResponseWalletList extends Response {
    * @param string|null $secret
    *
    * @return array|null
-   * @throws Exception
+   * @throws SodiumException
    */
   public function getWallets ( ?string $secret = null ): ?array {
     // Get data
@@ -132,7 +139,7 @@ class ResponseWalletList extends Response {
 
   /**
    * @return array|null
-   * @throws Exception
+   * @throws SodiumException
    */
   public function payload (): ?array {
     return $this->getWallets();

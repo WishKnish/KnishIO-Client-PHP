@@ -47,28 +47,84 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Exception;
-
-use Throwable;
+namespace WishKnish\KnishIO\Client;
 
 /**
- * Class MolecularHashMissingException
- * @package WishKnish\KnishIO\Client\Exception
  *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
-class NegativeMeaningException extends BaseException {
+class AtomMeta {
+
   /**
-   * MolecularHashMissingException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
+   * @param array $meta
    */
-  public function __construct ( string $message = 'Negative meaning', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+  public function __construct(
+    private array $meta = [],
+  ) {
+
+  }
+
+  /**
+   * @param array $meta
+   *
+   * @return $this
+   */
+  public function merge( array $meta ): self {
+    $this->meta = array_merge( $this->meta, $meta );
+    return $this;
+  }
+
+  /**
+   * @param string $context
+   *
+   * @return $this
+   */
+  public function addContext( string $context ): self {
+    $this->merge( [ 'context' => $context ] );
+    return $this;
+  }
+
+  /**
+   * @param Wallet $wallet
+   *
+   * @return void
+   */
+  public function addWallet( Wallet $wallet ): self {
+    $walletMeta = [
+      'pubkey' => $wallet->pubkey,
+      'characters' => $wallet->characters,
+    ];
+    if ( $wallet->tokenUnits ) {
+      $walletMeta[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+    }
+    if ( $wallet->tradeRates ) {
+      $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
+    }
+    $this->merge( $walletMeta );
+    return $this;
+  }
+
+  /**
+   * @param Wallet $signingWallet
+   *
+   * @return $this
+   * @throws \JsonException
+   */
+  public function addSigningWallet( Wallet $signingWallet ): self {
+    $this->merge( [
+      'signingWallet' => json_encode( [
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
+      ], JSON_THROW_ON_ERROR ),
+    ] );
+    return $this;
+  }
+
+  /**
+   * @return array
+   */
+  public function get(): array {
+    return $this->meta;
   }
 }

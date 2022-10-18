@@ -49,15 +49,15 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
+use JsonException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use WishKnish\KnishIO\Client\Libraries\Crypto;
 
 /**
  * Class MoleculeStructure
@@ -68,7 +68,6 @@ class MoleculeStructure {
   use Json;
 
   public ?string $molecularHash;
-  public ?string $cellSlug;
   public ?string $counterparty = null;
   public ?string $bundle;
   public ?string $status;
@@ -76,42 +75,42 @@ class MoleculeStructure {
   public string $createdAt;
   public array $atoms = [];
 
-
   /**
-   * @param string|array $isotope
+   * @param string|array $isotopes
    * @param array $atoms
    *
    * @return array
    */
-  public static function isotopeFilter ( string|array $isotope, array $atoms ): array {
+  public static function isotopeFilter ( string|array $isotopes, array $atoms ): array {
+    if ( is_string( $isotopes ) ) {
+      $isotopes = [ $isotopes ];
+    }
     $result = [];
-    $search = is_array($isotope) ? $isotope : [ $isotope ];
-
-    foreach( $atoms as $atom ) {
-      if ( in_array( $atom->isotope, $search ) ) {
+    foreach ( $atoms as $atom ) {
+      if ( in_array( $atom->isotope, $isotopes, true ) ) {
         $result[] = $atom;
       }
     }
     return $result;
   }
 
-
   /**
-   * @param string $isotope
+   * @param string|array $isotopes
    *
    * @return array
    */
-  public function getIsotopes( string $isotope ): array {
-    return static::isotopeFilter( $isotope, $this->atoms );
+  public function getIsotopes ( string|array $isotopes ): array {
+    if ( is_string( $isotopes ) ) {
+      $isotopes = [ $isotopes ];
+    }
+    return static::isotopeFilter( $isotopes, $this->atoms );
   }
-
 
   /**
    * @return string
    */
-  public function logString(): string {
-    return $this->molecularHash .
-      ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+  public function logString (): string {
+    return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
   }
 
   /**
@@ -128,7 +127,6 @@ class MoleculeStructure {
    * @param int $index
    *
    * @return string
-   * @throws Exception
    */
   public function getBatchId ( int $index ): string {
     $molecularHash = Atom::hashAtoms( $this->atoms );
@@ -200,22 +198,21 @@ class MoleculeStructure {
   }
 
   /**
-   * MoleculeStructure constructor.
-   *
    * @param string|null $cellSlug
    */
-  public function __construct ( string $cellSlug = null ) {
-    $this->cellSlug = $cellSlug;
+  public function __construct (
+    public ?string $cellSlug = null
+  ) {
+
   }
 
   /**
    * @param Wallet|null $senderWallet
    *
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function check ( Wallet $senderWallet = null ): void {
-    ( new CheckMolecule( $this ) )
-      ->verify( $senderWallet );
+    ( new CheckMolecule( $this ) )->verify( $senderWallet );
   }
 
   /**
@@ -238,7 +235,6 @@ class MoleculeStructure {
    * @param bool $encode
    *
    * @return string
-   * @throws Exception
    */
   public function signatureFragments ( string $key, bool $encode = true ): string {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
@@ -279,16 +275,15 @@ class MoleculeStructure {
   }
 
   /**
-   * @param string $json
+   * @param string $string
    * @param string|null $secret
    *
    * @return MoleculeStructure
-   * @throws Exception
    */
-  public static function jsonToObject ( string $json, string $secret = null ): static {
+  public static function jsonToObject ( string $string, string $secret = null ): static {
     $secret = $secret ?? Crypto::generateSecret();
     $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
+    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
 
     foreach ( $object->atoms as $idx => $atom ) {
       $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );

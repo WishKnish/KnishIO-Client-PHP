@@ -70,9 +70,7 @@ class ResponseMetaType extends Response {
     }
 
     $result = [
-      'instances' => [],
-      'instanceCount' => [],
-      'paginatorInfo' => [],
+      'instances' => [], 'instanceCount' => [], 'paginatorInfo' => [],
     ];
 
     $metaData = $data[ 0 ];

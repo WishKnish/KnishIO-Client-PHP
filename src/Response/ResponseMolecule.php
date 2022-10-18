@@ -51,7 +51,6 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use JsonException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMoleculeStructure;
 
 /**
  * Class ResponseMolecule
@@ -68,27 +67,6 @@ class ResponseMolecule extends Response {
    * @var mixed
    */
   protected mixed $payload;
-
-  /**
-   * @var MoleculeStructure
-   */
-  protected MoleculeStructure $clientMolecule;
-
-  /**
-   * Response constructor.
-   *
-   * @param MutationProposeMoleculeStructure|null $query
-   * @param string $json
-   *
-   * @throws JsonException
-   */
-  public function __construct ( ?MutationProposeMoleculeStructure $query, string $json ) {
-    parent::__construct( $query, $json );
-
-    if ( $query !== null ) {
-      $this->clientMolecule = $query->moleculeStructure();
-    }
-  }
 
   /**
    * Initialization
@@ -109,15 +87,6 @@ class ResponseMolecule extends Response {
   }
 
   /**
-   * Get a client molecule
-   *
-   * @return MoleculeStructure
-   */
-  public function clientMolecule (): MoleculeStructure {
-    return $this->clientMolecule;
-  }
-
-  /**
    * @return MoleculeStructure|null
    */
   public function molecule (): ?MoleculeStructure {
@@ -131,6 +100,13 @@ class ResponseMolecule extends Response {
     $molecule->createdAt = array_get( $data, 'createdAt' );
 
     return $molecule;
+  }
+
+  /**
+   * @return string
+   */
+  public function getMolecularHash (): string {
+    return array_get( $this->data(), 'molecularHash' );
   }
 
   /**

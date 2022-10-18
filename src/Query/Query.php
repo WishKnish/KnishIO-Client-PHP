@@ -51,13 +51,9 @@ namespace WishKnish\KnishIO\Client\Query;
 
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
-use JetBrains\PhpStorm\Pure;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\KnishIOClient;
-use WishKnish\KnishIO\Client\Molecule;
-use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Response\Response;
 
 /**
@@ -81,7 +77,7 @@ abstract class Query {
   protected Request $request;
 
   /**
-   * @var Response
+   * @var Response|null
    */
   protected ?Response $response = null;
 
@@ -91,7 +87,7 @@ abstract class Query {
   protected static string $defaultQuery;
 
   /**
-   * @var array|null
+   * @var array
    */
   protected array $variables;
 
@@ -124,7 +120,7 @@ abstract class Query {
   }
 
   /**
-   * @return Response
+   * @return Response|null
    */
   public function response (): ?Response {
     return $this->response;
@@ -144,13 +140,9 @@ abstract class Query {
     $this->variables = $this->compiledVariables( $variables ?? [] );
 
     // Create a request
-    return new Request( 'POST', $this->uri(),
-      array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ),
-      json_encode( [
-        'query' => $this->compiledQuery( $fields ),
-        'variables' => $this->variables,
-      ], JSON_THROW_ON_ERROR )
-    );
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [
+      'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables,
+    ], JSON_THROW_ON_ERROR ) );
   }
 
   /**
@@ -178,54 +170,6 @@ abstract class Query {
   }
 
   /**
-   * @param string $json
-   * !!! DEBUG FUNCTION
-   *
-   * @return string
-   * @throws GuzzleException
-   */
-  public static function getProposeMoleculeUri ( string $json ): string {
-    $client = new KnishIOClient( url( '' ) . '/graphql' );
-    $molecule = Molecule::jsonToObject( $json );
-    $query = $client->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
-    return $query->getQueryUri( 'ProposeMolecule', $query->compiledVariables( [] ) );
-  }
-
-  /**
-   * Debug info => get an uri to execute GraphQL directly from it
-   * !!! DEBUG FUNCTION
-   *
-   * @param string $name
-   * @param array|string $variables
-   * @param array|null $fields
-   *
-   * @return string
-   * @throws JsonException
-   */
-  public function getQueryUri ( string $name, array|string $variables, array $fields = null ): string {
-
-    // Compile variables
-    if ( is_string( $variables ) ) {
-      $variables = json_decode( trim( $variables ), true, 512, JSON_THROW_ON_ERROR );
-    }
-    $variables = $this->compiledVariables( $variables );
-    $variables = preg_replace( '#\"([^\"]+)\":#U', '$1:', json_encode( $variables, JSON_THROW_ON_ERROR ) );
-    $variables = substr( $variables, 1, -1 );
-
-    // Compile fields
-    $fields = $fields ?? $this->fields;
-    $fields = str_replace( [ ', ', ' {' ], [ ',', '{' ], $this->compiledFields( $fields ) );
-
-    $queryUri = str_replace(
-      [ '@name', '@mutation', '@vars', '@fields', ],
-      [ $name, ( $this->isMutation ? 'mutation' : '' ), urlencode( $variables ), $fields, ],
-      '?query=@mutation{@name(@vars)@fields}&noMiddleware=true'
-    );
-
-    return $this->uri() . $queryUri;
-  }
-
-  /**
    * @param array|null $fields
    *
    * @return array|string
@@ -245,7 +189,7 @@ abstract class Query {
    *
    * @return string
    */
-  protected function compiledFields ( array $fields ): string {
+  public function compiledFields ( array $fields ): string {
     foreach ( $fields as $key => $field ) {
       if ( is_array( $field ) ) {
         $fields[ $key ] = $key . ' ' . $this->compiledFields( $field );
@@ -311,6 +255,13 @@ abstract class Query {
    */
   public function fields (): array {
     return $this->fields;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isMutation (): bool {
+    return $this->isMutation;
   }
 
 }

@@ -52,18 +52,18 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class WrongTokenUnitFormatException
+ * Class CryptoException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class WrongTokenUnitFormatException extends BaseException {
+class CryptoException extends BaseException {
   /**
-   * WrongTokenTypeException constructor.
+   * CryptoException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Error thrown by key cryptographic functions.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }
