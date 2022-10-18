@@ -79,11 +79,6 @@ class Atom {
 
 
   /**
-   * @var string
-   */
-  public string $createdAt;
-
-  /**
    * @param string|null $position
    * @param string|null $walletAddress
    * @param string $isotope
@@ -108,6 +103,7 @@ class Atom {
     public array $meta = [],
     public ?string $otsFragment = null,
     public ?int $index = null,
+    public ?string $createdAt = null,
   ) {
 
     // Normalize meta
@@ -116,7 +112,9 @@ class Atom {
     }
 
     // Set created at
-    $this->createdAt = Strings::currentTimeMillis();
+    if ( !$this->createdAt ) {
+      $this->createdAt = Strings::currentTimeMillis();
+    }
   }
 
   /**
@@ -172,12 +170,14 @@ class Atom {
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
 
+    $hashingValues = [];
     foreach ( $atomList as $atom ) {
 
       $atomData = get_object_vars( $atom );
 
       try {
-        $molecularSponge->absorb( $numberOfAtoms );
+        // $molecularSponge->absorb( (string) $numberOfAtoms );
+        $hashingValues[] = (string) $numberOfAtoms;
       }
       catch ( Exception $e ) {
         throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
@@ -201,8 +201,10 @@ class Atom {
             if ( isset( $meta[ 'value' ] ) ) {
 
               try {
-                $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-                $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+                // $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
+                // $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
+                $hashingValues[] = ( string ) $meta[ 'key' ];
+                $hashingValues[] = ( string ) $meta[ 'value' ];
               }
               catch ( Exception $e ) {
                 throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
@@ -216,7 +218,8 @@ class Atom {
 
         // Absorb value as string
         try {
-          $molecularSponge->absorb( ( string ) $value );
+          // $molecularSponge->absorb( ( string ) $value );
+          $hashingValues[] = ( string ) $value;
         }
         catch ( Exception $e ) {
           throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
@@ -224,6 +227,12 @@ class Atom {
       }
 
     }
+
+    // Add hash values to the sponge
+    foreach( $hashingValues as $hashingValue ) {
+      $molecularSponge->absorb( $hashingValue );
+    }
+
     try {
       switch ( $output ) {
         case 'hex':
