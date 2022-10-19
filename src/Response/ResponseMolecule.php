@@ -80,7 +80,7 @@ class ResponseMolecule extends Response {
     try {
       $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
     }
-    catch ( JsonException $e ) {
+    catch ( JsonException ) {
       // Unable to decode JSON response?
       /** @TODO Add proper handing of JSON errors */
     }

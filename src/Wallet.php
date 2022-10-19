@@ -122,6 +122,16 @@ class Wallet {
   public ?string $createdAt = null;
 
   /**
+   * @var string|null
+   */
+  public ?string $tokenName = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenSupply = null;
+
+  /**
    * @var array
    */
   public array $tokenUnits = [];
@@ -130,6 +140,11 @@ class Wallet {
    * @var array
    */
   public array $tradeRates = [];
+
+  /**
+   * @var array
+   */
+  public array $molecules = [];
 
   /**
    * @var Soda|null
