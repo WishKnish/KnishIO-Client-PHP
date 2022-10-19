@@ -86,7 +86,8 @@ class AtomMeta {
   /**
    * @param Wallet $wallet
    *
-   * @return void
+   * @return $this
+   * @throws \JsonException
    */
   public function addWallet( Wallet $wallet ): self {
     $walletMeta = [
