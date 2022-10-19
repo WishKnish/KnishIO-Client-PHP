@@ -138,7 +138,7 @@ class AuthToken {
   #[ArrayShape( [
     'token' => "string",
     'pubkey' => "string",
-    'wallet' => "\WishKnish\KnishIO\Client\Wallet"
+    'wallet' => Wallet::class
   ] )]
   public function getAuthData (): array {
     return [

@@ -52,7 +52,6 @@ namespace WishKnish\KnishIO\Client;
 use BI\BigInteger;
 use Exception;
 use JsonException;
-use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
@@ -319,7 +318,6 @@ class Wallet {
    *
    * @return array
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function encryptBinary ( string $message, ...$pubkeys ): array {
@@ -331,7 +329,6 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function decryptBinary ( array|string $message ): mixed {
@@ -354,7 +351,6 @@ class Wallet {
    *
    * @return array
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function encryptMessage ( mixed $message, ...$pubkeys ): array {
@@ -379,7 +375,6 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function decryptMessage ( array|string $message ): mixed {

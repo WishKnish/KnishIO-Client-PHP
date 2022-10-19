@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use JsonException;
+
 /**
  *
  */
@@ -86,7 +88,8 @@ class AtomMeta {
   /**
    * @param Wallet $wallet
    *
-   * @return void
+   * @return AtomMeta
+   * @throws JsonException
    */
   public function addWallet ( Wallet $wallet ): self {
     $walletMeta = [
@@ -107,7 +110,7 @@ class AtomMeta {
    * @param Wallet $signingWallet
    *
    * @return $this
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function addSigningWallet ( Wallet $signingWallet ): self {
     $this->merge( [

@@ -87,7 +87,12 @@ class Molecule extends MoleculeStructure {
    *
    * @throws SodiumException
    */
-  public function __construct ( private string $secret, private ?Wallet $sourceWallet, private ?Wallet $remainderWallet, ?string $cellSlug = null ) {
+  public function __construct (
+    private readonly string $secret,
+    private readonly ?Wallet $sourceWallet,
+    private ?Wallet $remainderWallet,
+    ?string $cellSlug = null
+  ) {
     parent::__construct( $cellSlug );
 
     if ( $remainderWallet || $sourceWallet ) {
@@ -577,10 +582,6 @@ class Molecule extends MoleculeStructure {
    * @param int $amount - how many of the token we are initially issuing (for fungible tokens only)
    * @param array $meta - additional fields to configure the token
    *
-   * @param Wallet $recipientWallet
-   * @param int $amount
-   * @param array $meta
-   *
    * @return $this
    * @throws JsonException
    */
@@ -740,12 +741,12 @@ class Molecule extends MoleculeStructure {
   /**
    * @param string $token
    * @param int $amount
-   * @param string $metaType
-   * @param string $metaId
+   * @param string $recipientBundle
    * @param array $meta
    * @param string|null $batchId
    *
    * @return $this
+   * @throws JsonException
    */
   public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
 

@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -89,6 +90,7 @@ class Atom {
    * @param array $meta
    * @param string|null $otsFragment
    * @param int|null $index
+   * @param string|null $createdAt
    */
   public function __construct (
     public ?string $position,
@@ -119,13 +121,14 @@ class Atom {
   /**
    * @param Wallet $wallet
    * @param string $isotope
-   * @param int $value
+   * @param string|null $value
    * @param string|null $metaType
    * @param string|null $metaId
-   * @param array $metas
+   * @param AtomMeta|null $meta
+   * @param string|null $batchId
    *
    * @return static
-   * @throws \JsonException
+   * @throws JsonException
    */
   public static function create(
     Wallet $wallet,
@@ -234,8 +237,13 @@ class Atom {
     }
 
     // Add hash values to the sponge
-    foreach ( $hashingValues as $hashingValue ) {
-      $molecularSponge->absorb( $hashingValue );
+    try {
+      foreach ( $hashingValues as $hashingValue ) {
+        $molecularSponge->absorb( $hashingValue );
+      }
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
     }
 
     try {

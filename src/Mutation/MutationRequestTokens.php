@@ -60,8 +60,7 @@ class MutationRequestTokens extends MutationProposeMolecule {
   /**
    * @param string $tokenSlug
    * @param $requestedAmount
-   * @param string $metaType
-   * @param string $metaId
+   * @param string $recipientBundle
    * @param array $metas
    * @param string|null $batchId
    *

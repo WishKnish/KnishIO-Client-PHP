@@ -641,6 +641,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function createIdentifier ( string $type, string $contact, string $code ): Response {
 
@@ -729,6 +730,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -943,6 +945,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function withdrawBufferToken ( string $tokenSlug, int $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
 
