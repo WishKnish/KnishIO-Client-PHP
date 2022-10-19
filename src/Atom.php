@@ -77,7 +77,6 @@ class Atom {
 
   use Json;
 
-
   /**
    * @param string|null $position
    * @param string|null $walletAddress
@@ -140,7 +139,7 @@ class Atom {
 
     // If meta is not passed - create it
     if ( !$meta ) {
-      $meta = new AtomMeta;
+      $meta = new AtomMeta();
     }
 
     // Create the final atom's object
@@ -186,12 +185,18 @@ class Atom {
       foreach ( $atomData as $name => $value ) {
 
         // All null values not in custom keys list won't get hashed
-        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
+        if ( $value === null && !in_array( $name, [
+            'position',
+            'walletAddress',
+          ], true ) ) {
           continue;
         }
 
         // Excluded keys
-        if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
+        if ( in_array( $name, [
+          'otsFragment',
+          'index',
+        ], true ) ) {
           continue;
         }
 
@@ -229,7 +234,7 @@ class Atom {
     }
 
     // Add hash values to the sponge
-    foreach( $hashingValues as $hashingValue ) {
+    foreach ( $hashingValues as $hashingValue ) {
       $molecularSponge->absorb( $hashingValue );
     }
 
@@ -289,7 +294,10 @@ class Atom {
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
-    $property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+    $property = array_get( [
+      'tokenSlug' => 'token',
+      'metas' => 'meta',
+    ], $property, $property );
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {

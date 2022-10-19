@@ -53,7 +53,6 @@ use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
-use WishKnish\KnishIO\Client\Exception\TokenSlugFormatException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
@@ -88,12 +87,7 @@ class Molecule extends MoleculeStructure {
    *
    * @throws SodiumException
    */
-  public function __construct (
-    private string $secret,
-    private ?Wallet $sourceWallet,
-    private ?Wallet $remainderWallet,
-    ?string $cellSlug = null
-  ) {
+  public function __construct ( private string $secret, private ?Wallet $sourceWallet, private ?Wallet $remainderWallet, ?string $cellSlug = null ) {
     parent::__construct( $cellSlug );
 
     if ( $remainderWallet || $sourceWallet ) {
@@ -189,7 +183,6 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-
   /**
    * @param string $metaType
    * @param string $metaId
@@ -200,7 +193,11 @@ class Molecule extends MoleculeStructure {
    */
   public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
 
-    foreach ( [ 'conditions', 'callback', 'rule', ] as $key ) {
+    foreach ( [
+      'conditions',
+      'callback',
+      'rule',
+    ] as $key ) {
       if ( !array_key_exists( $key, $meta ) ) {
         throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
@@ -463,7 +460,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Set a metas signing wallet data for molecule reconciliation ability
-    $firstAtomMeta = new AtomMeta;
+    $firstAtomMeta = new AtomMeta();
     if ( $signingWallet ) {
       $firstAtomMeta->addSigningWallet( $signingWallet );
     }

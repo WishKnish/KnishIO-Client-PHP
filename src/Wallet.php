@@ -137,7 +137,6 @@ class Wallet {
    */
   protected ?Soda $soda = null;
 
-
   /**
    * @param string|null $secret
    * @param string $token
@@ -156,7 +155,6 @@ class Wallet {
   ) {
 
     $this->characters = $this->characters ?? 'BASE64';
-
 
     if ( $secret ) {
 
@@ -178,7 +176,6 @@ class Wallet {
       $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
     }
   }
-
 
   /**
    * @param string $secretOrBundle

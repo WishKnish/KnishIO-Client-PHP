@@ -148,7 +148,25 @@ class MoleculeStructure {
   protected static function enumerate ( string $hash ): array {
 
     $target = [];
-    $mapped = [ '0' => -8, '1' => -7, '2' => -6, '3' => -5, '4' => -4, '5' => -3, '6' => -2, '7' => -1, '8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8, ];
+    $mapped = [
+      '0' => -8,
+      '1' => -7,
+      '2' => -6,
+      '3' => -5,
+      '4' => -4,
+      '5' => -3,
+      '6' => -2,
+      '7' => -1,
+      '8' => 0,
+      '9' => 1,
+      'a' => 2,
+      'b' => 3,
+      'c' => 4,
+      'd' => 5,
+      'e' => 6,
+      'f' => 7,
+      'g' => 8,
+    ];
 
     foreach ( str_split( $hash ) as $index => $symbol ) {
 
@@ -185,7 +203,13 @@ class MoleculeStructure {
 
         if ( $totalCondition ? $value < 8 : $value > -8 ) {
 
-          $totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
+          $totalCondition ? [
+            ++$mappedHashArray[ $key ],
+            ++$total,
+          ] : [
+            --$mappedHashArray[ $key ],
+            --$total,
+          ];
 
           if ( $total === 0 ) {
             break;
@@ -200,9 +224,7 @@ class MoleculeStructure {
   /**
    * @param string|null $cellSlug
    */
-  public function __construct (
-    public ?string $cellSlug = null
-  ) {
+  public function __construct ( public ?string $cellSlug = null ) {
 
   }
 

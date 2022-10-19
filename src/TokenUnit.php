@@ -23,7 +23,11 @@ class TokenUnit {
 
     // Not a token units transfer
     if ( $sendTokenUnits === null ) {
-      return [ 0, [], [] ];
+      return [
+        0,
+        [],
+        []
+      ];
     }
 
     // Calculate amount
@@ -41,7 +45,11 @@ class TokenUnit {
       }
     }
 
-    return [ $amount, $recipientTokenUnits, $remainderTokenUnits, ];
+    return [
+      $amount,
+      $recipientTokenUnits,
+      $remainderTokenUnits,
+    ];
   }
 
   /**
@@ -95,11 +103,7 @@ class TokenUnit {
     }
 
     // Create a new token unit
-    return static::create(
-      $tokenUnitId,
-      array_get( $data, 'name' ),
-      $metas
-    );
+    return static::create( $tokenUnitId, array_get( $data, 'name' ), $metas );
   }
 
   /**
@@ -153,7 +157,11 @@ class TokenUnit {
    * @return array
    */
   public function toData (): array {
-    return [ $this->id, $this->name, $this->metas, ];
+    return [
+      $this->id,
+      $this->name,
+      $this->metas,
+    ];
   }
 
   /**
@@ -162,7 +170,9 @@ class TokenUnit {
    */
   public function toGraphQLResponse (): array {
     return [
-      'id' => $this->id, 'name' => $this->name, 'metas' => json_encode( $this->metas, JSON_THROW_ON_ERROR ),
+      'id' => $this->id,
+      'name' => $this->name,
+      'metas' => json_encode( $this->metas, JSON_THROW_ON_ERROR ),
     ];
   }
 

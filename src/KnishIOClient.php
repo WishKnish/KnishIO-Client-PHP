@@ -145,7 +145,6 @@ class KnishIOClient {
    */
   private ?AuthToken $authToken;
 
-
   /**
    * KnishIOClient constructor.
    *
@@ -173,7 +172,6 @@ class KnishIOClient {
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
   }
-
 
   /**
    * Get random uri from specified $this->uris
@@ -245,7 +243,6 @@ class KnishIOClient {
     $this->bundle = Crypto::generateBundleHash( $secret );
   }
 
-
   /**
    * @return string|null
    */
@@ -291,12 +288,7 @@ class KnishIOClient {
     $secret = $secret ?: $this->getSecret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if (
-      $sourceWallet === null &&
-      $this->remainderWallet &&
-      $this->remainderWallet->token === 'USER' &&
-      $this->lastMoleculeQuery
-    ) {
+    if ( $sourceWallet === null && $this->remainderWallet && $this->remainderWallet->token === 'USER' && $this->lastMoleculeQuery ) {
 
       /**
        * @var ResponseMolecule $response
@@ -373,7 +365,9 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute( [
-      'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'type' => $type,
+      'bundleHash' => $bundleHash ?: $this->getBundle(),
+      'token' => $tokenSlug,
+      'type' => $type,
     ] );
   }
 
@@ -586,7 +580,11 @@ class KnishIOClient {
         $amount = count( $units );
 
         // Set custom default metadata
-        $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
+        $meta = array_merge( $meta, [
+          'splittable' => 1,
+          'decimals' => 0,
+          'tokenUnits' => json_encode( $units ),
+        ] );
       }
     }
 
@@ -677,7 +675,11 @@ class KnishIOClient {
     /**
      * @var ResponseWalletList $response
      */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'unspent' => $unspent, ] );
+    $response = $query->execute( [
+      'bundleHash' => $bundleHash ?: $this->getBundle(),
+      'token' => $tokenSlug,
+      'unspent' => $unspent,
+    ] );
 
     return $response->getWallets();
   }
@@ -1162,7 +1164,9 @@ class KnishIOClient {
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
     $response = $query->execute( [
-      'cellSlug' => $cellSlug, 'pubkey' => $wallet->pubkey, 'encrypt' => $encrypt,
+      'cellSlug' => $cellSlug,
+      'pubkey' => $wallet->pubkey,
+      'encrypt' => $encrypt,
     ] );
 
     // Create & set an auth token object if there any data in payload (@todo add a key based check?)
@@ -1230,7 +1234,8 @@ class KnishIOClient {
     $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );
 
     // Set encryption
-    $this->client()->setEncryption( $encrypt );
+    $this->client()
+      ->setEncryption( $encrypt );
 
     // Return full response
     return $response;

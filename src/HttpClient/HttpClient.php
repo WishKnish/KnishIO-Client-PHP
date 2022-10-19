@@ -96,7 +96,17 @@ class HttpClient extends Client implements HttpClientInterface {
     $this->setUri( $uri );
     $this->cipher = new Cipher();
     $this->authToken = null;
-    $this->config = [ 'base_uri' => $uri, 'handler' => $this->cipher->stack(), 'encrypt' => $encrypt, RequestOptions::VERIFY => false, RequestOptions::HTTP_ERRORS => false, RequestOptions::HEADERS => [ 'User-Agent' => 'KnishIO/0.1', 'Accept' => 'application/json', ], ];
+    $this->config = [
+      'base_uri' => $uri,
+      'handler' => $this->cipher->stack(),
+      'encrypt' => $encrypt,
+      RequestOptions::VERIFY => false,
+      RequestOptions::HTTP_ERRORS => false,
+      RequestOptions::HEADERS => [
+        'User-Agent' => 'KnishIO/0.1',
+        'Accept' => 'application/json',
+      ],
+    ];
 
     // Merge config
     $config = array_replace_recursive( $this->config, $config );
@@ -110,7 +120,7 @@ class HttpClient extends Client implements HttpClientInterface {
    *
    * @return void
    */
-  public function setEncryption( bool $encrypt ): void {
+  public function setEncryption ( bool $encrypt ): void {
     $this->config[ 'encrypt' ] = $encrypt;
   }
 

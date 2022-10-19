@@ -68,7 +68,7 @@ class AtomMeta {
    *
    * @return $this
    */
-  public function merge( array $meta ): self {
+  public function merge ( array $meta ): self {
     $this->meta = array_merge( $this->meta, $meta );
     return $this;
   }
@@ -78,7 +78,7 @@ class AtomMeta {
    *
    * @return $this
    */
-  public function addContext( string $context ): self {
+  public function addContext ( string $context ): self {
     $this->merge( [ 'context' => $context ] );
     return $this;
   }
@@ -88,7 +88,7 @@ class AtomMeta {
    *
    * @return void
    */
-  public function addWallet( Wallet $wallet ): self {
+  public function addWallet ( Wallet $wallet ): self {
     $walletMeta = [
       'pubkey' => $wallet->pubkey,
       'characters' => $wallet->characters,
@@ -109,7 +109,7 @@ class AtomMeta {
    * @return $this
    * @throws \JsonException
    */
-  public function addSigningWallet( Wallet $signingWallet ): self {
+  public function addSigningWallet ( Wallet $signingWallet ): self {
     $this->merge( [
       'signingWallet' => json_encode( [
         'address' => $signingWallet->address,
@@ -124,7 +124,7 @@ class AtomMeta {
   /**
    * @return array
    */
-  public function get(): array {
+  public function get (): array {
     return $this->meta;
   }
 }

@@ -66,7 +66,12 @@ class QueryActiveSession extends Query {
 
   // Fields
   protected array $fields = [
-    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
+    'bundleHash',
+    'metaType',
+    'metaId',
+    'jsonData',
+    'createdAt',
+    'updatedAt',
   ];
 
   /**

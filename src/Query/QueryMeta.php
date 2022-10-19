@@ -63,7 +63,15 @@ class QueryMeta extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ];
+  protected array $fields = [
+    'molecularHash',
+    'position',
+    'metaType',
+    'metaId',
+    'key',
+    'value',
+    'createdAt',
+  ];
 
   /**
    * @param array|string|null $metaType
