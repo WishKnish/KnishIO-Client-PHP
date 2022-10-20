@@ -135,19 +135,20 @@ class Atom {
   }
 
   /**
-   * @param Wallet $wallet
    * @param string $isotope
-   * @param int $value
+   * @param Wallet|null $wallet
+   * @param string|null $value
    * @param string|null $metaType
    * @param string|null $metaId
-   * @param array $metas
+   * @param AtomMeta|null $meta
+   * @param string|null $batchId
    *
    * @return static
    * @throws \JsonException
    */
   public static function create(
-    Wallet $wallet,
     string $isotope,
+    Wallet $wallet = null,
     string $value = null,
     string $metaType = null,
     string $metaId = null,
@@ -160,18 +161,22 @@ class Atom {
       $meta = new AtomMeta;
     }
 
+    // If wallet has been passed => add related metas
+    if ( $wallet ) {
+      $meta->addWallet( $wallet );
+    }
+
     // Create the final atom's object
     return new Atom(
-      $wallet->position,
-      $wallet->address,
+      $wallet?->position,
+      $wallet?->address,
       $isotope,
-      $wallet->token,
+      $wallet?->token,
       $value,
       $batchId ?? $wallet->batchId,
       $metaType,
       $metaId,
-      $meta->addWallet( $wallet )
-        ->get(),
+      $meta->get(),
     );
   }
 
