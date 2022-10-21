@@ -173,7 +173,7 @@ class Atom {
       $isotope,
       $wallet?->token,
       $value,
-      $batchId ?? $wallet->batchId,
+      $batchId ?? $wallet?->batchId,
       $metaType,
       $metaId,
       $meta->get(),

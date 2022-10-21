@@ -72,12 +72,6 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  */
 class Molecule extends MoleculeStructure {
 
-  /**
-   * @return string
-   */
-  public static function continuIdMetaType (): string {
-    return 'walletBundle';
-  }
 
   /**
    * @param string $secret
@@ -181,7 +175,7 @@ class Molecule extends MoleculeStructure {
       'I',
       $this->remainderWallet,
       null,
-      static::continuIdMetaType(),
+      'walletBundle',
       $this->remainderWallet->bundle,
     ) );
 
