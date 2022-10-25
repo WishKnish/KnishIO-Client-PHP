@@ -92,6 +92,11 @@ class MoleculeStructure {
       }
     }
     return $result;
+    /*
+    return array_values( array_filter( $atoms, static function ( $atom ) use ( $isotopes ) {
+      return in_array( $atom->isotope, $isotopes, true );
+    } ) );
+    */
   }
 
   /**
@@ -100,9 +105,6 @@ class MoleculeStructure {
    * @return array
    */
   public function getIsotopes ( string|array $isotopes ): array {
-    if ( is_string( $isotopes ) ) {
-      $isotopes = [ $isotopes ];
-    }
     return static::isotopeFilter( $isotopes, $this->atoms );
   }
 

@@ -80,11 +80,10 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule {
 
   /**
-   * CheckMolecule constructor.
-   *
    * @param MoleculeStructure $molecule
    */
   public function __construct ( private readonly MoleculeStructure $molecule ) {
+
     // No molecular hash?
     if ( $molecule->molecularHash === null ) {
       throw new MoleculeHashMissingException();
@@ -93,6 +92,13 @@ class CheckMolecule {
     // No atoms?
     if ( empty( $molecule->atoms ) ) {
       throw new MoleculeAtomsMissingException();
+    }
+
+    // Check atom indexes
+    foreach ( $this->molecule->atoms as $atom ) {
+      if ( null === $atom->index ) {
+        throw new MoleculeAtomIndexException();
+      }
     }
   }
 
@@ -105,14 +111,12 @@ class CheckMolecule {
     $this->molecularHash();
     $this->ots();
     $this->isotopeM();
-    $this->isotopeP();
     $this->isotopeR();
     $this->isotopeC();
     $this->isotopeVB( $fromWallet );
     $this->isotopeT();
     $this->isotopeI();
     $this->isotopeU();
-    $this->index();
     $this->batchId();
   }
 
@@ -217,17 +221,6 @@ class CheckMolecule {
   }
 
   /**
-   * Check index
-   */
-  public function index (): void {
-    foreach ( $this->molecule->atoms as $atom ) {
-      if ( null === $atom->index ) {
-        throw new MoleculeAtomIndexException();
-      }
-    }
-  }
-
-  /**
    * Check isotope T
    */
   public function isotopeT (): void {
@@ -261,13 +254,6 @@ class CheckMolecule {
         throw new MoleculeAtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-  }
-
-  /**
-   * Check isotope P
-   */
-  public function isotopeP (): void {
-    $this->isotopeC();
   }
 
   /**
