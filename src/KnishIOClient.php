@@ -145,6 +145,11 @@ class KnishIOClient {
    */
   private ?AuthToken $authToken;
 
+  /**
+   * @var bool
+   */
+  private bool $encrypt = false;
+
 
   /**
    * KnishIOClient constructor.
@@ -174,6 +179,20 @@ class KnishIOClient {
     $this->serverSdkVersion = $serverSdkVersion;
   }
 
+  /**
+   * @param bool $encrypt
+   *
+   * @return bool
+   */
+  public function switchEncryption ( bool $encrypt = false ): bool {
+    if ( $this->encrypt === $encrypt ) {
+       return false;
+    }
+
+    // Set encryption
+    $this->encrypt = $encrypt;
+    $this->client()->setEncryption( $encrypt );
+  }
 
   /**
    * Get random uri from specified $this->uris
@@ -1229,8 +1248,8 @@ class KnishIOClient {
     // Response for request guest/profile auth token
     $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );
 
-    // Set encryption
-    $this->client()->setEncryption( $encrypt );
+    // Switch encryption
+    $this->switchEncryption( $encrypt );
 
     // Return full response
     return $response;

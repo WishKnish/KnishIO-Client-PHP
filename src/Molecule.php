@@ -826,7 +826,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Generate the private signing key for this molecule
-    $key = Wallet::generateWalletKey( $this->secret, $firstAtom->token, $signingPosition );
+    $key = Wallet::generateKey( $this->secret, $firstAtom->token, $signingPosition );
 
     // Building a one-time-signature
     $signatureFragments = $this->signatureFragments( $key );
