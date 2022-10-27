@@ -677,6 +677,30 @@ class KnishIOClient {
   }
 
   /**
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $policy
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
+   */
+  public function createPolicy( string $metaType, string $metaId, array $policy = [] ): Response {
+
+    // Create a molecule
+    $molecule = $this->createMolecule();
+    $molecule->addPolicyAtom( $metaType, $metaId, [], $policy );
+    $molecule->addContinuIdAtom();
+    $molecule->sign();
+    $molecule->check();
+
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
+  }
+
+  /**
    * @param string|null $bundleHash
    * @param string|null $tokenSlug
    * @param bool $unspent
@@ -1024,8 +1048,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
-
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**
@@ -1059,7 +1084,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**
@@ -1127,7 +1154,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**

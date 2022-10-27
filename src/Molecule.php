@@ -182,16 +182,48 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
+  /**
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $metas
+   * @param array $policy
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function addPolicyAtom(
+    string $metaType,
+    string $metaId,
+    array $metas = [],
+    array $policy = []
+  ): self {
+
+    // AtomMeta object initialization
+    $atomMeta = new AtomMeta( $metas );
+    $atomMeta->addPolicy( $policy );
+
+    $this->addAtom( Atom::create(
+      'R',
+      null,
+      null,
+      $metaType,
+      $metaId,
+      $atomMeta
+    ) );
+
+    return $this;
+  }
 
   /**
    * @param string $metaType
    * @param string $metaId
    * @param array $meta
+   * @param array $policy
    *
    * @return $this
    * @throws JsonException
    */
-  public function createRule ( string $metaType, string $metaId, array $meta ): Molecule {
+  public function createRule ( string $metaType, string $metaId, array $meta, array $policy = [] ): Molecule {
 
     foreach ( [ 'conditions', 'callback', 'rule', ] as $key ) {
       if ( !array_key_exists( $key, $meta ) ) {
@@ -203,19 +235,24 @@ class Molecule extends MoleculeStructure {
       }
     }
 
+    // Create & fill atom meta object
+    $atomMeta = new AtomMeta( $meta );
+    $atomMeta->addPolicy( $policy );
+
+    // Create rule isotope atom
     $this->addAtom( Atom::create(
       'R',
       $this->sourceWallet,
       null,
       $metaType,
       $metaId,
+      $atomMeta
     ) );
 
     // Add continuID atom
     $this->addContinuIdAtom();
 
     return $this;
-
   }
 
   /**
@@ -684,11 +721,12 @@ class Molecule extends MoleculeStructure {
    * @param array $meta
    * @param string $metaType
    * @param string $metaId
+   * @param array $policy
    *
    * @return $this
    * @throws JsonException
    */
-  public function initMeta ( array $meta, string $metaType, string $metaId ): Molecule {
+  public function initMeta ( array $meta, string $metaType, string $metaId, array $policy = [] ): Molecule {
 
     $this->addAtom( Atom::create(
       'M',
@@ -698,6 +736,9 @@ class Molecule extends MoleculeStructure {
       $metaId,
       new AtomMeta( $meta )
     ) );
+
+    // Add policy atom
+    $this->addPolicyAtom( $metaType, $metaId, $meta, $policy );
 
     // Add continuID atom
     $this->addContinuIdAtom();
