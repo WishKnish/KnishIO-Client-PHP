@@ -82,8 +82,8 @@ class Molecule extends MoleculeStructure {
    * @throws SodiumException
    */
   public function __construct (
-    private string $secret,
-    private ?Wallet $sourceWallet = null,
+    private readonly string $secret,
+    private readonly ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null
   ) {
@@ -777,8 +777,7 @@ class Molecule extends MoleculeStructure {
   /**
    * @param string $token
    * @param int $amount
-   * @param string $metaType
-   * @param string $metaId
+   * @param string $recipientBundle
    * @param array $meta
    * @param string|null $batchId
    *

@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use JsonException;
+
 /**
  *
  */
@@ -57,7 +59,7 @@ class PolicyMeta {
   /**
    * @var array
    */
-  private array $policy = [];
+  private array $policy;
 
   /**
    * @param array $policy
@@ -124,6 +126,7 @@ class PolicyMeta {
 
   /**
    * @return string
+   * @throws JsonException
    */
   public function toJson(): string {
     return json_encode( $this->get(), JSON_THROW_ON_ERROR );

@@ -192,6 +192,8 @@ class KnishIOClient {
     // Set encryption
     $this->encrypt = $encrypt;
     $this->client()->setEncryption( $encrypt );
+
+    return true;
   }
 
   /**

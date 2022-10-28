@@ -110,7 +110,7 @@ class AtomMeta {
    * @param array $policy
    *
    * @return $this
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function addPolicy( array $policy ): self {
     if ( !$policy ) {
