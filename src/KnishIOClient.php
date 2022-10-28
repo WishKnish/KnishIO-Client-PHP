@@ -146,6 +146,12 @@ class KnishIOClient {
   private ?AuthToken $authToken;
 
   /**
+   * @var bool
+   */
+  private bool $encrypt = false;
+
+
+  /**
    * KnishIOClient constructor.
    *
    * @param string|array $uri
@@ -171,6 +177,21 @@ class KnishIOClient {
 
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
+  }
+
+  /**
+   * @param bool $encrypt
+   *
+   * @return bool
+   */
+  public function switchEncryption ( bool $encrypt = false ): bool {
+    if ( $this->encrypt === $encrypt ) {
+       return false;
+    }
+
+    // Set encryption
+    $this->encrypt = $encrypt;
+    $this->client()->setEncryption( $encrypt );
   }
 
   /**
@@ -288,7 +309,12 @@ class KnishIOClient {
     $secret = $secret ?: $this->getSecret();
 
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-    if ( $sourceWallet === null && $this->remainderWallet && $this->remainderWallet->token === 'USER' && $this->lastMoleculeQuery ) {
+    if (
+      $sourceWallet === null &&
+      $this->remainderWallet &&
+      $this->remainderWallet->token === 'USER' &&
+      $this->lastMoleculeQuery
+    ) {
 
       /**
        * @var ResponseMolecule $response
@@ -367,7 +393,7 @@ class KnishIOClient {
     return $query->execute( [
       'bundleHash' => $bundleHash ?: $this->getBundle(),
       'token' => $tokenSlug,
-      'type' => $type,
+      'type' => $type
     ] );
   }
 
@@ -561,31 +587,34 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
-    if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
-      // Generate batch ID if it does not pass
+    $fungibility = array_get( $meta, 'fungibility' );
+
+
+    // For stackable token - create a batch ID
+    if ( $fungibility === 'stackable' ) {
       $batchId = $batchId ?? Crypto::generateBatchId();
+    }
 
-      // Special logic for token unit initialization
-      if ( count( $units ) > 0 ) {
+    // Special logic for token unit initialization (nonfungible || stackable)
+    if ( in_array( $fungibility, [ 'nonfungible', 'stackable' ] ) && count( $units ) > 0 ) {
 
-        if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
-          throw new StackableUnitDecimalsException();
-        }
+      if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
+        throw new StackableUnitDecimalsException();
+      }
 
-        if ( $amount > 0 ) {
-          throw new StackableUnitAmountException();
-        }
+      if ( $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
 
-        $amount = count( $units );
+      $amount = count( $units );
 
-        // Set custom default metadata
+      // Set custom default metadata
         $meta = array_merge( $meta, [
           'splittable' => 1,
           'decimals' => 0,
-          'tokenUnits' => json_encode( $units ),
+          'tokenUnits' => json_encode( $units )
         ] );
-      }
     }
 
     // Set default decimals value
@@ -657,6 +686,30 @@ class KnishIOClient {
   }
 
   /**
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $policy
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws SodiumException
+   */
+  public function createPolicy( string $metaType, string $metaId, array $policy = [] ): Response {
+
+    // Create a molecule
+    $molecule = $this->createMolecule();
+    $molecule->addPolicyAtom( $metaType, $metaId, [], $policy );
+    $molecule->addContinuIdAtom();
+    $molecule->sign();
+    $molecule->check();
+
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
+  }
+
+  /**
    * @param string|null $bundleHash
    * @param string|null $tokenSlug
    * @param bool $unspent
@@ -679,7 +732,7 @@ class KnishIOClient {
     $response = $query->execute( [
       'bundleHash' => $bundleHash ?: $this->getBundle(),
       'token' => $tokenSlug,
-      'unspent' => $unspent,
+      'unspent' => $unspent
     ] );
 
     return $response->getWallets();
@@ -1010,8 +1063,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
-
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**
@@ -1045,7 +1099,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**
@@ -1113,7 +1169,9 @@ class KnishIOClient {
     $molecule->sign();
     $molecule->check();
 
-    return ( new MutationProposeMolecule( $this->client(), $molecule ) )->execute();
+    // Create & execute a mutation
+    $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
+    return $query->execute();
   }
 
   /**
@@ -1169,7 +1227,7 @@ class KnishIOClient {
     $response = $query->execute( [
       'cellSlug' => $cellSlug,
       'pubkey' => $wallet->pubkey,
-      'encrypt' => $encrypt,
+      'encrypt' => $encrypt
     ] );
 
     // Create & set an auth token object if there any data in payload (@todo add a key based check?)
@@ -1236,9 +1294,8 @@ class KnishIOClient {
     // Response for request guest/profile auth token
     $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );
 
-    // Set encryption
-    $this->client()
-      ->setEncryption( $encrypt );
+    // Switch encryption
+    $this->switchEncryption( $encrypt );
 
     // Return full response
     return $response;
