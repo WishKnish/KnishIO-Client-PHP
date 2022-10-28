@@ -86,7 +86,8 @@ class AtomMeta {
   /**
    * @param Wallet $wallet
    *
-   * @return void
+   * @return $this
+   * @throws \JsonException
    */
   public function addWallet( Wallet $wallet ): self {
     $walletMeta = [
@@ -100,6 +101,26 @@ class AtomMeta {
       $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
     }
     $this->merge( $walletMeta );
+    return $this;
+  }
+
+  /**
+   * @param array $policy
+   *
+   * @return $this
+   * @throws \JsonException
+   */
+  public function addPolicy( array $policy ): self {
+    if ( !$policy ) {
+      return $this;
+    }
+
+    $policyMeta = new PolicyMeta( $policy, array_keys( $this->meta ) );
+
+    $this->merge( [
+      'policy' => $policyMeta->toJson(),
+    ] );
+
     return $this;
   }
 

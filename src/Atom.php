@@ -77,6 +77,23 @@ class Atom {
 
   use Json;
 
+  /**
+   * @return string[]
+   */
+  public static function getHashableProps(): array {
+    return [
+      'position',
+      'walletAddress',
+      'isotope',
+      'token',
+      'value',
+      'batchId',
+      'metaType',
+      'metaId',
+      'meta',
+      'createdAt',
+    ];
+  }
 
   /**
    * @param string|null $position
@@ -118,19 +135,20 @@ class Atom {
   }
 
   /**
-   * @param Wallet $wallet
    * @param string $isotope
-   * @param int $value
+   * @param Wallet|null $wallet
+   * @param string|null $value
    * @param string|null $metaType
    * @param string|null $metaId
-   * @param array $metas
+   * @param AtomMeta|null $meta
+   * @param string|null $batchId
    *
    * @return static
    * @throws \JsonException
    */
   public static function create(
-    Wallet $wallet,
     string $isotope,
+    Wallet $wallet = null,
     string $value = null,
     string $metaType = null,
     string $metaId = null,
@@ -143,19 +161,53 @@ class Atom {
       $meta = new AtomMeta;
     }
 
+    // If wallet has been passed => add related metas
+    if ( $wallet ) {
+      $meta->addWallet( $wallet );
+    }
+
     // Create the final atom's object
     return new Atom(
-      $wallet->position,
-      $wallet->address,
+      $wallet?->position,
+      $wallet?->address,
       $isotope,
-      $wallet->token,
+      $wallet?->token,
       $value,
-      $batchId ?? $wallet->batchId,
+      $batchId ?? $wallet?->batchId,
       $metaType,
       $metaId,
-      $meta->addWallet( $wallet )
-        ->get(),
+      $meta->get(),
     );
+  }
+
+  /**
+   * @return array
+   */
+  public function getHashableValues(): array {
+    $hashableValues = [];
+    foreach( static::getHashableProps() as $property ) {
+      $value = $this->$property;
+
+      // All null values not in custom keys list won't get hashed
+      if ( $value === null && !in_array( $property, [ 'position', 'walletAddress', ], true ) ) {
+        continue;
+      }
+
+      // Special code for meta property
+      if ( $property === 'meta' ) {
+        foreach ( $value as $meta ) {
+          if ( isset( $meta[ 'value' ] ) ) {
+            $hashableValues[] = ( string ) $meta[ 'key' ];
+            $hashableValues[] = ( string ) $meta[ 'value' ];
+          }
+        }
+      }
+      // Default value
+      else {
+        $hashableValues[] = ( string ) $value;
+      }
+    }
+    return $hashableValues;
   }
 
   /**
@@ -170,67 +222,23 @@ class Atom {
     $molecularSponge = Crypto\Shake256::init();
     $numberOfAtoms = count( $atomList );
 
-    $hashingValues = [];
+    $hashableValues = [];
     foreach ( $atomList as $atom ) {
 
-      $atomData = get_object_vars( $atom );
+      // !!! @todo: why does this code works for every interaction of atoms, maybe it needs to be taken out of the loop?
+      $hashableValues[] = (string) $numberOfAtoms;
 
+      $hashableValues = array_merge( $hashableValues, $atom->getHashableValues() );
+    }
+
+    // Add hash values to the sponge
+    foreach( $hashableValues as $hashableValue ) {
       try {
-        // $molecularSponge->absorb( (string) $numberOfAtoms );
-        $hashingValues[] = (string) $numberOfAtoms;
+        $molecularSponge->absorb( $hashableValue );
       }
       catch ( Exception $e ) {
         throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
       }
-
-      foreach ( $atomData as $name => $value ) {
-
-        // All null values not in custom keys list won't get hashed
-        if ( $value === null && !in_array( $name, [ 'position', 'walletAddress', ], true ) ) {
-          continue;
-        }
-
-        // Excluded keys
-        if ( in_array( $name, [ 'otsFragment', 'index', ], true ) ) {
-          continue;
-        }
-
-        if ( $name === 'meta' ) {
-          foreach ( $value as $meta ) {
-
-            if ( isset( $meta[ 'value' ] ) ) {
-
-              try {
-                // $molecularSponge->absorb( ( string ) $meta[ 'key' ] );
-                // $molecularSponge->absorb( ( string ) $meta[ 'value' ] );
-                $hashingValues[] = ( string ) $meta[ 'key' ];
-                $hashingValues[] = ( string ) $meta[ 'value' ];
-              }
-              catch ( Exception $e ) {
-                throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
-              }
-
-            }
-          }
-
-          continue;
-        }
-
-        // Absorb value as string
-        try {
-          // $molecularSponge->absorb( ( string ) $value );
-          $hashingValues[] = ( string ) $value;
-        }
-        catch ( Exception $e ) {
-          throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
-        }
-      }
-
-    }
-
-    // Add hash values to the sponge
-    foreach( $hashingValues as $hashingValue ) {
-      $molecularSponge->absorb( $hashingValue );
     }
 
     try {

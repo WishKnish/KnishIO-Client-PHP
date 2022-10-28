@@ -164,11 +164,11 @@ class Wallet {
       $this->bundle = Crypto::generateBundleHash( $secret );
 
       // Generate a position for non-shadow wallet if not initialized
-      $this->position = $this->position ?? static::generateWalletPosition();
+      $this->position = $this->position ?? static::generatePosition();
 
       // Key & address initialization
-      $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
-      $this->address = static::generateWalletAddress( $this->key );
+      $this->key = static::generateKey( $secret, $this->token, $this->position );
+      $this->address = static::generateAddress( $this->key );
 
       // Soda object initialization
       $this->soda = new Soda( $this->characters );
@@ -192,7 +192,7 @@ class Wallet {
   public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
     $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
-    $position = $secret ? static::generateWalletPosition() : null;
+    $position = $secret ? static::generatePosition() : null;
 
     // Wallet initialization
     $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
@@ -274,46 +274,6 @@ class Wallet {
     }
 
     $remainderWallet->tokenUnits = $remainderTokenUnits;
-  }
-
-  /**
-   * @param int $saltLength
-   *
-   * @return string
-   * @throws CryptoException
-   */
-  protected static function generateWalletPosition ( int $saltLength = 64 ): string {
-    return Strings::randomString( $saltLength );
-  }
-
-  /**
-   * @param string $key
-   *
-   * @return string
-   */
-  protected static function generateWalletAddress ( string $key ): string {
-
-    $digestSponge = Crypto\Shake256::init();
-
-    foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
-      foreach ( range( 1, 16 ) as $ignored ) {
-        $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
-      }
-
-      try {
-        $digestSponge->absorb( $workingFragment );
-      }
-      catch ( Exception $e ) {
-        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
-      }
-    }
-
-    try {
-      return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
-    }
-    catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
-    }
   }
 
   /**
@@ -407,13 +367,52 @@ class Wallet {
   }
 
   /**
+   * @param int $saltLength
+   *
+   * @return string
+   */
+  protected static function generatePosition ( int $saltLength = 64 ): string {
+    return Strings::randomString( $saltLength );
+  }
+
+  /**
+   * @param string $key
+   *
+   * @return string
+   */
+  protected static function generateAddress ( string $key ): string {
+
+    $digestSponge = Crypto\Shake256::init();
+
+    foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
+      foreach ( range( 1, 16 ) as $ignored ) {
+        $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
+      }
+
+      try {
+        $digestSponge->absorb( $workingFragment );
+      }
+      catch ( Exception $e ) {
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      }
+    }
+
+    try {
+      return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+    }
+  }
+
+  /**
    * @param string $secret
    * @param string $token
    * @param string $position
    *
    * @return string
    */
-  public static function generateWalletKey ( string $secret, string $token, string $position ): string {
+  public static function generateKey ( string $secret, string $token, string $position ): string {
 
     // Converting secret to bigInt
     // Adding new position to the user secret to produce the indexed key
