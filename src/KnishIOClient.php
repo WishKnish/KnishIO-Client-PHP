@@ -586,27 +586,30 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
-    if ( array_get( $meta, 'fungibility' ) === 'stackable' ) { // For stackable token - create a batch ID
 
-      // Generate batch ID if it does not pass
+    $fungibility = array_get( $meta, 'fungibility' );
+
+
+    // For stackable token - create a batch ID
+    if ( $fungibility === 'stackable' ) {
       $batchId = $batchId ?? Crypto::generateBatchId();
+    }
 
-      // Special logic for token unit initialization
-      if ( count( $units ) > 0 ) {
+    // Special logic for token unit initialization (nonfungible || stackable)
+    if ( in_array( $fungibility, [ 'nonfungible', 'stackable' ] ) && count( $units ) > 0 ) {
 
-        if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
-          throw new StackableUnitDecimalsException();
-        }
-
-        if ( $amount > 0 ) {
-          throw new StackableUnitAmountException();
-        }
-
-        $amount = count( $units );
-
-        // Set custom default metadata
-        $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
+      if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
+        throw new StackableUnitDecimalsException();
       }
+
+      if ( $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
+
+      $amount = count( $units );
+
+      // Set custom default metadata
+      $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
     }
 
     // Set default decimals value
