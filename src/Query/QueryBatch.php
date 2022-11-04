@@ -63,7 +63,20 @@ class QueryBatch extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'batchId', 'type', 'createdAt', 'wallet' => [ 'address', 'bundleHash', 'amount', ], 'metas' => [ 'key', 'value', ], ];
+  protected array $fields = [
+    'batchId',
+    'type',
+    'createdAt',
+    'wallet' => [
+      'address',
+      'bundleHash',
+      'amount',
+    ],
+    'metas' => [
+      'key',
+      'value',
+    ],
+  ];
 
   /**
    * @param string $response

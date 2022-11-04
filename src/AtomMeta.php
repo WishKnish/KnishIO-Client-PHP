@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use JsonException;
+
 /**
  *
  */
@@ -68,7 +70,7 @@ class AtomMeta {
    *
    * @return $this
    */
-  public function merge( array $meta ): self {
+  public function merge ( array $meta ): self {
     $this->meta = array_merge( $this->meta, $meta );
     return $this;
   }
@@ -78,7 +80,7 @@ class AtomMeta {
    *
    * @return $this
    */
-  public function addContext( string $context ): self {
+  public function addContext ( string $context ): self {
     $this->merge( [ 'context' => $context ] );
     return $this;
   }
@@ -87,9 +89,9 @@ class AtomMeta {
    * @param Wallet $wallet
    *
    * @return $this
-   * @throws \JsonException
+   * @throws JsonException
    */
-  public function addWallet( Wallet $wallet ): self {
+  public function addWallet ( Wallet $wallet ): self {
     $walletMeta = [
       'pubkey' => $wallet->pubkey,
       'characters' => $wallet->characters,
@@ -108,7 +110,7 @@ class AtomMeta {
    * @param array $policy
    *
    * @return $this
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function addPolicy( array $policy ): self {
     if ( !$policy ) {
@@ -128,9 +130,9 @@ class AtomMeta {
    * @param Wallet $signingWallet
    *
    * @return $this
-   * @throws \JsonException
+   * @throws JsonException
    */
-  public function addSigningWallet( Wallet $signingWallet ): self {
+  public function addSigningWallet ( Wallet $signingWallet ): self {
     $this->merge( [
       'signingWallet' => json_encode( [
         'address' => $signingWallet->address,
@@ -145,7 +147,7 @@ class AtomMeta {
   /**
    * @return array
    */
-  public function get(): array {
+  public function get (): array {
     return $this->meta;
   }
 }

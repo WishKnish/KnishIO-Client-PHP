@@ -63,7 +63,61 @@ class QueryMetaType extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'metaType', 'instances' => [ 'metaType', 'metaId', 'createdAt', 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'atoms' => [ 'molecularHash', 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'otsFragment', 'createdAt', ], 'molecules' => [ 'molecularHash', 'cellSlug', 'bundleHash', 'status', 'height', 'createdAt', 'receivedAt', 'processedAt', 'broadcastedAt', ], ], 'metas' => [ 'molecularHash', 'position', 'metaType', 'metaId', 'key', 'value', 'createdAt', ], 'paginatorInfo' => [ 'currentPage', 'total' ], 'createdAt', ];
+  protected array $fields = [ 'metaType',
+    'instances' => [
+      'metaType',
+      'metaId',
+      'createdAt',
+      'metas' => [
+        'molecularHash',
+        'position',
+        'metaType',
+        'metaId',
+        'key',
+        'value',
+        'createdAt',
+      ],
+      'atoms' => [
+        'molecularHash',
+        'position',
+        'isotope',
+        'walletAddress',
+        'tokenSlug',
+        'batchId',
+        'value',
+        'index',
+        'metaType',
+        'metaId',
+        'otsFragment',
+        'createdAt',
+      ],
+      'molecules' => [
+        'molecularHash',
+        'cellSlug',
+        'bundleHash',
+        'status',
+        'height',
+        'createdAt',
+        'receivedAt',
+        'processedAt',
+        'broadcastedAt',
+      ],
+    ],
+    'metas' => [
+      'molecularHash',
+      'position',
+      'metaType',
+      'metaId',
+      'key',
+      'value',
+      'createdAt',
+    ],
+    'paginatorInfo' => [
+      'currentPage',
+      'total'
+    ],
+    'createdAt',
+  ];
 
   /**
    * Builds a GraphQL-friendly variables object based on input fields

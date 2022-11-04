@@ -63,7 +63,10 @@ class Meta {
   public static function normalize ( array $meta ): array {
     $result = [];
     foreach ( $meta as $key => $value ) {
-      $result[] = is_array( $value ) ? $value : [ 'key' => $key, 'value' => (string) $value, ];
+      $result[] = is_array( $value ) ? $value : [
+        'key' => $key,
+        'value' => (string) $value,
+      ];
     }
     return $result;
   }

@@ -192,6 +192,8 @@ class KnishIOClient {
     // Set encryption
     $this->encrypt = $encrypt;
     $this->client()->setEncryption( $encrypt );
+
+    return true;
   }
 
   /**
@@ -263,7 +265,6 @@ class KnishIOClient {
     $this->secret = $secret;
     $this->bundle = Crypto::generateBundleHash( $secret );
   }
-
 
   /**
    * @return string|null
@@ -392,7 +393,9 @@ class KnishIOClient {
 
     // Execute the query
     return $query->execute( [
-      'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'type' => $type,
+      'bundleHash' => $bundleHash ?: $this->getBundle(),
+      'token' => $tokenSlug,
+      'type' => $type
     ] );
   }
 
@@ -609,7 +612,11 @@ class KnishIOClient {
       $amount = count( $units );
 
       // Set custom default metadata
-      $meta = array_merge( $meta, [ 'splittable' => 1, 'decimals' => 0, 'tokenUnits' => json_encode( $units ), ] );
+        $meta = array_merge( $meta, [
+          'splittable' => 1,
+          'decimals' => 0,
+          'tokenUnits' => json_encode( $units )
+        ] );
     }
 
     // Set default decimals value
@@ -665,6 +672,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function createIdentifier ( string $type, string $contact, string $code ): Response {
 
@@ -723,7 +731,11 @@ class KnishIOClient {
     /**
      * @var ResponseWalletList $response
      */
-    $response = $query->execute( [ 'bundleHash' => $bundleHash ?: $this->getBundle(), 'token' => $tokenSlug, 'unspent' => $unspent, ] );
+    $response = $query->execute( [
+      'bundleHash' => $bundleHash ?: $this->getBundle(),
+      'token' => $tokenSlug,
+      'unspent' => $unspent
+    ] );
 
     return $response->getWallets();
   }
@@ -773,6 +785,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -987,6 +1000,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException
    * @throws JsonException
+   * @throws SodiumException
    */
   public function withdrawBufferToken ( string $tokenSlug, int $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
 
@@ -1213,7 +1227,9 @@ class KnishIOClient {
     $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
 
     $response = $query->execute( [
-      'cellSlug' => $cellSlug, 'pubkey' => $wallet->pubkey, 'encrypt' => $encrypt,
+      'cellSlug' => $cellSlug,
+      'pubkey' => $wallet->pubkey,
+      'encrypt' => $encrypt
     ] );
 
     // Create & set an auth token object if there any data in payload (@todo add a key based check?)

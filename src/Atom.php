@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -107,6 +108,7 @@ class Atom {
    * @param array $meta
    * @param string|null $otsFragment
    * @param int|null $index
+   * @param string|null $createdAt
    */
   public function __construct (
     public ?string $position,
@@ -144,7 +146,7 @@ class Atom {
    * @param string|null $batchId
    *
    * @return static
-   * @throws \JsonException
+   * @throws JsonException
    */
   public static function create(
     string $isotope,
@@ -158,7 +160,7 @@ class Atom {
 
     // If meta is not passed - create it
     if ( !$meta ) {
-      $meta = new AtomMeta;
+      $meta = new AtomMeta();
     }
 
     // If wallet has been passed => add related metas
@@ -297,7 +299,10 @@ class Atom {
    * @todo change to __set?
    */
   public function setProperty ( string $property, $value ): void {
-    $property = array_get( [ 'tokenSlug' => 'token', 'metas' => 'meta', ], $property, $property );
+    $property = array_get( [
+      'tokenSlug' => 'token',
+      'metas' => 'meta',
+    ], $property, $property );
 
     // Meta json specific logic (if meta does not initialized)
     if ( !$this->meta && $property === 'metasJson' ) {

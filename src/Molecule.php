@@ -82,8 +82,8 @@ class Molecule extends MoleculeStructure {
    * @throws SodiumException
    */
   public function __construct (
-    private string $secret,
-    private ?Wallet $sourceWallet = null,
+    private readonly string $secret,
+    private readonly ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null
   ) {
@@ -225,7 +225,11 @@ class Molecule extends MoleculeStructure {
    */
   public function createRule ( string $metaType, string $metaId, array $meta, array $policy = [] ): Molecule {
 
-    foreach ( [ 'conditions', 'callback', 'rule', ] as $key ) {
+    foreach ( [
+      'conditions',
+      'callback',
+      'rule'
+    ] as $key ) {
       if ( !array_key_exists( $key, $meta ) ) {
         throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
       }
@@ -493,7 +497,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Set a metas signing wallet data for molecule reconciliation ability
-    $firstAtomMeta = new AtomMeta;
+    $firstAtomMeta = new AtomMeta();
     if ( $signingWallet ) {
       $firstAtomMeta->addSigningWallet( $signingWallet );
     }
@@ -609,10 +613,6 @@ class Molecule extends MoleculeStructure {
    * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
    * @param int $amount - how many of the token we are initially issuing (for fungible tokens only)
    * @param array $meta - additional fields to configure the token
-   *
-   * @param Wallet $recipientWallet
-   * @param int $amount
-   * @param array $meta
    *
    * @return $this
    * @throws JsonException
@@ -777,12 +777,12 @@ class Molecule extends MoleculeStructure {
   /**
    * @param string $token
    * @param int $amount
-   * @param string $metaType
-   * @param string $metaId
+   * @param string $recipientBundle
    * @param array $meta
    * @param string|null $batchId
    *
    * @return $this
+   * @throws JsonException
    */
   public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
 

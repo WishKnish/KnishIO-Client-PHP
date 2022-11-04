@@ -17,11 +17,25 @@ class BaseX {
   private Base64|Base58 $encoder;
 
   public function __construct ( array $options = [] ) {
-    $basex = [ 'BASE2', 'BASE8', 'BASE11', 'BASE36', 'BASE62', 'BASE67' ];
-    $base58 = [ 'BITCOIN', 'FLICKR', 'RIPPLE', 'IPFS' ];
+    $basex = [
+      'BASE2',
+      'BASE8',
+      'BASE11',
+      'BASE36',
+      'BASE62',
+      'BASE67'
+    ];
+    $base58 = [
+      'BITCOIN',
+      'FLICKR',
+      'RIPPLE',
+      'IPFS'
+    ];
     $base64 = [ 'BASE64' ];
     $config = [
-      "characters" => B58::GMP, "check" => false, "version" => 0x00,
+      "characters" => B58::GMP,
+      "check" => false,
+      "version" => 0x00,
     ];
 
     $cloneOptions = ( new ArrayObject( $options ) )->getArrayCopy();

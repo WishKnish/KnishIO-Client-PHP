@@ -140,8 +140,12 @@ abstract class Query {
     $this->variables = $this->compiledVariables( $variables ?? [] );
 
     // Create a request
-    return new Request( 'POST', $this->uri(), array_merge( $headers, [ 'Content-Type' => 'application/json', 'x-auth-token' => $this->client->getAuthToken(), ] ), json_encode( [
-      'query' => $this->compiledQuery( $fields ), 'variables' => $this->variables,
+    return new Request( 'POST', $this->uri(), array_merge( $headers, [
+      'Content-Type' => 'application/json',
+      'x-auth-token' => $this->client->getAuthToken(),
+    ] ), json_encode( [
+      'query' => $this->compiledQuery( $fields ),
+      'variables' => $this->variables,
     ], JSON_THROW_ON_ERROR ) );
   }
 

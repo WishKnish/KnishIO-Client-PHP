@@ -39,7 +39,9 @@ class AuthToken {
   public static function restore ( array $snapshot, string $secret ): self {
     $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
     return static::create( [
-      'token' => array_get( $snapshot, 'token' ), 'expiresAt' => array_get( $snapshot, 'expiresAt' ), 'pubkey' => array_get( $snapshot, 'pubkey' ),
+      'token' => array_get( $snapshot, 'token' ),
+      'expiresAt' => array_get( $snapshot, 'expiresAt' ),
+      'pubkey' => array_get( $snapshot, 'pubkey' ),
     ], $wallet, array_get( $snapshot, 'encrypt' ) );
   }
 
@@ -76,12 +78,21 @@ class AuthToken {
    * @return array
    */
   #[ArrayShape( [
-    'token' => "string", 'expiresAt' => "string", 'pubkey' => "string", 'encrypt' => "bool", 'wallet' => "array"
+    'token' => "string",
+    'expiresAt' => "string",
+    'pubkey' => "string",
+    'encrypt' => "bool",
+    'wallet' => "array"
   ] )]
   public function getSnapshot (): array {
     return [
-      'token' => $this->token, 'expiresAt' => $this->expiresAt, 'pubkey' => $this->pubkey, 'encrypt' => $this->encrypt, 'wallet' => [
-        'position' => $this->wallet->position, 'characters' => $this->wallet->characters,
+      'token' => $this->token,
+      'expiresAt' => $this->expiresAt,
+      'pubkey' => $this->pubkey,
+      'encrypt' => $this->encrypt,
+      'wallet' => [
+        'position' => $this->wallet->position,
+        'characters' => $this->wallet->characters,
       ],
     ];
   }
@@ -125,11 +136,15 @@ class AuthToken {
    */
   #[Pure]
   #[ArrayShape( [
-    'token' => "string", 'pubkey' => "string", 'wallet' => "\WishKnish\KnishIO\Client\Wallet"
+    'token' => "string",
+    'pubkey' => "string",
+    'wallet' => Wallet::class
   ] )]
   public function getAuthData (): array {
     return [
-      'token' => $this->getToken(), 'pubkey' => $this->getPubkey(), 'wallet' => $this->getWallet(),
+      'token' => $this->getToken(),
+      'pubkey' => $this->getPubkey(),
+      'wallet' => $this->getWallet(),
     ];
   }
 

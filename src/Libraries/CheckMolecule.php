@@ -159,7 +159,8 @@ class CheckMolecule {
         $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
 
         if ( !array_every( array_keys( $policy ), static fn( $value ) => in_array( $value, [
-          'read', 'write'
+          'read',
+          'write'
         ], true ) ) ) {
           throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
@@ -168,7 +169,9 @@ class CheckMolecule {
       if ( array_key_exists( 'rule', $metas ) ) {
 
         foreach ( [
-          'callback', 'conditions', 'rule',
+          'callback',
+          'conditions',
+          'rule',
         ] as $key ) {
           if ( !array_key_exists( $key, $metas ) ) {
             throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
@@ -186,7 +189,9 @@ class CheckMolecule {
             $keys = array_keys( $condition );
 
             if ( count( array_intersect( $keys, [
-                'key', 'value', 'comparison',
+                'key',
+                'value',
+                'comparison',
               ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
               throw new MetaMissingException( 'Missing field in conditions.' );
             }
@@ -194,7 +199,8 @@ class CheckMolecule {
         }
 
         if ( !in_array( strtolower( $metas[ 'callback' ] ), [
-          'reject', 'unseat',
+          'reject',
+          'unseat',
         ], true ) ) {
           $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
@@ -241,7 +247,10 @@ class CheckMolecule {
       };
 
       if ( $metaType === 'wallet' ) {
-        $checkRequiredMetaKeys( [ 'position', 'bundle' ] );
+        $checkRequiredMetaKeys( [
+          'position',
+          'bundle'
+        ] );
       }
 
       $checkRequiredMetaKeys( [ 'token' ] );
@@ -301,7 +310,7 @@ class CheckMolecule {
     foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
       if ( $atom->token !== 'AUTH' ) {
-          throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 
       if ( $atom->index !== 0 ) {
@@ -338,7 +347,10 @@ class CheckMolecule {
   public function isotopeVB ( Wallet $senderWallet = null ): void {
 
     // Get atoms with V OR B isotopes
-    $atoms = $this->molecule->getIsotopes( [ 'V', 'B' ] );
+    $atoms = $this->molecule->getIsotopes( [
+      'V',
+      'B'
+    ] );
 
     // V & B isotopes does not found
     if ( !$atoms ) {

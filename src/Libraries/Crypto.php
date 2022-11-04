@@ -49,9 +49,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use JsonException;
-use ReflectionException;
-use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
@@ -80,7 +77,10 @@ class Crypto {
    */
   public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
 
-    if ( !in_array( null, [ $molecularHash, $index ], true ) ) {
+    if ( !in_array( null, [
+      $molecularHash,
+      $index
+    ], true ) ) {
       return static::generateBundleHash( $molecularHash . $index );
     }
 
@@ -106,6 +106,5 @@ class Crypto {
   public static function isBundleHash ( string $code ): bool {
     return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
   }
-
 
 }

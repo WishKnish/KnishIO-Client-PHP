@@ -80,7 +80,12 @@ class MutationActiveSession extends Mutation {
 
   // Fields
   protected array $fields = [
-    'bundleHash', 'metaType', 'metaId', 'jsonData', 'createdAt', 'updatedAt',
+    'bundleHash',
+    'metaType',
+    'metaId',
+    'jsonData',
+    'createdAt',
+    'updatedAt',
   ];
 
   /**

@@ -63,7 +63,26 @@ class QueryMetaInstance extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'nodes' => [ 'metaType', 'metaId', 'createdAt', 'metas' => [ 'key', 'value', 'createdAt', ], ], 'counts' => [ 'key', 'value', ], 'paginator' => [ 'offset', 'total' ], ];
+  protected array $fields = [
+    'nodes' => [
+      'metaType',
+      'metaId',
+      'createdAt',
+      'metas' => [
+        'key',
+        'value',
+        'createdAt',
+      ],
+    ],
+    'counts' => [
+      'key',
+      'value',
+    ],
+    'paginator' => [
+      'offset',
+      'total'
+    ],
+  ];
 
   /**
    * @param string $response

@@ -52,7 +52,6 @@ namespace WishKnish\KnishIO\Client;
 use BI\BigInteger;
 use Exception;
 use JsonException;
-use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
@@ -123,6 +122,16 @@ class Wallet {
   public ?string $createdAt = null;
 
   /**
+   * @var string|null
+   */
+  public ?string $tokenName = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenSupply = null;
+
+  /**
    * @var array
    */
   public array $tokenUnits = [];
@@ -133,10 +142,14 @@ class Wallet {
   public array $tradeRates = [];
 
   /**
+   * @var array
+   */
+  public array $molecules = [];
+
+  /**
    * @var Soda|null
    */
   protected ?Soda $soda = null;
-
 
   /**
    * @param string|null $secret
@@ -156,7 +169,6 @@ class Wallet {
   ) {
 
     $this->characters = $this->characters ?? 'BASE64';
-
 
     if ( $secret ) {
 
@@ -178,7 +190,6 @@ class Wallet {
       $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
     }
   }
-
 
   /**
    * @param string $secretOrBundle
@@ -282,7 +293,6 @@ class Wallet {
    *
    * @return array
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function encryptBinary ( string $message, ...$pubkeys ): array {
@@ -294,7 +304,6 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function decryptBinary ( array|string $message ): mixed {
@@ -317,7 +326,6 @@ class Wallet {
    *
    * @return array
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function encryptMessage ( mixed $message, ...$pubkeys ): array {
@@ -342,7 +350,6 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function decryptMessage ( array|string $message ): mixed {

@@ -63,7 +63,13 @@ class QueryLinkIdentifierMutation extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'type', 'bundle', 'content', 'set', 'message', ];
+  protected array $fields = [
+    'type',
+    'bundle',
+    'content',
+    'set',
+    'message',
+  ];
 
   /**
    * Create a response
