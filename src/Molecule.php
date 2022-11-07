@@ -547,7 +547,6 @@ class Molecule extends MoleculeStructure {
       'token' => $newWallet->token,
       'bundle' => $newWallet->bundle,
       'position' => $newWallet->position,
-      'amount' => '0',
       'batch_id' => $newWallet->batchId,
     ] );
 

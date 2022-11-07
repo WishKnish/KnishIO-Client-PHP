@@ -103,7 +103,7 @@ class PolicyMeta {
     foreach( [ 'read' => $readPolicy, 'write' => $writePolicy ] as $type => $value ) {
       $policyKeys = array_column( $value, 'key' );
 
-      if ( !$this->policy[ $type ] ) {
+      if ( !array_has( $this->policy, $type ) ) {
         $this->policy[ $type ] = [];
       }
 
