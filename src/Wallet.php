@@ -167,9 +167,6 @@ class Wallet {
     public ?string $batchId = null,
     public ?string $characters = null
   ) {
-
-    $this->characters = $this->characters ?? 'BASE64';
-
     if ( $secret ) {
 
       // Set bundle from the secret
@@ -188,6 +185,9 @@ class Wallet {
       // Private & pubkey initialization
       $this->privkey = $this->soda->generatePrivateKey( $this->key );
       $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
+
+      // Set characters
+      $this->characters = $this->characters ?? 'BASE64';
     }
   }
 

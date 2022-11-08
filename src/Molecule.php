@@ -662,6 +662,8 @@ class Molecule extends MoleculeStructure {
       'tokenSlug' => $tokenSlug,
       'walletAddress' => $wallet->address,
       'walletPosition' => $wallet->position,
+      'pubkey' => $wallet->pubkey,
+      'characters' => $wallet->characters,
       'batchId' => $wallet->batchId,
     ] );
 
