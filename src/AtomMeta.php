@@ -113,9 +113,6 @@ class AtomMeta {
    * @throws JsonException
    */
   public function addPolicy( array $policy ): self {
-    if ( !$policy ) {
-      return $this;
-    }
 
     $policyMeta = new PolicyMeta( $policy, array_keys( $this->meta ) );
 
