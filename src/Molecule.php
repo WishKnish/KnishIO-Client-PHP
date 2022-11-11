@@ -546,13 +546,20 @@ class Molecule extends MoleculeStructure {
    */
   public function initWalletCreation ( Wallet $newWallet ): Molecule {
 
+    /*
     $atomMeta = new AtomMeta( [
       'address' => $newWallet->address,
       'token' => $newWallet->token,
       'bundle' => $newWallet->bundle,
       'position' => $newWallet->position,
       'batch_id' => $newWallet->batchId,
+      'walletPubkey' => $newWallet->pubkey,
+      'walletCharacters' => $newWallet->characters,
     ] );
+    */
+
+    $atomMeta = new AtomMeta;
+    $atomMeta->addNewWallet( $newWallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(
@@ -611,13 +618,14 @@ class Molecule extends MoleculeStructure {
    *
    * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
    * @param int $amount - how many of the token we are initially issuing (for fungible tokens only)
-   * @param array $meta - additional fields to configure the token
+   * @param array $metas - additional fields to configure the token
    *
    * @return $this
    * @throws JsonException
    */
-  public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $meta ): Molecule {
+  public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $metas ): Molecule {
 
+    /*
     // Fill metas with wallet property
     foreach ( [
       'walletAddress' => 'address',
@@ -629,6 +637,11 @@ class Molecule extends MoleculeStructure {
         $meta[ $metaKey ] = $recipientWallet->$walletProperty;
       }
     }
+    */
+
+    // Atom meta with new wallet data
+    $meta = new AtomMeta( $metas );
+    $meta->addNewWallet( $recipientWallet );
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
     $this->addAtom( Atom::create(
@@ -637,7 +650,7 @@ class Molecule extends MoleculeStructure {
       $amount,
       'token',
       $recipientWallet->token,
-      new AtomMeta( $meta ),
+      $meta,
       $recipientWallet->batchId,
     ) );
 
@@ -648,16 +661,14 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * Init shadow wallet claim
-   *
-   * @param string $tokenSlug
    * @param Wallet $wallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
+  public function initShadowWalletClaim ( Wallet $wallet ): Molecule {
 
+    /*
     $atomMeta = new AtomMeta( [
       'tokenSlug' => $tokenSlug,
       'walletAddress' => $wallet->address,
@@ -666,6 +677,9 @@ class Molecule extends MoleculeStructure {
       'characters' => $wallet->characters,
       'batchId' => $wallet->batchId,
     ] );
+    */
+    $atomMeta = new AtomMeta;
+    $atomMeta->addNewWallet( $wallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(

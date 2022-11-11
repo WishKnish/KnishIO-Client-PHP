@@ -107,6 +107,101 @@ class AtomMeta {
   }
 
   /**
+   * New wallet: used for shadow wallet claim & wallet creation
+   *
+   * @param Wallet $wallet
+   *
+   * @return void
+   */
+  public function addNewWallet( Wallet $wallet ): self {
+
+    $this->merge( [
+      'walletTokenSlug' => $wallet->token,
+      'walletBundleHash' => $wallet->bundle,
+      'walletAddress' => $wallet->address,
+      'walletPosition' => $wallet->position,
+      'walletBatchId' => $wallet->batchId,
+      'walletPubkey' => $wallet->pubkey,
+      'walletCharacters' => $wallet->characters,
+    ] );
+
+    /*
+    $this->merge( [
+      'newWallet' => json_encode( [
+        'tokenSlug' => $wallet->token,
+        'bundleHash' => $wallet->bundle,
+        'address' => $wallet->address,
+        'position' => $wallet->position,
+        'batchId' => $wallet->batchId,
+        'pubkey' => $wallet->pubkey,
+        'characters' => $wallet->characters,
+      ] )
+    ] );
+    */
+
+    return $this;
+  }
+
+  /**
+   * @return array
+   */
+  public function getNewWalletData(): array {
+
+    /*
+
+    // Token creation
+    'walletAddress' => 'address',
+    'walletPosition' => 'position',
+    'walletPubkey' => 'pubkey',
+    'walletCharacters' => 'characters',
+
+    // Wallet creation
+    'address' => $newWallet->address,
+    'token' => $newWallet->token,
+    'bundle' => $newWallet->bundle,
+    'position' => $newWallet->position,
+    'batch_id' => $newWallet->batchId,
+    'pubkey' => $newWallet->pubkey,
+    'characters' => $newWallet->characters,
+
+    // Shadow wallet claim
+    'tokenSlug' => $tokenSlug,
+    'walletAddress' => $wallet->address,
+    'walletPosition' => $wallet->position,
+    'pubkey' => $wallet->pubkey,
+    'characters' => $wallet->characters,
+    'batchId' => $wallet->batchId,
+
+    */
+
+    // key - actual key, value - array of the oldest keys
+    // @todo this code will be removed, it's tmp supporting
+    $walletKeys = [
+      'walletTokenSlug' => [ 'token', 'tokenSlug' ],
+      'walletBundleHash' => [ 'bundle' ],
+      'walletAddress' => [ 'address '],
+      'walletPosition' => [ 'position '],
+      'walletBatchId' => [ 'batchId', 'batch_id' ],
+      'walletPubkey' => [ 'pubkey' ],
+      'walletCharacters' => [ 'characters' ],
+    ];
+
+    // Set wallet data by all key combinations
+    $walletData = [];
+    foreach( $walletKeys as $actualKey => $keys ) {
+      foreach( array_merge( [ $actualKey ], $keys ) as $key ) {
+        $value = array_get( $this->meta, $key );
+        if ( $value ) {
+          break;
+        }
+      }
+      $walletData[ $actualKey ] = $value;
+    }
+
+    return $walletData;
+  }
+
+  /**
    * @param array $policy
    *
    * @return $this
