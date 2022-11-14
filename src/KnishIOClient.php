@@ -612,11 +612,11 @@ class KnishIOClient {
       $amount = count( $units );
 
       // Set custom default metadata
-        $meta = array_merge( $meta, [
-          'splittable' => 1,
-          'decimals' => 0,
-          'tokenUnits' => json_encode( $units )
-        ] );
+      $meta = array_merge( $meta, [
+        'splittable' => 1,
+        'decimals' => 0,
+        'tokenUnits' => json_encode( $units )
+      ] );
     }
 
     // Set default decimals value

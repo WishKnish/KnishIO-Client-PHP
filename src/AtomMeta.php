@@ -107,14 +107,13 @@ class AtomMeta {
   }
 
   /**
-   * New wallet: used for shadow wallet claim & wallet creation
+   * Created wallet: used for shadow wallet claim & wallet creation
    *
    * @param Wallet $wallet
    *
    * @return void
    */
-  public function addNewWallet( Wallet $wallet ): self {
-
+  public function addCreatedWallet( Wallet $wallet ): self {
     $this->merge( [
       'walletTokenSlug' => $wallet->token,
       'walletBundleHash' => $wallet->bundle,
@@ -124,28 +123,14 @@ class AtomMeta {
       'walletPubkey' => $wallet->pubkey,
       'walletCharacters' => $wallet->characters,
     ] );
-
-    /*
-    $this->merge( [
-      'newWallet' => json_encode( [
-        'tokenSlug' => $wallet->token,
-        'bundleHash' => $wallet->bundle,
-        'address' => $wallet->address,
-        'position' => $wallet->position,
-        'batchId' => $wallet->batchId,
-        'pubkey' => $wallet->pubkey,
-        'characters' => $wallet->characters,
-      ] )
-    ] );
-    */
-
     return $this;
   }
 
   /**
-   * @return array
+   * @return Wallet
+   * @throws \SodiumException
    */
-  public function getNewWalletData(): array {
+  public function getCreatedWallet(): Wallet {
 
     /*
 
@@ -198,7 +183,18 @@ class AtomMeta {
       $walletData[ $actualKey ] = $value;
     }
 
-    return $walletData;
+    // Create a client wallet from the stored data
+    $wallet = new Wallet(
+      null,
+      array_get( $walletData, 'walletTokenSlug' ),
+      array_get( $walletData, 'walletPosition' ),
+      array_get( $walletData, 'walletBatchId' ) ?: null,
+      array_get( $walletData, 'walletCharacters' )
+    );
+    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );
+    $wallet->address = array_get( $walletData, 'walletAddress' );
+    $wallet->pubkey = array_get( $walletData, 'walletPubkey' );
+    return $wallet;
   }
 
   /**

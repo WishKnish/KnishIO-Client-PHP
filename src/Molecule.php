@@ -559,7 +559,7 @@ class Molecule extends MoleculeStructure {
     */
 
     $atomMeta = new AtomMeta;
-    $atomMeta->addNewWallet( $newWallet );
+    $atomMeta->addCreatedWallet( $newWallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(
@@ -641,7 +641,7 @@ class Molecule extends MoleculeStructure {
 
     // Atom meta with new wallet data
     $meta = new AtomMeta( $metas );
-    $meta->addNewWallet( $recipientWallet );
+    $meta->addCreatedWallet( $recipientWallet );
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
     $this->addAtom( Atom::create(
@@ -679,7 +679,7 @@ class Molecule extends MoleculeStructure {
     ] );
     */
     $atomMeta = new AtomMeta;
-    $atomMeta->addNewWallet( $wallet );
+    $atomMeta->addCreatedWallet( $wallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(
