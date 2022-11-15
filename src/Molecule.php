@@ -499,7 +499,7 @@ class Molecule extends MoleculeStructure {
     // Set a metas signing wallet data for molecule reconciliation ability
     $firstAtomMeta = new AtomMeta();
     if ( $signingWallet ) {
-      $firstAtomMeta->addSigningWallet( $signingWallet );
+      $firstAtomMeta->setSigningWallet( $signingWallet );
     }
 
     // Initializing a new Atom to remove tokens from source
@@ -559,7 +559,7 @@ class Molecule extends MoleculeStructure {
     */
 
     $atomMeta = new AtomMeta;
-    $atomMeta->addCreatedWallet( $newWallet );
+    $atomMeta->setMetaWallet( $newWallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(
@@ -641,7 +641,7 @@ class Molecule extends MoleculeStructure {
 
     // Atom meta with new wallet data
     $meta = new AtomMeta( $metas );
-    $meta->addCreatedWallet( $recipientWallet );
+    $meta->setMetaWallet( $recipientWallet );
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
     $this->addAtom( Atom::create(
@@ -679,7 +679,7 @@ class Molecule extends MoleculeStructure {
     ] );
     */
     $atomMeta = new AtomMeta;
-    $atomMeta->addCreatedWallet( $wallet );
+    $atomMeta->setMetaWallet( $wallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(

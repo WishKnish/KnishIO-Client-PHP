@@ -165,7 +165,7 @@ class Atom {
 
     // If wallet has been passed => add related metas
     if ( $wallet ) {
-      $meta->addWallet( $wallet );
+      $meta->setAtomWallet( $wallet );
     }
 
     // Create the final atom's object
@@ -180,6 +180,34 @@ class Atom {
       $metaId,
       $meta->get(),
     );
+  }
+
+  /**
+   * @param string|null $bundleHash
+   *
+   * @return Wallet
+   * @throws \SodiumException
+   */
+  public function getWallet ( string $bundleHash = null ): Wallet {
+    $atomMeta = new AtomMeta( $this->aggregatedMeta() );
+
+    // Special code for the token creation (from atom's meta)
+    if ( $this->isotope == 'C' && in_array( $this->metaType, [ 'token', 'wallet' ] ) ) {
+      return $atomMeta->getMetaWallet( $bundleHash );
+    }
+
+    // Create a client wallet from the stored data
+    $wallet = new Wallet(
+      null,
+      $this->token,
+      $this->position,
+      $this->batchId,
+      $atomMeta->getCharacters()
+    );
+    $wallet->bundle = $bundleHash;
+    $wallet->address = $this->walletAddress;
+    $wallet->pubkey = $atomMeta->getPubkey();
+    return $wallet;
   }
 
   /**

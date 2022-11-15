@@ -86,12 +86,14 @@ class AtomMeta {
   }
 
   /**
+   * Set all metadata from related wallet to atom
+   *
    * @param Wallet $wallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function addWallet ( Wallet $wallet ): self {
+  public function setAtomWallet ( Wallet $wallet ): self {
     $walletMeta = [
       'pubkey' => $wallet->pubkey,
       'characters' => $wallet->characters,
@@ -107,16 +109,15 @@ class AtomMeta {
   }
 
   /**
-   * Created wallet: used for shadow wallet claim & wallet creation
+   * Set NEW wallet(wallet creation): used for shadow wallet claim & wallet creation & token creation
    *
    * @param Wallet $wallet
    *
    * @return void
    */
-  public function addCreatedWallet( Wallet $wallet ): self {
+  public function setMetaWallet( Wallet $wallet ): self {
     $this->merge( [
       'walletTokenSlug' => $wallet->token,
-      'walletBundleHash' => $wallet->bundle,
       'walletAddress' => $wallet->address,
       'walletPosition' => $wallet->position,
       'walletBatchId' => $wallet->batchId,
@@ -127,13 +128,14 @@ class AtomMeta {
   }
 
   /**
+   * @param string|null $bundleHash
+   *
    * @return Wallet
    * @throws \SodiumException
    */
-  public function getCreatedWallet(): Wallet {
+  public function getMetaWallet( string $bundleHash = null ): Wallet {
 
     /*
-
     // Token creation
     'walletAddress' => 'address',
     'walletPosition' => 'position',
@@ -156,14 +158,12 @@ class AtomMeta {
     'pubkey' => $wallet->pubkey,
     'characters' => $wallet->characters,
     'batchId' => $wallet->batchId,
-
     */
 
     // key - actual key, value - array of the oldest keys
     // @todo this code will be removed, it's tmp supporting
     $walletKeys = [
       'walletTokenSlug' => [ 'token', 'tokenSlug' ],
-      'walletBundleHash' => [ 'bundle' ],
       'walletAddress' => [ 'address '],
       'walletPosition' => [ 'position '],
       'walletBatchId' => [ 'batchId', 'batch_id' ],
@@ -191,10 +191,76 @@ class AtomMeta {
       array_get( $walletData, 'walletBatchId' ) ?: null,
       array_get( $walletData, 'walletCharacters' )
     );
-    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );
+    $wallet->bundle = $bundleHash;
     $wallet->address = array_get( $walletData, 'walletAddress' );
     $wallet->pubkey = array_get( $walletData, 'walletPubkey' );
     return $wallet;
+  }
+
+  /**
+   * @param Wallet $signingWallet
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function setSigningWallet ( Wallet $signingWallet ): self {
+    $this->merge( [
+      'signingWallet' => json_encode( [
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
+      ], JSON_THROW_ON_ERROR ),
+    ] );
+    return $this;
+  }
+
+  /**
+   * @param string|null $bundleHash
+   *
+   * @return Wallet|null
+   * @throws JsonException
+   * @throws \SodiumException
+   */
+  public function getSigningWallet( string $bundleHash = null ): ?Wallet {
+
+    if ( !array_has( $this->meta, 'signingWallet' ) ) {
+      return null;
+    }
+
+    $walletData = json_decode(
+      array_get( $this->meta, 'signingWallet' ),
+      true,
+      512,
+      JSON_THROW_ON_ERROR
+    );
+
+    $wallet = new Wallet(
+      null,
+      'USER',
+      array_get( $walletData, 'position' ),
+      null,
+      array_get( $walletData, 'characters' )
+    );
+    $wallet->bundle = $bundleHash;
+    $wallet->address = array_get( $walletData, 'address' );
+    $wallet->pubkey = array_get( $walletData, 'pubkey' );
+    return $wallet;
+  }
+
+
+  /**
+   * @return string|null
+   */
+  public function getCharacters(): ?string {
+    return array_get( $this->meta, 'characters' );
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getPubkey(): ?string {
+    return array_get( $this->meta, 'pubkey' );
   }
 
   /**
@@ -211,24 +277,6 @@ class AtomMeta {
       'policy' => $policyMeta->toJson(),
     ] );
 
-    return $this;
-  }
-
-  /**
-   * @param Wallet $signingWallet
-   *
-   * @return $this
-   * @throws JsonException
-   */
-  public function addSigningWallet ( Wallet $signingWallet ): self {
-    $this->merge( [
-      'signingWallet' => json_encode( [
-        'address' => $signingWallet->address,
-        'position' => $signingWallet->position,
-        'pubkey' => $signingWallet->pubkey,
-        'characters' => $signingWallet->characters,
-      ], JSON_THROW_ON_ERROR ),
-    ] );
     return $this;
   }
 
