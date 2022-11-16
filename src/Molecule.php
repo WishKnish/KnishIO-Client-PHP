@@ -849,6 +849,7 @@ class Molecule extends MoleculeStructure {
    *
    * @param bool $anonymous
    * @param bool $compressed
+   * @throws \SodiumException
    */
   public function sign ( bool $anonymous = false, bool $compressed = true ): void {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
@@ -871,9 +872,10 @@ class Molecule extends MoleculeStructure {
     // Set signing position from the first atom
     $signingPosition = $firstAtom->position;
 
-    // Try to get custom signing position from the metas (local molecule with server secret)
-    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-      $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
+    // Try to get other specified signing wallet from the metas & override position
+    $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
+    if ( false && $signingWallet ) {
+      $signingPosition = $signingWallet->position;
     }
 
     // Signing position is required

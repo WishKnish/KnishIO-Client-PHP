@@ -49,8 +49,10 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
+use Illuminate\Support\Facades\Log;
 use JsonException;
 use WishKnish\KnishIO\Client\Atom;
+use WishKnish\KnishIO\Client\AtomMeta;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomIndexException;
@@ -460,6 +462,7 @@ class CheckMolecule {
    * the sender’s address.
    *
    * @throws CryptoException|MoleculeHashMissingException|MoleculeAtomsMissingException|MoleculeSignatureMalformedException|MoleculeSignatureMismatchException
+   * @throws \SodiumException
    */
   public function ots (): void {
 
@@ -499,9 +502,10 @@ class CheckMolecule {
     // Get a signing address
     $signingAddress = $firstAtom->walletAddress;
 
-    // Try to get custom signing position from the metas (local molecule with server secret)
-    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-      $signingAddress = array_get( json_decode( $signingWallet, true ), 'address' );
+    // Try to get other specified signing wallet from the metas & override signing address
+    $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
+    if ( false && $signingWallet ) {
+      $signingAddress = $signingWallet->address;
     }
 
     // Check the first atom's wallet: is what the molecule must be signed with

@@ -592,7 +592,6 @@ class KnishIOClient {
 
     $fungibility = array_get( $meta, 'fungibility' );
 
-
     // For stackable token - create a batch ID
     if ( $fungibility === 'stackable' ) {
       $batchId = $batchId ?? Crypto::generateBatchId();

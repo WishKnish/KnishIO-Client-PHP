@@ -219,22 +219,19 @@ class AtomMeta {
    * @param string|null $bundleHash
    *
    * @return Wallet|null
-   * @throws JsonException
    * @throws \SodiumException
    */
   public function getSigningWallet( string $bundleHash = null ): ?Wallet {
 
+    // Signing wallet key does not found in metas: the value is not set
     if ( !array_has( $this->meta, 'signingWallet' ) ) {
       return null;
     }
 
-    $walletData = json_decode(
-      array_get( $this->meta, 'signingWallet' ),
-      true,
-      512,
-      JSON_THROW_ON_ERROR
-    );
+    // Get wallet's data from the meta key
+    $walletData = json_decode( array_get( $this->meta, 'signingWallet' ), true );
 
+    // Create a wallet with all existing data
     $wallet = new Wallet(
       null,
       'USER',

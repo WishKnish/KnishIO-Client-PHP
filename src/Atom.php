@@ -183,34 +183,6 @@ class Atom {
   }
 
   /**
-   * @param string|null $bundleHash
-   *
-   * @return Wallet
-   * @throws \SodiumException
-   */
-  public function getWallet ( string $bundleHash = null ): Wallet {
-    $atomMeta = new AtomMeta( $this->aggregatedMeta() );
-
-    // Special code for the token creation (from atom's meta)
-    if ( $this->isotope == 'C' && in_array( $this->metaType, [ 'token', 'wallet' ] ) ) {
-      return $atomMeta->getMetaWallet( $bundleHash );
-    }
-
-    // Create a client wallet from the stored data
-    $wallet = new Wallet(
-      null,
-      $this->token,
-      $this->position,
-      $this->batchId,
-      $atomMeta->getCharacters()
-    );
-    $wallet->bundle = $bundleHash;
-    $wallet->address = $this->walletAddress;
-    $wallet->pubkey = $atomMeta->getPubkey();
-    return $wallet;
-  }
-
-  /**
    * @return array
    */
   public function getHashableValues(): array {
@@ -318,6 +290,13 @@ class Atom {
    */
   public function aggregatedMeta (): array {
     return Meta::aggregate( $this->meta );
+  }
+
+  /**
+   * @return AtomMeta
+   */
+  public function getAtomMeta(): AtomMeta {
+    return new AtomMeta( $this->aggregatedMeta() );
   }
 
   /**
