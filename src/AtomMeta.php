@@ -118,6 +118,7 @@ class AtomMeta {
   public function setMetaWallet( Wallet $wallet ): self {
     $this->merge( [
       'walletTokenSlug' => $wallet->token,
+      'walletBundleHash' => $wallet->bundle,
       'walletAddress' => $wallet->address,
       'walletPosition' => $wallet->position,
       'walletBatchId' => $wallet->batchId,
@@ -128,12 +129,10 @@ class AtomMeta {
   }
 
   /**
-   * @param string|null $bundleHash
-   *
    * @return Wallet
    * @throws \SodiumException
    */
-  public function getMetaWallet( string $bundleHash = null ): Wallet {
+  public function getMetaWallet(): Wallet {
 
     /*
     // Token creation
@@ -164,6 +163,7 @@ class AtomMeta {
     // @todo this code will be removed, it's tmp supporting
     $walletKeys = [
       'walletTokenSlug' => [ 'token', 'tokenSlug' ],
+      'walletBundleHash' => [ 'bundle' ],
       'walletAddress' => [ 'address '],
       'walletPosition' => [ 'position '],
       'walletBatchId' => [ 'batchId', 'batch_id' ],
@@ -191,7 +191,7 @@ class AtomMeta {
       array_get( $walletData, 'walletBatchId' ) ?: null,
       array_get( $walletData, 'walletCharacters' )
     );
-    $wallet->bundle = $bundleHash;
+    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );;
     $wallet->address = array_get( $walletData, 'walletAddress' );
     $wallet->pubkey = array_get( $walletData, 'walletPubkey' );
     return $wallet;
@@ -206,8 +206,11 @@ class AtomMeta {
   public function setSigningWallet ( Wallet $signingWallet ): self {
     $this->merge( [
       'signingWallet' => json_encode( [
+        'tokenSlug' => $signingWallet->token,
+        'bundleHash' => $signingWallet->bundle,
         'address' => $signingWallet->address,
         'position' => $signingWallet->position,
+        // 'batchId' => $signingWallet->batchId,
         'pubkey' => $signingWallet->pubkey,
         'characters' => $signingWallet->characters,
       ], JSON_THROW_ON_ERROR ),
@@ -216,12 +219,10 @@ class AtomMeta {
   }
 
   /**
-   * @param string|null $bundleHash
-   *
    * @return Wallet|null
    * @throws \SodiumException
    */
-  public function getSigningWallet( string $bundleHash = null ): ?Wallet {
+  public function getSigningWallet(): ?Wallet {
 
     // Signing wallet key does not found in metas: the value is not set
     if ( !array_has( $this->meta, 'signingWallet' ) ) {
@@ -234,12 +235,12 @@ class AtomMeta {
     // Create a wallet with all existing data
     $wallet = new Wallet(
       null,
-      'USER',
+      array_get( $walletData, 'tokenSlug' ),
       array_get( $walletData, 'position' ),
-      null,
+      null, // array_get( $walletData, 'batchId' ),
       array_get( $walletData, 'characters' )
     );
-    $wallet->bundle = $bundleHash;
+    $wallet->bundle = array_get( $walletData, 'bundleHash' );
     $wallet->address = array_get( $walletData, 'address' );
     $wallet->pubkey = array_get( $walletData, 'pubkey' );
     return $wallet;

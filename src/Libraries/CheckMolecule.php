@@ -504,7 +504,7 @@ class CheckMolecule {
 
     // Try to get other specified signing wallet from the metas & override signing address
     $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
-    if ( false && $signingWallet ) {
+    if ( $signingWallet ) {
       $signingAddress = $signingWallet->address;
     }
 

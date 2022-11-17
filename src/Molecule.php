@@ -874,7 +874,7 @@ class Molecule extends MoleculeStructure {
 
     // Try to get other specified signing wallet from the metas & override position
     $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
-    if ( false && $signingWallet ) {
+    if ( $signingWallet ) {
       $signingPosition = $signingWallet->position;
     }
 
