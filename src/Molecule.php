@@ -540,13 +540,15 @@ class Molecule extends MoleculeStructure {
 
   /**
    * @param Wallet $wallet
+   * @param AtomMeta|null $atomMeta
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWalletCreation ( Wallet $wallet ): Molecule {
+  public function initWalletCreation ( Wallet $wallet, AtomMeta $atomMeta = null ): Molecule {
 
-    $atomMeta = new AtomMeta;
+    // Create an atom metadata
+    $atomMeta = $atomMeta ?? new AtomMeta;
     $atomMeta->setMetaWallet( $wallet );
 
     // Create an 'C' atom
@@ -572,7 +574,8 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    */
   public function initShadowWalletClaim ( Wallet $wallet ): Molecule {
-    return $this->initWalletCreation( $wallet );
+    $atomMeta = ( new AtomMeta )->setShadowWalletClaim( true );
+    return $this->initWalletCreation( $wallet, $atomMeta );
   }
 
   /**

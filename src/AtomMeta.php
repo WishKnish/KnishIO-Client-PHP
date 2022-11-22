@@ -109,11 +109,12 @@ class AtomMeta {
   }
 
   /**
-   * Set NEW wallet(wallet creation): used for shadow wallet claim & wallet creation & token creation
+   * Set full NEW wallet metadata
+   * Used for shadow wallet claim & wallet creation & token creation
    *
    * @param Wallet $wallet
    *
-   * @return void
+   * @return $this
    */
   public function setMetaWallet( Wallet $wallet ): self {
     $this->merge( [
@@ -126,6 +127,23 @@ class AtomMeta {
       'walletCharacters' => $wallet->characters,
     ] );
     return $this;
+  }
+
+  /**
+   * @param bool $shadowWalletClaim
+   *
+   * @return $this
+   */
+  public function setShadowWalletClaim( bool $shadowWalletClaim ): self {
+    $this->merge( [ 'shadowWalletClaim' => (int) $shadowWalletClaim ] );
+    return $this;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isShadowWalletClaim(): bool {
+    return array_get( $this->meta, 'shadowWalletClaim', false );
   }
 
   /**

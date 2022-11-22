@@ -288,6 +288,18 @@ class Wallet {
   }
 
   /**
+   * @param string $secret
+   *
+   * @return Wallet
+   * @throws SodiumException
+   */
+  public function createRemainder( string $secret ): self {
+    $remainderWallet = Wallet::create( $secret, $this->token, $this->batchId, $this->characters );
+    $remainderWallet->initBatchId( $this, true );
+    return $remainderWallet;
+  }
+
+  /**
    * @param string $message
    * @param ...$pubkeys
    *
