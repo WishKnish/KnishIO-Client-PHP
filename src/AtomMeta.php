@@ -140,6 +140,7 @@ class AtomMeta {
   }
 
   /**
+   * (used only on the server side)
    * @return bool
    */
   public function isShadowWalletClaim(): bool {
@@ -147,6 +148,7 @@ class AtomMeta {
   }
 
   /**
+   * (used only on the server side)
    * @return Wallet
    * @throws \SodiumException
    */
@@ -228,7 +230,6 @@ class AtomMeta {
         'bundleHash' => $signingWallet->bundle,
         'address' => $signingWallet->address,
         'position' => $signingWallet->position,
-        // 'batchId' => $signingWallet->batchId,
         'pubkey' => $signingWallet->pubkey,
         'characters' => $signingWallet->characters,
       ], JSON_THROW_ON_ERROR ),
@@ -237,6 +238,7 @@ class AtomMeta {
   }
 
   /**
+   * (used only on the server side)
    * @return Wallet|null
    * @throws \SodiumException
    */
@@ -255,7 +257,7 @@ class AtomMeta {
       null,
       array_get( $walletData, 'tokenSlug' ),
       array_get( $walletData, 'position' ),
-      null, // array_get( $walletData, 'batchId' ),
+      null,
       array_get( $walletData, 'characters' )
     );
     $wallet->bundle = array_get( $walletData, 'bundleHash' );
@@ -263,7 +265,6 @@ class AtomMeta {
     $wallet->pubkey = array_get( $walletData, 'pubkey' );
     return $wallet;
   }
-
 
   /**
    * @return string|null
