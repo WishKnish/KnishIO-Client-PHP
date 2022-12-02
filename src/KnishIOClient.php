@@ -732,23 +732,13 @@ class KnishIOClient {
      */
     $response = $query->execute( [
       'bundleHash' => $bundleHash ?: $this->getBundle(),
-      'token' => $tokenSlug,
+      'tokenSlug' => $tokenSlug,
       'unspent' => $unspent
     ] );
 
     return $response->getWallets();
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param string|null $bundleHash
-   *
-   * @return array|null
-   * @throws GuzzleException|Exception
-   */
-  public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ?array {
-    return $this->queryWallets( $bundleHash, $tokenSlug );
-  }
 
   /**
    * @param string|null $bundleHash
@@ -869,8 +859,9 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function claimShadowWallets ( string $tokenSlug ): array {
+
     // Get shadow wallet list
-    $wallets = $this->queryShadowWallets( $tokenSlug );
+    $wallets = $this->queryWallets( null, $tokenSlug );
 
     // Check shadow wallets
     $shadowWallets = [];
