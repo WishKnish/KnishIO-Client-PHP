@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use JsonException;
+
 /**
  * Class Meta
  * @package WishKnish\KnishIO\Client
@@ -59,13 +61,31 @@ class Meta {
    * @param array $meta
    *
    * @return array
+   * @throws JsonException
    */
   public static function normalize ( array $meta ): array {
     $result = [];
+
     foreach ( $meta as $key => $value ) {
-      $result[] = is_array( $value ) ? $value : [
+
+      // Handling non-string meta values
+      if ( !is_string( $value ) ) {
+
+        // Is value numeric?
+        if ( is_numeric( $value ) ) {
+          $value = (string) $value;
+        }
+
+        // Is value an object?
+        if (is_object( $value ) ) {
+          $value = json_encode( $value, JSON_THROW_ON_ERROR );
+        }
+      }
+
+      // Adding normalized meta
+      $result[] = [
         'key' => $key,
-        'value' => (string) $value,
+        'value' => $value,
       ];
     }
     return $result;
