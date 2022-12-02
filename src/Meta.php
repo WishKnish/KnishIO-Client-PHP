@@ -77,7 +77,7 @@ class Meta {
         }
 
         // Is value an object?
-        if (is_object( $value ) ) {
+        if ( is_object( $value ) || is_array( $value ) ) {
           $value = json_encode( $value, JSON_THROW_ON_ERROR );
         }
       }
