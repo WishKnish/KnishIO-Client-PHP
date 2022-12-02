@@ -72,7 +72,6 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  */
 class Molecule extends MoleculeStructure {
 
-
   /**
    * @param string $secret
    * @param Wallet|null $sourceWallet
@@ -82,15 +81,17 @@ class Molecule extends MoleculeStructure {
    * @throws SodiumException
    */
   public function __construct (
-    private readonly string $secret,
-    private readonly ?Wallet $sourceWallet = null,
+    private string $secret,
+    private ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null
   ) {
     parent::__construct( $cellSlug );
 
-    // Sets the remainder wallet, or generates it if source wallet is provided
-    $this->remainderWallet = $remainderWallet ?: ( $sourceWallet ? Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters ) : null );
+    // Generates remainder wallet if source wallet is provided
+    if ( !$remainderWallet && $sourceWallet) {
+      $this->remainderWallet = Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+    }
 
     $this->clear();
   }
@@ -119,9 +120,9 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @return Wallet
+   * @return Wallet|null
    */
-  public function remainderWallet (): Wallet {
+  public function remainderWallet (): ?Wallet {
     return $this->remainderWallet;
   }
 
@@ -144,6 +145,7 @@ class Molecule extends MoleculeStructure {
    * @param Atom $atom
    *
    * @return $this
+   * @throws SodiumException
    */
   public function addAtom ( Atom $atom ): Molecule {
 
@@ -152,6 +154,11 @@ class Molecule extends MoleculeStructure {
 
     // Set atom's index
     $atom->index = $this->generateIndex();
+
+    // Add source wallet if not already set when adding first atom
+    if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
+      $this->sourceWallet = new Wallet( $this->secret(), $atom->token, $atom->position, $atom->batchId );
+    }
 
     // Add atom
     $this->atoms[] = $atom;
@@ -167,15 +174,21 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function addContinuIdAtom (): Molecule {
+
+    // Creating a remainder wallet if needed
+    if(!$this->remainderWallet()) {
+      $this->remainderWallet = new Wallet( $this->secret() );
+    }
 
     $this->addAtom( Atom::create(
       'I',
       $this->remainderWallet,
       null,
       'walletBundle',
-      $this->remainderWallet->bundle,
+      $this->remainderWallet->bundle
     ) );
 
     return $this;
@@ -189,6 +202,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function addPolicyAtom(
     string $metaType,
@@ -221,8 +235,14 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
-  public function createRule ( string $metaType, string $metaId, array $meta, array $policy = [] ): Molecule {
+  public function createRule (
+    string $metaType,
+    string $metaId,
+    array $meta,
+    array $policy = []
+  ): Molecule {
 
     foreach ( [
       'conditions',
@@ -264,6 +284,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function replenishToken ( int $amount, array $tokenUnits = [] ): Molecule {
 
@@ -315,6 +336,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function fuseToken ( array $tokenUnits, Wallet $recipientWallet ): Molecule {
 
@@ -357,6 +379,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function burnToken ( int $amount ): Molecule {
 
@@ -395,6 +418,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initValue ( Wallet $recipientWallet, int $amount ): Molecule {
 
@@ -484,6 +508,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
 
@@ -542,6 +567,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initWalletCreation ( Wallet $newWallet ): Molecule {
 
@@ -578,6 +604,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
 
@@ -614,6 +641,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $meta ): Molecule {
 
@@ -654,6 +682,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
 
@@ -691,6 +720,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initIdentifierCreation ( string $type, string $contact, string $code ): Molecule {
 
@@ -725,6 +755,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initMeta ( array $meta, string $metaType, string $metaId, array $policy = [] ): Molecule {
 
@@ -755,6 +786,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
 
@@ -783,6 +815,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
 
@@ -810,6 +843,7 @@ class Molecule extends MoleculeStructure {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function initAuthorization ( array $meta = [] ): Molecule {
 
