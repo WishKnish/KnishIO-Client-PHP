@@ -73,6 +73,7 @@ class MoleculeStructure {
   public ?string $status;
   public int $local = 0;
   public string $createdAt;
+  public ?string $receivedAt = null;
   public array $atoms = [];
 
   /**
