@@ -89,8 +89,8 @@ class Molecule extends MoleculeStructure {
     parent::__construct( $cellSlug );
 
     // Generates remainder wallet if source wallet is provided
-    if ( !$remainderWallet && $sourceWallet) {
-      $this->remainderWallet = Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+    if ( $remainderWallet || $sourceWallet ) {
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
     }
 
     $this->clear();
@@ -179,7 +179,7 @@ class Molecule extends MoleculeStructure {
   public function addContinuIdAtom (): Molecule {
 
     // Creating a remainder wallet if needed
-    if(!$this->remainderWallet()) {
+    if( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
       $this->remainderWallet = new Wallet( $this->secret() );
     }
 
