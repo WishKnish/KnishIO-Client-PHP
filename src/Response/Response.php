@@ -152,7 +152,13 @@ class Response {
 
     // Check key & return custom data from the response
     if ( !array_has( $this->response, $this->dataKey ) ) {
-      throw new InvalidResponseException();
+      if(array_has( $this->response, 'errors' ) && $this->response['errors'][0]['debugMessage']) {
+        $error = $this->response['errors'][0]['debugMessage'];
+      }
+      else {
+        $error = 'GraphQL did not provide a valid response.';
+      }
+      throw new InvalidResponseException( $error );
     }
 
     return array_get( $this->response, $this->dataKey );
