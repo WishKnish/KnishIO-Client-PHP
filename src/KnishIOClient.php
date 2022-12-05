@@ -1224,7 +1224,7 @@ class KnishIOClient {
 
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
-    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
+    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'USER' );
 
     $response = $query->execute( [
       'cellSlug' => $cellSlug,
@@ -1249,9 +1249,16 @@ class KnishIOClient {
    * @throws GuzzleException|JsonException|Exception
    */
   public function requestProfileAuthToken ( string $secret, bool $encrypt ): Response {
+
     $this->setSecret( $secret );
 
-    $wallet = new Wallet( $secret, 'AUTH' );
+    // Querying ContinuID USER wallet
+    $wallet = $this->queryBalance( 'USER' )->payload();
+
+    // If no ContinuID established, create a new USER wallet
+    if( !$wallet ) {
+      $wallet = new Wallet( $secret, 'USER' );
+    }
 
     // Create an auth molecule
     $molecule = $this->createMolecule( $secret, $wallet );

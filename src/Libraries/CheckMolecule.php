@@ -309,7 +309,7 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
-      if ( $atom->token !== 'AUTH' ) {
+      if ( $atom->token !== 'USER' ) {
         throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 
