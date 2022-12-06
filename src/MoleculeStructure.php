@@ -75,6 +75,7 @@ class MoleculeStructure {
   public string $createdAt;
   public ?string $receivedAt = null;
   public array $atoms = [];
+  public ?array $payloads = null;
 
   /**
    * @param string|array $isotopes
