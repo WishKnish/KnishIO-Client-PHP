@@ -72,8 +72,11 @@ class MoleculeStructure {
   public ?string $bundle;
   public ?string $status;
   public int $local = 0;
+  public ?int $height = null;
+  public ?int $depth = null;
   public string $createdAt;
   public ?string $receivedAt = null;
+  public ?string $processedAt = null;
   public array $atoms = [];
   public ?array $payloads = null;
 
