@@ -54,21 +54,17 @@ use Throwable;
 /**
  * Class TokenTypeException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
 class TokenTypeException extends KnishIOException {
-  /**
-   * TokenTypeException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Wrong type of token for this isotope', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * TokenTypeException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Wrong type of token for this isotope', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

@@ -54,21 +54,17 @@ use Throwable;
 /**
  * Class TransferMismatchedException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
 class TransferMismatchedException extends KnishIOException {
-  /**
-   * TransferMismatchedException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Token transfer slugs are mismatched', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * TransferMismatchedException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Token transfer slugs are mismatched', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

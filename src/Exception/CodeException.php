@@ -56,14 +56,15 @@ use Throwable;
  * @package WishKnish\KnishIO\Client\Exception
  */
 class CodeException extends KnishIOException {
-  /**
-   * CodeException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Code exception', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * CodeException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Code exception', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

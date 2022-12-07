@@ -79,9 +79,13 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class CheckMolecule {
 
-  /**
-   * @param MoleculeStructure $molecule
-   */
+    /**
+     * @param MoleculeStructure $molecule
+     *
+     * @throws MoleculeHashMissingException
+     * @throws MoleculeAtomsMissingException
+     * @throws MoleculeAtomIndexException
+     */
   public function __construct ( private readonly MoleculeStructure $molecule ) {
 
     // No molecular hash?
@@ -120,9 +124,10 @@ class CheckMolecule {
     $this->batchId();
   }
 
-  /**
-   * Check batch ID
-   */
+    /**
+     * Check batch ID
+     * @throws WalletBatchException
+     */
   public function batchId (): void {
 
     /** @var Atom $sourceAtom */
@@ -145,9 +150,10 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * @throws JsonException
-   */
+    /**
+     * @throws JsonException
+     * @throws MetaMissingException
+     */
   public function isotopeR (): void {
 
     /** @var Atom $atom */
@@ -212,9 +218,10 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Check ContinuID
-   */
+    /**
+     * Check ContinuID
+     * @throws MoleculeAtomsMissingException
+     */
   public function continuId (): void {
 
     /** @var Atom $atom */
@@ -226,9 +233,12 @@ class CheckMolecule {
 
   }
 
-  /**
-   * Check isotope T
-   */
+    /**
+     * Check isotope T
+     * @throws MetaMissingException
+     * @throws MoleculeAtomIndexException
+     * @throws TokenTypeException
+     */
   public function isotopeT (): void {
 
     /** @var Atom $atom */
@@ -265,9 +275,11 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Check isotope C
-   */
+    /**
+     * Check isotope C
+     * @throws TokenTypeException
+     * @throws MoleculeAtomIndexException
+     */
   public function isotopeC (): void {
 
     /** @var Atom $atom */
@@ -283,9 +295,11 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Check isotope I
-   */
+    /**
+     * Check isotope I
+     * @throws TokenTypeException
+     * @throws MoleculeAtomIndexException
+     */
   public function isotopeI (): void {
 
     /** @var Atom $atom */
@@ -301,9 +315,11 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Check isotope U
-   */
+    /**
+     * Check isotope U
+     * @throws TokenTypeException
+     * @throws MoleculeAtomIndexException
+     */
   public function isotopeU (): void {
 
     /** @var Atom $atom */
@@ -319,9 +335,11 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Check isotope M
-   */
+    /**
+     * Check isotope M
+     * @throws MetaMissingException
+     * @throws TokenTypeException
+     */
   public function isotopeM (): void {
 
     /** @var Atom $atom */
@@ -337,13 +355,21 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Verification of V, B isotope molecules checks to make sure that:
-   * 1. we're sending and receiving the same token
-   * 2. we're only subtracting on the first atom
-   *
-   * @param Wallet|null $senderWallet
-   */
+    /**
+     * Verification of V, B isotope molecules checks to make sure that:
+     * 1. we're sending and receiving the same token
+     * 2. we're only subtracting on the first atom
+     *
+     * @param Wallet|null $senderWallet
+     *
+     * @throws TransferMismatchedException
+     * @throws TransferMalformedException
+     * @throws TransferToSelfException
+     * @throws TransferUnbalancedException
+     * @throws TransferBalanceException
+     * @throws TransferRemainderException
+     * @throws TransferWalletException
+     */
   public function isotopeVB ( Wallet $senderWallet = null ): void {
 
     // Get atoms with V OR B isotopes
@@ -445,9 +471,11 @@ class CheckMolecule {
     }
   }
 
-  /**
-   * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
-   */
+    /**
+     * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
+     * @throws MoleculeHashMismatchException
+     * @throws CryptoException
+     */
   public function molecularHash (): void {
     if ( $this->molecule->molecularHash !== Atom::hashAtoms( $this->molecule->atoms ) ) {
       throw new MoleculeHashMismatchException();
@@ -459,8 +487,11 @@ class CheckMolecule {
    * of signature fragments Om and a molecular hash Hm into a single-use wallet address to be matched against
    * the sender’s address.
    *
-   * @throws CryptoException|MoleculeHashMissingException|MoleculeAtomsMissingException|MoleculeSignatureMalformedException|MoleculeSignatureMismatchException
-   */
+     * @return void
+     * @throws CryptoException
+     * @throws MoleculeSignatureMalformedException
+     * @throws MoleculeSignatureMismatchException
+     */
   public function ots (): void {
 
     // Determine first atom

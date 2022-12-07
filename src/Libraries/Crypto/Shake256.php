@@ -100,19 +100,20 @@ class Shake256 {
         ->squeeze( $length );
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
   }
 
-  /**
-   * @return SHA3
-   */
+    /**
+     * @return SHA3
+     * @throws CryptoException
+     */
   public static function init (): SHA3 {
     try {
       return SHA3::init( SHA3::SHAKE256 );
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
   }
 

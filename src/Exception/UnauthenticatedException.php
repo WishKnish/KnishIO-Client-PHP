@@ -56,14 +56,15 @@ use Throwable;
  * @package WishKnish\KnishIO\Client\Exception
  */
 class UnauthenticatedException extends KnishIOException {
-  /**
-   * UnauthenticatedException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Unauthenticated.', int $code = 2, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * UnauthenticatedException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Unauthenticated.', $payload = null, int $code = 2, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

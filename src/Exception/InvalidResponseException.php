@@ -54,21 +54,17 @@ use Throwable;
 /**
  * Class InvalidResponseException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
 class InvalidResponseException extends KnishIOException {
-  /**
-   * InvalidResponseException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'GraphQL did not provide a valid response.', int $code = 2, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * InvalidResponseException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'GraphQL did not provide a valid response.', $payload = null, int $code = 2, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

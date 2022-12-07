@@ -95,9 +95,10 @@ class Cipher {
     $this->wallet = $wallet;
   }
 
-  /**
-   * @return Wallet
-   */
+    /**
+     * @return Wallet
+     * @throws CodeException
+     */
   public function wallet (): Wallet {
     if ( $this->wallet === null ) {
       throw new CodeException( 'Authorized wallet missing.' );
@@ -112,9 +113,10 @@ class Cipher {
     $this->pubkey = $pubkey;
   }
 
-  /**
-   * @return string
-   */
+    /**
+     * @return string
+     * @throws CodeException
+     */
   public function getPubkey (): string {
     if ( $this->pubkey === null ) {
       throw new CodeException( 'Server public key missing.' );

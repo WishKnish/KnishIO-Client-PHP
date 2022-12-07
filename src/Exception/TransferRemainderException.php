@@ -54,21 +54,17 @@ use Throwable;
 /**
  * Class TransferRemainderException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
 class TransferRemainderException extends KnishIOException {
-  /**
-   * TransferRemainderException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Invalid remainder provided', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * TransferRemainderException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Invalid remainder provided', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

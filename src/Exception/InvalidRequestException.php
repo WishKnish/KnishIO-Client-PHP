@@ -54,21 +54,17 @@ use Throwable;
 /**
  * Class InvalidResponseException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
 class InvalidRequestException extends KnishIOException {
-  /**
-   * InvalidRequestException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Invalid request format.', int $code = 2, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * InvalidRequestException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Invalid request format.', $payload = null, int $code = 2, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

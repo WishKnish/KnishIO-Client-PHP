@@ -52,14 +52,15 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 class StackableUnitAmountException extends KnishIOException {
-  /**
-   * StackableUnitAmountException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Can\'t use stackable units and provide amount.', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * StackableUnitAmountException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Can\'t use stackable units and provide amount.', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

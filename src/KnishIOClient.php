@@ -207,7 +207,7 @@ class KnishIOClient {
       return $this->uris[ random_int( 0, count( $this->uris ) - 1 ) ];
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
   }
 
@@ -266,9 +266,10 @@ class KnishIOClient {
     $this->bundle = Crypto::generateBundleHash( $secret );
   }
 
-  /**
-   * @return string|null
-   */
+    /**
+     * @return string|null
+     * @throws UnauthenticatedException
+     */
   public function getSecret (): ?string {
     if ( !$this->secret ) {
       throw new UnauthenticatedException( 'KnishIOClient::getSecret - Expected ' . static::class . '::authentication call before.' );
@@ -277,11 +278,12 @@ class KnishIOClient {
     return $this->secret;
   }
 
-  /**
-   * Returns the bundle hash for this session
-   *
-   * @returns {string}
-   */
+    /**
+     * Returns the bundle hash for this session
+     *
+     * @returns {string}
+     * @throws UnauthenticatedException
+     */
   public function getBundle (): ?string {
     if ( !$this->bundle ) {
       throw new UnauthenticatedException( 'KnishIOClient::getBundle() - Unable to find a stored bundle!' );
@@ -348,15 +350,16 @@ class KnishIOClient {
     return new $class( $this->client );
   }
 
-  /**
-   * @param string $class
-   * @param Molecule|null $molecule
-   *
-   * @return MutationProposeMolecule
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $class
+     * @param Molecule|null $molecule
+     *
+     * @return MutationProposeMolecule
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws CodeException
+     */
   public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
 
     // Init molecule
@@ -399,15 +402,17 @@ class KnishIOClient {
     ] );
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param string $type
-   *
-   * @return Wallet
-   * @throws GuzzleException
-   * @throws JsonException
-   */
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param string $type
+     *
+     * @return Wallet
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws TransferAmountException
+     * @throws WalletShadowException
+     */
   public function querySourceWallet ( string $tokenSlug, int $amount, string $type = 'regular' ): Wallet {
 
     // Get a from wallet
@@ -576,18 +581,20 @@ class KnishIOClient {
       ] );
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param array $meta
-   * @param string|null $batchId
-   * @param array $units
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param array $meta
+     * @param string|null $batchId
+     * @param array $units
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws StackableUnitDecimalsException
+     * @throws StackableUnitAmountException
+     */
   public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     $fungibility = array_get( $meta, 'fungibility' );
@@ -774,19 +781,22 @@ class KnishIOClient {
     return $query->execute( $variables, $fields );
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param string|null $recipientBundle
-   * @param array $meta
-   * @param string|null $batchId
-   * @param array $units
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param string|null $recipientBundle
+     * @param array $meta
+     * @param string|null $batchId
+     * @param array $units
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBundleException
+     * @throws WalletBatchException
+     * @throws StackableUnitAmountException
+     */
   public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // No bundle? Use our own
@@ -861,14 +871,15 @@ class KnishIOClient {
     return $query->execute();
   }
 
-  /**
-   * @param string $tokenSlug
-   *
-   * @return array
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $tokenSlug
+     *
+     * @return array
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws WalletShadowException
+     */
   public function claimShadowWallets ( string $tokenSlug ): array {
     // Get shadow wallet list
     $wallets = $this->queryShadowWallets( $tokenSlug );
@@ -892,19 +903,21 @@ class KnishIOClient {
     return $responses;
   }
 
-  /**
-   * @param string $bundleHash
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param string|null $batchId
-   * @param array $units
-   * @param Wallet|null $sourceWallet
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $bundleHash
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param string|null $batchId
+     * @param array $units
+     * @param Wallet|null $sourceWallet
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBundleException
+     * @throws StackableUnitAmountException
+     */
   public function transferToken ( string $bundleHash, string $tokenSlug, int $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
@@ -1023,17 +1036,18 @@ class KnishIOClient {
     return $query->execute();
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param array $units
-   * @param Wallet|null $sourceWallet
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param array $units
+     * @param Wallet|null $sourceWallet
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws StackableUnitAmountException
+     */
   public function burnToken ( string $tokenSlug, int $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
@@ -1070,17 +1084,18 @@ class KnishIOClient {
     return $query->execute();
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param int $amount
-   * @param array $tokenUnits
-   * @param Wallet|null $sourceWallet
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param array $tokenUnits
+     * @param Wallet|null $sourceWallet
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferWalletException
+     */
   public function replenishToken ( string $tokenSlug, int $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
     // Get a from wallet
@@ -1106,18 +1121,20 @@ class KnishIOClient {
     return $query->execute();
   }
 
-  /**
-   * @param string $bundleHash
-   * @param string $tokenSlug
-   * @param TokenUnit $newTokenUnit
-   * @param array $fusedTokenUnitIds
-   * @param Wallet|null $sourceWallet
-   *
-   * @return Response
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $bundleHash
+     * @param string $tokenSlug
+     * @param TokenUnit $newTokenUnit
+     * @param array $fusedTokenUnitIds
+     * @param Wallet|null $sourceWallet
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws WalletShadowException
+     * @throws TransferWalletException
+     */
   public function fuseToken ( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed

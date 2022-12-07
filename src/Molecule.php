@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use JsonException;
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
@@ -227,16 +228,17 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * @param string $metaType
-   * @param string $metaId
-   * @param array $meta
-   * @param array $policy
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param string $metaType
+     * @param string $metaId
+     * @param array $meta
+     * @param array $policy
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws MetaMissingException
+     */
   public function createRule (
     string $metaType,
     string $metaId,
@@ -278,14 +280,15 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * @param int $amount
-   * @param array $tokenUnits
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param int $amount
+     * @param array $tokenUnits
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferAmountException
+     */
   public function replenishToken ( int $amount, array $tokenUnits = [] ): Molecule {
 
     if ( $amount < 0 ) {
@@ -330,14 +333,15 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * @param array $tokenUnits
-   * @param Wallet $recipientWallet
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param array $tokenUnits
+     * @param Wallet $recipientWallet
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBalanceException
+     */
   public function fuseToken ( array $tokenUnits, Wallet $recipientWallet ): Molecule {
 
     // Calculate amount
@@ -374,13 +378,15 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * @param int $amount
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param int $amount
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferAmountException
+     * @throws TransferBalanceException
+     */
   public function burnToken ( int $amount ): Molecule {
 
     if ( $amount < 0 ) {
@@ -409,17 +415,18 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * Initialize a V-type molecule to transfer value from one wallet to another, with a third,
-   * regenerated wallet receiving the remainder
-   *
-   * @param Wallet $recipientWallet
-   * @param int $amount
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * Initialize a V-type molecule to transfer value from one wallet to another, with a third,
+     * regenerated wallet receiving the remainder
+     *
+     * @param Wallet $recipientWallet
+     * @param int $amount
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBalanceException
+     */
   public function initValue ( Wallet $recipientWallet, int $amount ): Molecule {
 
     if ( !$this->sourceWallet->hasEnoughBalance( $amount ) ) {
@@ -454,14 +461,15 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * @param int $amount
-   * @param array $tradeRates
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param int $amount
+     * @param array $tradeRates
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBalanceException
+     */
   public function initDepositBuffer ( int $amount, array $tradeRates ): Molecule {
 
     if ( !$this->sourceWallet->hasEnoughBalance( $amount ) ) {
@@ -500,16 +508,17 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * Initialize withdraw buffer (BVB molecule OR BV..VB combination)
-   *
-   * @param array $recipients
-   * @param Wallet|null $signingWallet
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * Initialize withdraw buffer (BVB molecule OR BV..VB combination)
+     *
+     * @param array $recipients
+     * @param Wallet|null $signingWallet
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws TransferBalanceException
+     */
   public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
 
     // Get the final sum of the recipients amount
@@ -862,13 +871,17 @@ class Molecule extends MoleculeStructure {
     return $this;
   }
 
-  /**
-   * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
-   * molecule. Resulting 4096 byte (2048 character) string is the one-time signature, which is then compressed.
-   *
-   * @param bool $anonymous
-   * @param bool $compressed
-   */
+    /**
+     * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
+     * molecule. Resulting 4096 byte (2048 character) string is the one-time signature, which is then compressed.
+     *
+     * @param bool $anonymous
+     * @param bool $compressed
+     *
+     * @throws MoleculeAtomsMissingException
+     * @throws WalletSignatureException
+     * @throws CryptoException
+     */
   public function sign ( bool $anonymous = false, bool $compressed = true ): void {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
         return !( $atom instanceof Atom );

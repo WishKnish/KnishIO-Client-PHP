@@ -10,7 +10,10 @@ class Base64 {
     return base64_encode( $data );
   }
 
-  public function decode ( $data ): string {
+    /**
+     * @throws CodeException
+     */
+    public function decode ( $data ): string {
     $decode = base64_decode( $data, true );
 
     if ( $decode === false ) {

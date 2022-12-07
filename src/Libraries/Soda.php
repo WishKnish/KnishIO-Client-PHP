@@ -68,12 +68,13 @@ class Soda {
    */
   private array $characters;
 
-  /**
-   * Soda constructor.
-   *
-   * @param string|null $characters
-   *
-   */
+    /**
+     * Soda constructor.
+     *
+     * @param string|null $characters
+     *
+     * @throws CryptoException
+     */
   public function __construct ( string $characters = null ) {
     $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
 

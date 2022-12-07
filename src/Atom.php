@@ -239,7 +239,7 @@ class Atom {
         $molecularSponge->absorb( $hashableValue );
       }
       catch ( Exception $e ) {
-        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+        throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
       }
     }
 
@@ -267,7 +267,7 @@ class Atom {
       }
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
 
     return $target;

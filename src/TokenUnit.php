@@ -65,13 +65,14 @@ class TokenUnit {
     return $result;
   }
 
-  /**
-   * @param mixed $id
-   * @param mixed $name
-   * @param mixed $metas
-   *
-   * @return static
-   */
+    /**
+     * @param mixed $id
+     * @param mixed $name
+     * @param mixed $metas
+     *
+     * @return static
+     * @throws TokenUnitFormatException
+     */
   public static function create ( mixed $id, mixed $name, mixed $metas ): self {
     if ( !is_string( $id ) || !$id ) {
       throw new TokenUnitFormatException( 'Invalid token unit ID format: non-empty string expected.' );
@@ -85,11 +86,12 @@ class TokenUnit {
     return new self( $id, $name, $metas );
   }
 
-  /**
-   * @param array $data
-   *
-   * @return static
-   */
+    /**
+     * @param array $data
+     *
+     * @return static
+     * @throws TokenUnitFormatException
+     */
   public static function createFromGraphQL ( array $data ): self {
     $metas = array_get( $data, 'metas', [] );
     if ( $metas ) {
@@ -106,11 +108,12 @@ class TokenUnit {
     return static::create( $tokenUnitId, array_get( $data, 'name' ), $metas );
   }
 
-  /**
-   * @param array|string $data
-   *
-   * @return static
-   */
+    /**
+     * @param array|string $data
+     *
+     * @return static
+     * @throws TokenUnitFormatException
+     */
   public static function createFromDB ( array|string $data ): self {
 
     // !!! @todo supports wrong token creation with simple array: need to be deleted after db clearing

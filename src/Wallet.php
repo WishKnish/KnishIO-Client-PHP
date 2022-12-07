@@ -320,14 +320,15 @@ class Wallet {
     return $decrypt;
   }
 
-  /**
-   * @param mixed $message
-   * @param mixed ...$pubkeys
-   *
-   * @return array
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * @param mixed $message
+     * @param mixed ...$pubkeys
+     *
+     * @return array
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws CryptoException
+     */
   public function encryptMessage ( mixed $message, ...$pubkeys ): array {
 
     if ( !$this->soda ) {
@@ -343,15 +344,17 @@ class Wallet {
     return $encrypt;
   }
 
-  /**
-   * Uses the current wallet's private key to decrypt the given message
-   *
-   * @param array|string $message
-   *
-   * @return mixed
-   * @throws JsonException
-   * @throws SodiumException
-   */
+    /**
+     * Uses the current wallet's private key to decrypt the given message
+     *
+     * @param array|string $message
+     *
+     * @return mixed
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws CodeException
+     * @throws CryptoException
+     */
   public function decryptMessage ( array|string $message ): mixed {
 
     if ( !$this->soda ) {
@@ -382,11 +385,12 @@ class Wallet {
     return Strings::randomString( $saltLength );
   }
 
-  /**
-   * @param string $key
-   *
-   * @return string
-   */
+    /**
+     * @param string $key
+     *
+     * @return string
+     * @throws CryptoException
+     */
   protected static function generateAddress ( string $key ): string {
 
     $digestSponge = Crypto\Shake256::init();
@@ -400,7 +404,7 @@ class Wallet {
         $digestSponge->absorb( $workingFragment );
       }
       catch ( Exception $e ) {
-        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+        throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
       }
     }
 
@@ -408,17 +412,18 @@ class Wallet {
       return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
   }
 
-  /**
-   * @param string $secret
-   * @param string $token
-   * @param string $position
-   *
-   * @return string
-   */
+    /**
+     * @param string $secret
+     * @param string $token
+     * @param string $position
+     *
+     * @return string
+     * @throws CryptoException
+     */
   public static function generateKey ( string $secret, string $token, string $position ): string {
 
     // Converting secret to bigInt
@@ -438,7 +443,7 @@ class Wallet {
       return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
     }
     catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
     }
   }
 

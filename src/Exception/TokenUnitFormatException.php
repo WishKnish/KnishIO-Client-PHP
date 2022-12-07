@@ -56,14 +56,15 @@ use Throwable;
  * @package WishKnish\KnishIO\Client\Exception
  */
 class TokenUnitFormatException extends KnishIOException {
-  /**
-   * TokenUnitFormatException constructor.
-   *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+    /**
+     * TokenUnitFormatException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+  public function __construct ( string $message = 'Wrong token unit format.', $payload = null, int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $payload, $code, $previous );
   }
 }

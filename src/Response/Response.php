@@ -84,15 +84,17 @@ class Response {
    */
   protected string $dataKey;
 
-  /**
-   * Response constructor.
-   *
-   * @param Query|null $query
-   * @param string $json
-   * @param string|null $dataKey
-   *
-   * @throws JsonException
-   */
+    /**
+     * Response constructor.
+     *
+     * @param Query|null $query
+     * @param string $json
+     * @param string|null $dataKey
+     *
+     * @throws JsonException
+     * @throws UnauthenticatedException
+     * @throws InvalidResponseException
+     */
   public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
     // Set a query
     $this->query = $query;
@@ -138,11 +140,12 @@ class Response {
 
   }
 
-  /**
-   * Get a response
-   *
-   * @return mixed
-   */
+    /**
+     * Get a response
+     *
+     * @return mixed
+     * @throws InvalidResponseException
+     */
   public function data (): mixed {
 
     // For the root class
