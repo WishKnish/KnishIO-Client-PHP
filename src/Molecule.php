@@ -559,6 +559,7 @@ class Molecule extends MoleculeStructure {
       'wallet',
       $wallet->address,
       $atomMeta,
+      $wallet->batchId
     ) );
 
     // Add continuID atom
