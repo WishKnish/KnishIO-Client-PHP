@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class TokenTypeException extends BaseException {
+class TokenTypeException extends KnishIOException {
   /**
    * TokenTypeException constructor.
    *

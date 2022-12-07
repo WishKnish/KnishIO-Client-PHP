@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class MoleculeAtomIndexException extends BaseException {
+class MoleculeAtomIndexException extends KnishIOException {
   /**
    * MoleculeAtomIndexException constructor.
    *

@@ -55,7 +55,7 @@ use Throwable;
  * Class CodeException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class CodeException extends BaseException {
+class CodeException extends KnishIOException {
   /**
    * CodeException constructor.
    *

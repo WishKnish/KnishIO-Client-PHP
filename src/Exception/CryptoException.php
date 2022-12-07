@@ -55,7 +55,7 @@ use Throwable;
  * Class CryptoException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class CryptoException extends BaseException {
+class CryptoException extends KnishIOException {
   /**
    * CryptoException constructor.
    *

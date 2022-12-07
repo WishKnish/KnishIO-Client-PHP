@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class MetaMissingException extends BaseException {
+class MetaMissingException extends KnishIOException {
 
   /**
    * MetaMissingException constructor.

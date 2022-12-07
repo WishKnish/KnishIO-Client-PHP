@@ -55,7 +55,7 @@ use Throwable;
  * Class UnauthenticatedException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class UnauthenticatedException extends BaseException {
+class UnauthenticatedException extends KnishIOException {
   /**
    * UnauthenticatedException constructor.
    *

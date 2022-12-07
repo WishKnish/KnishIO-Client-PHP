@@ -55,7 +55,7 @@ use Throwable;
  * Class TokenSlugFormatException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class TokenSlugFormatException extends BaseException {
+class TokenSlugFormatException extends KnishIOException {
   /**
    * TokenSlugFormatException constructor.
    *

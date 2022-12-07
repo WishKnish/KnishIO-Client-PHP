@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class MoleculeSignatureMalformedException extends BaseException {
+class MoleculeSignatureMalformedException extends KnishIOException {
   /**
    * MoleculeSignatureMalformedException constructor.
    *

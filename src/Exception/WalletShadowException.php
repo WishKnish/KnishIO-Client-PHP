@@ -55,7 +55,7 @@ use Throwable;
  * Class WalletShadowException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class WalletShadowException extends BaseException {
+class WalletShadowException extends KnishIOException {
   /**
    * WalletShadowException constructor.
    *

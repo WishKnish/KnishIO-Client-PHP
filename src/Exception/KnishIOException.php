@@ -54,7 +54,7 @@ use LogicException;
 use Throwable;
 
 /**
- * Class BaseException
+ * Class KnishIOException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -62,12 +62,12 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-abstract class BaseException extends LogicException implements BaseExceptionInterface {
+abstract class KnishIOException extends LogicException implements BaseExceptionInterface {
   protected $message = 'Unknown exception';
   protected $code = 0;
 
   /**
-   * BaseException constructor.
+   * KnishIOException constructor.
    *
    * @param string $message
    * @param int $code

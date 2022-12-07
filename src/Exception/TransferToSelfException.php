@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class TransferToSelfException extends BaseException {
+class TransferToSelfException extends KnishIOException {
   /**
    * TransferToSelfException constructor.
    *

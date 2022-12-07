@@ -55,7 +55,7 @@ use Throwable;
  * Class TokenUnitFormatException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class TokenUnitFormatException extends BaseException {
+class TokenUnitFormatException extends KnishIOException {
   /**
    * TokenUnitFormatException constructor.
    *

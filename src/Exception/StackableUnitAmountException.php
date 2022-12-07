@@ -51,7 +51,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 
 use Throwable;
 
-class StackableUnitAmountException extends BaseException {
+class StackableUnitAmountException extends KnishIOException {
   /**
    * StackableUnitAmountException constructor.
    *

@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class InvalidResponseException extends BaseException {
+class InvalidResponseException extends KnishIOException {
   /**
    * InvalidResponseException constructor.
    *

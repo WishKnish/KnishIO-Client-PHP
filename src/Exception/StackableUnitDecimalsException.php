@@ -55,7 +55,7 @@ use Throwable;
  * Class StackableUnitDecimalsException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class StackableUnitDecimalsException extends BaseException {
+class StackableUnitDecimalsException extends KnishIOException {
   /**
    * StackableUnitDecimalsException constructor.
    *

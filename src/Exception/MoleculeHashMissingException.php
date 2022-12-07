@@ -60,7 +60,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class MoleculeHashMissingException extends BaseException {
+class MoleculeHashMissingException extends KnishIOException {
   /**
    * MoleculeHashMissingException constructor.
    *
