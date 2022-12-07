@@ -64,7 +64,7 @@ class InvalidRequestException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-  public function __construct ( string $message = 'Invalid request format.', $payload = null, int $code = 2, Throwable $previous = null ) {
-    parent::__construct( $message, $payload, $code, $previous );
-  }
+    public function __construct ( string $message = 'Invalid request format.', $payload = null, int $code = 2, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
+    }
 }

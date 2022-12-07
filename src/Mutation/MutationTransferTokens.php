@@ -58,19 +58,19 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class MutationTransferTokens extends MutationProposeMolecule {
 
-  /**
-   * @param Wallet $toWallet
-   * @param $amount
-   *
-   * @return $this
-   * @throws JsonException
-   */
-  public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
-    $this->molecule->initValue( $toWallet, $amount );
-    $this->molecule->sign();
-    $this->molecule->check( $this->molecule->sourceWallet() );
+    /**
+     * @param Wallet $toWallet
+     * @param $amount
+     *
+     * @return $this
+     * @throws JsonException
+     */
+    public function fillMolecule ( Wallet $toWallet, $amount ): MutationTransferTokens {
+        $this->molecule->initValue( $toWallet, $amount );
+        $this->molecule->sign();
+        $this->molecule->check( $this->molecule->sourceWallet() );
 
-    return $this;
-  }
+        return $this;
+    }
 
 }

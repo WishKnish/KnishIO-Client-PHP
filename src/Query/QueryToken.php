@@ -57,30 +57,30 @@ use WishKnish\KnishIO\Client\Response\Response;
  * @package WishKnish\KnishIO\Client\Query
  */
 class QueryToken extends Query {
-  // Query
-  protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
+    // Query
+    protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
 	 	@fields
 	 }';
 
-  // Fields
-  protected array $fields = [
-    'slug',
-    'name',
-    'fungibility',
-    'supply',
-    'decimals',
-    'amount',
-    'icon',
-  ];
+    // Fields
+    protected array $fields = [
+        'slug',
+        'name',
+        'fungibility',
+        'supply',
+        'decimals',
+        'amount',
+        'icon',
+    ];
 
-  /**
-   * @param string $response
-   *
-   * @return Response
-   * @throws JsonException
-   */
-  public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.Token' );
-  }
+    /**
+     * @param string $response
+     *
+     * @return Response
+     * @throws JsonException
+     */
+    public function createResponse ( string $response ): Response {
+        return new Response( $this, $response, 'data.Token' );
+    }
 
 }

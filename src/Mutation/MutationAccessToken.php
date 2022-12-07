@@ -57,24 +57,24 @@ use WishKnish\KnishIO\Client\Response\ResponseAccessToken;
  * @package WishKnish\KnishIO\Client\Mutation
  */
 class MutationAccessToken extends Mutation {
-  // Query
-  protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
+    // Query
+    protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
 
-  // Fields
-  protected array $fields = [
-    'token',
-    'time',
-  ];
+    // Fields
+    protected array $fields = [
+        'token',
+        'time',
+    ];
 
-  /**
-   * Create a response
-   *
-   * @param $response
-   *
-   * @return ResponseAccessToken
-   * @throws JsonException
-   */
-  public function createResponse ( $response ): ResponseAccessToken {
-    return new ResponseAccessToken( $this, $response );
-  }
+    /**
+     * Create a response
+     *
+     * @param $response
+     *
+     * @return ResponseAccessToken
+     * @throws JsonException
+     */
+    public function createResponse ( $response ): ResponseAccessToken {
+        return new ResponseAccessToken( $this, $response );
+    }
 }

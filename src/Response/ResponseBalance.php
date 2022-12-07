@@ -58,26 +58,26 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class ResponseBalance extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.Balance';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.Balance';
 
-  /**
-   * Get a payload
-   *
-   * @return Wallet|null
-   * @throws SodiumException
-   */
-  public function payload (): ?Wallet {
-    // Get data
-    $walletData = $this->data();
-    if ( !$walletData ) {
-      return null;
+    /**
+     * Get a payload
+     *
+     * @return Wallet|null
+     * @throws SodiumException
+     */
+    public function payload (): ?Wallet {
+        // Get data
+        $walletData = $this->data();
+        if ( !$walletData ) {
+            return null;
+        }
+
+        // Return a client wallet object
+        return ResponseWalletList::toClientWallet( $walletData );
     }
-
-    // Return a client wallet object
-    return ResponseWalletList::toClientWallet( $walletData );
-  }
 
 }

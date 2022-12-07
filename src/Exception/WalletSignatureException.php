@@ -64,7 +64,7 @@ class WalletSignatureException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-  public function __construct ( string $message = 'Signing wallet is invalid.', $payload = null, int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $payload, $code, $previous );
-  }
+    public function __construct ( string $message = 'Signing wallet is invalid.', $payload = null, int $code = 1, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
+    }
 }

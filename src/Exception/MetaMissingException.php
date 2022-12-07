@@ -65,9 +65,9 @@ class MetaMissingException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-  public function __construct ( string $message = 'Empty meta data.', $payload = null, int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $payload, $code, $previous );
+    public function __construct ( string $message = 'Empty meta data.', $payload = null, int $code = 1, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
 
-  }
+    }
 
 }

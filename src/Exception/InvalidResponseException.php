@@ -64,7 +64,7 @@ class InvalidResponseException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-  public function __construct ( string $message = 'GraphQL did not provide a valid response.', $payload = null, int $code = 2, Throwable $previous = null ) {
-    parent::__construct( $message, $payload, $code, $previous );
-  }
+    public function __construct ( string $message = 'GraphQL did not provide a valid response.', $payload = null, int $code = 2, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
+    }
 }

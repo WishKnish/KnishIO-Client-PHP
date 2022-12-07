@@ -55,16 +55,16 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseQueryUserActivity extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.UserActivity';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.UserActivity';
 
-  /**
-   * @return mixed
-   */
-  public function payload (): mixed {
-    return $this->data();
-  }
+    /**
+     * @return mixed
+     */
+    public function payload (): mixed {
+        return $this->data();
+    }
 
 }

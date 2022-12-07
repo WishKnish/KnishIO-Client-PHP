@@ -57,37 +57,37 @@ use WishKnish\KnishIO\Client\Response\ResponseContinuId;
  * @package WishKnish\KnishIO\Client\Query
  */
 class QueryContinuId extends Query {
-  // Query
-  /**
-   * @var string
-   */
-  protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
+    // Query
+    /**
+     * @var string
+     */
+    protected static string $defaultQuery = 'query ($bundle: String!) { ContinuId(bundle: $bundle)
     	@fields
     }';
 
-  // Fields
-  protected array $fields = [
-    'type',
-    'address',
-    'bundleHash',
-    'tokenSlug',
-    'position',
-    'batchId',
-    'characters',
-    'pubkey',
-    'amount',
-    'createdAt',
-  ];
+    // Fields
+    protected array $fields = [
+        'type',
+        'address',
+        'bundleHash',
+        'tokenSlug',
+        'position',
+        'batchId',
+        'characters',
+        'pubkey',
+        'amount',
+        'createdAt',
+    ];
 
-  /**
-   * Create a response
-   *
-   * @param string $response
-   *
-   * @return ResponseContinuId
-   * @throws JsonException
-   */
-  public function createResponse ( string $response ): ResponseContinuId {
-    return new ResponseContinuId( $this, $response );
-  }
+    /**
+     * Create a response
+     *
+     * @param string $response
+     *
+     * @return ResponseContinuId
+     * @throws JsonException
+     */
+    public function createResponse ( string $response ): ResponseContinuId {
+        return new ResponseContinuId( $this, $response );
+    }
 }

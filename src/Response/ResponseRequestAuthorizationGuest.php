@@ -55,58 +55,58 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseRequestAuthorizationGuest extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.AccessToken';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.AccessToken';
 
-  /**
-   * @return string
-   */
-  public function reason (): string {
-    return 'Invalid response from server';
-  }
+    /**
+     * @return string
+     */
+    public function reason (): string {
+        return 'Invalid response from server';
+    }
 
-  /**
-   * @return bool
-   */
-  public function success (): bool {
-    return $this->payload() !== null;
-  }
+    /**
+     * @return bool
+     */
+    public function success (): bool {
+        return $this->payload() !== null;
+    }
 
-  /**
-   * @return mixed
-   */
-  public function payload (): mixed {
-    return $this->data();
-  }
+    /**
+     * @return mixed
+     */
+    public function payload (): mixed {
+        return $this->data();
+    }
 
-  /**
-   * @return string|null
-   */
-  public function token (): ?string {
-    return array_get( $this->payload(), 'token' );
-  }
+    /**
+     * @return string|null
+     */
+    public function token (): ?string {
+        return array_get( $this->payload(), 'token' );
+    }
 
-  /**
-   * @return int|null
-   */
-  public function time (): ?int {
-    return array_get( $this->payload(), 'time' );
-  }
+    /**
+     * @return int|null
+     */
+    public function time (): ?int {
+        return array_get( $this->payload(), 'time' );
+    }
 
-  /**
-   * @return string|null
-   */
-  public function pubkey (): ?string {
-    return array_get( $this->payload(), 'key' );
-  }
+    /**
+     * @return string|null
+     */
+    public function pubkey (): ?string {
+        return array_get( $this->payload(), 'key' );
+    }
 
-  /**
-   * @return bool|null
-   */
-  public function encrypt (): ?bool {
-    return array_get( $this->payload(), 'encrypt' );
-  }
+    /**
+     * @return bool|null
+     */
+    public function encrypt (): ?bool {
+        return array_get( $this->payload(), 'encrypt' );
+    }
 
 }

@@ -56,6 +56,7 @@ use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Libraries\Cipher;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -65,166 +66,168 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class HttpClient extends Client implements HttpClientInterface {
 
-  /**
-   * @var string|null
-   */
-  private ?string $authToken;
+    /**
+     * @var string|null
+     */
+    private ?string $authToken;
 
-  /**
-   * @var string
-   */
-  protected string $uri;
+    /**
+     * @var string
+     */
+    protected string $uri;
 
-  /**
-   * @var Cipher
-   */
-  private Cipher $cipher;
+    /**
+     * @var Cipher
+     */
+    private Cipher $cipher;
 
-  /**
-   * @var array
-   */
-  private array $config;
+    /**
+     * @var array
+     */
+    private array $config;
 
-  /**
-   * HttpClient constructor.
-   *
-   * @param string $uri
-   * @param array $config
-   * @param bool $encrypt
-   */
-  public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
-    $this->setUri( $uri );
-    $this->cipher = new Cipher();
-    $this->authToken = null;
-    $this->config = [
-      'base_uri' => $uri,
-      'handler' => $this->cipher->stack(),
-      'encrypt' => $encrypt,
-      RequestOptions::VERIFY => false,
-      RequestOptions::HTTP_ERRORS => false,
-      RequestOptions::HEADERS => [
-        'User-Agent' => 'KnishIO/0.1',
-        'Accept' => 'application/json',
-      ],
-    ];
+    /**
+     * HttpClient constructor.
+     *
+     * @param string $uri
+     * @param array $config
+     * @param bool $encrypt
+     */
+    public function __construct ( string $uri, array $config = [], bool $encrypt = false ) {
+        $this->setUri( $uri );
+        $this->cipher = new Cipher();
+        $this->authToken = null;
+        $this->config = [
+            'base_uri' => $uri,
+            'handler' => $this->cipher->stack(),
+            'encrypt' => $encrypt,
+            RequestOptions::VERIFY => false,
+            RequestOptions::HTTP_ERRORS => false,
+            RequestOptions::HEADERS => [
+                'User-Agent' => 'KnishIO/0.1',
+                'Accept' => 'application/json',
+            ],
+        ];
 
-    // Merge config
-    $config = array_replace_recursive( $this->config, $config );
+        // Merge config
+        $config = array_replace_recursive( $this->config, $config );
 
-    // Guzzle constructor
-    parent::__construct( $config );
-  }
+        // Guzzle constructor
+        parent::__construct( $config );
+    }
 
-  /**
-   * @param bool $encrypt
-   *
-   * @return void
-   */
-  public function setEncryption ( bool $encrypt ): void {
-    $this->config[ 'encrypt' ] = $encrypt;
-  }
+    /**
+     * @param bool $encrypt
+     *
+     * @return void
+     */
+    public function setEncryption ( bool $encrypt ): void {
+        $this->config[ 'encrypt' ] = $encrypt;
+    }
 
-  /**
-   * @return bool
-   */
-  public function hasEncryption (): bool {
-    return $this->config[ 'encrypt' ];
-  }
+    /**
+     * @return bool
+     */
+    public function hasEncryption (): bool {
+        return $this->config[ 'encrypt' ];
+    }
 
-  /**
-   * @param Wallet $wallet
-   */
-  public function setWallet ( Wallet $wallet ): void {
-    $this->cipher->setWallet( $wallet );
-  }
+    /**
+     * @param Wallet $wallet
+     */
+    public function setWallet ( Wallet $wallet ): void {
+        $this->cipher->setWallet( $wallet );
+    }
 
-  /**
-   * @return Wallet
-   */
-  public function wallet (): Wallet {
-    return $this->cipher->wallet();
-  }
+    /**
+     * @return Wallet
+     * @throws CodeException
+     */
+    public function wallet (): Wallet {
+        return $this->cipher->wallet();
+    }
 
-  /**
-   * @param string $pubkey
-   */
-  public function setPubkey ( string $pubkey ): void {
-    $this->cipher->setPubkey( $pubkey );
-  }
+    /**
+     * @param string $pubkey
+     */
+    public function setPubkey ( string $pubkey ): void {
+        $this->cipher->setPubkey( $pubkey );
+    }
 
-  /**
-   * @return string
-   */
-  public function getPubkey (): string {
-    return $this->cipher->getPubkey();
-  }
+    /**
+     * @return string
+     * @throws CodeException
+     */
+    public function getPubkey (): string {
+        return $this->cipher->getPubkey();
+    }
 
-  /**
-   * @return string
-   */
-  public function getUri (): string {
-    return $this->uri;
-  }
+    /**
+     * @return string
+     */
+    public function getUri (): string {
+        return $this->uri;
+    }
 
-  /**
-   * @param string $uri
-   */
-  public function setUri ( string $uri ): void {
-    $this->uri = $uri;
-  }
+    /**
+     * @param string $uri
+     */
+    public function setUri ( string $uri ): void {
+        $this->uri = $uri;
+    }
 
-  /**
-   * @param string $authToken
-   */
-  public function setAuthToken ( string $authToken ): void {
-    $this->authToken = $authToken;
-  }
+    /**
+     * @param string $authToken
+     */
+    public function setAuthToken ( string $authToken ): void {
+        $this->authToken = $authToken;
+    }
 
-  /**
-   * @return string|null
-   */
-  public function getAuthToken (): ?string {
-    return $this->authToken;
-  }
+    /**
+     * @return string|null
+     */
+    public function getAuthToken (): ?string {
+        return $this->authToken;
+    }
 
-  /**
-   * Sets the authorization data
-   *
-   * @param string $token
-   * @param string $pubkey
-   * @param Wallet $wallet
-   */
-  public function setAuthData ( string $token, string $pubkey, Wallet $wallet ): void {
-    $this->setAuthToken( $token );
-    $this->setPubkey( $pubkey );
-    $this->setWallet( $wallet );
-  }
+    /**
+     * Sets the authorization data
+     *
+     * @param string $token
+     * @param string $pubkey
+     * @param Wallet $wallet
+     */
+    public function setAuthData ( string $token, string $pubkey, Wallet $wallet ): void {
+        $this->setAuthToken( $token );
+        $this->setPubkey( $pubkey );
+        $this->setWallet( $wallet );
+    }
 
-  /**
-   * @param RequestInterface $request
-   * @param array $options
-   *
-   * @return ResponseInterface
-   * @throws GuzzleException
-   */
-  public function send ( RequestInterface $request, array $options = [] ): ResponseInterface {
-    $config = array_replace_recursive( $this->config, $options );
+    /**
+     * @param RequestInterface $request
+     * @param array $options
+     *
+     * @return ResponseInterface
+     * @throws GuzzleException
+     */
+    public function send ( RequestInterface $request, array $options = [] ): ResponseInterface {
+        $config = array_replace_recursive( $this->config, $options );
 
-    return parent::send( $request, $config );
-  }
+        return parent::send( $request, $config );
+    }
 
-  /**
-   * @param string $method
-   * @param array $args
-   *
-   * @return Promise\PromiseInterface
-   */
-  public function __call ( $method, $args ) {
+    /**
+     * @param string $method
+     * @param array $args
+     *
+     * @return Promise\PromiseInterface
+     */
+    public function __call ( $method, $args ) {
 
-    $opts = ( new ArrayObject( $args ) )->getArrayCopy();
-    $opts[ 1 ] = array_replace_recursive( $this->config, $opts[ 1 ] ?? [] );
+        $opts = ( new ArrayObject( $args ) )->getArrayCopy();
+        $opts[ 1 ] = array_replace_recursive( $this->config, $opts[ 1 ] ?? [] );
 
-    return parent::__call( $method, $opts );
-  }
+        return parent::__call( $method, $opts );
+    }
 
 }

@@ -57,50 +57,50 @@ use JsonException;
  */
 class Meta {
 
-  /**
-   * @param array $meta
-   *
-   * @return array
-   * @throws JsonException
-   */
-  public static function normalize ( array $meta ): array {
-    $result = [];
+    /**
+     * @param array $meta
+     *
+     * @return array
+     * @throws JsonException
+     */
+    public static function normalize ( array $meta ): array {
+        $result = [];
 
-    foreach ( $meta as $key => $value ) {
+        foreach ( $meta as $key => $value ) {
 
-      // Handling non-string meta values
-      if ( !is_string( $value ) ) {
+            // Handling non-string meta values
+            if ( !is_string( $value ) ) {
 
-        // Is value numeric?
-        if ( is_numeric( $value ) ) {
-          $value = (string) $value;
+                // Is value numeric?
+                if ( is_numeric( $value ) ) {
+                    $value = (string) $value;
+                }
+
+                // Is value an object?
+                if ( is_object( $value ) || is_array( $value ) ) {
+                    $value = json_encode( $value, JSON_THROW_ON_ERROR );
+                }
+            }
+
+            // Adding normalized meta
+            $result[] = [
+                'key' => $key,
+                'value' => $value,
+            ];
         }
+        return $result;
+    }
 
-        // Is value an object?
-        if ( is_object( $value ) || is_array( $value ) ) {
-          $value = json_encode( $value, JSON_THROW_ON_ERROR );
+    /**
+     * @param array $meta
+     *
+     * @return array
+     */
+    public static function aggregate ( array $meta ): array {
+        $aggregate = [];
+        foreach ( $meta as $metaEntry ) {
+            $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
         }
-      }
-
-      // Adding normalized meta
-      $result[] = [
-        'key' => $key,
-        'value' => $value,
-      ];
+        return $aggregate;
     }
-    return $result;
-  }
-
-  /**
-   * @param array $meta
-   *
-   * @return array
-   */
-  public static function aggregate ( array $meta ): array {
-    $aggregate = [];
-    foreach ( $meta as $metaEntry ) {
-      $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
-    }
-    return $aggregate;
-  }
 }

@@ -57,9 +57,9 @@ use WishKnish\KnishIO\Client\Query\Query;
  */
 class Mutation extends Query {
 
-  /**
-   * @var bool
-   */
-  protected bool $isMutation = true;
+    /**
+     * @var bool
+     */
+    protected bool $isMutation = true;
 
 }

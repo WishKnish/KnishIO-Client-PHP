@@ -59,26 +59,26 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class ResponseContinuId extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.ContinuId';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.ContinuId';
 
-  /**
-   * Get a payload
-   *
-   * @return Wallet|null
-   * @throws InvalidResponseException
-   * @throws SodiumException
-   */
-  public function payload (): ?Wallet {
+    /**
+     * Get a payload
+     *
+     * @return Wallet|null
+     * @throws InvalidResponseException
+     * @throws SodiumException
+     */
+    public function payload (): ?Wallet {
 
-    // Check response
-    $data = $this->data();
-    if ( $data !== null ) {
-      return ResponseWalletList::toClientWallet( $data );
+        // Check response
+        $data = $this->data();
+        if ( $data !== null ) {
+            return ResponseWalletList::toClientWallet( $data );
+        }
+
+        return null;
     }
-
-    return null;
-  }
 }

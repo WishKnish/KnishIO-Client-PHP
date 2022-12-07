@@ -59,29 +59,29 @@ use WishKnish\KnishIO\Client\Response\ResponseQueryActiveSession;
  */
 class QueryActiveSession extends Query {
 
-  // Query
-  protected static string $defaultQuery = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
+    // Query
+    protected static string $defaultQuery = 'query( $bundleHash: String, $metaType: String, $metaId: String ) { ActiveUser( bundleHash: $bundleHash, metaType: $metaType, metaId: $metaId )
 	 	@fields
 	 }';
 
-  // Fields
-  protected array $fields = [
-    'bundleHash',
-    'metaType',
-    'metaId',
-    'jsonData',
-    'createdAt',
-    'updatedAt',
-  ];
+    // Fields
+    protected array $fields = [
+        'bundleHash',
+        'metaType',
+        'metaId',
+        'jsonData',
+        'createdAt',
+        'updatedAt',
+    ];
 
-  /**
-   * @param string $response
-   *
-   * @return Response
-   * @throws JsonException
-   */
-  public function createResponse ( string $response ): Response {
-    return new ResponseQueryActiveSession( $this, $response );
-  }
+    /**
+     * @param string $response
+     *
+     * @return Response
+     * @throws JsonException
+     */
+    public function createResponse ( string $response ): Response {
+        return new ResponseQueryActiveSession( $this, $response );
+    }
 
 }

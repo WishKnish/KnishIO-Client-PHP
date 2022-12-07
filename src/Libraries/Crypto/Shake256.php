@@ -83,38 +83,38 @@ dd ('OK');
  */
 class Shake256 {
 
-  /**
-   * Shake256 hashing
-   *
-   * @param $data
-   * @param int $length
-   *
-   * @return string
-   * @throws CryptoException
-   */
-  public static function hash ( $data, int $length ): string {
+    /**
+     * Shake256 hashing
+     *
+     * @param $data
+     * @param int $length
+     *
+     * @return string
+     * @throws CryptoException
+     */
+    public static function hash ( $data, int $length ): string {
 
-    try {
-      return SHA3::init( SHA3::SHAKE256 )
-        ->absorb( $data )
-        ->squeeze( $length );
+        try {
+            return SHA3::init( SHA3::SHAKE256 )
+                ->absorb( $data )
+                ->squeeze( $length );
+        }
+        catch ( Exception $e ) {
+            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
+        }
     }
-    catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
-    }
-  }
 
     /**
      * @return SHA3
      * @throws CryptoException
      */
-  public static function init (): SHA3 {
-    try {
-      return SHA3::init( SHA3::SHAKE256 );
+    public static function init (): SHA3 {
+        try {
+            return SHA3::init( SHA3::SHAKE256 );
+        }
+        catch ( Exception $e ) {
+            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
+        }
     }
-    catch ( Exception $e ) {
-      throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
-    }
-  }
 
 }

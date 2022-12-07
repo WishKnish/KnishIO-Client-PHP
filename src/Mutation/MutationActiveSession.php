@@ -54,8 +54,8 @@ use WishKnish\KnishIO\Client\Response\Response;
 
 class MutationActiveSession extends Mutation {
 
-  // Query
-  protected static string $defaultQuery = 'mutation( $bundleHash: String!,
+    // Query
+    protected static string $defaultQuery = 'mutation( $bundleHash: String!,
       $metaType: String!,
       $metaId: String!,
       $ipAddress: String,
@@ -78,24 +78,24 @@ class MutationActiveSession extends Mutation {
           @fields
       }';
 
-  // Fields
-  protected array $fields = [
-    'bundleHash',
-    'metaType',
-    'metaId',
-    'jsonData',
-    'createdAt',
-    'updatedAt',
-  ];
+    // Fields
+    protected array $fields = [
+        'bundleHash',
+        'metaType',
+        'metaId',
+        'jsonData',
+        'createdAt',
+        'updatedAt',
+    ];
 
-  /**
-   * @param string $response
-   *
-   * @return Response
-   * @throws JsonException
-   */
-  public function createResponse ( string $response ): Response {
-    return new Response( $this, $response, 'data.ActiveSession' );
-  }
+    /**
+     * @param string $response
+     *
+     * @return Response
+     * @throws JsonException
+     */
+    public function createResponse ( string $response ): Response {
+        return new Response( $this, $response, 'data.ActiveSession' );
+    }
 }
 

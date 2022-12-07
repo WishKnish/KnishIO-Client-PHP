@@ -57,26 +57,26 @@ use GuzzleHttp\ClientInterface;
  */
 interface HttpClientInterface extends ClientInterface {
 
-  /**
-   * @return string
-   */
-  public function getUri (): string;
+    /**
+     * @return string
+     */
+    public function getUri (): string;
 
-  /**
-   * @param string $uri
-   */
-  public function setUri ( string $uri ): void;
+    /**
+     * @param string $uri
+     */
+    public function setUri ( string $uri ): void;
 
-  /**
-   * @param string $authToken
-   *
-   * @return void
-   */
-  public function setAuthToken ( string $authToken ): void;
+    /**
+     * @param string $authToken
+     *
+     * @return void
+     */
+    public function setAuthToken ( string $authToken ): void;
 
-  /**
-   * @return string|null
-   */
-  public function getAuthToken (): ?string;
+    /**
+     * @return string|null
+     */
+    public function getAuthToken (): ?string;
 
 }

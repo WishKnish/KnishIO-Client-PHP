@@ -59,43 +59,43 @@ use WishKnish\KnishIO\Client\Response\ResponseMoleculeList;
  * /graphql?query={Molecule(lastMolecularHashes:[],limit:10,order:"created_at asc"){molecularHash}}
  */
 class QueryMoleculeList extends Query {
-  // Query
-  protected static string $defaultQuery = 'query( $status: String, $molecularHash: String, $lastMolecularHashes: [ String! ], $firstMolecularHashes: [ String! ], $cellSlug: String, $local: Boolean, $algorithm: String, $limit: Int, $order: String ) { Molecule( status: $status, molecularHash: $molecularHash, lastMolecularHashes: $lastMolecularHashes, firstMolecularHashes: $firstMolecularHashes, cellSlug: $cellSlug, local: $local, algorithm: $algorithm, limit: $limit, order: $order )
+    // Query
+    protected static string $defaultQuery = 'query( $status: String, $molecularHash: String, $lastMolecularHashes: [ String! ], $firstMolecularHashes: [ String! ], $cellSlug: String, $local: Boolean, $algorithm: String, $limit: Int, $order: String ) { Molecule( status: $status, molecularHash: $molecularHash, lastMolecularHashes: $lastMolecularHashes, firstMolecularHashes: $firstMolecularHashes, cellSlug: $cellSlug, local: $local, algorithm: $algorithm, limit: $limit, order: $order )
 	 	@fields
 	}';
 
-  // Fields
-  protected array $fields = [
-    'molecularHash',
-    'cellSlug',
-    'counterparty',
-    'bundleHash',
-    'createdAt',
-    'processedAt',
-    'atoms' => [
-      'position',
-      'isotope',
-      'walletAddress',
-      'tokenSlug',
-      'batchId',
-      'value',
-      'index',
-      'metaType',
-      'metaId',
-      'metasJson',
-      'otsFragment',
-      'createdAt',
-    ],
-  ];
+    // Fields
+    protected array $fields = [
+        'molecularHash',
+        'cellSlug',
+        'counterparty',
+        'bundleHash',
+        'createdAt',
+        'processedAt',
+        'atoms' => [
+            'position',
+            'isotope',
+            'walletAddress',
+            'tokenSlug',
+            'batchId',
+            'value',
+            'index',
+            'metaType',
+            'metaId',
+            'metasJson',
+            'otsFragment',
+            'createdAt',
+        ],
+    ];
 
-  /**
-   * @param string $response
-   *
-   * @return ResponseMoleculeList
-   * @throws JsonException
-   */
-  public function createResponse ( string $response ): ResponseMoleculeList {
-    return new ResponseMoleculeList( $this, $response );
-  }
+    /**
+     * @param string $response
+     *
+     * @return ResponseMoleculeList
+     * @throws JsonException
+     */
+    public function createResponse ( string $response ): ResponseMoleculeList {
+        return new ResponseMoleculeList( $this, $response );
+    }
 
 }

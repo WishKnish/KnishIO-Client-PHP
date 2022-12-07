@@ -60,41 +60,41 @@ use Tuupola\Base58\PhpEncoder;
  * @package WishKnish\KnishIO\Client\Libraries
  */
 class Base58 extends Base {
-  /**
-   * @var BaseEncoder
-   */
-  private $encoder;
+    /**
+     * @var BaseEncoder
+     */
+    private $encoder;
 
-  /**
-   * @var array
-   */
-  private array $options = [
-    'characters' => Base::GMP,
-    'check' => false,
-    'version' => 0x00,
-  ];
+    /**
+     * @var array
+     */
+    private array $options = [
+        'characters' => Base::GMP,
+        'check' => false,
+        'version' => 0x00,
+    ];
 
-  /**
-   * Base58 constructor.
-   *
-   * @param array $options
-   */
-  public function __construct ( array $options = [] ) {
+    /**
+     * Base58 constructor.
+     *
+     * @param array $options
+     */
+    public function __construct ( array $options = [] ) {
 
-    parent::__construct( $options );
+        parent::__construct( $options );
 
-    $this->options = array_merge( $this->options, $options );
+        $this->options = array_merge( $this->options, $options );
 
-    if ( extension_loaded( 'gmp' ) ) {
-      $this->encoder = new GmpEncoder( $this->options );
+        if ( extension_loaded( 'gmp' ) ) {
+            $this->encoder = new GmpEncoder( $this->options );
+        }
+        else if ( extension_loaded( 'bcmath' ) ) {
+            $this->encoder = new BcmathEncoder( $this->options );
+        }
+        else {
+            $this->encoder = new PhpEncoder( $this->options );
+        }
+
     }
-    else if ( extension_loaded( 'bcmath' ) ) {
-      $this->encoder = new BcmathEncoder( $this->options );
-    }
-    else {
-      $this->encoder = new PhpEncoder( $this->options );
-    }
-
-  }
 
 }

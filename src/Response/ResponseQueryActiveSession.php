@@ -55,27 +55,27 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseQueryActiveSession extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.ActiveUser';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.ActiveUser';
 
-  /**
-   * @return array
-   */
-  public function payload (): array {
-    $list = $this->data();
+    /**
+     * @return array
+     */
+    public function payload (): array {
+        $list = $this->data();
 
-    // Prepare active user list
-    $activeUsers = [];
-    foreach ( $list as $item ) {
-      if ( $jsonData = array_get( $item, 'jsonData' ) ) {
-        $item[ 'jsonData' ] = json_decode( $jsonData, true );
-      }
-      $activeUsers[] = $item;
+        // Prepare active user list
+        $activeUsers = [];
+        foreach ( $list as $item ) {
+            if ( $jsonData = array_get( $item, 'jsonData' ) ) {
+                $item[ 'jsonData' ] = json_decode( $jsonData, true );
+            }
+            $activeUsers[] = $item;
+        }
+
+        return $activeUsers;
     }
-
-    return $activeUsers;
-  }
 
 }

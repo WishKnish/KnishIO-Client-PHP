@@ -55,32 +55,32 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseRequestAuthorization extends ResponseMolecule {
 
-  /**
-   * @return string|null
-   */
-  public function token (): ?string {
-    return array_get( $this->payload, 'token' );
-  }
+    /**
+     * @return string|null
+     */
+    public function token (): ?string {
+        return array_get( $this->payload, 'token' );
+    }
 
-  /**
-   * @return int|null
-   */
-  public function time (): ?int {
-    return array_get( $this->payload, 'time' );
-  }
+    /**
+     * @return int|null
+     */
+    public function time (): ?int {
+        return array_get( $this->payload, 'time' );
+    }
 
-  /**
-   * @return string|null
-   */
-  public function pubkey (): ?string {
-    return array_get( $this->payload, 'key' );
-  }
+    /**
+     * @return string|null
+     */
+    public function pubkey (): ?string {
+        return array_get( $this->payload, 'key' );
+    }
 
-  /**
-   * @return bool|null
-   */
-  public function encrypt (): ?bool {
-    return array_get( $this->payload, 'encrypt' );
-  }
+    /**
+     * @return bool|null
+     */
+    public function encrypt (): ?bool {
+        return array_get( $this->payload, 'encrypt' );
+    }
 
 }

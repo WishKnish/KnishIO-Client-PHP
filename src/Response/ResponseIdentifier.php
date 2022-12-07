@@ -55,27 +55,27 @@ namespace WishKnish\KnishIO\Client\Response;
  */
 class ResponseIdentifier extends Response {
 
-  /**
-   * @var string
-   */
-  protected string $dataKey = 'data.LinkIdentifier';
+    /**
+     * @var string
+     */
+    protected string $dataKey = 'data.LinkIdentifier';
 
-  /**
-   * Success
-   *
-   * @return bool
-   */
-  public function success (): bool {
-    return array_get( $this->data(), 'set' );
-  }
+    /**
+     * Success
+     *
+     * @return bool
+     */
+    public function success (): bool {
+        return array_get( $this->data(), 'set' );
+    }
 
-  /**
-   * Message
-   *
-   * @return string
-   */
-  public function message (): string {
-    return array_get( $this->data(), 'message' );
-  }
+    /**
+     * Message
+     *
+     * @return string
+     */
+    public function message (): string {
+        return array_get( $this->data(), 'message' );
+    }
 
 }

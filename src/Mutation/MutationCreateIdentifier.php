@@ -57,20 +57,20 @@ use JsonException;
  */
 class MutationCreateIdentifier extends MutationProposeMolecule {
 
-  /**
-   * @param $type
-   * @param $contact
-   * @param $code
-   *
-   * @return MutationCreateIdentifier
-   * @throws JsonException
-   */
-  public function fillMolecule ( $type, $contact, $code ): MutationCreateIdentifier {
-    $this->molecule->initIdentifierCreation( $type, $contact, $code );
-    $this->molecule->sign();
-    $this->molecule->check();
+    /**
+     * @param $type
+     * @param $contact
+     * @param $code
+     *
+     * @return MutationCreateIdentifier
+     * @throws JsonException
+     */
+    public function fillMolecule ( $type, $contact, $code ): MutationCreateIdentifier {
+        $this->molecule->initIdentifierCreation( $type, $contact, $code );
+        $this->molecule->sign();
+        $this->molecule->check();
 
-    return $this;
-  }
+        return $this;
+    }
 
 }

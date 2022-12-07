@@ -59,24 +59,24 @@ use WishKnish\KnishIO\Client\Wallet;
  */
 class MutationClaimShadowWallet extends MutationProposeMolecule {
 
-  /**
-   * @param string $tokenSlug
-   * @param string|null $batchId
-   *
-   * @return $this
-   * @throws JsonException
-   * @throws SodiumException
-   */
-  public function fillMolecule ( string $tokenSlug, ?string $batchId = null ): MutationClaimShadowWallet {
-    // Create a wallet
-    $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
+    /**
+     * @param string $tokenSlug
+     * @param string|null $batchId
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     */
+    public function fillMolecule ( string $tokenSlug, ?string $batchId = null ): MutationClaimShadowWallet {
+        // Create a wallet
+        $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
 
-    // Init shadow wallet claim
-    $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
-    $this->molecule->sign();
-    $this->molecule->check();
+        // Init shadow wallet claim
+        $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
+        $this->molecule->sign();
+        $this->molecule->check();
 
-    return $this;
-  }
+        return $this;
+    }
 
 }

@@ -38,6 +38,7 @@
   },
   "require" : {
     "php" : "^8.1",
+      "ext-ctype": "*",
     "ext-json" : "*",
     "ext-sodium" : "*",
     "desktopd/php-sha3-streamable" : "@dev",

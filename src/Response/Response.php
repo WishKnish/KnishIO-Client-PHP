@@ -59,30 +59,30 @@ use WishKnish\KnishIO\Client\Query\Query;
  * @package WishKnish\KnishIO\Client\Query
  */
 class Response {
-  /**
-   * @var Query|null
-   */
-  protected ?Query $query;
+    /**
+     * @var Query|null
+     */
+    protected ?Query $query;
 
-  /**
-   * @var array|null
-   */
-  protected ?array $response;
+    /**
+     * @var array|null
+     */
+    protected ?array $response;
 
-  /**
-   * @var string
-   */
-  protected string $originResponse;
+    /**
+     * @var string
+     */
+    protected string $originResponse;
 
-  /**
-   * @var mixed
-   */
-  protected mixed $payload;
+    /**
+     * @var mixed
+     */
+    protected mixed $payload;
 
-  /**
-   * @var string
-   */
-  protected string $dataKey;
+    /**
+     * @var string
+     */
+    protected string $dataKey;
 
     /**
      * Response constructor.
@@ -95,50 +95,50 @@ class Response {
      * @throws UnauthenticatedException
      * @throws InvalidResponseException
      */
-  public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
-    // Set a query
-    $this->query = $query;
+    public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
+        // Set a query
+        $this->query = $query;
 
-    // Origin response
-    $this->originResponse = $json;
+        // Origin response
+        $this->originResponse = $json;
 
-    // Json decode
-    $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
+        // Json decode
+        $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
 
-    // Set datakey from
-    if ( $dataKey !== null ) {
-      $this->dataKey = $dataKey;
+        // Set datakey from
+        if ( $dataKey !== null ) {
+            $this->dataKey = $dataKey;
+        }
+
+        // Catch exceptions
+        if ( array_has( $this->response, 'exception' ) ) {
+
+            // Exception error
+            $message = array_get( $this->response, 'message' );
+
+            // Custom exceptions
+            if ( stripos( $message, 'Unauthenticated' ) !== false ) {
+                throw new UnauthenticatedException ( $message );
+            }
+
+            // Default exception
+            throw new InvalidResponseException( $message );
+        }
+
+        // No-json response - error
+        if ( $this->response === null ) {
+            throw new InvalidResponseException();
+        }
+
+        $this->init();
     }
 
-    // Catch exceptions
-    if ( array_has( $this->response, 'exception' ) ) {
+    /**
+     * Initialization
+     */
+    public function init (): void {
 
-      // Exception error
-      $message = array_get( $this->response, 'message' );
-
-      // Custom exceptions
-      if ( stripos( $message, 'Unauthenticated' ) !== false ) {
-        throw new UnauthenticatedException ( $message );
-      }
-
-      // Default exception
-      throw new InvalidResponseException( $message );
     }
-
-    // No-json response - error
-    if ( $this->response === null ) {
-      throw new InvalidResponseException();
-    }
-
-    $this->init();
-  }
-
-  /**
-   * Initialization
-   */
-  public function init (): void {
-
-  }
 
     /**
      * Get a response
@@ -146,48 +146,48 @@ class Response {
      * @return mixed
      * @throws InvalidResponseException
      */
-  public function data (): mixed {
+    public function data (): mixed {
 
-    // For the root class
-    if ( !$this->dataKey ) {
-      return $this->response;
+        // For the root class
+        if ( !$this->dataKey ) {
+            return $this->response;
+        }
+
+        // Check key & return custom data from the response
+        if ( !array_has( $this->response, $this->dataKey ) ) {
+            if ( array_has( $this->response, 'errors' ) && $this->response[ 'errors' ][ 0 ][ 'debugMessage' ] ) {
+                $error = $this->response[ 'errors' ][ 0 ][ 'debugMessage' ];
+            }
+            else {
+                $error = 'GraphQL did not provide a valid response.';
+            }
+            throw new InvalidResponseException( $error );
+        }
+
+        return array_get( $this->response, $this->dataKey );
     }
 
-    // Check key & return custom data from the response
-    if ( !array_has( $this->response, $this->dataKey ) ) {
-      if(array_has( $this->response, 'errors' ) && $this->response['errors'][0]['debugMessage']) {
-        $error = $this->response['errors'][0]['debugMessage'];
-      }
-      else {
-        $error = 'GraphQL did not provide a valid response.';
-      }
-      throw new InvalidResponseException( $error );
+    /**
+     * @return array|null
+     */
+    public function response (): ?array {
+        return $this->response;
     }
 
-    return array_get( $this->response, $this->dataKey );
-  }
+    /**
+     * Get a payload
+     *
+     * @return mixed
+     */
+    public function payload (): mixed {
+        return null;
+    }
 
-  /**
-   * @return array|null
-   */
-  public function response (): ?array {
-    return $this->response;
-  }
-
-  /**
-   * Get a payload
-   *
-   * @return mixed
-   */
-  public function payload (): mixed {
-    return null;
-  }
-
-  /**
-   * @return Query|null
-   */
-  public function query (): ?Query {
-    return $this->query;
-  }
+    /**
+     * @return Query|null
+     */
+    public function query (): ?Query {
+        return $this->query;
+    }
 
 }
