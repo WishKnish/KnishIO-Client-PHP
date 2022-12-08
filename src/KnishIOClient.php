@@ -713,14 +713,13 @@ class KnishIOClient {
   /**
    * @param string|null $bundleHash
    * @param string|null $tokenSlug
-   * @param bool $unspent
    *
    * @return array|null
    * @throws GuzzleException
    * @throws JsonException
    * @throws SodiumException
    */
-  public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
+  public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null ): ?array {
 
     /**
      * @var QueryWalletList $query
@@ -733,7 +732,6 @@ class KnishIOClient {
     $response = $query->execute( [
       'bundleHash' => $bundleHash ?: $this->getBundle(),
       'tokenSlug' => $tokenSlug,
-      'unspent' => $unspent
     ] );
 
     return $response->getWallets();
