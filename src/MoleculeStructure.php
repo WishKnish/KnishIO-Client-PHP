@@ -55,6 +55,22 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\MetaMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomIndexException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMismatchException;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException;
+use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\TokenTypeException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
+use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
+use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
+use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
+use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
+use WishKnish\KnishIO\Client\Exception\TransferWalletException;
+use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -240,6 +256,24 @@ class MoleculeStructure {
     /**
      * @param Wallet|null $senderWallet
      *
+     * @return void
+     * @throws CryptoException
+     * @throws MetaMissingException
+     * @throws MoleculeAtomIndexException
+     * @throws MoleculeAtomsMissingException
+     * @throws MoleculeHashMismatchException
+     * @throws MoleculeHashMissingException
+     * @throws MoleculeSignatureMalformedException
+     * @throws MoleculeSignatureMismatchException
+     * @throws TokenTypeException
+     * @throws TransferBalanceException
+     * @throws TransferMalformedException
+     * @throws TransferMismatchedException
+     * @throws TransferRemainderException
+     * @throws TransferToSelfException
+     * @throws TransferUnbalancedException
+     * @throws TransferWalletException
+     * @throws WalletBatchException
      * @throws JsonException
      */
     public function check ( Wallet $senderWallet = null ): void {
@@ -266,6 +300,7 @@ class MoleculeStructure {
      * @param bool $encode
      *
      * @return string
+     * @throws CryptoException
      */
     public function signatureFragments ( string $key, bool $encode = true ): string {
         // Subdivide Kk into 16 segments of 256 bytes (128 characters) each

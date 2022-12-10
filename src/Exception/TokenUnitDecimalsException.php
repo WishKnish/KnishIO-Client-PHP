@@ -52,19 +52,19 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class UnauthenticatedException
+ * Class TokenUnitDecimalsException
  * @package WishKnish\KnishIO\Client\Exception
  */
-class UnauthenticatedException extends KnishIOException {
+class TokenUnitDecimalsException extends KnishIOException {
     /**
-     * UnauthenticatedException constructor.
+     * TokenUnitDecimalsException constructor.
      *
      * @param string $message
      * @param $payload
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct ( string $message = 'Attempting to access secret or bundle without being authenticated first.', $payload = null, int $code = 2, Throwable $previous = null ) {
+    public function __construct ( string $message = 'Tokens with unit IDs cannot have decimal places!', $payload = null, int $code = 1, Throwable $previous = null ) {
         parent::__construct( $message, $payload, $code, $previous );
     }
 }

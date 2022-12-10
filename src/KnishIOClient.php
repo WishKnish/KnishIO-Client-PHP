@@ -50,19 +50,24 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
+use Exception\InvalidResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
-use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
-use WishKnish\KnishIO\Client\Exception\StackableUnitDecimalsException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeMutationClassException;
+use WishKnish\KnishIO\Client\Exception\TokenUnitAmountException;
+use WishKnish\KnishIO\Client\Exception\TokenUnitDecimalsException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferBundleException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
+use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -167,6 +172,7 @@ class KnishIOClient {
      * @param int $serverSdkVersion
      *
      * @return void
+     * @throws CryptoException
      */
     public function initialize ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
         $this->reset();
@@ -272,7 +278,7 @@ class KnishIOClient {
      */
     public function getSecret (): ?string {
         if ( !$this->secret ) {
-            throw new UnauthenticatedException( 'KnishIOClient::getSecret - Expected ' . static::class . '::authentication call before.' );
+            throw new UnauthenticatedException();
         }
 
         return $this->secret;
@@ -286,7 +292,7 @@ class KnishIOClient {
      */
     public function getBundle (): ?string {
         if ( !$this->bundle ) {
-            throw new UnauthenticatedException( 'KnishIOClient::getBundle() - Unable to find a stored bundle!' );
+            throw new UnauthenticatedException();
         }
         return $this->bundle;
     }
@@ -359,7 +365,8 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
-     * @throws CodeException
+     * @throws MoleculeMutationClassException
+     * @throws UnauthenticatedException
      */
     public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
 
@@ -371,7 +378,7 @@ class KnishIOClient {
 
         // Only instances of MutationProposeMolecule supported
         if ( !$query instanceof MutationProposeMolecule ) {
-            throw new CodeException( static::class . '::createMoleculeMutation - required class instance of MutationProposeMolecule.' );
+            throw new MoleculeMutationClassException( 'Attempting to create a Mutation using class not inherited from MutationProposeMolecule.', $class );
         }
 
         // Save the last molecule query
@@ -388,6 +395,7 @@ class KnishIOClient {
      * @return Response
      * @throws GuzzleException
      * @throws JsonException
+     * @throws UnauthenticatedException
      */
     public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): Response {
 
@@ -413,6 +421,8 @@ class KnishIOClient {
      * @throws JsonException
      * @throws TransferAmountException
      * @throws WalletShadowException
+     * @throws UnauthenticatedException
+     * @throws TransferBalanceException
      */
     public function querySourceWallet ( string $tokenSlug, int $amount, string $type = 'regular' ): Wallet {
 
@@ -423,7 +433,7 @@ class KnishIOClient {
 
         // Check source wallet balance
         if ( !$fromWallet || !$fromWallet->hasEnoughBalance( $amount ) ) {
-            throw new TransferAmountException( 'The transfer amount cannot be greater than the sender\'s balance.' );
+            throw new TransferBalanceException('Insufficient balance to complete transfer.', $fromWallet->balance );
         }
 
         // Check shadow wallet
@@ -593,8 +603,11 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
-     * @throws StackableUnitDecimalsException
-     * @throws StackableUnitAmountException
+     * @throws TokenUnitDecimalsException
+     * @throws TokenUnitAmountException
+     * @throws CryptoException
+     * @throws UnauthenticatedException
+     * @throws CodeException
      */
     public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -609,11 +622,11 @@ class KnishIOClient {
         if ( in_array( $fungibility, [ 'nonfungible', 'stackable' ] ) && count( $units ) > 0 ) {
 
             if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
-                throw new StackableUnitDecimalsException();
+                throw new TokenUnitDecimalsException();
             }
 
             if ( $amount > 0 ) {
-                throw new StackableUnitAmountException();
+                throw new TokenUnitAmountException();
             }
 
             $amount = count( $units );
@@ -654,6 +667,8 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws UnauthenticatedException
+     * @throws CodeException
      */
     public function createMeta ( string $metaType, string $metaId, array $metadata = [] ): Response {
 
@@ -680,6 +695,7 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws CodeException
      */
     public function createIdentifier ( string $type, string $contact, string $code ): Response {
 
@@ -700,9 +716,14 @@ class KnishIOClient {
      * @param array $policy
      *
      * @return Response
+     * @throws CodeException
+     * @throws CryptoException
+     * @throws MoleculeAtomsMissingException
+     * @throws WalletSignatureException
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws UnauthenticatedException
      */
     public function createPolicy ( string $metaType, string $metaId, array $policy = [] ): Response {
 
@@ -727,6 +748,7 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws UnauthenticatedException
      */
     public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
 
@@ -795,7 +817,10 @@ class KnishIOClient {
      * @throws SodiumException
      * @throws TransferBundleException
      * @throws WalletBatchException
-     * @throws StackableUnitAmountException
+     * @throws TokenUnitAmountException
+     * @throws InvalidResponseException
+     * @throws CryptoException
+     * @throws CodeException
      */
     public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -814,7 +839,7 @@ class KnishIOClient {
 
         // NON-stackable tokens & batch ID is NOT NULL - error
         if ( !$isStackable && $batchId !== null ) {
-            throw new WalletBatchException( 'Expected Batch ID = null for non-stackable tokens.' );
+            throw new WalletBatchException( 'Non-stackable tokens should not have a Batch ID.' );
         }
         // Stackable tokens & batch ID is NULL - generate new one
         if ( $isStackable && $batchId === null ) {
@@ -826,7 +851,7 @@ class KnishIOClient {
 
             // Can't specify units and amount simultaneously
             if ( $amount > 0 ) {
-                throw new StackableUnitAmountException();
+                throw new TokenUnitAmountException();
             }
 
             // Amount will equal number of units being requested
@@ -858,6 +883,7 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws CodeException
      */
     public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
         /**
@@ -912,11 +938,15 @@ class KnishIOClient {
      * @param Wallet|null $sourceWallet
      *
      * @return Response
+     * @throws CodeException
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws TokenUnitAmountException
+     * @throws TransferAmountException
      * @throws TransferBundleException
-     * @throws StackableUnitAmountException
+     * @throws UnauthenticatedException
+     * @throws WalletShadowException
      */
     public function transferToken ( string $bundleHash, string $tokenSlug, int $amount = 0, ?string $batchId = null, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
@@ -930,7 +960,7 @@ class KnishIOClient {
 
             // Can't move stackable units AND provide amount
             if ( $amount > 0 ) {
-                throw new StackableUnitAmountException();
+                throw new TokenUnitAmountException();
             }
 
             $amount = count( $units );
@@ -978,9 +1008,13 @@ class KnishIOClient {
      * @param Wallet|null $sourceWallet
      *
      * @return Response
+     * @throws CodeException
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws TransferAmountException
+     * @throws UnauthenticatedException
+     * @throws WalletShadowException
      */
     public function depositBufferToken ( string $tokenSlug, int $amount, array $tradeRates, ?Wallet $sourceWallet = null ): Response {
 
@@ -1011,9 +1045,13 @@ class KnishIOClient {
      * @param Wallet|null $signingWallet
      *
      * @return Response
+     * @throws CodeException
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws TransferAmountException
+     * @throws UnauthenticatedException
+     * @throws WalletShadowException
      */
     public function withdrawBufferToken ( string $tokenSlug, int $amount, ?Wallet $sourceWallet = null, ?Wallet $signingWallet = null ): Response {
 
@@ -1043,10 +1081,18 @@ class KnishIOClient {
      * @param Wallet|null $sourceWallet
      *
      * @return Response
+     * @throws CodeException
+     * @throws CryptoException
+     * @throws TransferBalanceException
      * @throws GuzzleException
      * @throws JsonException
+     * @throws MoleculeAtomsMissingException
      * @throws SodiumException
-     * @throws StackableUnitAmountException
+     * @throws TokenUnitAmountException
+     * @throws TransferAmountException
+     * @throws UnauthenticatedException
+     * @throws WalletShadowException
+     * @throws WalletSignatureException
      */
     public function burnToken ( string $tokenSlug, int $amount, array $units = [], ?Wallet $sourceWallet = null ): Response {
 
@@ -1063,7 +1109,7 @@ class KnishIOClient {
 
             // Can't burn stackable units AND provide amount
             if ( $amount > 0 ) {
-                throw new StackableUnitAmountException();
+                throw new TokenUnitAmountException();
             }
 
             // Calculating amount based on Unit IDs
@@ -1091,10 +1137,16 @@ class KnishIOClient {
      * @param Wallet|null $sourceWallet
      *
      * @return Response
+     * @throws CodeException
+     * @throws CryptoException
      * @throws GuzzleException
      * @throws JsonException
+     * @throws MoleculeAtomsMissingException
      * @throws SodiumException
+     * @throws TransferAmountException
      * @throws TransferWalletException
+     * @throws UnauthenticatedException
+     * @throws WalletSignatureException
      */
     public function replenishToken ( string $tokenSlug, int $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
@@ -1129,11 +1181,17 @@ class KnishIOClient {
      * @param Wallet|null $sourceWallet
      *
      * @return Response
+     * @throws CodeException
+     * @throws CryptoException
      * @throws GuzzleException
      * @throws JsonException
+     * @throws MoleculeAtomsMissingException
      * @throws SodiumException
-     * @throws WalletShadowException
+     * @throws TransferBalanceException
      * @throws TransferWalletException
+     * @throws UnauthenticatedException
+     * @throws WalletShadowException
+     * @throws WalletSignatureException
      */
     public function fuseToken ( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null ): Response {
 
@@ -1198,6 +1256,7 @@ class KnishIOClient {
      * @throws GuzzleException
      * @throws JsonException
      * @throws SodiumException
+     * @throws UnauthenticatedException
      */
     public function getSourceWallet (): Wallet {
         // Has a ContinuID wallet?

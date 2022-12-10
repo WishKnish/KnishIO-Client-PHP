@@ -64,7 +64,7 @@ class TransferBalanceException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct ( string $message = 'Insufficient balance to make transfer', $payload = null, int $code = 1, Throwable $previous = null ) {
+    public function __construct ( string $message = 'Insufficient balance to complete transfer.', $payload = null, int $code = 1, Throwable $previous = null ) {
         parent::__construct( $message, $payload, $code, $previous );
     }
 }

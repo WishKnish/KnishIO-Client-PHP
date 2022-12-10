@@ -51,16 +51,20 @@ namespace WishKnish\KnishIO\Client\Exception;
 
 use Throwable;
 
-class StackableUnitAmountException extends KnishIOException {
+/**
+ * Class MoleculeAtomIndexException
+ * @package WishKnish\KnishIO\Client\Exception
+ */
+class MoleculeMutationClassException extends KnishIOException {
     /**
-     * StackableUnitAmountException constructor.
+     * MoleculeAtomIndexException constructor.
      *
      * @param string $message
      * @param $payload
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct ( string $message = 'Can\'t use stackable units and provide amount.', $payload = null, int $code = 1, Throwable $previous = null ) {
+    public function __construct ( string $message = 'Attempting to create a Mutation using class not inherited from MutationProposeMolecule.', $payload = null, int $code = 1, Throwable $previous = null ) {
         parent::__construct( $message, $payload, $code, $previous );
     }
 }

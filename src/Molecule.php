@@ -518,6 +518,7 @@ class Molecule extends MoleculeStructure {
      * @throws JsonException
      * @throws SodiumException
      * @throws TransferBalanceException
+     * @throws CryptoException
      */
     public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
 

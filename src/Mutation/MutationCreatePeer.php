@@ -66,6 +66,25 @@ class MutationCreatePeer extends MutationProposeMolecule {
      *
      * @return $this
      * @throws JsonException
+     * @throws \SodiumException
+     * @throws \WishKnish\KnishIO\Client\Exception\CryptoException
+     * @throws \WishKnish\KnishIO\Client\Exception\MetaMissingException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeAtomIndexException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeHashMismatchException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeHashMissingException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException
+     * @throws \WishKnish\KnishIO\Client\Exception\MoleculeSignatureMismatchException
+     * @throws \WishKnish\KnishIO\Client\Exception\TokenTypeException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferBalanceException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferMalformedException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferMismatchedException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferRemainderException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferToSelfException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferUnbalancedException
+     * @throws \WishKnish\KnishIO\Client\Exception\TransferWalletException
+     * @throws \WishKnish\KnishIO\Client\Exception\WalletBatchException
+     * @throws \WishKnish\KnishIO\Client\Exception\WalletSignatureException
      */
     public function fillMolecule ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
         // Set name as slug if it is not defined
