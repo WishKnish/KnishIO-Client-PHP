@@ -499,7 +499,7 @@ class Molecule extends MoleculeStructure {
     // Set a metas signing wallet data for molecule reconciliation ability
     $firstAtomMeta = new AtomMeta();
     if ( $signingWallet ) {
-      $firstAtomMeta->addSigningWallet( $signingWallet );
+      $firstAtomMeta->setSigningWallet( $signingWallet );
     }
 
     // Initializing a new Atom to remove tokens from source
@@ -539,20 +539,17 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param Wallet $newWallet
+   * @param Wallet $wallet
+   * @param AtomMeta|null $atomMeta
    *
    * @return $this
    * @throws JsonException
    */
-  public function initWalletCreation ( Wallet $newWallet ): Molecule {
+  public function initWalletCreation ( Wallet $wallet, AtomMeta $atomMeta = null ): Molecule {
 
-    $atomMeta = new AtomMeta( [
-      'address' => $newWallet->address,
-      'token' => $newWallet->token,
-      'bundle' => $newWallet->bundle,
-      'position' => $newWallet->position,
-      'batch_id' => $newWallet->batchId,
-    ] );
+    // Create an atom metadata
+    $atomMeta = $atomMeta ?? new AtomMeta;
+    $atomMeta->setMetaWallet( $wallet );
 
     // Create an 'C' atom
     $this->addAtom( Atom::create(
@@ -560,14 +557,26 @@ class Molecule extends MoleculeStructure {
       $this->sourceWallet,
       null,
       'wallet',
-      $newWallet->address,
+      $wallet->address,
       $atomMeta,
+      $wallet->batchId
     ) );
 
     // Add continuID atom
     $this->addContinuIdAtom();
 
     return $this;
+  }
+
+  /**
+   * @param Wallet $wallet
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function initShadowWalletClaim ( Wallet $wallet ): Molecule {
+    $atomMeta = ( new AtomMeta )->setShadowWalletClaim( true );
+    return $this->initWalletCreation( $wallet, $atomMeta );
   }
 
   /**
@@ -611,24 +620,16 @@ class Molecule extends MoleculeStructure {
    *
    * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
    * @param int $amount - how many of the token we are initially issuing (for fungible tokens only)
-   * @param array $meta - additional fields to configure the token
+   * @param array $metas - additional fields to configure the token
    *
    * @return $this
    * @throws JsonException
    */
-  public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $meta ): Molecule {
+  public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $metas ): Molecule {
 
-    // Fill metas with wallet property
-    foreach ( [
-      'walletAddress' => 'address',
-      'walletPosition' => 'position',
-      'walletPubkey' => 'pubkey',
-      'walletCharacters' => 'characters',
-    ] as $metaKey => $walletProperty ) {
-      if ( !array_get( $meta, $metaKey ) ) {
-        $meta[ $metaKey ] = $recipientWallet->$walletProperty;
-      }
-    }
+    // Atom meta with new wallet data
+    $meta = new AtomMeta( $metas );
+    $meta->setMetaWallet( $recipientWallet );
 
     // The primary atom tells the ledger that a certain amount of the new token is being issued.
     $this->addAtom( Atom::create(
@@ -637,44 +638,8 @@ class Molecule extends MoleculeStructure {
       $amount,
       'token',
       $recipientWallet->token,
-      new AtomMeta( $meta ),
+      $meta,
       $recipientWallet->batchId,
-    ) );
-
-    // Add continuID atom
-    $this->addContinuIdAtom();
-
-    return $this;
-  }
-
-  /**
-   * Init shadow wallet claim
-   *
-   * @param string $tokenSlug
-   * @param Wallet $wallet
-   *
-   * @return $this
-   * @throws JsonException
-   */
-  public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
-
-    $atomMeta = new AtomMeta( [
-      'tokenSlug' => $tokenSlug,
-      'walletAddress' => $wallet->address,
-      'walletPosition' => $wallet->position,
-      'pubkey' => $wallet->pubkey,
-      'characters' => $wallet->characters,
-      'batchId' => $wallet->batchId,
-    ] );
-
-    // Create an 'C' atom
-    $this->addAtom( Atom::create(
-      'C',
-      $this->sourceWallet,
-      null,
-      'wallet',
-      $wallet->address,
-      $atomMeta,
     ) );
 
     // Add continuID atom
@@ -835,6 +800,7 @@ class Molecule extends MoleculeStructure {
    *
    * @param bool $anonymous
    * @param bool $compressed
+   * @throws \SodiumException
    */
   public function sign ( bool $anonymous = false, bool $compressed = true ): void {
     if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
@@ -857,9 +823,10 @@ class Molecule extends MoleculeStructure {
     // Set signing position from the first atom
     $signingPosition = $firstAtom->position;
 
-    // Try to get custom signing position from the metas (local molecule with server secret)
-    if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-      $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
+    // Try to get other specified signing wallet from the metas & override position
+    $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
+    if ( $signingWallet ) {
+      $signingPosition = $signingWallet->position;
     }
 
     // Signing position is required

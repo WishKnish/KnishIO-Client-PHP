@@ -93,7 +93,7 @@ class TokenUnit {
   public static function createFromGraphQL ( array $data ): self {
     $metas = array_get( $data, 'metas', [] );
     if ( $metas ) {
-      $metas = json_decode( $metas, true, JSON_THROW_ON_ERROR );
+      $metas = json_decode( $metas, true, 512, JSON_THROW_ON_ERROR );
     }
 
     // Get token unit ID

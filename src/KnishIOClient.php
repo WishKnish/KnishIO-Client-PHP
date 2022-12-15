@@ -592,7 +592,6 @@ class KnishIOClient {
 
     $fungibility = array_get( $meta, 'fungibility' );
 
-
     // For stackable token - create a batch ID
     if ( $fungibility === 'stackable' ) {
       $batchId = $batchId ?? Crypto::generateBatchId();
@@ -612,11 +611,11 @@ class KnishIOClient {
       $amount = count( $units );
 
       // Set custom default metadata
-        $meta = array_merge( $meta, [
-          'splittable' => 1,
-          'decimals' => 0,
-          'tokenUnits' => json_encode( $units )
-        ] );
+      $meta = array_merge( $meta, [
+        'splittable' => 1,
+        'decimals' => 0,
+        'tokenUnits' => json_encode( $units )
+      ] );
     }
 
     // Set default decimals value
@@ -714,14 +713,13 @@ class KnishIOClient {
   /**
    * @param string|null $bundleHash
    * @param string|null $tokenSlug
-   * @param bool $unspent
    *
    * @return array|null
    * @throws GuzzleException
    * @throws JsonException
    * @throws SodiumException
    */
-  public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
+  public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null ): ?array {
 
     /**
      * @var QueryWalletList $query
@@ -733,23 +731,12 @@ class KnishIOClient {
      */
     $response = $query->execute( [
       'bundleHash' => $bundleHash ?: $this->getBundle(),
-      'token' => $tokenSlug,
-      'unspent' => $unspent
+      'tokenSlug' => $tokenSlug,
     ] );
 
     return $response->getWallets();
   }
 
-  /**
-   * @param string $tokenSlug
-   * @param string|null $bundleHash
-   *
-   * @return array|null
-   * @throws GuzzleException|Exception
-   */
-  public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ?array {
-    return $this->queryWallets( $bundleHash, $tokenSlug );
-  }
 
   /**
    * @param string|null $bundleHash
@@ -870,8 +857,9 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function claimShadowWallets ( string $tokenSlug ): array {
+
     // Get shadow wallet list
-    $wallets = $this->queryShadowWallets( $tokenSlug );
+    $wallets = $this->queryWallets( null, $tokenSlug );
 
     // Check shadow wallets
     $shadowWallets = [];
@@ -939,13 +927,12 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $this->remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
-    $fromWallet->splitUnits( $units, $this->remainderWallet, $recipientWallet );
+    $fromWallet->splitUnits( $units, $remainderWallet, $recipientWallet );
 
     // Create a molecule with custom source wallet
-    $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
 
     // Create a query
     /** @var MutationTransferTokens $query */
@@ -976,11 +963,10 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
-    $this->remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $this->remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
     // Create a molecule with custom source wallet
-    $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
 
     // Create a mutation
     /** @var MutationDepositBufferToken $query */
@@ -1009,10 +995,10 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount, 'buffer' );
 
     // Remainder wallet
-    $this->remainderWallet = $fromWallet;
+    $remainderWallet = $fromWallet;
 
     // Create a molecule with custom source wallet
-    $molecule = $this->createMolecule( null, $fromWallet, $this->remainderWallet );
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
 
     // Create a mutation
     /** @var MutationWithdrawBufferToken $query */
@@ -1041,8 +1027,7 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
@@ -1092,8 +1077,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
     // Burn tokens
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
@@ -1155,8 +1139,7 @@ class KnishIOClient {
     $recipientWallet->initBatchId( $fromWallet );
 
     // Remainder wallet
-    $remainderWallet = Wallet::create( $this->getSecret(), $tokenSlug, $fromWallet->batchId, $fromWallet->characters );
-    $remainderWallet->initBatchId( $fromWallet, true );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
     // Split token units (fused)
     $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );

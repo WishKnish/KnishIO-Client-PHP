@@ -165,7 +165,7 @@ class Atom {
 
     // If wallet has been passed => add related metas
     if ( $wallet ) {
-      $meta->addWallet( $wallet );
+      $meta->setAtomWallet( $wallet );
     }
 
     // Create the final atom's object
@@ -290,6 +290,13 @@ class Atom {
    */
   public function aggregatedMeta (): array {
     return Meta::aggregate( $this->meta );
+  }
+
+  /**
+   * @return AtomMeta
+   */
+  public function getAtomMeta(): AtomMeta {
+    return new AtomMeta( $this->aggregatedMeta() );
   }
 
   /**

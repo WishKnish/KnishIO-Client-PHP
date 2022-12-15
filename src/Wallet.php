@@ -153,7 +153,7 @@ class Wallet {
 
   /**
    * @param string|null $secret
-   * @param string $token
+   * @param string|null $token
    * @param string|null $position
    * @param string|null $batchId
    * @param string|null $characters
@@ -162,7 +162,7 @@ class Wallet {
    */
   public function __construct (
     string $secret = null,
-    public string $token = 'USER',
+    public ?string $token = 'USER',
     public ?string $position = null,
     public ?string $batchId = null,
     public ?string $characters = null
@@ -285,6 +285,18 @@ class Wallet {
     }
 
     $remainderWallet->tokenUnits = $remainderTokenUnits;
+  }
+
+  /**
+   * @param string $secret
+   *
+   * @return Wallet
+   * @throws SodiumException
+   */
+  public function createRemainder( string $secret ): self {
+    $remainderWallet = Wallet::create( $secret, $this->token, $this->batchId, $this->characters );
+    $remainderWallet->initBatchId( $this, true );
+    return $remainderWallet;
   }
 
   /**
