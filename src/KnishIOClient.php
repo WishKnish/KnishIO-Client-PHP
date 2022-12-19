@@ -84,7 +84,6 @@ use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryToken;
-use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -498,40 +497,6 @@ class KnishIOClient {
 
         // Execute the query
         return $query->execute();
-    }
-
-    /**
-     *
-     * @param string $bundleHash
-     * @param string $metaType
-     * @param string $metaId
-     * @param string $ipAddress
-     * @param string $browser
-     * @param string $osCpu
-     * @param string $resolution
-     * @param string $timeZone
-     * @param array $countBy
-     * @param string $interval
-     *
-     * @return Response {Promise<*>}
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function queryUserActivity ( string $bundleHash, string $metaType, string $metaId, string $ipAddress, string $browser, string $osCpu, string $resolution, string $timeZone, array $countBy, string $interval ): Response {
-        return $this->createQuery( QueryUserActivity::class )
-            ->execute( [
-                'bundleHash' => $bundleHash,
-                'metaType' => $metaType,
-                'metaId' => $metaId,
-                'ipAddress' => $ipAddress,
-                'browser' => $browser,
-                'osCpu' => $osCpu,
-                'resolution' => $resolution,
-                'timeZone' => $timeZone,
-                'countBy' => $countBy,
-                'interval' => $interval
-            ] );
     }
 
     /**
