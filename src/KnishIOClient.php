@@ -70,7 +70,6 @@ use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
-use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
@@ -679,30 +678,6 @@ class KnishIOClient {
 
         // Init a molecule
         $query->fillMolecule( $metaType, $metaId, $metadata );
-
-        // Execute a query
-        return $query->execute();
-    }
-
-    /**
-     * @param string $type
-     * @param string $contact
-     * @param string $code
-     *
-     * @return Response
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function createIdentifier ( string $type, string $contact, string $code ): Response {
-
-        // Create & execute a query
-        /** @var MutationCreateIdentifier $query */
-        $query = $this->createMoleculeMutation( MutationCreateIdentifier::class );
-
-        // Init a molecule
-        $query->fillMolecule( $type, $contact, $code );
 
         // Execute a query
         return $query->execute();

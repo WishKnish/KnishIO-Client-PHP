@@ -728,41 +728,6 @@ class Molecule extends MoleculeStructure {
     }
 
     /**
-     * Initialize a C-type molecule to issue a new type of identifier
-     *
-     * @param string $type
-     * @param string $contact
-     * @param string $code
-     *
-     * @return $this
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function initIdentifierCreation ( string $type, string $contact, string $code ): Molecule {
-
-        $atomMeta = new AtomMeta( [
-            'code' => $code,
-            'hash' => Crypto::generateBundleHash( trim( $contact ) ),
-        ] );
-
-        // Create an 'C' atom
-        $this->addAtom( Atom::create(
-            'C',
-            $this->sourceWallet,
-            null,
-            'identifier',
-            $type,
-            $atomMeta,
-        ) );
-
-        // Add continuID atom
-        $this->addContinuIdAtom();
-
-        return $this;
-    }
-
-    /**
      * Initialize an M-type molecule with the given data
      *
      * @param array $meta
