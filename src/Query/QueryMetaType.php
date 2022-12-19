@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Response\ResponseMetaType;
 
 /**
@@ -160,6 +161,7 @@ class QueryMetaType extends Query {
      *
      * @return ResponseMetaType
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseMetaType {
         return new ResponseMetaType( $this, $response );

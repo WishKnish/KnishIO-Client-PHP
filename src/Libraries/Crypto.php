@@ -49,7 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
@@ -63,7 +63,7 @@ class Crypto {
      * @param int $length
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function generateSecret ( string $seed = null, int $length = 2048 ): string {
         return $seed ? bin2hex( Shake256::hash( $seed, $length / 4 ) ) : Strings::randomString( $length );
@@ -74,7 +74,7 @@ class Crypto {
      * @param int|null $index
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
 
@@ -94,7 +94,7 @@ class Crypto {
      * @param string $secret
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function generateBundleHash ( string $secret ): string {
         return bin2hex( Shake256::hash( $secret, 32 ) );

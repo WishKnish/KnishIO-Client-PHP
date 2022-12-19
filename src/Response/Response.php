@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Response;
 
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
 
@@ -92,8 +93,7 @@ class Response {
      * @param string|null $dataKey
      *
      * @throws JsonException
-     * @throws UnauthenticatedException
-     * @throws InvalidResponseException
+     * @throws KnishIOException
      */
     public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
         // Set a query
@@ -118,16 +118,16 @@ class Response {
 
             // Custom exceptions
             if ( stripos( $message, 'Unauthenticated' ) !== false ) {
-                throw new UnauthenticatedException ( $message );
+                throw new UnauthenticatedException ( $message, $this->response );
             }
 
             // Default exception
-            throw new InvalidResponseException( $message );
+            throw new InvalidResponseException( $message, $this->response );
         }
 
         // No-json response - error
         if ( $this->response === null ) {
-            throw new InvalidResponseException();
+            throw new InvalidResponseException( 'No GraphQL response returned.' );
         }
 
         $this->init();
@@ -144,7 +144,7 @@ class Response {
      * Get a response
      *
      * @return mixed
-     * @throws InvalidResponseException
+     * @throws KnishIOException
      */
     public function data (): mixed {
 
@@ -153,18 +153,15 @@ class Response {
             return $this->response;
         }
 
+        $payload = array_get( $this->response, $this->dataKey );
+
         // Check key & return custom data from the response
-        if ( !array_has( $this->response, $this->dataKey ) ) {
-            if ( array_has( $this->response, 'errors' ) && $this->response[ 'errors' ][ 0 ][ 'debugMessage' ] ) {
-                $error = $this->response[ 'errors' ][ 0 ][ 'debugMessage' ];
-            }
-            else {
-                $error = 'GraphQL did not provide a valid response.';
-            }
-            throw new InvalidResponseException( $error );
+        if ( !$payload ) {
+            dd($this->query);
+            throw new InvalidResponseException( 'GraphQL did not provide a valid response.', $this->response['errors'] );
         }
 
-        return array_get( $this->response, $this->dataKey );
+        return $payload;
     }
 
     /**

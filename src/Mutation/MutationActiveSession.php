@@ -50,8 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
-use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Response\Response;
 
 class MutationActiveSession extends Mutation {
@@ -95,8 +94,7 @@ class MutationActiveSession extends Mutation {
      *
      * @return Response
      * @throws JsonException
-     * @throws InvalidResponseException
-     * @throws UnauthenticatedException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): Response {
         return new Response( $this, $response, 'data.ActiveSession' );

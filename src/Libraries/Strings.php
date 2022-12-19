@@ -53,6 +53,7 @@ use BI\BigInteger;
 use Exception;
 use JetBrains\PhpStorm\Pure;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 /**
  * Class Str
@@ -86,7 +87,7 @@ class Strings {
      * @param string $alphabet
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function randomString ( int $length = 256, string $alphabet = 'abcdef0123456789' ): string {
         $array = array_map( static function () {

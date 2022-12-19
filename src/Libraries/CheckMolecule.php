@@ -51,7 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use JsonException;
 use WishKnish\KnishIO\Client\Atom;
-use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomIndexException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
@@ -82,9 +82,7 @@ class CheckMolecule {
     /**
      * @param MoleculeStructure $molecule
      *
-     * @throws MoleculeHashMissingException
-     * @throws MoleculeAtomsMissingException
-     * @throws MoleculeAtomIndexException
+     * @throws KnishIOException
      */
     public function __construct ( private readonly MoleculeStructure $molecule ) {
 
@@ -110,22 +108,8 @@ class CheckMolecule {
      * @param Wallet|null $fromWallet
      *
      * @return void
-     * @throws CryptoException
+     * @throws KnishIOException
      * @throws JsonException
-     * @throws MetaMissingException
-     * @throws MoleculeAtomIndexException
-     * @throws MoleculeHashMismatchException
-     * @throws MoleculeSignatureMalformedException
-     * @throws MoleculeSignatureMismatchException
-     * @throws TokenTypeException
-     * @throws TransferBalanceException
-     * @throws TransferMalformedException
-     * @throws TransferMismatchedException
-     * @throws TransferRemainderException
-     * @throws TransferToSelfException
-     * @throws TransferUnbalancedException
-     * @throws TransferWalletException
-     * @throws WalletBatchException
      */
     public function verify ( Wallet $fromWallet = null ): void {
         $this->molecularHash();
@@ -142,7 +126,7 @@ class CheckMolecule {
 
     /**
      * Check batch ID
-     * @throws WalletBatchException
+     * @throws KnishIOException
      */
     public function batchId (): void {
 
@@ -168,7 +152,7 @@ class CheckMolecule {
 
     /**
      * @throws JsonException
-     * @throws MetaMissingException
+     * @throws KnishIOException
      */
     public function isotopeR (): void {
 
@@ -236,7 +220,7 @@ class CheckMolecule {
 
     /**
      * Check ContinuID
-     * @throws MoleculeAtomsMissingException
+     * @throws KnishIOException
      */
     public function continuId (): void {
 
@@ -251,9 +235,7 @@ class CheckMolecule {
 
     /**
      * Check isotope T
-     * @throws MetaMissingException
-     * @throws MoleculeAtomIndexException
-     * @throws TokenTypeException
+     * @throws KnishIOException
      */
     public function isotopeT (): void {
 
@@ -293,8 +275,7 @@ class CheckMolecule {
 
     /**
      * Check isotope C
-     * @throws TokenTypeException
-     * @throws MoleculeAtomIndexException
+     * @throws KnishIOException
      */
     public function isotopeC (): void {
 
@@ -313,8 +294,7 @@ class CheckMolecule {
 
     /**
      * Check isotope I
-     * @throws TokenTypeException
-     * @throws MoleculeAtomIndexException
+     * @throws KnishIOException
      */
     public function isotopeI (): void {
 
@@ -333,8 +313,7 @@ class CheckMolecule {
 
     /**
      * Check isotope U
-     * @throws TokenTypeException
-     * @throws MoleculeAtomIndexException
+     * @throws KnishIOException
      */
     public function isotopeU (): void {
 
@@ -353,8 +332,7 @@ class CheckMolecule {
 
     /**
      * Check isotope M
-     * @throws MetaMissingException
-     * @throws TokenTypeException
+     * @throws KnishIOException
      */
     public function isotopeM (): void {
 
@@ -378,13 +356,7 @@ class CheckMolecule {
      *
      * @param Wallet|null $senderWallet
      *
-     * @throws TransferMismatchedException
-     * @throws TransferMalformedException
-     * @throws TransferToSelfException
-     * @throws TransferUnbalancedException
-     * @throws TransferBalanceException
-     * @throws TransferRemainderException
-     * @throws TransferWalletException
+     * @throws KnishIOException
      */
     public function isotopeVB ( Wallet $senderWallet = null ): void {
 
@@ -489,8 +461,7 @@ class CheckMolecule {
 
     /**
      * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
-     * @throws MoleculeHashMismatchException
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function molecularHash (): void {
         if ( $this->molecule->molecularHash !== Atom::hashAtoms( $this->molecule->atoms ) ) {
@@ -504,9 +475,7 @@ class CheckMolecule {
      * the sender’s address.
      *
      * @return void
-     * @throws CryptoException
-     * @throws MoleculeSignatureMalformedException
-     * @throws MoleculeSignatureMismatchException
+     * @throws KnishIOException
      */
     public function ots (): void {
 

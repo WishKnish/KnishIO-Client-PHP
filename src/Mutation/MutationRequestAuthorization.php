@@ -50,6 +50,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
+use SodiumException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 
@@ -66,6 +68,8 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
      *
      * @return $this
      * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
      */
     public function fillMolecule ( array $meta ): MutationRequestAuthorization {
         $this->molecule->initAuthorization( $meta );
@@ -82,6 +86,7 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
      *
      * @return ResponseMolecule
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseMolecule {
         return new ResponseRequestAuthorization( $this, $response );

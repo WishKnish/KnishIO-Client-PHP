@@ -53,6 +53,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Psr7\Request;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Response\Response;
 
@@ -156,6 +157,7 @@ abstract class Query {
      * @return Response
      * @throws GuzzleException
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function execute ( array $variables = null, array $fields = null ): Response {
 
@@ -216,6 +218,7 @@ abstract class Query {
      *
      * @return Response
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): Response {
         return new Response( $this, $response );
@@ -226,6 +229,7 @@ abstract class Query {
      *
      * @return Response
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponseRaw ( ResponseInterface $response ): Response {
         return $this->createResponse( $response->getBody()

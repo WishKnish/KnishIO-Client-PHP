@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -68,6 +69,7 @@ class ResponseBalance extends Response {
      *
      * @return Wallet|null
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function payload (): ?Wallet {
         // Get data

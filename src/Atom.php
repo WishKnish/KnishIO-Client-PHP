@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client;
 use Exception;
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -219,7 +220,7 @@ class Atom {
      * @param string $output
      *
      * @return array|string|null
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
         $atomList = static::sortAtoms( $atoms );

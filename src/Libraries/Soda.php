@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
@@ -73,7 +74,7 @@ class Soda {
      *
      * @param string|null $characters
      *
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function __construct ( string $characters = null ) {
         $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
@@ -92,6 +93,7 @@ class Soda {
      * @return string
      * @throws SodiumException
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function encrypt ( mixed $message, string $key ): string {
         return $this->encode( sodium_crypto_box_seal( json_encode( $message, JSON_THROW_ON_ERROR ), $this->decode( $key ) ) );
@@ -107,6 +109,7 @@ class Soda {
      * @return mixed
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function decrypt ( string $encrypted, string $privateKey, string $publicKey ): mixed {
 
@@ -123,6 +126,7 @@ class Soda {
      *
      * @return string
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function generatePrivateKey ( string $key ): string {
         return $this->encode( sodium_crypto_box_secretkey( Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES ) ) );
@@ -135,6 +139,7 @@ class Soda {
      *
      * @return string
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function generatePublicKey ( string $key ): string {
         return $this->encode( sodium_crypto_box_publickey_from_secretkey( $this->decode( $key ) ) );
@@ -144,6 +149,7 @@ class Soda {
      * @param string $key
      *
      * @return string
+     * @throws KnishIOException
      */
     public function shortHash ( string $key ): string {
         return $this->encode( Shake256::hash( $key, 8 ) );
@@ -153,6 +159,7 @@ class Soda {
      * @param string $data
      *
      * @return string
+     * @throws KnishIOException
      */
     private function decode ( string $data ): string {
         return ( new BaseX( $this->characters ) )->decode( $data );

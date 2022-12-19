@@ -51,7 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use JsonException;
 use SodiumException;
-use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
@@ -80,6 +80,7 @@ class Molecule extends MoleculeStructure {
      * @param string|null $cellSlug
      *
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function __construct (
         private string $secret,
@@ -147,6 +148,7 @@ class Molecule extends MoleculeStructure {
      *
      * @return $this
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function addAtom ( Atom $atom ): Molecule {
 
@@ -176,6 +178,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function addContinuIdAtom (): Molecule {
 
@@ -204,6 +207,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function addPolicyAtom (
         string $metaType,
@@ -237,7 +241,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws MetaMissingException
+     * @throws KnishIOException
      */
     public function createRule (
         string $metaType,
@@ -287,7 +291,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferAmountException
+     * @throws KnishIOException
      */
     public function replenishToken ( int $amount, array $tokenUnits = [] ): Molecule {
 
@@ -340,7 +344,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferBalanceException
+     * @throws KnishIOException
      */
     public function fuseToken ( array $tokenUnits, Wallet $recipientWallet ): Molecule {
 
@@ -384,8 +388,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferAmountException
-     * @throws TransferBalanceException
+     * @throws KnishIOException
      */
     public function burnToken ( int $amount ): Molecule {
 
@@ -425,7 +428,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferBalanceException
+     * @throws KnishIOException
      */
     public function initValue ( Wallet $recipientWallet, int $amount ): Molecule {
 
@@ -468,7 +471,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferBalanceException
+     * @throws KnishIOException
      */
     public function initDepositBuffer ( int $amount, array $tradeRates ): Molecule {
 
@@ -517,8 +520,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
-     * @throws TransferBalanceException
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
 
@@ -578,6 +580,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initWalletCreation ( Wallet $newWallet ): Molecule {
 
@@ -615,6 +618,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
 
@@ -652,6 +656,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $meta ): Molecule {
 
@@ -693,6 +698,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initShadowWalletClaim ( string $tokenSlug, Wallet $wallet ): Molecule {
 
@@ -731,6 +737,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initIdentifierCreation ( string $type, string $contact, string $code ): Molecule {
 
@@ -766,6 +773,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initMeta ( array $meta, string $metaType, string $metaId, array $policy = [] ): Molecule {
 
@@ -797,6 +805,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
 
@@ -826,6 +835,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
 
@@ -854,6 +864,7 @@ class Molecule extends MoleculeStructure {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function initAuthorization ( array $meta = [] ): Molecule {
 
@@ -879,9 +890,7 @@ class Molecule extends MoleculeStructure {
      * @param bool $anonymous
      * @param bool $compressed
      *
-     * @throws MoleculeAtomsMissingException
-     * @throws WalletSignatureException
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function sign ( bool $anonymous = false, bool $compressed = true ): void {
         if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {

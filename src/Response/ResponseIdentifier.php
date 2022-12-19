@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
+
 /**
  * Class ResponseBalance
  * @package WishKnish\KnishIO\Client\Response
@@ -64,6 +66,7 @@ class ResponseIdentifier extends Response {
      * Success
      *
      * @return bool
+     * @throws KnishIOException
      */
     public function success (): bool {
         return array_get( $this->data(), 'set' );
@@ -73,6 +76,7 @@ class ResponseIdentifier extends Response {
      * Message
      *
      * @return string
+     * @throws KnishIOException
      */
     public function message (): string {
         return array_get( $this->data(), 'message' );

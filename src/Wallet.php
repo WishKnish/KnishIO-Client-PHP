@@ -55,6 +55,7 @@ use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -159,6 +160,7 @@ class Wallet {
      * @param string|null $characters
      *
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function __construct (
         string $secret = null,
@@ -199,6 +201,7 @@ class Wallet {
      *
      * @return Wallet
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
         $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
@@ -215,6 +218,7 @@ class Wallet {
      * @param array $unitsData
      *
      * @return array
+     * @throws KnishIOException
      */
     public static function getTokenUnits ( array $unitsData ): array {
         $result = [];
@@ -234,6 +238,8 @@ class Wallet {
     /**
      * @param Wallet $sourceWallet
      * @param bool $isRemainder
+     *
+     * @throws KnishIOException
      */
     public function initBatchId ( Wallet $sourceWallet, bool $isRemainder = false ): void {
         if ( $sourceWallet->batchId ) {
@@ -294,6 +300,7 @@ class Wallet {
      * @return array
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function encryptBinary ( string $message, ...$pubkeys ): array {
         return $this->encryptMessage( base64_encode( $message ), ...$pubkeys );
@@ -305,6 +312,7 @@ class Wallet {
      * @return mixed
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function decryptBinary ( array|string $message ): mixed {
         $decrypt = $this->decryptMessage( $message );
@@ -327,7 +335,7 @@ class Wallet {
      * @return array
      * @throws JsonException
      * @throws SodiumException
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function encryptMessage ( mixed $message, ...$pubkeys ): array {
 
@@ -352,8 +360,7 @@ class Wallet {
      * @return mixed
      * @throws JsonException
      * @throws SodiumException
-     * @throws CodeException
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public function decryptMessage ( array|string $message ): mixed {
 
@@ -380,6 +387,7 @@ class Wallet {
      * @param int $saltLength
      *
      * @return string
+     * @throws KnishIOException
      */
     protected static function generatePosition ( int $saltLength = 64 ): string {
         return Strings::randomString( $saltLength );
@@ -389,7 +397,7 @@ class Wallet {
      * @param string $key
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     protected static function generateAddress ( string $key ): string {
 
@@ -422,7 +430,7 @@ class Wallet {
      * @param string $position
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function generateKey ( string $secret, string $token, string $position ): string {
 

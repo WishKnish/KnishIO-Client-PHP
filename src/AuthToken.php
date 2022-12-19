@@ -5,6 +5,7 @@ namespace WishKnish\KnishIO\Client;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 /**
  * Class AuthToken
@@ -35,6 +36,7 @@ class AuthToken {
      *
      * @return static
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public static function restore ( array $snapshot, string $secret ): self {
         $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );

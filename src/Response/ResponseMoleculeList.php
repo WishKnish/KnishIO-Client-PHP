@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
 /**
@@ -66,6 +68,7 @@ class ResponseMoleculeList extends Response {
      * @param array $data
      *
      * @return MoleculeStructure
+     * @throws JsonException
      */
     public static function toClientMolecule ( array $data ): MoleculeStructure {
         return MoleculeStructure::toObject( $data );
@@ -73,6 +76,8 @@ class ResponseMoleculeList extends Response {
 
     /**
      * @return array
+     * @throws KnishIOException
+     * @throws JsonException
      */
     public function payload (): array {
         // Get data

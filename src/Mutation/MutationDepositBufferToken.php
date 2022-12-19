@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 /**
  * Class MutationDepositBufferToken
@@ -65,6 +66,7 @@ class MutationDepositBufferToken extends MutationProposeMolecule {
      * @return $this
      * @throws JsonException
      * @throws SodiumException
+     * @throws KnishIOException
      */
     public function fillMolecule ( int $amount, array $tradeRates ): self {
         $this->molecule->initDepositBuffer( $amount, $tradeRates );

@@ -56,7 +56,7 @@ use GuzzleHttp\Promise;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Libraries\Cipher;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -141,7 +141,7 @@ class HttpClient extends Client implements HttpClientInterface {
 
     /**
      * @return Wallet
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function wallet (): Wallet {
         return $this->cipher->wallet();
@@ -156,7 +156,7 @@ class HttpClient extends Client implements HttpClientInterface {
 
     /**
      * @return string
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function getPubkey (): string {
         return $this->cipher->getPubkey();

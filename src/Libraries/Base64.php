@@ -3,6 +3,7 @@
 namespace WishKnish\KnishIO\Client\Libraries;
 
 use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 class Base64 {
 
@@ -11,7 +12,7 @@ class Base64 {
     }
 
     /**
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function decode ( $data ): string {
         $decode = base64_decode( $data, true );

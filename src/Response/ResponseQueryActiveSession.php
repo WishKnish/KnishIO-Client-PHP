@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
+
 /**
  * Class ResponseQueryActiveSession
  * @package WishKnish\KnishIO\Client\Response
@@ -62,6 +64,7 @@ class ResponseQueryActiveSession extends Response {
 
     /**
      * @return array
+     * @throws KnishIOException
      */
     public function payload (): array {
         $list = $this->data();

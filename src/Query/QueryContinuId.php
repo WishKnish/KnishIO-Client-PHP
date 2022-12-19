@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Response\ResponseContinuId;
 
 /**
@@ -86,6 +87,7 @@ class QueryContinuId extends Query {
      *
      * @return ResponseContinuId
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseContinuId {
         return new ResponseContinuId( $this, $response );

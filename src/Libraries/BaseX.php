@@ -5,7 +5,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 use ArrayObject;
 use JetBrains\PhpStorm\Pure;
 use Tuupola\Base58 as B58;
-use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 class BaseX {
     public const BASE2 = '01';
@@ -65,7 +65,7 @@ class BaseX {
     }
 
     /**
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function decode ( $data ): string {
         return $this->encoder->decode( $data );

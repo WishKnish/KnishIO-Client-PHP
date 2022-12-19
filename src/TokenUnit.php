@@ -4,6 +4,7 @@ namespace WishKnish\KnishIO\Client;
 
 use JetBrains\PhpStorm\Pure;
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
 
 /**
@@ -71,7 +72,7 @@ class TokenUnit {
      * @param mixed $metas
      *
      * @return static
-     * @throws TokenUnitFormatException
+     * @throws KnishIOException
      */
     public static function create ( mixed $id, mixed $name, mixed $metas ): self {
         if ( !is_string( $id ) || !$id ) {
@@ -90,7 +91,7 @@ class TokenUnit {
      * @param array $data
      *
      * @return static
-     * @throws TokenUnitFormatException
+     * @throws KnishIOException
      */
     public static function createFromGraphQL ( array $data ): self {
         $metas = array_get( $data, 'metas', [] );
@@ -112,7 +113,7 @@ class TokenUnit {
      * @param array|string $data
      *
      * @return static
-     * @throws TokenUnitFormatException
+     * @throws KnishIOException
      */
     public static function createFromDB ( array|string $data ): self {
 

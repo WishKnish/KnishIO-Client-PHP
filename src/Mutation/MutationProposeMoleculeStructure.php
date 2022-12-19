@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Mutation;
 
 use JetBrains\PhpStorm\Pure;
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Query\Query;
@@ -130,6 +131,7 @@ class MutationProposeMoleculeStructure extends Query {
      *
      * @return ResponseMolecule
      * @throws JsonException
+     * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseMolecule {
         return new ResponseMolecule( $this, $response );

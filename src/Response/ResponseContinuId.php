@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use SodiumException;
-use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -68,7 +68,7 @@ class ResponseContinuId extends Response {
      * Get a payload
      *
      * @return Wallet|null
-     * @throws InvalidResponseException
+     * @throws KnishIOException
      * @throws SodiumException
      */
     public function payload (): ?Wallet {

@@ -63,6 +63,7 @@ use Psr\Http\Message\ResponseInterface;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\InvalidRequestException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Wallet;
 
 class Cipher {
@@ -97,7 +98,7 @@ class Cipher {
 
     /**
      * @return Wallet
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function wallet (): Wallet {
         if ( $this->wallet === null ) {
@@ -115,7 +116,7 @@ class Cipher {
 
     /**
      * @return string
-     * @throws CodeException
+     * @throws KnishIOException
      */
     public function getPubkey (): string {
         if ( $this->pubkey === null ) {

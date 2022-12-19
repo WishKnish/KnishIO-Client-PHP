@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
+
 /**
  * Class ResponseMetaType
  * @package WishKnish\KnishIO\Client\Response
@@ -62,6 +64,7 @@ class ResponseMetaType extends Response {
 
     /**
      * @return array|array[]
+     * @throws KnishIOException
      */
     public function payload (): array {
         $data = $this->data();

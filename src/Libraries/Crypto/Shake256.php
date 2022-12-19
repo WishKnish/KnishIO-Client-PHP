@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 use desktopd\SHA3\Sponge as SHA3;
 use Exception;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 /*
 
@@ -90,7 +91,7 @@ class Shake256 {
      * @param int $length
      *
      * @return string
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function hash ( $data, int $length ): string {
 
@@ -106,7 +107,7 @@ class Shake256 {
 
     /**
      * @return SHA3
-     * @throws CryptoException
+     * @throws KnishIOException
      */
     public static function init (): SHA3 {
         try {
