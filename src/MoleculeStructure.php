@@ -69,7 +69,6 @@ class MoleculeStructure {
     use Json;
 
     public ?string $molecularHash;
-    public ?string $counterparty = null;
     public ?string $bundle;
     public ?string $status;
     public int $local = 0;
@@ -79,7 +78,7 @@ class MoleculeStructure {
     public ?string $receivedAt = null;
     public ?string $processedAt = null;
     public array $atoms = [];
-    public ?array $payloads = null;
+    public ?array $payload = null;
 
     /**
      * @param string|array $isotopes
@@ -119,16 +118,6 @@ class MoleculeStructure {
      */
     public function logString (): string {
         return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
-    }
-
-    /**
-     * @param string|null $counterparty
-     *
-     * @return $this
-     */
-    public function withCounterparty ( ?string $counterparty ): self {
-        $this->counterparty = $counterparty;
-        return $this;
     }
 
     /**

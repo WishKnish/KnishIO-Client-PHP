@@ -156,8 +156,7 @@ class Response {
         $payload = array_get( $this->response, $this->dataKey );
 
         // Check key & return custom data from the response
-        if ( !$payload ) {
-            dd($this->query);
+        if ( array_key_exists( 'errors', $this->response) ) {
             throw new InvalidResponseException( 'GraphQL did not provide a valid response.', $this->response['errors'] );
         }
 

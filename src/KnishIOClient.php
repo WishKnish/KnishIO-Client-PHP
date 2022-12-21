@@ -1174,7 +1174,8 @@ class KnishIOClient {
 
         // Create & set an auth token object if the response is successful
         if ( $response->success() ) {
-            $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
+            $payload = $response->payload();
+            $authToken = AuthToken::create( $payload['U'], $wallet, $encrypt );
             $this->setAuthToken( $authToken );
         }
 
