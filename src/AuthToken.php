@@ -50,13 +50,13 @@ class AuthToken {
     /**
      * @param string $token
      * @param string $expiresAt
-     * @param string $pubkey
+     * @param string|null $pubkey
      * @param bool $encrypt
      */
     public function __construct (
         protected string $token,
         protected string $expiresAt,
-        protected string $pubkey,
+        protected ?string $pubkey,
         protected bool $encrypt,
     ) {
 
@@ -107,9 +107,9 @@ class AuthToken {
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getPubkey (): string {
+    public function getPubkey (): ?string {
         return $this->pubkey;
     }
 

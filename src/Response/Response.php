@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Response;
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
+use WishKnish\KnishIO\Client\Exception\ResponseJsonException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Query\Query;
 
@@ -92,7 +93,6 @@ class Response {
      * @param string $json
      * @param string|null $dataKey
      *
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
@@ -103,7 +103,12 @@ class Response {
         $this->originResponse = $json;
 
         // Json decode
-        $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
+        try {
+            $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
+        }
+        catch( JsonException $e ) {
+            throw new ResponseJsonException('Json exception thrown when decoding response: '. $e->getMessage(), $json);
+        }
 
         // Set datakey from
         if ( $dataKey !== null ) {
@@ -175,7 +180,7 @@ class Response {
      *
      * @return mixed
      */
-    public function payload (): mixed {
+    public function getPayload (): mixed {
         return null;
     }
 

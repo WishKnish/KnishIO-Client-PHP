@@ -47,103 +47,36 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
-use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\Response\ResponseAuthToken;
 
 /**
- * Class ResponseMolecule
- * @package WishKnish\KnishIO\Client\Response
+ * Class MutationAuthToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class ResponseMolecule extends Response {
+class MutationAuthToken extends Mutation {
+    // Query
+    protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AuthToken( cellSlug: $cellSlug ) @fields }';
+
+    // Fields
+    protected array $fields = [
+        'token',
+        'time',
+    ];
 
     /**
-     * @var string
-     */
-    protected string $dataKey = 'data.ProposeMolecule';
-
-    /**
-     * @var mixed
-     */
-    protected mixed $payload;
-
-    /**
-     * Initialization
-     * @throws KnishIOException
-     */
-    public function init (): void {
-
-        // Get a json payload
-        $payload_json = array_get( $this->data(), 'payload' );
-
-        // Decode payload
-        try {
-            $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
-        }
-        catch ( JsonException ) {
-            // Unable to decode JSON response?
-            /** @TODO Add proper handing of JSON errors */
-        }
-    }
-
-    /**
-     * @return MoleculeStructure|null
-     * @throws KnishIOException
-     */
-    public function molecule (): ?MoleculeStructure {
-        if ( !$data = $this->data() ) {
-            return null;
-        }
-
-        $molecule = new MoleculeStructure();
-        $molecule->molecularHash = array_get( $data, 'molecularHash' );
-        $molecule->status = array_get( $data, 'status' );
-        $molecule->createdAt = array_get( $data, 'createdAt' );
-
-        return $molecule;
-    }
-
-    /**
-     * @return string
-     * @throws KnishIOException
-     */
-    public function getMolecularHash (): string {
-        return array_get( $this->data(), 'molecularHash' );
-    }
-
-    /**
-     * Success?
+     * Create a response
      *
-     * @return bool
+     * @param $response
+     *
+     * @return ResponseAuthToken
+     * @throws JsonException
      * @throws KnishIOException
      */
-    public function success (): bool {
-        return ( $this->status() === 'accepted' );
+    public function createResponse ( $response ): ResponseAuthToken {
+        return new ResponseAuthToken( $this, $response );
     }
-
-    /**
-     * @return string
-     * @throws KnishIOException
-     */
-    public function status (): string {
-        return array_get( $this->data(), 'status', 'rejected' );
-    }
-
-    /**
-     * @return string
-     * @throws KnishIOException
-     */
-    public function reason (): string {
-        return array_get( $this->data(), 'reason', 'Invalid response from server' );
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPayload ( $isotope = null ): mixed {
-        return $isotope ? $this->payload[ $isotope ] : $this->payload;
-    }
-
 }

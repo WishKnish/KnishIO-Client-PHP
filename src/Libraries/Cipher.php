@@ -108,9 +108,9 @@ class Cipher {
     }
 
     /**
-     * @param string $pubkey
+     * @param string|null $pubkey
      */
-    public function setPubkey ( string $pubkey ): void {
+    public function setPubkey ( ?string $pubkey ): void {
         $this->pubkey = $pubkey;
     }
 
@@ -151,7 +151,7 @@ class Cipher {
                                     '__schema',
                                     'ContinuId'
                                 ] ) ),
-                            ( $requestType === 'mutation' && $requestName === 'AccessToken' ),
+                            ( $requestType === 'mutation' && $requestName === 'AuthToken' ),
                             ( $isMoleculeMutation && array_get( $original, 'variables.molecule.atoms.0.isotope' ) === 'U' )
                         ];
 

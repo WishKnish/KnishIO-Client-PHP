@@ -47,36 +47,24 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Mutation;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use JsonException;
-use WishKnish\KnishIO\Client\Exception\KnishIOException;
-use WishKnish\KnishIO\Client\Response\ResponseAccessToken;
+use Throwable;
 
 /**
- * Class MutationAccessToken
- * @package WishKnish\KnishIO\Client\Mutation
+ * Class ResponseJsonException
+ * @package WishKnish\KnishIO\Client\Exception
  */
-class MutationAccessToken extends Mutation {
-    // Query
-    protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
-
-    // Fields
-    protected array $fields = [
-        'token',
-        'time',
-    ];
-
+class ResponseJsonException extends KnishIOException {
     /**
-     * Create a response
+     * MoleculeAtomIndexException constructor.
      *
-     * @param $response
-     *
-     * @return ResponseAccessToken
-     * @throws JsonException
-     * @throws KnishIOException
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
      */
-    public function createResponse ( $response ): ResponseAccessToken {
-        return new ResponseAccessToken( $this, $response );
+    public function __construct ( string $message = 'Json exception thrown when decoding response.', $payload = null, int $code = 1, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
     }
 }

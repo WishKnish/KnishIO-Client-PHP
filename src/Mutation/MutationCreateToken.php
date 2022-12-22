@@ -64,17 +64,17 @@ class MutationCreateToken extends MutationProposeMolecule {
     /**
      * @param Wallet $recipientWallet
      * @param $amount
-     * @param array $meta
+     * @param array $metas
      *
      * @return $this
      * @throws JsonException
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function fillMolecule ( Wallet $recipientWallet, $amount, array $meta = [] ): MutationCreateToken {
+    public function fillMolecule ( Wallet $recipientWallet, $amount, array $metas = [] ): MutationCreateToken {
 
         // Fill the molecule
-        $this->molecule->initTokenCreation( $recipientWallet, $amount, $meta );
+        $this->molecule->initTokenCreation( $recipientWallet, $amount, $metas );
         $this->molecule->sign();
         $this->molecule->check();
 

@@ -235,7 +235,7 @@ class Molecule extends MoleculeStructure {
     /**
      * @param string $metaType
      * @param string $metaId
-     * @param array $meta
+     * @param array $metas
      * @param array $policy
      *
      * @return $this
@@ -246,7 +246,7 @@ class Molecule extends MoleculeStructure {
     public function createRule (
         string $metaType,
         string $metaId,
-        array $meta,
+        array $metas,
         array $policy = []
     ): Molecule {
 
@@ -255,17 +255,17 @@ class Molecule extends MoleculeStructure {
             'callback',
             'rule'
         ] as $key ) {
-            if ( !array_key_exists( $key, $meta ) ) {
-                throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+            if ( !array_key_exists( $key, $metas ) ) {
+                throw new MetaMissingException( 'No or not defined "' . $key . '" in metas' );
             }
 
-            if ( is_array( $meta[ $key ] ) ) {
-                $meta[ $key ] = json_encode( $meta[ $key ], JSON_UNESCAPED_SLASHES );
+            if ( is_array( $metas[ $key ] ) ) {
+                $meta[ $key ] = json_encode( $metas[ $key ], JSON_UNESCAPED_SLASHES );
             }
         }
 
         // Create & fill atom meta object
-        $atomMeta = new AtomMeta( $meta );
+        $atomMeta = new AtomMeta( $metas );
         $atomMeta->addPolicy( $policy );
 
         // Create rule isotope atom
@@ -658,7 +658,7 @@ class Molecule extends MoleculeStructure {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $meta ): Molecule {
+    public function initTokenCreation ( Wallet $recipientWallet, int $amount, array $metas ): Molecule {
 
         // Fill metas with wallet property
         foreach ( [
@@ -667,7 +667,7 @@ class Molecule extends MoleculeStructure {
             'walletPubkey' => 'pubkey',
             'walletCharacters' => 'characters',
         ] as $metaKey => $walletProperty ) {
-            if ( !array_get( $meta, $metaKey ) ) {
+            if ( !array_get( $metas, $metaKey ) ) {
                 $meta[ $metaKey ] = $recipientWallet->$walletProperty;
             }
         }
@@ -679,7 +679,7 @@ class Molecule extends MoleculeStructure {
             $amount,
             'token',
             $recipientWallet->token,
-            new AtomMeta( $meta ),
+            new AtomMeta( $metas ),
             $recipientWallet->batchId,
         ) );
 
@@ -730,7 +730,7 @@ class Molecule extends MoleculeStructure {
     /**
      * Initialize an M-type molecule with the given data
      *
-     * @param array $meta
+     * @param array $metas
      * @param string $metaType
      * @param string $metaId
      * @param array $policy
@@ -740,7 +740,7 @@ class Molecule extends MoleculeStructure {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function initMeta ( array $meta, string $metaType, string $metaId, array $policy = [] ): Molecule {
+    public function initMeta ( array $metas, string $metaType, string $metaId, array $policy = [] ): Molecule {
 
         $this->addAtom( Atom::create(
             'M',
@@ -748,11 +748,11 @@ class Molecule extends MoleculeStructure {
             null,
             $metaType,
             $metaId,
-            new AtomMeta( $meta )
+            new AtomMeta( $metas )
         ) );
 
         // Add policy atom
-        $this->addPolicyAtom( $metaType, $metaId, $meta, $policy );
+        $this->addPolicyAtom( $metaType, $metaId, $metas, $policy );
 
         // Add continuID atom
         $this->addContinuIdAtom();
@@ -763,7 +763,7 @@ class Molecule extends MoleculeStructure {
     /**
      * Initialize meta append molecule
      *
-     * @param array $meta
+     * @param array $metas
      * @param string $metaType
      * @param string $metaId
      *
@@ -772,7 +772,7 @@ class Molecule extends MoleculeStructure {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
+    public function initMetaAppend ( array $metas, string $metaType, string $metaId ): Molecule {
 
         $this->addAtom( Atom::create(
             'A',
@@ -780,7 +780,7 @@ class Molecule extends MoleculeStructure {
             null,
             $metaType,
             $metaId,
-            new AtomMeta( $meta )
+            new AtomMeta( $metas )
         ) );
 
         // Add continuID atom
@@ -794,7 +794,7 @@ class Molecule extends MoleculeStructure {
      * @param string $token
      * @param int $amount
      * @param string $recipientBundle
-     * @param array $meta
+     * @param array $metas
      * @param string|null $batchId
      *
      * @return $this
@@ -802,10 +802,10 @@ class Molecule extends MoleculeStructure {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
+    public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $metas = [], ?string $batchId = null ): Molecule {
 
         // Set meta token
-        $meta[ 'token' ] = $token;
+        $metas[ 'token' ] = $token;
 
         $this->addAtom( Atom::create(
             'T',
@@ -813,7 +813,7 @@ class Molecule extends MoleculeStructure {
             $amount,
             'walletBundle',
             $recipientBundle,
-            new AtomMeta( $meta ),
+            new AtomMeta( $metas ),
             $batchId,
         ) );
 
@@ -824,14 +824,14 @@ class Molecule extends MoleculeStructure {
     }
 
     /**
-     * @param array $meta
+     * @param array $metas
      *
      * @return $this
      * @throws JsonException
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function initAuthorization ( array $meta = [] ): Molecule {
+    public function initAuthorization ( array $metas = [] ): Molecule {
 
         $this->addAtom( Atom::create(
             'U',
@@ -839,7 +839,7 @@ class Molecule extends MoleculeStructure {
             null,
             null,
             null,
-            new AtomMeta( $meta ),
+            new AtomMeta( $metas ),
         ) );
 
         // Add continuID atom

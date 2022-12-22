@@ -420,7 +420,7 @@ class KnishIOClient {
         // Get a from wallet
         /** @var Wallet|null $fromWallet */
         $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundle(), $type )
-            ->payload();
+            ->getPayload();
 
         // Check source wallet balance
         if ( !$fromWallet || !$fromWallet->hasEnoughBalance( $amount ) ) {
@@ -457,7 +457,7 @@ class KnishIOClient {
 
         // Execute the query
         return $query->execute( $variables, $fields )
-            ->payload();
+            ->getPayload();
     }
 
     /**
@@ -502,7 +502,7 @@ class KnishIOClient {
     /**
      * @param string $tokenSlug
      * @param int $amount
-     * @param array $meta
+     * @param array $metas
      * @param string|null $batchId
      * @param array $units
      *
@@ -512,9 +512,9 @@ class KnishIOClient {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function createToken ( string $tokenSlug, int $amount, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+    public function createToken ( string $tokenSlug, int $amount, array $metas = [], ?string $batchId = null, array $units = [] ): Response {
 
-        $fungibility = array_get( $meta, 'fungibility' );
+        $fungibility = array_get( $metas, 'fungibility' );
 
         // For stackable token - create a batch ID
         if ( $fungibility === 'stackable' ) {
@@ -524,7 +524,7 @@ class KnishIOClient {
         // Special logic for token unit initialization (nonfungible || stackable)
         if ( in_array( $fungibility, [ 'nonfungible', 'stackable' ] ) && count( $units ) > 0 ) {
 
-            if ( array_key_exists( 'decimals', $meta ) && $meta[ 'decimals' ] > 0 ) {
+            if ( array_key_exists( 'decimals', $metas ) && $meta[ 'decimals' ] > 0 ) {
                 throw new TokenUnitDecimalsException();
             }
 
@@ -535,7 +535,7 @@ class KnishIOClient {
             $amount = count( $units );
 
             // Set custom default metadata
-            $meta = array_merge( $meta, [
+            $meta = array_merge( $metas, [
                 'splittable' => 1,
                 'decimals' => 0,
                 'tokenUnits' => json_encode( $units )
@@ -543,8 +543,8 @@ class KnishIOClient {
         }
 
         // Set default decimals value
-        if ( !array_has( $meta, 'decimals' ) ) {
-            $meta[ 'decimals' ] = 0;
+        if ( !array_has( $metas, 'decimals' ) ) {
+            $metas[ 'decimals' ] = 0;
         }
 
         // Recipient wallet
@@ -555,7 +555,7 @@ class KnishIOClient {
         $query = $this->createMoleculeMutation( MutationCreateToken::class );
 
         // Init a molecule
-        $query->fillMolecule( $recipientWallet, $amount, $meta );
+        $query->fillMolecule( $recipientWallet, $amount, $metas );
 
         // Return a query execution result
         return $query->execute();
@@ -572,7 +572,7 @@ class KnishIOClient {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function createMeta ( string $metaType, string $metaId, array $metadata = [] ): Response {
+    public function createMeta ( string $metaType, string $metaId, array $metas = [] ): Response {
 
         // Create a custom molecule
         $molecule = $this->createMolecule( $this->getSecret(), $this->getSourceWallet() );
@@ -582,7 +582,7 @@ class KnishIOClient {
         $query = $this->createMoleculeMutation( MutationCreateMeta::class, $molecule );
 
         // Init a molecule
-        $query->fillMolecule( $metaType, $metaId, $metadata );
+        $query->fillMolecule( $metaType, $metaId, $metas );
 
         // Execute a query
         return $query->execute();
@@ -686,7 +686,7 @@ class KnishIOClient {
      * @param string $tokenSlug
      * @param int $amount
      * @param string|null $recipientBundle
-     * @param array $meta
+     * @param array $metas
      * @param string|null $batchId
      * @param array $units
      *
@@ -696,7 +696,7 @@ class KnishIOClient {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+    public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $metas = [], ?string $batchId = null, array $units = [] ): Response {
 
         // No bundle? Use our own
         $recipientBundle = $recipientBundle ?? $this->getBundle();
@@ -740,7 +740,7 @@ class KnishIOClient {
         $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
         // Init a molecule
-        $query->fillMolecule( $tokenSlug, $amount, $recipientBundle, $meta, $batchId );
+        $query->fillMolecule( $tokenSlug, $amount, $recipientBundle, $metas, $batchId );
 
         // Return a query execution result
         return $query->execute();
@@ -1002,7 +1002,7 @@ class KnishIOClient {
         // Get a from wallet
         /** @var Wallet|null $fromWallet */
         $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-            ->payload();
+            ->getPayload();
         if ( $fromWallet === null ) {
             throw new TransferWalletException( 'Source wallet is missing or invalid.' );
         }
@@ -1045,7 +1045,7 @@ class KnishIOClient {
         // Get a from wallet
         /** @var Wallet|null $fromWallet */
         $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-            ->payload();
+            ->getPayload();
         if ( $fromWallet === null ) {
             throw new TransferWalletException( 'Source wallet is missing or invalid.' );
         }
@@ -1103,7 +1103,7 @@ class KnishIOClient {
     public function getSourceWallet (): Wallet {
         // Has a ContinuID wallet?
         $sourceWallet = $this->queryContinuId( $this->getBundle() )
-            ->payload();
+            ->getPayload();
         if ( !$sourceWallet ) {
             $sourceWallet = new Wallet( $this->getSecret() );
         }
@@ -1133,6 +1133,7 @@ class KnishIOClient {
 
     /**
      * @param string $secret
+     * @param string|null $cellSlug
      * @param bool $encrypt
      *
      * @return Response
@@ -1141,13 +1142,17 @@ class KnishIOClient {
      * @throws KnishIOException
      * @throws SodiumException
      */
-    public function requestProfileAuthToken ( string $secret, bool $encrypt ): Response {
+    public function requestAuthToken ( string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
+        // Set a cell slug
+        if( $cellSlug ) {
+            $this->setCellSlug( $cellSlug );
+        }
 
         $this->setSecret( $secret );
 
         // Querying ContinuID USER wallet
         $wallet = $this->queryBalance( 'USER' )
-            ->payload();
+            ->getPayload();
 
         // If no ContinuID established, create a new USER wallet
         if ( !$wallet ) {
@@ -1174,33 +1179,10 @@ class KnishIOClient {
 
         // Create & set an auth token object if the response is successful
         if ( $response->success() ) {
-            $payload = $response->payload();
+            $payload = $response->getPayload();
             $authToken = AuthToken::create( $payload['U'], $wallet, $encrypt );
             $this->setAuthToken( $authToken );
         }
-
-        return $response;
-    }
-
-    /**
-     * @param string $secret
-     * @param string|null $cellSlug
-     * @param bool $encrypt
-     *
-     * @return Response
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     * @throws SodiumException
-     */
-    public function requestAuthToken ( string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
-        // Set a cell slug
-        if( $cellSlug ) {
-            $this->setCellSlug( $cellSlug );
-        }
-
-        // Response for request auth token
-        $response = $this->requestProfileAuthToken( $secret, $encrypt );
 
         // Switch encryption
         $this->switchEncryption( $encrypt );

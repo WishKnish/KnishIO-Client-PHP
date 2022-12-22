@@ -78,11 +78,11 @@ class ResponseMetaType extends Response {
             'paginatorInfo' => [],
         ];
 
-        $metaData = $data[ 0 ];
+        $metas = $data[ 0 ];
 
         // Duplicate logic from js (@todo $result = $data[ 0 ]?)
         foreach ( $result as $key => $value ) {
-            if ( $responseValue = array_get( $metaData, $key ) ) {
+            if ( $responseValue = array_get( $metas, $key ) ) {
                 $result[ $key ] = $responseValue;
             }
         }

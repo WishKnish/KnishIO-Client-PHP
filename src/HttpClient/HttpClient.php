@@ -150,7 +150,7 @@ class HttpClient extends Client implements HttpClientInterface {
     /**
      * @param string $pubkey
      */
-    public function setPubkey ( string $pubkey ): void {
+    public function setPubkey ( ?string $pubkey ): void {
         $this->cipher->setPubkey( $pubkey );
     }
 
@@ -194,10 +194,10 @@ class HttpClient extends Client implements HttpClientInterface {
      * Sets the authorization data
      *
      * @param string $token
-     * @param string $pubkey
+     * @param string|null $pubkey
      * @param Wallet $wallet
      */
-    public function setAuthData ( string $token, string $pubkey, Wallet $wallet ): void {
+    public function setAuthData ( string $token, ?string $pubkey, Wallet $wallet ): void {
         $this->setAuthToken( $token );
         $this->setPubkey( $pubkey );
         $this->setWallet( $wallet );

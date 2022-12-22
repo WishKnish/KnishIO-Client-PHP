@@ -180,7 +180,7 @@ class CheckMolecule {
                     'rule',
                 ] as $key ) {
                     if ( !array_key_exists( $key, $metas ) ) {
-                        throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
+                        throw new MetaMissingException( 'Missing \'' . $key . '\' field in metas.' );
                     }
                 }
 
@@ -242,14 +242,14 @@ class CheckMolecule {
         /** @var Atom $atom */
         foreach ( $this->molecule->getIsotopes( 'T' ) as $atom ) {
 
-            $meta = $atom->aggregatedMeta();
+            $metas = $atom->aggregatedMeta();
             $metaType = strtolower( ( string ) $atom->metaType );
 
             // Check required meta keys closure
-            $checkRequiredMetaKeys = static function ( array $keys ) use ( $meta ) {
+            $checkRequiredMetaKeys = static function ( array $keys ) use ( $metas ) {
                 foreach ( $keys as $key ) {
-                    if ( !array_key_exists( $key, $meta ) || empty( $meta[ $key ] ) ) {
-                        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
+                    if ( !array_key_exists( $key, $metas ) || empty( $metas[ $key ] ) ) {
+                        throw new MetaMissingException( 'Key "' . $key . '" not defined in metas.' );
                     }
                 }
             };
@@ -339,7 +339,7 @@ class CheckMolecule {
         /** @var Atom $atom */
         foreach ( $this->molecule->getIsotopes( 'M' ) as $atom ) {
 
-            if ( empty( $atom->meta ) ) {
+            if ( empty( $atom->metas ) ) {
                 throw new MetaMissingException();
             }
 

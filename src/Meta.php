@@ -58,15 +58,21 @@ use JsonException;
 class Meta {
 
     /**
-     * @param array $meta
+     * @param array $metas
      *
      * @return array
      * @throws JsonException
      */
-    public static function normalize ( array $meta ): array {
+    public static function normalize ( array $metas ): array {
+
+        // Already normalized?
+        if ( array_is_list( $metas ) ) {
+            return $metas;
+        }
+
         $result = [];
 
-        foreach ( $meta as $key => $value ) {
+        foreach ( $metas as $key => $value ) {
 
             // Handling non-string meta values
             if ( !is_string( $value ) ) {
@@ -92,13 +98,31 @@ class Meta {
     }
 
     /**
-     * @param array $meta
+     * @param array|string $metas
      *
      * @return array
      */
-    public static function aggregate ( array $meta ): array {
+    public static function aggregate ( array|string $metas ): array {
+
+        // Handling stringified metas
+        if( gettype( $metas) === 'string') {
+            $metas = json_decode( $metas, true );
+        }
+
         $aggregate = [];
-        foreach ( $meta as $metaEntry ) {
+        foreach ( $metas as $metaEntry ) {
+            if( gettype( $metaEntry) === 'string') {
+                $metaEntry = json_decode( $metaEntry, true );
+            }
+
+            if( gettype( $metaEntry ) === 'object' ) {
+                $metaEntry = (array) $metaEntry;
+            }
+
+            if( gettype( $metaEntry['value']) === 'string') {
+                $metaEntry['value'] = json_decode( $metaEntry['value'], true );
+            }
+
             $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
         }
         return $aggregate;

@@ -69,7 +69,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string|null $batchId
  * @property string|null $metaType
  * @property string|null $metaId
- * @property array $meta
+ * @property array $metas
  * @property integer|null $index
  * @property string|null $otsFragment
  * @property string $createdAt
@@ -92,7 +92,7 @@ class Atom {
             'batchId',
             'metaType',
             'metaId',
-            'meta',
+            'metas',
             'createdAt',
         ];
     }
@@ -106,7 +106,7 @@ class Atom {
      * @param string|null $batchId
      * @param string|null $metaType
      * @param string|null $metaId
-     * @param array $meta
+     * @param array $metas
      * @param string|null $otsFragment
      * @param int|null $index
      * @param string|null $createdAt
@@ -122,15 +122,15 @@ class Atom {
         public ?string $batchId = null,
         public ?string $metaType = null,
         public ?string $metaId = null,
-        public array $meta = [],
+        public array $metas = [],
         public ?string $otsFragment = null,
         public ?int $index = null,
         public ?string $createdAt = null,
     ) {
 
         // Normalize meta
-        if ( $this->meta ) {
-            $this->meta = Meta::normalize( $this->meta );
+        if ( $this->metas ) {
+            $this->metas = Meta::normalize( $this->metas );
         }
 
         // Set created at
@@ -157,18 +157,18 @@ class Atom {
         string $value = null,
         string $metaType = null,
         string $metaId = null,
-        AtomMeta $meta = null,
+        AtomMeta $metas = null,
         string $batchId = null,
     ): self {
 
         // If meta is not passed - create it
-        if ( !$meta ) {
-            $meta = new AtomMeta();
+        if ( !$metas ) {
+            $metas = new AtomMeta();
         }
 
         // If wallet has been passed => add related metas
         if ( $wallet ) {
-            $meta->addWallet( $wallet );
+            $metas->addWallet( $wallet );
         }
 
         // Create the final atom's object
@@ -181,7 +181,7 @@ class Atom {
             $batchId ?? $wallet?->batchId,
             $metaType,
             $metaId,
-            $meta->get(),
+            $metas->get(),
         );
     }
 
@@ -199,11 +199,11 @@ class Atom {
             }
 
             // Special code for meta property
-            if ( $property === 'meta' ) {
-                foreach ( $value as $meta ) {
+            if ( $property === 'metas' ) {
+                foreach ( $value as $metas ) {
                     if ( isset( $meta[ 'value' ] ) ) {
-                        $hashableValues[] = ( string ) $meta[ 'key' ];
-                        $hashableValues[] = ( string ) $meta[ 'value' ];
+                        $hashableValues[] = ( string ) $metas[ 'key' ];
+                        $hashableValues[] = ( string ) $metas[ 'value' ];
                     }
                 }
             }
@@ -292,7 +292,7 @@ class Atom {
      * @return array
      */
     public function aggregatedMeta (): array {
-        return Meta::aggregate( $this->meta );
+        return Meta::aggregate( $this->metas );
     }
 
     /**
@@ -309,10 +309,10 @@ class Atom {
         ], $property, $property );
 
         // Meta json specific logic (if meta does not initialized)
-        if ( !$this->meta && $property === 'metasJson' ) {
+        if ( !$this->metas && $property === 'metasJson' ) {
             $metas = json_decode( $value, true );
             if ( $metas !== null ) {
-                $this->meta = Meta::normalize( $metas );
+                $this->metas = Meta::normalize( $metas );
             }
         } // Default meta set
         else {

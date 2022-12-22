@@ -290,9 +290,24 @@ class MoleculeStructure {
      */
     public static function toObject ( array $data ): MoleculeStructure {
         $object = static::arrayToObject( $data );
-        foreach ( $object->atoms as $key => $atom_data ) {
-            $atom = new Atom( $atom_data[ 'position' ], $atom_data[ 'walletAddress' ], $atom_data[ 'isotope' ] );
-            $object->atoms[ $key ] = Atom::arrayToObject( $atom_data, $atom );
+        foreach ( $object->atoms as $key => $atomData ) {
+
+            $atom = new Atom(
+                $atomData[ 'position' ],
+                $atomData[ 'walletAddress' ],
+                $atomData[ 'isotope' ],
+                $atomData[ 'token' ],
+                $atomData[ 'value' ],
+                $atomData[ 'batchId' ],
+                $atomData[ 'metaType' ],
+                $atomData[ 'metaId' ],
+                $atomData[ 'metas' ],
+                $atomData[ 'otsFragment' ],
+                $atomData[ 'index' ],
+                $atomData[ 'createdAt' ]
+            );
+
+            $object->atoms[ $key ] = $atom;
         }
         $object->atoms = Atom::sortAtoms( $object->atoms );
         return $object;

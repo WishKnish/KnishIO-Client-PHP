@@ -52,15 +52,15 @@ namespace WishKnish\KnishIO\Client\Response;
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
 
 /**
- * Class ResponseAccessToken
+ * Class ResponseAuthToken
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseAccessToken extends Response {
+class ResponseAuthToken extends Response {
 
     /**
      * @var string
      */
-    protected string $dataKey = 'data.AccessToken';
+    protected string $dataKey = 'data.AuthToken';
 
     /**
      * @return string
@@ -74,14 +74,14 @@ class ResponseAccessToken extends Response {
      * @throws KnishIOException
      */
     public function success (): bool {
-        return $this->payload() !== null;
+        return $this->getPayload() !== null;
     }
 
     /**
      * @return mixed
      * @throws KnishIOException
      */
-    public function payload (): mixed {
+    public function getPayload (): mixed {
         return $this->data();
     }
 
@@ -90,7 +90,7 @@ class ResponseAccessToken extends Response {
      * @throws KnishIOException
      */
     public function token (): ?string {
-        return array_get( $this->payload(), 'token' );
+        return array_get( $this->getPayload(), 'token' );
     }
 
     /**
@@ -98,7 +98,7 @@ class ResponseAccessToken extends Response {
      * @throws KnishIOException
      */
     public function time (): ?int {
-        return array_get( $this->payload(), 'time' );
+        return array_get( $this->getPayload(), 'time' );
     }
 
 }

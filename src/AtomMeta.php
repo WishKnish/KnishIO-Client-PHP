@@ -57,21 +57,21 @@ use JsonException;
 class AtomMeta {
 
     /**
-     * @param array $meta
+     * @param array $metas
      */
     public function __construct (
-        private array $meta = [],
+        private array $metas = [],
     ) {
 
     }
 
     /**
-     * @param array $meta
+     * @param array $metas
      *
      * @return $this
      */
-    public function merge ( array $meta ): self {
-        $this->meta = array_merge( $this->meta, $meta );
+    public function merge ( array $metas ): self {
+        $this->metas = array_merge( $this->metas, $metas );
         return $this;
     }
 
@@ -92,17 +92,17 @@ class AtomMeta {
      * @throws JsonException
      */
     public function addWallet ( Wallet $wallet ): self {
-        $walletMeta = [
+        $walletMetas = [
             'pubkey' => $wallet->pubkey,
             'characters' => $wallet->characters,
         ];
         if ( $wallet->tokenUnits ) {
-            $walletMeta[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+            $walletMetas[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
         }
         if ( $wallet->tradeRates ) {
-            $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
+            $walletMetas[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
         }
-        $this->merge( $walletMeta );
+        $this->merge( $walletMetas );
         return $this;
     }
 
@@ -114,7 +114,7 @@ class AtomMeta {
      */
     public function addPolicy ( array $policy ): self {
 
-        $policyMeta = new PolicyMeta( $policy, array_keys( $this->meta ) );
+        $policyMeta = new PolicyMeta( $policy, array_keys( $this->metas ) );
 
         $this->merge( [
             'policy' => $policyMeta->toJson(),
@@ -145,6 +145,6 @@ class AtomMeta {
      * @return array
      */
     public function get (): array {
-        return $this->meta;
+        return $this->metas;
     }
 }
