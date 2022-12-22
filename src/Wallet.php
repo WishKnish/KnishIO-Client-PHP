@@ -127,9 +127,19 @@ class Wallet {
   public ?string $tokenName = null;
 
   /**
+   * @var int
+   */
+  public int $tokenAmount = 0;
+
+  /**
    * @var string|null
    */
   public ?string $tokenSupply = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenFungibility = null;
 
   /**
    * @var array
@@ -140,11 +150,6 @@ class Wallet {
    * @var array
    */
   public array $tradeRates = [];
-
-  /**
-   * @var array
-   */
-  public array $molecules = [];
 
   /**
    * @var Soda|null

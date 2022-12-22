@@ -85,13 +85,12 @@ class ResponseWalletList extends Response {
       $wallet->bundle = $data[ 'bundleHash' ];
     }
 
-    // Bind other data
-    if ( array_has( $data, 'token' ) && $data[ 'token' ] ) {
-      $wallet->tokenName = array_get( $data, 'token.name' );
-      $wallet->tokenSupply = array_get( $data, 'token.amount' );
-    }
-    if ( array_has( $data, 'molecules' ) ) {
-      $wallet->molecules = $data[ 'molecules' ];
+    // Bind token data
+    if ( $token = array_get( $data, 'token' ) ) {
+      $wallet->tokenName = array_get( $token, 'name' );
+      $wallet->tokenAmount = (int) array_get( $token, 'amount' );
+      $wallet->tokenSupply = array_get( $token, 'supply' );
+      $wallet->tokenFungibility = array_get( $token, 'fungibility' );
     }
 
     // Get token units from the response
