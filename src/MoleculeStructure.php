@@ -65,14 +65,39 @@ use WishKnish\KnishIO\Client\Traits\Json;
  */
 class MoleculeStructure {
 
-  use Json;
-
+  /**
+   * @var string|null
+   */
   public ?string $molecularHash;
+
+  /**
+   * @var string|null
+   */
   public ?string $counterparty = null;
+
+  /**
+   * @var string|null
+   */
   public ?string $bundle;
+
+  /**
+   * @var string|null
+   */
   public ?string $status;
+
+  /**
+   * @var int
+   */
   public int $local = 0;
+
+  /**
+   * @var string
+   */
   public string $createdAt;
+
+  /**
+   * @var array
+   */
   public array $atoms = [];
 
   /**
@@ -92,11 +117,6 @@ class MoleculeStructure {
       }
     }
     return $result;
-    /*
-    return array_values( array_filter( $atoms, static function ( $atom ) use ( $isotopes ) {
-      return in_array( $atom->isotope, $isotopes, true );
-    } ) );
-    */
   }
 
   /**
@@ -240,13 +260,6 @@ class MoleculeStructure {
   }
 
   /**
-   * @return string
-   */
-  public function __toString (): string {
-    return $this->toJson();
-  }
-
-  /**
    * @return array
    */
   public function normalizedHash (): array {
@@ -289,45 +302,33 @@ class MoleculeStructure {
    * @return static
    */
   public static function toObject ( array $data ): MoleculeStructure {
-    $object = static::arrayToObject( $data );
-    foreach ( $object->atoms as $key => $atom_data ) {
-      $atom = new Atom( $atom_data[ 'position' ], $atom_data[ 'walletAddress' ], $atom_data[ 'isotope' ] );
-      $object->atoms[ $key ] = Atom::arrayToObject( $atom_data, $atom );
+    $molecule = new self;
+    foreach( [
+      'cellSlug', 'molecularHash', 'counterparty', 'bundle', 'status', 'local', 'createdAt',
+    ] as $property ) {
+      $molecule->$property = array_get( $data, $property );
     }
-    $object->atoms = Atom::sortAtoms( $object->atoms );
-    return $object;
-  }
-
-  /**
-   * @param string $string
-   * @param string|null $secret
-   *
-   * @return MoleculeStructure
-   */
-  public static function jsonToObject ( string $string, string $secret = null ): static {
-    $secret = $secret ?? Crypto::generateSecret();
-    $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
-
-    foreach ( $object->atoms as $idx => $atom ) {
-      $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
+    foreach( array_get( $data, 'atoms', [] ) as $atom ) {
+      if ( !array_has( $atom, 'meta' ) ) {
+        dd( $atom );
+      }
+      $molecule->atoms[] = new Atom(
+        array_get( $atom, 'position' ),
+        array_get( $atom, 'walletAddress' ),
+        array_get( $atom, 'isotope' ),
+        array_get( $atom, 'token' ),
+        array_get( $atom, 'value' ),
+        array_get( $atom, 'batchId' ),
+        array_get( $atom, 'metaType' ),
+        array_get( $atom, 'metaId' ),
+        array_get( $atom, 'meta' ),
+        array_get( $atom, 'otsFragment' ),
+        array_get( $atom, 'index' ),
+        array_get( $atom, 'createdAt' ),
+      );
     }
-
-    $object->atoms = Atom::sortAtoms( $object->atoms );
-
-    return $object;
-  }
-
-  /**
-   * @param string $property
-   * @param $value
-   *
-   * @todo change to __set?
-   */
-  public function setProperty ( string $property, $value ): void {
-    $property = array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
-
-    $this->$property = $value;
+    $molecule->atoms = Atom::sortAtoms( $molecule->atoms );
+    return $molecule;
   }
 
 }
