@@ -748,17 +748,16 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException|JsonException
    */
-  public function queryBundle ( string $bundleHash = null, string $key = null, string $value = null, bool $latest = true, array $fields = null ): Response {
+  public function queryBundle ( string $bundleHash = null, array $fields = null ): Response {
     /**
      * Create a query
      *
      * @var QueryWalletBundle $query
      */
     $query = $this->createQuery( QueryWalletBundle::class );
-    $variables = QueryWalletBundle::createVariables( $bundleHash, $key, $value, $latest );
 
     // Execute the query
-    return $query->execute( $variables, $fields );
+    return $query->execute( [ 'bundleHashes' => [ $bundleHash ] ], $fields );
   }
 
   /**

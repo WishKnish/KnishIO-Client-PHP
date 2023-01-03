@@ -76,8 +76,6 @@ use WishKnish\KnishIO\Client\Traits\Json;
  */
 class Atom {
 
-  use Json;
-
   /**
    * @return string[]
    */
@@ -300,34 +298,11 @@ class Atom {
   }
 
   /**
-   * @param string $property
-   * @param $value
-   *
-   * @todo change to __set?
-   */
-  public function setProperty ( string $property, $value ): void {
-    $property = array_get( [
-      'tokenSlug' => 'token',
-      'metas' => 'meta',
-    ], $property, $property );
-
-    // Meta json specific logic (if meta does not initialized)
-    if ( !$this->meta && $property === 'metasJson' ) {
-      $metas = json_decode( $value, true );
-      if ( $metas !== null ) {
-        $this->meta = Meta::normalize( $metas );
-      }
-    } // Default meta set
-    else {
-      $this->$property = $value;
-    }
-  }
-
-  /**
    * @return int
    */
   public function getValue (): int {
     return $this->value * 1;
   }
+
 
 }

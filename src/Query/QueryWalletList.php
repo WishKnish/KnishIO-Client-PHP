@@ -69,11 +69,9 @@ class QueryWalletList extends Query {
     'bundleHash',
     'token' => [
       'name',
-      'amount'
-    ],
-    'molecules' => [
-      'molecularHash',
-      'createdAt',
+      'amount',
+      'fungibility',
+      'supply',
     ],
     'tokenUnits' => [
       'id',
