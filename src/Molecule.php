@@ -724,6 +724,9 @@ class Molecule extends MoleculeStructure {
    */
   public function initMetaAppend ( array $meta, string $metaType, string $metaId ): Molecule {
 
+    // Set molecule as local
+    $this->local = 1;
+
     $this->addAtom( Atom::create(
       'A',
       $this->sourceWallet,
@@ -751,6 +754,9 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    */
   public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $meta = [], ?string $batchId = null ): Molecule {
+
+    // Set molecule as local
+    $this->local = 1;
 
     // Set meta token
     $meta[ 'token' ] = $token;
