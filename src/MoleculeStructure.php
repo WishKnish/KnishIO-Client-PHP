@@ -306,7 +306,18 @@ class MoleculeStructure {
     foreach( [
       'cellSlug', 'molecularHash', 'counterparty', 'bundle', 'status', 'local', 'createdAt',
     ] as $property ) {
-      $molecule->$property = array_get( $data, $property );
+      $value = array_get( $data, $property );
+
+      // Special typed modification
+      switch ( $property ) {
+        case 'local':
+          $value = (int) $value;
+          break;
+        case 'createdAt':
+          $value = (string) $value;
+          break;
+      }
+      $molecule->$property = $value;
     }
     foreach( array_get( $data, 'atoms', [] ) as $atom ) {
       if ( !array_has( $atom, 'meta' ) ) {
