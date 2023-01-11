@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use JsonException;
+use SodiumException;
 
 /**
  *
@@ -150,7 +151,7 @@ class AtomMeta {
   /**
    * (used only on the server side)
    * @return Wallet
-   * @throws \SodiumException
+   * @throws SodiumException
    */
   public function getMetaWallet(): Wallet {
 
@@ -211,7 +212,7 @@ class AtomMeta {
       array_get( $walletData, 'walletBatchId' ) ?: null,
       array_get( $walletData, 'walletCharacters' )
     );
-    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );;
+    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );
     $wallet->address = array_get( $walletData, 'walletAddress' );
     $wallet->pubkey = array_get( $walletData, 'walletPubkey' );
     return $wallet;
@@ -240,7 +241,7 @@ class AtomMeta {
   /**
    * (used only on the server side)
    * @return Wallet|null
-   * @throws \SodiumException
+   * @throws SodiumException
    */
   public function getSigningWallet(): ?Wallet {
 

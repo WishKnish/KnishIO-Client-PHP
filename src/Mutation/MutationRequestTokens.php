@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
+use SodiumException;
 
 /**
  * Class MutationRequestTokens
@@ -66,6 +67,7 @@ class MutationRequestTokens extends MutationProposeMolecule {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function fillMolecule ( string $tokenSlug, $requestedAmount, string $recipientBundle, array $metas = [], ?string $batchId = null ): MutationRequestTokens {
 

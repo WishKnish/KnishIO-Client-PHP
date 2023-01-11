@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
+use SodiumException;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -64,6 +65,7 @@ class MutationWithdrawBufferToken extends MutationProposeMolecule {
    *
    * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
   public function fillMolecule ( array $recipients, ?Wallet $signingWallet = null ): self {
     $this->molecule->initWithdrawBuffer( $recipients, $signingWallet );

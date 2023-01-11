@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
 use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
@@ -67,6 +68,7 @@ class ResponseMoleculeList extends Response {
    * @param array $data
    *
    * @return MoleculeStructure
+   * @throws JsonException
    */
   public static function toClientMolecule ( array $data ): MoleculeStructure {
 
@@ -76,8 +78,7 @@ class ResponseMoleculeList extends Response {
     foreach( $data[ 'atoms' ] as $key => $atom ) {
       $atom[ 'token' ] = $atom[ 'tokenSlug' ];
       $atom[ 'meta' ] = Meta::normalize( json_decode( $atom[ 'metasJson' ], true ) );
-      unset( $atom[ 'tokenSlug' ] );
-      unset( $atom[ 'metasJson' ] );
+      unset( $atom[ 'tokenSlug' ], $atom[ 'metasJson' ] );
 
       $data[ 'atoms' ][ $key ] = $atom;
     }
@@ -87,6 +88,7 @@ class ResponseMoleculeList extends Response {
 
   /**
    * @return array
+   * @throws JsonException
    */
   public function payload (): array {
     // Get data

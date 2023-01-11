@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
@@ -70,6 +71,7 @@ class ResponseWalletList extends Response {
    *
    * @return Wallet
    * @throws SodiumException
+   * @throws JsonException
    */
   public static function toClientWallet ( array $data, string $secret = null ): Wallet {
 

@@ -82,7 +82,7 @@ class Molecule extends MoleculeStructure {
    */
   public function __construct (
     private readonly string $secret,
-    private readonly ?Wallet $sourceWallet = null,
+    private ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null
   ) {

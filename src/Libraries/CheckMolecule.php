@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 
 use Illuminate\Support\Facades\Log;
 use JsonException;
+use SodiumException;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\AtomMeta;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
@@ -108,6 +109,7 @@ class CheckMolecule {
    * @param Wallet|null $fromWallet
    *
    * @throws JsonException
+   * @throws SodiumException
    */
   public function verify ( Wallet $fromWallet = null ): void {
     $this->molecularHash();
@@ -462,7 +464,7 @@ class CheckMolecule {
    * the sender’s address.
    *
    * @throws CryptoException|MoleculeHashMissingException|MoleculeAtomsMissingException|MoleculeSignatureMalformedException|MoleculeSignatureMismatchException
-   * @throws \SodiumException
+   * @throws SodiumException
    */
   public function ots (): void {
 

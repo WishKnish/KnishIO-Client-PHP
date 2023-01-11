@@ -107,6 +107,8 @@ class Atom {
    * @param string|null $otsFragment
    * @param int|null $index
    * @param string|null $createdAt
+   *
+   * @throws JsonException
    */
   public function __construct (
     public ?string $position,

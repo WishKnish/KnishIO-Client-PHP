@@ -89,6 +89,7 @@ class TokenUnit {
    * @param array $data
    *
    * @return static
+   * @throws JsonException
    */
   public static function createFromGraphQL ( array $data ): self {
     $metas = array_get( $data, 'metas', [] );

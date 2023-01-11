@@ -299,7 +299,7 @@ class Wallet {
    * @throws SodiumException
    */
   public function createRemainder( string $secret ): self {
-    $remainderWallet = Wallet::create( $secret, $this->token, $this->batchId, $this->characters );
+    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters );
     $remainderWallet->initBatchId( $this, true );
     return $remainderWallet;
   }
