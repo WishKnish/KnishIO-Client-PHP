@@ -86,12 +86,14 @@ class AtomMeta {
   }
 
   /**
+   * Set all metadata from related wallet to atom
+   *
    * @param Wallet $wallet
    *
    * @return $this
    * @throws JsonException
    */
-  public function addWallet ( Wallet $wallet ): self {
+  public function setAtomWallet ( Wallet $wallet ): self {
     $walletMeta = [
       'pubkey' => $wallet->pubkey,
       'characters' => $wallet->characters,
@@ -104,6 +106,178 @@ class AtomMeta {
     }
     $this->merge( $walletMeta );
     return $this;
+  }
+
+  /**
+   * Set full NEW wallet metadata
+   * Used for shadow wallet claim & wallet creation & token creation
+   *
+   * @param Wallet $wallet
+   *
+   * @return $this
+   */
+  public function setMetaWallet( Wallet $wallet ): self {
+    $this->merge( [
+      'walletTokenSlug' => $wallet->token,
+      'walletBundleHash' => $wallet->bundle,
+      'walletAddress' => $wallet->address,
+      'walletPosition' => $wallet->position,
+      'walletBatchId' => $wallet->batchId,
+      'walletPubkey' => $wallet->pubkey,
+      'walletCharacters' => $wallet->characters,
+    ] );
+    return $this;
+  }
+
+  /**
+   * @param bool $shadowWalletClaim
+   *
+   * @return $this
+   */
+  public function setShadowWalletClaim( bool $shadowWalletClaim ): self {
+    $this->merge( [ 'shadowWalletClaim' => (int) $shadowWalletClaim ] );
+    return $this;
+  }
+
+  /**
+   * (used only on the server side)
+   * @return bool
+   */
+  public function isShadowWalletClaim(): bool {
+    return array_get( $this->meta, 'shadowWalletClaim', false );
+  }
+
+  /**
+   * (used only on the server side)
+   * @return Wallet
+   * @throws \SodiumException
+   */
+  public function getMetaWallet(): Wallet {
+
+    /*
+    // Token creation
+    'walletAddress' => 'address',
+    'walletPosition' => 'position',
+    'walletPubkey' => 'pubkey',
+    'walletCharacters' => 'characters',
+
+    // Wallet creation
+    'address' => $newWallet->address,
+    'token' => $newWallet->token,
+    'bundle' => $newWallet->bundle,
+    'position' => $newWallet->position,
+    'batch_id' => $newWallet->batchId,
+    'pubkey' => $newWallet->pubkey,
+    'characters' => $newWallet->characters,
+
+    // Shadow wallet claim
+    'tokenSlug' => $tokenSlug,
+    'walletAddress' => $wallet->address,
+    'walletPosition' => $wallet->position,
+    'pubkey' => $wallet->pubkey,
+    'characters' => $wallet->characters,
+    'batchId' => $wallet->batchId,
+    */
+
+    // key - actual key, value - array of the oldest keys
+    // @todo this code will be removed, it's tmp supporting
+    $walletKeys = [
+      'walletTokenSlug' => [ 'token', 'tokenSlug' ],
+      'walletBundleHash' => [ 'bundle' ],
+      'walletAddress' => [ 'address '],
+      'walletPosition' => [ 'position '],
+      'walletBatchId' => [ 'batchId', 'batch_id' ],
+      'walletPubkey' => [ 'pubkey' ],
+      'walletCharacters' => [ 'characters' ],
+    ];
+
+    // Set wallet data by all key combinations
+    $walletData = [];
+    foreach( $walletKeys as $actualKey => $keys ) {
+      foreach( array_merge( [ $actualKey ], $keys ) as $key ) {
+        $value = array_get( $this->meta, $key );
+        if ( $value ) {
+          break;
+        }
+      }
+      $walletData[ $actualKey ] = $value;
+    }
+
+    // Create a client wallet from the stored data
+    $wallet = new Wallet(
+      null,
+      array_get( $walletData, 'walletTokenSlug' ),
+      array_get( $walletData, 'walletPosition' ),
+      array_get( $walletData, 'walletBatchId' ) ?: null,
+      array_get( $walletData, 'walletCharacters' )
+    );
+    $wallet->bundle = array_get( $walletData, 'walletBundleHash' );;
+    $wallet->address = array_get( $walletData, 'walletAddress' );
+    $wallet->pubkey = array_get( $walletData, 'walletPubkey' );
+    return $wallet;
+  }
+
+  /**
+   * @param Wallet $signingWallet
+   *
+   * @return $this
+   * @throws JsonException
+   */
+  public function setSigningWallet ( Wallet $signingWallet ): self {
+    $this->merge( [
+      'signingWallet' => json_encode( [
+        'tokenSlug' => $signingWallet->token,
+        'bundleHash' => $signingWallet->bundle,
+        'address' => $signingWallet->address,
+        'position' => $signingWallet->position,
+        'pubkey' => $signingWallet->pubkey,
+        'characters' => $signingWallet->characters,
+      ], JSON_THROW_ON_ERROR ),
+    ] );
+    return $this;
+  }
+
+  /**
+   * (used only on the server side)
+   * @return Wallet|null
+   * @throws \SodiumException
+   */
+  public function getSigningWallet(): ?Wallet {
+
+    // Signing wallet key does not found in metas: the value is not set
+    if ( !array_has( $this->meta, 'signingWallet' ) ) {
+      return null;
+    }
+
+    // Get wallet's data from the meta key
+    $walletData = json_decode( array_get( $this->meta, 'signingWallet' ), true );
+
+    // Create a wallet with all existing data
+    $wallet = new Wallet(
+      null,
+      array_get( $walletData, 'tokenSlug' ),
+      array_get( $walletData, 'position' ),
+      null,
+      array_get( $walletData, 'characters' )
+    );
+    $wallet->bundle = array_get( $walletData, 'bundleHash' );
+    $wallet->address = array_get( $walletData, 'address' );
+    $wallet->pubkey = array_get( $walletData, 'pubkey' );
+    return $wallet;
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getCharacters(): ?string {
+    return array_get( $this->meta, 'characters' );
+  }
+
+  /**
+   * @return string|null
+   */
+  public function getPubkey(): ?string {
+    return array_get( $this->meta, 'pubkey' );
   }
 
   /**
@@ -120,24 +294,6 @@ class AtomMeta {
       'policy' => $policyMeta->toJson(),
     ] );
 
-    return $this;
-  }
-
-  /**
-   * @param Wallet $signingWallet
-   *
-   * @return $this
-   * @throws JsonException
-   */
-  public function addSigningWallet ( Wallet $signingWallet ): self {
-    $this->merge( [
-      'signingWallet' => json_encode( [
-        'address' => $signingWallet->address,
-        'position' => $signingWallet->position,
-        'pubkey' => $signingWallet->pubkey,
-        'characters' => $signingWallet->characters,
-      ], JSON_THROW_ON_ERROR ),
-    ] );
     return $this;
   }
 

@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Response;
 
+use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
 /**
@@ -68,6 +69,19 @@ class ResponseMoleculeList extends Response {
    * @return MoleculeStructure
    */
   public static function toClientMolecule ( array $data ): MoleculeStructure {
+
+    $data[ 'bundle' ] = $data[ 'bundleHash' ];
+    unset( $data[ 'bundleHash' ] );
+
+    foreach( $data[ 'atoms' ] as $key => $atom ) {
+      $atom[ 'token' ] = $atom[ 'tokenSlug' ];
+      $atom[ 'meta' ] = Meta::normalize( json_decode( $atom[ 'metasJson' ], true ) );
+      unset( $atom[ 'tokenSlug' ] );
+      unset( $atom[ 'metasJson' ] );
+
+      $data[ 'atoms' ][ $key ] = $atom;
+    }
+
     return MoleculeStructure::toObject( $data );
   }
 

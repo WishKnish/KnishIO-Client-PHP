@@ -72,7 +72,7 @@ class MutationClaimShadowWallet extends MutationProposeMolecule {
     $wallet = Wallet::create( $this->molecule->secret(), $tokenSlug, $batchId );
 
     // Init shadow wallet claim
-    $this->molecule->initShadowWalletClaim( $tokenSlug, $wallet );
+    $this->molecule->initShadowWalletClaim( $wallet );
     $this->molecule->sign();
     $this->molecule->check();
 

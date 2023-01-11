@@ -76,8 +76,6 @@ use WishKnish\KnishIO\Client\Traits\Json;
  */
 class Atom {
 
-  use Json;
-
   /**
    * @return string[]
    */
@@ -165,7 +163,7 @@ class Atom {
 
     // If wallet has been passed => add related metas
     if ( $wallet ) {
-      $meta->addWallet( $wallet );
+      $meta->setAtomWallet( $wallet );
     }
 
     // Create the final atom's object
@@ -293,27 +291,10 @@ class Atom {
   }
 
   /**
-   * @param string $property
-   * @param $value
-   *
-   * @todo change to __set?
+   * @return AtomMeta
    */
-  public function setProperty ( string $property, $value ): void {
-    $property = array_get( [
-      'tokenSlug' => 'token',
-      'metas' => 'meta',
-    ], $property, $property );
-
-    // Meta json specific logic (if meta does not initialized)
-    if ( !$this->meta && $property === 'metasJson' ) {
-      $metas = json_decode( $value, true );
-      if ( $metas !== null ) {
-        $this->meta = Meta::normalize( $metas );
-      }
-    } // Default meta set
-    else {
-      $this->$property = $value;
-    }
+  public function getAtomMeta(): AtomMeta {
+    return new AtomMeta( $this->aggregatedMeta() );
   }
 
   /**
@@ -322,5 +303,6 @@ class Atom {
   public function getValue (): int {
     return $this->value * 1;
   }
+
 
 }
