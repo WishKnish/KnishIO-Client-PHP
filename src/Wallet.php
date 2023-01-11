@@ -97,9 +97,9 @@ class Wallet {
   public ?string $bundle = null;
 
   /**
-   * @var string|null
+   * @var string
    */
-  public ?string $type = null;
+  public string $type = 'regular';
 
   /**
    * @var string|null
