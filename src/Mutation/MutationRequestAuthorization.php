@@ -84,7 +84,6 @@ class MutationRequestAuthorization extends MutationProposeMolecule {
      * @param string $response
      *
      * @return ResponseMolecule
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseMolecule {

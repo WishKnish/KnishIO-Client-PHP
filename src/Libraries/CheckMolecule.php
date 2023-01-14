@@ -462,6 +462,7 @@ class CheckMolecule {
     /**
      * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
      * @throws KnishIOException
+     * @throws JsonException
      */
     public function molecularHash (): void {
         if ( $this->molecule->molecularHash !== Atom::hashAtoms( $this->molecule->atoms ) ) {

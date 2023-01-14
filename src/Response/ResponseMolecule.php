@@ -140,6 +140,8 @@ class ResponseMolecule extends Response {
     }
 
     /**
+     * @param null $isotope
+     *
      * @return mixed
      */
     public function getPayload ( $isotope = null ): mixed {

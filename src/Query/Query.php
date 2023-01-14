@@ -217,7 +217,6 @@ abstract class Query {
      * @param string $response
      *
      * @return Response
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function createResponse ( string $response ): Response {
@@ -228,7 +227,6 @@ abstract class Query {
      * @param ResponseInterface $response
      *
      * @return Response
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function createResponseRaw ( ResponseInterface $response ): Response {

@@ -148,7 +148,7 @@ class HttpClient extends Client implements HttpClientInterface {
     }
 
     /**
-     * @param string $pubkey
+     * @param string|null $pubkey
      */
     public function setPubkey ( ?string $pubkey ): void {
         $this->cipher->setPubkey( $pubkey );

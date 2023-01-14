@@ -88,7 +88,6 @@ class MutationCreateMeta extends MutationProposeMolecule {
      * @param $response
      *
      * @return ResponseMetaCreate
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function createResponse ( $response ): ResponseMetaCreate {

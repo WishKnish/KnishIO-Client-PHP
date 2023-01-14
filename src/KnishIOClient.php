@@ -391,7 +391,7 @@ class KnishIOClient {
         // Execute the query
         return $query->execute( [
             'bundleHash' => $bundleHash ?: $this->getBundleHash(),
-            'token' => $tokenSlug,
+            'tokenSlug' => $tokenSlug,
             'type' => $type
         ] );
     }
@@ -526,7 +526,7 @@ class KnishIOClient {
             $amount = count( $units );
 
             // Set custom default metadata
-            $meta = array_merge( $metas, [
+            $metas = array_merge( $metas, [
                 'splittable' => 1,
                 'decimals' => 0,
                 'tokenUnits' => json_encode( $units )
@@ -555,13 +555,13 @@ class KnishIOClient {
     /**
      * @param string $metaType
      * @param string $metaId
-     * @param array $metadata
+     * @param array $metas
      *
      * @return Response
      * @throws GuzzleException
      * @throws JsonException
-     * @throws SodiumException
      * @throws KnishIOException
+     * @throws SodiumException
      */
     public function createMeta ( string $metaType, string $metaId, array $metas = [] ): Response {
 
@@ -627,7 +627,7 @@ class KnishIOClient {
          */
         $response = $query->execute( [
             'bundleHash' => $bundleHash ?: $this->getBundleHash(),
-            'token' => $tokenSlug,
+            'tokenSlug' => $tokenSlug,
             'unspent' => $unspent
         ] );
 
@@ -676,7 +676,7 @@ class KnishIOClient {
     /**
      * @param string $tokenSlug
      * @param int $amount
-     * @param string|null $recipientBundle
+     * @param string|null $recipientBundleHash
      * @param array $metas
      * @param string|null $batchId
      * @param array $units
@@ -684,8 +684,8 @@ class KnishIOClient {
      * @return Response
      * @throws GuzzleException
      * @throws JsonException
-     * @throws SodiumException
      * @throws KnishIOException
+     * @throws SodiumException
      */
     public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundleHash = null, array $metas = [], ?string $batchId = null, array $units = [] ): Response {
 
@@ -699,7 +699,7 @@ class KnishIOClient {
 
         // Get a token & init is Stackable flag for batch ID initialization
         $tokenResponse = $this->createQuery( QueryToken::class )
-            ->execute( [ 'slug' => $tokenSlug ] );
+            ->execute( [ 'tokenSlug' => $tokenSlug ] );
         $isStackable = array_get( $tokenResponse->data(), '0.fungibility' ) === 'stackable';
 
         // NON-stackable tokens & batch ID is NOT NULL - error
@@ -723,7 +723,7 @@ class KnishIOClient {
             $amount = count( $units );
 
             // Specify specific units to request
-            $meta[ 'tokenUnits' ] = json_encode( $units );
+            $metas[ 'tokenUnits' ] = json_encode( $units );
         }
 
         // Create a query

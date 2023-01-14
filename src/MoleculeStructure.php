@@ -125,6 +125,7 @@ class MoleculeStructure {
      *
      * @return string
      * @throws KnishIOException
+     * @throws JsonException
      */
     public function getBatchId ( int $index ): string {
         $molecularHash = Atom::hashAtoms( $this->atoms );

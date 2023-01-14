@@ -105,17 +105,17 @@ class Meta {
     public static function aggregate ( array|string $metas ): array {
 
         // Handling stringified metas
-        if( gettype( $metas) === 'string') {
+        if( is_string( $metas ) ) {
             $metas = json_decode( $metas, true );
         }
 
         $aggregate = [];
         foreach ( $metas as $metaEntry ) {
-            if( gettype( $metaEntry) === 'string') {
+            if( is_string( $metaEntry ) ) {
                 $metaEntry = json_decode( $metaEntry, true );
             }
 
-            if( gettype( $metaEntry ) === 'object' ) {
+            if( is_object( $metaEntry ) ) {
                 $metaEntry = (array) $metaEntry;
             }
 

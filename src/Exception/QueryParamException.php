@@ -47,92 +47,24 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Mutation;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use JetBrains\PhpStorm\Pure;
-use WishKnish\KnishIO\Client\Exception\KnishIOException;
-use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\MoleculeStructure;
-use WishKnish\KnishIO\Client\Query\Query;
-use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use Throwable;
 
 /**
- * Class MutationProposeMoleculeStructure
- * @package WishKnish\KnishIO\Client\Mutation
+ * Class QueryParamException
+ * @package WishKnish\KnishIO\Client\Exception
  */
-class MutationProposeMoleculeStructure extends Query {
-    // Query
-    protected static string $defaultQuery = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
-		@fields
-	}';
-
-    // Fields
-    protected array $fields = [
-        'molecularHash',
-        'height',
-        'depth',
-        'status',
-        'reason',
-        'payload',
-        'createdAt',
-        'receivedAt',
-        'processedAt',
-        'broadcastedAt',
-    ];
-
-    // Molecule
-    protected MoleculeStructure $moleculeStructure;
-
+class QueryParamException extends KnishIOException {
     /**
-     * @var bool
-     */
-    protected bool $isMutation = true;
-
-    /**
-     * MutationProposeMoleculeStructure constructor.
+     * QueryParamException constructor.
      *
-     * @param HttpClientInterface $client
-     * @param MoleculeStructure $moleculeStructure
-     * @param string|null $query
-     *
-     * @noinspection PhpPureAttributeCanBeAddedInspection
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
      */
-    public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
-        parent::__construct( $client, $query );
-
-        // Create a molecule
-        $this->moleculeStructure = $moleculeStructure;
+    public function __construct ( string $message = 'Invalid query parameters supplied.', $payload = null, int $code = 1, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
     }
-
-    /**
-     * @param array $variables
-     *
-     * @return array
-     */
-    #[Pure]
-    public function compiledVariables ( array $variables ): array {
-        // Default variables
-        $variables = parent::compiledVariables( $variables );
-
-        // Merge variables with a molecule key
-        return array_merge( $variables, [ 'molecule' => $this->moleculeStructure ] );
-    }
-
-    /**
-     * @return MoleculeStructure
-     */
-    public function moleculeStructure (): MoleculeStructure {
-        return $this->moleculeStructure;
-    }
-
-    /**
-     * @param string $response
-     *
-     * @return ResponseMolecule
-     * @throws KnishIOException
-     */
-    public function createResponse ( string $response ): ResponseMolecule {
-        return new ResponseMolecule( $this, $response );
-    }
-
 }

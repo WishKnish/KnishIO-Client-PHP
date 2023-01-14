@@ -47,92 +47,60 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Mutation;
+namespace WishKnish\KnishIO\Client\Query;
 
-use JetBrains\PhpStorm\Pure;
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
-use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
-use WishKnish\KnishIO\Client\MoleculeStructure;
-use WishKnish\KnishIO\Client\Query\Query;
-use WishKnish\KnishIO\Client\Response\ResponseMolecule;
+use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 
 /**
- * Class MutationProposeMoleculeStructure
- * @package WishKnish\KnishIO\Client\Mutation
+ * Class QueryBalance
+ * @package WishKnish\KnishIO\Client\Query
  */
-class MutationProposeMoleculeStructure extends Query {
+class QueryWallets extends Query {
     // Query
-    protected static string $defaultQuery = 'mutation( $molecule: MoleculeInput! ) { ProposeMolecule( molecule: $molecule )
-		@fields
+    protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $tokenSlug: String, $position: String, $unspent: Boolean ) { Wallets( address: $address, bundleHash: $bundleHash, tokenSlug: $tokenSlug, position: $position, unspent: $unspent )
+	 	@fields
 	}';
 
     // Fields
     protected array $fields = [
-        'molecularHash',
-        'height',
-        'depth',
-        'status',
-        'reason',
-        'payload',
+        'type',
+        'address',
+        'bundleHash',
+        'token' => [
+            'name',
+            'amount'
+        ],
+        'molecules' => [
+            'molecularHash',
+            'createdAt',
+        ],
+        'tokenUnits' => [
+            'id',
+            'name',
+            'metas',
+        ],
+        'tradeRates' => [
+            'tokenSlug',
+            'amount',
+        ],
+        'tokenSlug',
+        'batchId',
+        'position',
+        'amount',
+        'characters',
+        'pubkey',
         'createdAt',
-        'receivedAt',
-        'processedAt',
-        'broadcastedAt',
     ];
-
-    // Molecule
-    protected MoleculeStructure $moleculeStructure;
-
-    /**
-     * @var bool
-     */
-    protected bool $isMutation = true;
-
-    /**
-     * MutationProposeMoleculeStructure constructor.
-     *
-     * @param HttpClientInterface $client
-     * @param MoleculeStructure $moleculeStructure
-     * @param string|null $query
-     *
-     * @noinspection PhpPureAttributeCanBeAddedInspection
-     */
-    public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
-        parent::__construct( $client, $query );
-
-        // Create a molecule
-        $this->moleculeStructure = $moleculeStructure;
-    }
-
-    /**
-     * @param array $variables
-     *
-     * @return array
-     */
-    #[Pure]
-    public function compiledVariables ( array $variables ): array {
-        // Default variables
-        $variables = parent::compiledVariables( $variables );
-
-        // Merge variables with a molecule key
-        return array_merge( $variables, [ 'molecule' => $this->moleculeStructure ] );
-    }
-
-    /**
-     * @return MoleculeStructure
-     */
-    public function moleculeStructure (): MoleculeStructure {
-        return $this->moleculeStructure;
-    }
 
     /**
      * @param string $response
      *
-     * @return ResponseMolecule
+     * @return ResponseWalletList
      * @throws KnishIOException
      */
-    public function createResponse ( string $response ): ResponseMolecule {
-        return new ResponseMolecule( $this, $response );
+    public function createResponse ( string $response ): ResponseWalletList {
+        return new ResponseWalletList( $this, $response );
     }
 
 }

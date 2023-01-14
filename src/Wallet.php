@@ -426,13 +426,13 @@ class Wallet {
 
     /**
      * @param string $secret
-     * @param string $token
+     * @param string $tokenSlug
      * @param string $position
      *
      * @return string
      * @throws KnishIOException
      */
-    public static function generateKey ( string $secret, string $token, string $position ): string {
+    public static function generateKey ( string $secret, string $tokenSlug, string $position ): string {
 
         // Converting secret to bigInt
         // Adding new position to the user secret to produce the indexed key
@@ -443,8 +443,8 @@ class Wallet {
             $intermediateKeySponge = Crypto\Shake256::init()
                 ->absorb( $indexedKey->toString( 16 ) );
 
-            if ( $token !== '' ) {
-                $intermediateKeySponge->absorb( $token );
+            if ( $tokenSlug !== '' ) {
+                $intermediateKeySponge->absorb( $tokenSlug );
             }
 
             // Hashing the intermediate key to produce the private key

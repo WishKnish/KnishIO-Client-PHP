@@ -87,7 +87,6 @@ class MutationCreateToken extends MutationProposeMolecule {
      * @param string $response
      *
      * @return ResponseTokenCreate
-     * @throws JsonException
      * @throws KnishIOException
      */
     public function createResponse ( string $response ): ResponseTokenCreate {

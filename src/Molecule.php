@@ -651,7 +651,7 @@ class Molecule extends MoleculeStructure {
      *
      * @param Wallet $recipientWallet - wallet receiving the tokens. Needs to be initialized for the new token beforehand.
      * @param int $amount - how many of the token we are initially issuing (for fungible tokens only)
-     * @param array $meta - additional fields to configure the token
+     * @param array $metas - additional fields to configure the token
      *
      * @return $this
      * @throws JsonException
@@ -791,7 +791,7 @@ class Molecule extends MoleculeStructure {
     }
 
     /**
-     * @param string $token
+     * @param string $tokenSlug
      * @param int $amount
      * @param string $recipientBundle
      * @param array $metas
@@ -799,13 +799,13 @@ class Molecule extends MoleculeStructure {
      *
      * @return $this
      * @throws JsonException
-     * @throws SodiumException
      * @throws KnishIOException
+     * @throws SodiumException
      */
-    public function initTokenRequest ( string $token, int $amount, string $recipientBundle, array $metas = [], ?string $batchId = null ): Molecule {
+    public function initTokenRequest ( string $tokenSlug, int $amount, string $recipientBundle, array $metas = [], ?string $batchId = null ): Molecule {
 
         // Set meta token
-        $metas[ 'token' ] = $token;
+        $metas[ 'tokenSlug' ] = $tokenSlug;
 
         $this->addAtom( Atom::create(
             'T',
@@ -856,6 +856,7 @@ class Molecule extends MoleculeStructure {
      * @param bool $compressed
      *
      * @throws KnishIOException
+     * @throws JsonException
      */
     public function sign ( bool $anonymous = false, bool $compressed = true ): void {
         if ( empty( $this->atoms ) || !empty( array_filter( $this->atoms, static function ( $atom ) {
