@@ -64,7 +64,7 @@ class UnauthenticatedException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct ( string $message = 'Attempting to access secret or bundle without being authenticated first.', $payload = null, int $code = 2, Throwable $previous = null ) {
+    public function __construct ( string $message = 'Attempting to access secret or bundle hash without being authenticated first.', $payload = null, int $code = 2, Throwable $previous = null ) {
         parent::__construct( $message, $payload, $code, $previous );
     }
 }

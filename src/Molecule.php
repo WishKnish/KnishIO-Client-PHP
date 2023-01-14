@@ -66,7 +66,7 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  *
  * @property string|null $molecularHash
  * @property string|null $cellSlug
- * @property string|null $bundle
+ * @property string|null $bundleHash
  * @property string|null $status
  * @property string $createdAt
  * @property array $atoms
@@ -92,7 +92,7 @@ class Molecule extends MoleculeStructure {
 
         // Generates remainder wallet if source wallet is provided
         if ( $remainderWallet || $sourceWallet ) {
-            $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+            $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->tokenSlug, $sourceWallet->batchId, $sourceWallet->characters );
         }
 
         $this->clear();
@@ -135,7 +135,7 @@ class Molecule extends MoleculeStructure {
      */
     public function clear (): Molecule {
         $this->molecularHash = null;
-        $this->bundle = null;
+        $this->bundleHash = null;
         $this->status = null;
         $this->createdAt = Strings::currentTimeMillis();
         $this->atoms = [];
@@ -160,7 +160,7 @@ class Molecule extends MoleculeStructure {
 
         // Add source wallet if not already set when adding first atom
         if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
-            $this->sourceWallet = new Wallet( $this->secret(), $atom->token, $atom->position, $atom->batchId );
+            $this->sourceWallet = new Wallet( $this->secret(), $atom->tokenSlug, $atom->position, $atom->batchId );
         }
 
         // Add atom
@@ -183,7 +183,7 @@ class Molecule extends MoleculeStructure {
     public function addContinuIdAtom (): Molecule {
 
         // Creating a remainder wallet if needed
-        if ( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
+        if ( !$this->remainderWallet || $this->remainderWallet->tokenSlug !== 'USER' ) {
             $this->remainderWallet = new Wallet( $this->secret() );
         }
 
@@ -192,7 +192,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             null,
             'walletBundle',
-            $this->remainderWallet->bundle
+            $this->remainderWallet->bundleHash
         ) );
 
         return $this;
@@ -331,7 +331,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->remainderWallet->balance,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -368,7 +368,7 @@ class Molecule extends MoleculeStructure {
             $recipientWallet,
             1,
             'walletBundle',
-            $recipientWallet->bundle,
+            $recipientWallet->bundleHash,
         ) );
 
         $this->addAtom( Atom::create(
@@ -376,7 +376,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->sourceWallet->balance - $amount,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -412,7 +412,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->sourceWallet->balance - $amount,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -449,7 +449,7 @@ class Molecule extends MoleculeStructure {
             $recipientWallet,
             $amount,
             'walletBundle',
-            $recipientWallet->bundle,
+            $recipientWallet->bundleHash,
         ) );
 
         // Initializing a new Atom to deposit remainder in a new wallet
@@ -458,7 +458,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->sourceWallet->balance - $amount,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -480,7 +480,7 @@ class Molecule extends MoleculeStructure {
         }
 
         // Create a buffer wallet
-        $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+        $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->tokenSlug, $this->sourceWallet->batchId );
         $bufferWallet->tradeRates = $tradeRates;
 
         // Initializing a new Atom to remove tokens from source
@@ -496,7 +496,7 @@ class Molecule extends MoleculeStructure {
             $bufferWallet,
             $amount,
             'walletBundle',
-            $bufferWallet->bundle,
+            $bufferWallet->bundleHash,
         ) );
 
         // Initializing a new Atom to deposit remainder in a new wallet
@@ -505,7 +505,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->sourceWallet->balance - $amount,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -544,21 +544,21 @@ class Molecule extends MoleculeStructure {
             $this->sourceWallet,
             -$amount,
             'walletBundle',
-            $this->sourceWallet->bundle,
+            $this->sourceWallet->bundleHash,
             $firstAtomMeta
         ) );
 
         // Initializing a new Atom to add tokens to recipient
-        foreach ( $recipients as $recipientBundle => $recipientAmount ) {
+        foreach ( $recipients as $recipientBundleHash => $recipientAmount ) {
             $this->addAtom( new Atom(
                 null,
                 null,
                 'V',
-                $this->sourceWallet->token,
+                $this->sourceWallet->tokenSlug,
                 $recipientAmount,
                 $this->sourceWallet->batchId ? Crypto::generateBatchId() : null,
                 'walletBundle',
-                $recipientBundle,
+                $recipientBundleHash,
             ) );
         }
 
@@ -568,7 +568,7 @@ class Molecule extends MoleculeStructure {
             $this->remainderWallet,
             $this->sourceWallet->balance - $amount,
             'walletBundle',
-            $this->remainderWallet->bundle,
+            $this->remainderWallet->bundleHash,
         ) );
 
         return $this;
@@ -586,8 +586,8 @@ class Molecule extends MoleculeStructure {
 
         $atomMeta = new AtomMeta( [
             'address' => $newWallet->address,
-            'token' => $newWallet->token,
-            'bundle' => $newWallet->bundle,
+            'token' => $newWallet->tokenSlug,
+            'bundleHash' => $newWallet->bundleHash,
             'position' => $newWallet->position,
             'batch_id' => $newWallet->batchId,
         ] );
@@ -678,7 +678,7 @@ class Molecule extends MoleculeStructure {
             $this->sourceWallet,
             $amount,
             'token',
-            $recipientWallet->token,
+            $recipientWallet->tokenSlug,
             new AtomMeta( $metas ),
             $recipientWallet->batchId,
         ) );
@@ -865,7 +865,7 @@ class Molecule extends MoleculeStructure {
         }
 
         if ( !$anonymous ) {
-            $this->bundle = Crypto::generateBundleHash( $this->secret );
+            $this->bundleHash = Crypto::generateBundleHash( $this->secret );
         }
 
         $this->atoms = Atom::sortAtoms( $this->atoms );
@@ -889,7 +889,7 @@ class Molecule extends MoleculeStructure {
         }
 
         // Generate the private signing key for this molecule
-        $key = Wallet::generateKey( $this->secret, $firstAtom->token, $signingPosition );
+        $key = Wallet::generateKey( $this->secret, $firstAtom->tokenSlug, $signingPosition );
 
         // Building a one-time-signature
         $signatureFragments = $this->signatureFragments( $key );

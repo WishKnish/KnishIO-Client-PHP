@@ -59,13 +59,13 @@ use WishKnish\KnishIO\Client\Response\Response;
  */
 class QueryToken extends Query {
     // Query
-    protected static string $defaultQuery = 'query( $slug: String, $slugs: [ String! ], $limit: Int, $order: String ) { Token( slug: $slug, slugs: $slugs, limit: $limit, order: $order )
+    protected static string $defaultQuery = 'query( $tokenSlug: String, $tokenSlugs: [ String! ], $limit: Int, $order: String ) { Token( tokenSlug: $tokenSlug, tokenSlugs: $tokenSlugs, limit: $limit, order: $order )
 	 	@fields
 	 }';
 
     // Fields
     protected array $fields = [
-        'slug',
+        'tokenSlug',
         'name',
         'fungibility',
         'supply',

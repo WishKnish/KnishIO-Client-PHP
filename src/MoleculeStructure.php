@@ -69,7 +69,7 @@ class MoleculeStructure {
     use Json;
 
     public ?string $molecularHash;
-    public ?string $bundle;
+    public ?string $bundleHash;
     public ?string $status;
     public int $local = 0;
     public ?int $height = null;
@@ -296,7 +296,7 @@ class MoleculeStructure {
                 $atomData[ 'position' ],
                 $atomData[ 'walletAddress' ],
                 $atomData[ 'isotope' ],
-                $atomData[ 'token' ],
+                $atomData[ 'tokenSlug' ],
                 $atomData[ 'value' ],
                 $atomData[ 'batchId' ],
                 $atomData[ 'metaType' ],
@@ -341,7 +341,7 @@ class MoleculeStructure {
      * @todo change to __set?
      */
     public function setProperty ( string $property, $value ): void {
-        $property = array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
+        $property = array_get( [ 'bundleHash' => 'bundleHash' ], $property, $property );
 
         $this->$property = $value;
     }

@@ -61,18 +61,18 @@ use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
- * Class Wallet
+ * Class Wallets
  * @package WishKnish\KnishIO\Client
  *
  * @property string $position
- * @property string $token
+ * @property string $tokenSlug
  * @property string|null $batchId
  * @property string|null $characters
  * @property string|null $key
  * @property string|null $address
  * @property int $balance
  * @property string|null $type
- * @property string|null $bundle
+ * @property string|null $bundleHash
  * @property string|null $privkey
  * @property string|null $pubkey
  * @property string|null $createdAt
@@ -95,7 +95,7 @@ class Wallet {
     /**
      * @var string|null
      */
-    public ?string $bundle = null;
+    public ?string $bundleHash = null;
 
     /**
      * @var string|null
@@ -154,7 +154,7 @@ class Wallet {
 
     /**
      * @param string|null $secret
-     * @param string $token
+     * @param string $tokenSlug
      * @param string|null $position
      * @param string|null $batchId
      * @param string|null $characters
@@ -164,21 +164,21 @@ class Wallet {
      */
     public function __construct (
         string $secret = null,
-        public string $token = 'USER',
+        public string $tokenSlug = 'USER',
         public ?string $position = null,
         public ?string $batchId = null,
         public ?string $characters = null
     ) {
         if ( $secret ) {
 
-            // Set bundle from the secret
-            $this->bundle = Crypto::generateBundleHash( $secret );
+            // Set bundleHash from the secret
+            $this->bundleHash = Crypto::generateBundleHash( $secret );
 
             // Generate a position for non-shadow wallet if not initialized
             $this->position = $this->position ?? static::generatePosition();
 
             // Key & address initialization
-            $this->key = static::generateKey( $secret, $this->token, $this->position );
+            $this->key = static::generateKey( $secret, $this->tokenSlug, $this->position );
             $this->address = static::generateAddress( $this->key );
 
             // Soda object initialization
@@ -194,8 +194,8 @@ class Wallet {
     }
 
     /**
-     * @param string $secretOrBundle
-     * @param string $token
+     * @param string $secretOrBundleHash
+     * @param string $tokenSlug
      * @param string|null $batchId
      * @param string|null $characters
      *
@@ -203,14 +203,14 @@ class Wallet {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
-        $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
-        $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
+    public static function create ( string $secretOrBundleHash, string $tokenSlug = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
+        $secret = Crypto::isBundleHash( $secretOrBundleHash ) ? null : $secretOrBundleHash;
+        $bundleHash = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundleHash;
         $position = $secret ? static::generatePosition() : null;
 
-        // Wallet initialization
-        $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
-        $wallet->bundle = $bundle;
+        // Wallets initialization
+        $wallet = new Wallet( $secret, $tokenSlug, $position, $batchId, $characters );
+        $wallet->bundleHash = $bundleHash;
         return $wallet;
     }
 
@@ -374,7 +374,7 @@ class Wallet {
             $hash = $this->soda->shortHash( $this->pubkey );
 
             if ( !array_key_exists( $hash, $message ) ) {
-                throw new CodeException( 'Wallet::decryptMessage - hash does not found for the wallet\'s pubkey.' );
+                throw new CodeException( 'Wallets::decryptMessage - hash does not found for the wallet\'s pubkey.' );
             }
 
             $encrypted = $message[ $hash ];

@@ -63,7 +63,7 @@ class ResponseWalletList extends Response {
     /**
      * @var string
      */
-    protected string $dataKey = 'data.Wallet';
+    protected string $dataKey = 'data.Wallets';
 
     /**
      * @param array $data
@@ -84,7 +84,7 @@ class ResponseWalletList extends Response {
         else {
             $wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ], $data[ 'batchId' ], $data[ 'characters' ] );
             $wallet->address = $data[ 'address' ];
-            $wallet->bundle = $data[ 'bundleHash' ];
+            $wallet->bundleHash = $data[ 'bundleHash' ];
         }
 
         // Bind other data

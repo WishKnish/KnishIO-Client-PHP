@@ -119,12 +119,9 @@ class Meta {
                 $metaEntry = (array) $metaEntry;
             }
 
-            if( gettype( $metaEntry['value']) === 'string') {
-                $metaEntry['value'] = json_decode( $metaEntry['value'], true );
-            }
-
             $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
         }
+
         return $aggregate;
     }
 }

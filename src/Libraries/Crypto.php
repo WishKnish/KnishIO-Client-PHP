@@ -89,7 +89,7 @@ class Crypto {
     }
 
     /**
-     * Hashes the user secret to produce a bundle hash
+     * Hashes the user secret to produce a bundleHash
      *
      * @param string $secret
      *

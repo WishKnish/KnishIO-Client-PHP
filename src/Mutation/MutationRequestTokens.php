@@ -62,7 +62,7 @@ class MutationRequestTokens extends MutationProposeMolecule {
     /**
      * @param string $tokenSlug
      * @param $requestedAmount
-     * @param string $recipientBundle
+     * @param string $recipientBundleHash
      * @param array $metas
      * @param string|null $batchId
      *
@@ -71,10 +71,10 @@ class MutationRequestTokens extends MutationProposeMolecule {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function fillMolecule ( string $tokenSlug, $requestedAmount, string $recipientBundle, array $metas = [], ?string $batchId = null ): MutationRequestTokens {
+    public function fillMolecule ( string $tokenSlug, $requestedAmount, string $recipientBundleHash, array $metas = [], ?string $batchId = null ): MutationRequestTokens {
 
         // Fill the molecule
-        $this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $recipientBundle, $metas, $batchId );
+        $this->molecule->initTokenRequest( $tokenSlug, $requestedAmount, $recipientBundleHash, $metas, $batchId );
         $this->molecule->sign();
         $this->molecule->check();
 

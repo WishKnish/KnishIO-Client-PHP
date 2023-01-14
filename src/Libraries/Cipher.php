@@ -159,7 +159,7 @@ class Cipher {
                             return $handler( $request, $options );
                         }
 
-                        // Wallet::encryptMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
+                        // Wallets::encryptMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
                         $encryptedMessage = $this->wallet()
                             ->encryptMessage( $original, $this->getPubkey() );
 

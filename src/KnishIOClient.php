@@ -50,7 +50,6 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use Exception;
-use Exception\InvalidResponseException;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use SodiumException;
@@ -85,7 +84,7 @@ use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
-use WishKnish\KnishIO\Client\Query\QueryWalletList;
+use WishKnish\KnishIO\Client\Query\QueryWallets;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
@@ -110,7 +109,7 @@ class KnishIOClient {
     /**
      * @var string|null
      */
-    private ?string $bundle;
+    private ?string $bundleHash;
 
     /**
      * @var Wallet|null
@@ -126,11 +125,6 @@ class KnishIOClient {
      * @var string|null
      */
     private ?string $cellSlug = null;
-
-    /**
-     * @var int
-     */
-    private int $serverSdkVersion;
 
     /**
      * @var array
@@ -152,30 +146,27 @@ class KnishIOClient {
      *
      * @param string|array $uri
      * @param HttpClientInterface|null $client
-     * @param int $serverSdkVersion
      *
      * @throws KnishIOException
      */
-    public function __construct ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
-        $this->initialize( $uri, $client, $serverSdkVersion );
+    public function __construct ( string|array $uri, HttpClientInterface $client = null ) {
+        $this->initialize( $uri, $client );
     }
 
     /**
      * @param string|array $uri
      * @param HttpClientInterface|null $client
-     * @param int $serverSdkVersion
      *
      * @return void
      * @throws KnishIOException
      */
-    public function initialize ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
+    public function initialize ( string|array $uri, HttpClientInterface $client = null ): void {
         $this->reset();
 
         // Init uris
         $this->uris = is_array( $uri ) ? $uri : [ $uri ];
 
         $this->client = $client ?? new HttpClient( $this->getRandomUri() );
-        $this->serverSdkVersion = $serverSdkVersion;
     }
 
     /**
@@ -216,7 +207,7 @@ class KnishIOClient {
      */
     public function reset (): void {
         $this->secret = null;
-        $this->bundle = null;
+        $this->bundleHash = null;
         $this->remainderWallet = null;
     }
 
@@ -264,7 +255,7 @@ class KnishIOClient {
      */
     public function setSecret ( string $secret ): void {
         $this->secret = $secret;
-        $this->bundle = Crypto::generateBundleHash( $secret );
+        $this->bundleHash = Crypto::generateBundleHash( $secret );
     }
 
     /**
@@ -285,11 +276,11 @@ class KnishIOClient {
      * @returns {string}
      * @throws KnishIOException
      */
-    public function getBundle (): ?string {
-        if ( !$this->bundle ) {
+    public function getBundleHash (): ?string {
+        if ( !$this->bundleHash ) {
             throw new UnauthenticatedException();
         }
-        return $this->bundle;
+        return $this->bundleHash;
     }
 
     /**
@@ -318,7 +309,7 @@ class KnishIOClient {
         if (
             $sourceWallet === null &&
             $this->remainderWallet &&
-            $this->remainderWallet->token === 'USER' &&
+            $this->remainderWallet->tokenSlug === 'USER' &&
             $this->lastMoleculeQuery
         ) {
 
@@ -399,7 +390,7 @@ class KnishIOClient {
 
         // Execute the query
         return $query->execute( [
-            'bundleHash' => $bundleHash ?: $this->getBundle(),
+            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
             'token' => $tokenSlug,
             'type' => $type
         ] );
@@ -419,7 +410,7 @@ class KnishIOClient {
 
         // Get a from wallet
         /** @var Wallet|null $fromWallet */
-        $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundle(), $type )
+        $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundleHash(), $type )
             ->getPayload();
 
         // Check source wallet balance
@@ -524,7 +515,7 @@ class KnishIOClient {
         // Special logic for token unit initialization (nonfungible || stackable)
         if ( in_array( $fungibility, [ 'nonfungible', 'stackable' ] ) && count( $units ) > 0 ) {
 
-            if ( array_key_exists( 'decimals', $metas ) && $meta[ 'decimals' ] > 0 ) {
+            if ( array_key_exists( 'decimals', $metas ) && $metas[ 'decimals' ] > 0 ) {
                 throw new TokenUnitDecimalsException();
             }
 
@@ -627,15 +618,15 @@ class KnishIOClient {
     public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
 
         /**
-         * @var QueryWalletList $query
+         * @var QueryWallets $query
          */
-        $query = $this->createQuery( QueryWalletList::class );
+        $query = $this->createQuery( QueryWallets::class );
 
         /**
          * @var ResponseWalletList $response
          */
         $response = $query->execute( [
-            'bundleHash' => $bundleHash ?: $this->getBundle(),
+            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
             'token' => $tokenSlug,
             'unspent' => $unspent
         ] );
@@ -696,13 +687,13 @@ class KnishIOClient {
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $metas = [], ?string $batchId = null, array $units = [] ): Response {
+    public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundleHash = null, array $metas = [], ?string $batchId = null, array $units = [] ): Response {
 
         // No bundle? Use our own
-        $recipientBundle = $recipientBundle ?? $this->getBundle();
+        $recipientBundleHash = $recipientBundleHash ?? $this->getBundleHash();
 
-        // Check recipient bundle
-        if ( !Crypto::isBundleHash( $recipientBundle ) ) {
+        // Check recipient bundle hash
+        if ( !Crypto::isBundleHash( $recipientBundleHash ) ) {
             throw new TransferBundleException();
         }
 
@@ -740,7 +731,7 @@ class KnishIOClient {
         $query = $this->createMoleculeMutation( MutationRequestTokens::class );
 
         // Init a molecule
-        $query->fillMolecule( $tokenSlug, $amount, $recipientBundle, $metas, $batchId );
+        $query->fillMolecule( $tokenSlug, $amount, $recipientBundleHash, $metas, $batchId );
 
         // Return a query execution result
         return $query->execute();
@@ -933,7 +924,7 @@ class KnishIOClient {
         $query = $this->createMoleculeMutation( MutationWithdrawBufferToken::class, $molecule );
 
         // Init a molecule & execute it
-        $query->fillMolecule( [ $this->getBundle() => $amount, ], $signingWallet );
+        $query->fillMolecule( [ $this->getBundleHash() => $amount, ], $signingWallet );
         return $query->execute();
     }
 
@@ -1102,7 +1093,7 @@ class KnishIOClient {
      */
     public function getSourceWallet (): Wallet {
         // Has a ContinuID wallet?
-        $sourceWallet = $this->queryContinuId( $this->getBundle() )
+        $sourceWallet = $this->queryContinuId( $this->getBundleHash() )
             ->getPayload();
         if ( !$sourceWallet ) {
             $sourceWallet = new Wallet( $this->getSecret() );
@@ -1128,7 +1119,7 @@ class KnishIOClient {
          */
         $query = $this->createQuery( QueryContinuId::class );
 
-        return $query->execute( [ 'bundle' => $bundleHash ] );
+        return $query->execute( [ 'bundleHash' => $bundleHash ] );
     }
 
     /**
@@ -1169,6 +1160,7 @@ class KnishIOClient {
          */
         $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
         $query->fillMolecule( [ 'encrypt' => $encrypt ? 'true' : 'false' ] );
+        $query->molecule()->sign();
 
         /**
          * Get a response

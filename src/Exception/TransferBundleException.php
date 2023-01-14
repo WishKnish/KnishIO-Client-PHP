@@ -64,7 +64,7 @@ class TransferBundleException extends KnishIOException {
      * @param int $code
      * @param Throwable|null $previous
      */
-    public function __construct ( string $message = 'An invalid recipient wallet bundle was provided.', $payload = null, int $code = 1, Throwable $previous = null ) {
+    public function __construct ( string $message = 'An invalid recipient wallet bundle hash was provided.', $payload = null, int $code = 1, Throwable $previous = null ) {
         parent::__construct( $message, $payload, $code, $previous );
     }
 }

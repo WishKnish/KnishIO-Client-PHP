@@ -64,7 +64,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $position
  * @property string $walletAddress
  * @property string $isotope
- * @property string|null $token
+ * @property string|null $tokenSlug
  * @property string|null $value
  * @property string|null $batchId
  * @property string|null $metaType
@@ -84,10 +84,11 @@ class Atom {
      */
     public static function getHashableProps (): array {
         return [
+            'index',
             'position',
             'walletAddress',
             'isotope',
-            'token',
+            'tokenSlug',
             'value',
             'batchId',
             'metaType',
@@ -101,7 +102,7 @@ class Atom {
      * @param string|null $position
      * @param string|null $walletAddress
      * @param string $isotope
-     * @param string|null $token
+     * @param string|null $tokenSlug
      * @param string|null $value
      * @param string|null $batchId
      * @param string|null $metaType
@@ -117,7 +118,7 @@ class Atom {
         public ?string $position,
         public ?string $walletAddress,
         public string $isotope,
-        public ?string $token = null,
+        public ?string $tokenSlug = null,
         public ?string $value = null,
         public ?string $batchId = null,
         public ?string $metaType = null,
@@ -145,7 +146,7 @@ class Atom {
      * @param string|null $value
      * @param string|null $metaType
      * @param string|null $metaId
-     * @param AtomMeta|null $meta
+     * @param AtomMeta|null $metas
      * @param string|null $batchId
      *
      * @return static
@@ -176,7 +177,7 @@ class Atom {
             $wallet?->position,
             $wallet?->address,
             $isotope,
-            $wallet?->token,
+            $wallet?->tokenSlug,
             $value,
             $batchId ?? $wallet?->batchId,
             $metaType,
@@ -187,25 +188,21 @@ class Atom {
 
     /**
      * @return array
+     * @throws JsonException
      */
     public function getHashableValues (): array {
         $hashableValues = [];
         foreach ( static::getHashableProps() as $property ) {
             $value = $this->$property;
 
-            // All null values not in custom keys list won't get hashed
-            if ( $value === null && !in_array( $property, [ 'position', 'walletAddress', ], true ) ) {
+            // All null values won't get hashed
+            if ( $value === null ) {
                 continue;
             }
 
             // Special code for meta property
             if ( $property === 'metas' ) {
-                foreach ( $value as $metas ) {
-                    if ( isset( $meta[ 'value' ] ) ) {
-                        $hashableValues[] = ( string ) $metas[ 'key' ];
-                        $hashableValues[] = ( string ) $metas[ 'value' ];
-                    }
-                }
+                $hashableValues[] = json_encode( $value, JSON_THROW_ON_ERROR );
             }
             // Default value
             else {
@@ -221,19 +218,15 @@ class Atom {
      *
      * @return array|string|null
      * @throws KnishIOException
+     * @throws JsonException
      */
     public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
         $atomList = static::sortAtoms( $atoms );
         $molecularSponge = Crypto\Shake256::init();
-        $numberOfAtoms = count( $atomList );
 
         $hashableValues = [];
         foreach ( $atomList as $atom ) {
-
-            // !!! @todo: why does this code works for every interaction of atoms, maybe it needs to be taken out of the loop?
-            $hashableValues[] = (string) $numberOfAtoms;
-
-            $hashableValues = array_merge( $hashableValues, $atom->getHashableValues() );
+            $hashableValues[] = json_encode( $atom->getHashableValues(), JSON_THROW_ON_ERROR );
         }
 
         // Add hash values to the sponge
@@ -304,7 +297,7 @@ class Atom {
      */
     public function setProperty ( string $property, $value ): void {
         $property = array_get( [
-            'tokenSlug' => 'token',
+            'tokenSlug' => 'tokenSlug',
             'metas' => 'meta',
         ], $property, $property );
 

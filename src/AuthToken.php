@@ -114,6 +114,13 @@ class AuthToken {
     }
 
     /**
+     * @return int
+     */
+    public function getEncryptStatus (): int {
+        return $this->encrypt;
+    }
+
+    /**
      * @return string
      */
     public function getExpireInterval (): string {

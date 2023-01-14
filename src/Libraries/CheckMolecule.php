@@ -227,7 +227,7 @@ class CheckMolecule {
         /** @var Atom $atom */
         $atom = reset( $this->molecule->atoms );
 
-        if ( $atom->token === 'USER' && count( $this->molecule->getIsotopes( 'I' ) ) < 1 ) {
+        if ( $atom->tokenSlug === 'USER' && count( $this->molecule->getIsotopes( 'I' ) ) < 1 ) {
             throw new MoleculeAtomsMissingException( 'Missing atom ContinuID' );
         }
 
@@ -257,13 +257,13 @@ class CheckMolecule {
             if ( $metaType === 'wallet' ) {
                 $checkRequiredMetaKeys( [
                     'position',
-                    'bundle'
+                    'bundleHash'
                 ] );
             }
 
             $checkRequiredMetaKeys( [ 'token' ] );
 
-            if ( $atom->token !== 'USER' ) {
+            if ( $atom->tokenSlug !== 'USER' ) {
                 throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
 
@@ -282,7 +282,7 @@ class CheckMolecule {
         /** @var Atom $atom */
         foreach ( $this->molecule->getIsotopes( 'C' ) as $atom ) {
 
-            if ( $atom->token !== 'USER' ) {
+            if ( $atom->tokenSlug !== 'USER' ) {
                 throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
 
@@ -301,7 +301,7 @@ class CheckMolecule {
         /** @var Atom $atom */
         foreach ( $this->molecule->getIsotopes( 'I' ) as $atom ) {
 
-            if ( $atom->token !== 'USER' ) {
+            if ( $atom->tokenSlug !== 'USER' ) {
                 throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
 
@@ -320,7 +320,7 @@ class CheckMolecule {
         /** @var Atom $atom */
         foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
-            if ( $atom->token !== 'USER' ) {
+            if ( $atom->tokenSlug !== 'USER' ) {
                 throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
 
@@ -343,7 +343,7 @@ class CheckMolecule {
                 throw new MetaMissingException();
             }
 
-            if ( $atom->token !== 'USER' ) {
+            if ( $atom->tokenSlug !== 'USER' ) {
                 throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
             }
         }
@@ -381,7 +381,7 @@ class CheckMolecule {
             /** @var Atom $endAtom */
             $endAtom = end( $atoms );
 
-            if ( $firstAtom->token !== $endAtom->token ) {
+            if ( $firstAtom->tokenSlug !== $endAtom->tokenSlug ) {
                 throw new TransferMismatchedException();
             }
 
@@ -408,7 +408,7 @@ class CheckMolecule {
             $value = $vAtom->getValue();
 
             // Making sure all V atoms of the same token
-            if ( $vAtom->token !== $firstAtom->token ) {
+            if ( $vAtom->tokenSlug !== $firstAtom->tokenSlug ) {
                 throw new TransferMismatchedException();
             }
 
