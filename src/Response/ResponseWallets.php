@@ -55,10 +55,10 @@ use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
- * Class ResponseWalletList
+ * Class ResponseWallets
  * @package WishKnish\KnishIO\Client\Response
  */
-class ResponseWalletList extends Response {
+class ResponseWallets extends Response {
 
     /**
      * @var string
@@ -98,18 +98,22 @@ class ResponseWalletList extends Response {
 
         // Get token units from the response
         $tokenUnits = array_get( $data, 'tokenUnits', [] );
-        foreach ( $tokenUnits as $tokenUnit ) {
-            $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
+        if( $tokenUnits ) {
+            foreach ( $tokenUnits as $tokenUnit ) {
+                $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
+            }
         }
 
         // Set trade rates
         $tradeRates = array_get( $data, 'tradeRates', [] );
-        foreach ( $tradeRates as $tradeRate ) {
-            $wallet->tradeRates[ $tradeRate[ 'tokenSlug' ] ] = $tradeRate[ 'amount' ];
+        if( $tradeRates ) {
+            foreach ( $tradeRates as $tradeRate ) {
+                $wallet->tradeRates[ $tradeRate[ 'tokenSlug' ] ] = $tradeRate[ 'amount' ];
+            }
         }
 
         $wallet->type = $data[ 'type' ];
-        $wallet->balance = $data[ 'amount' ];
+        $wallet->balance = $data[ 'amount' ] ?: 0;
         $wallet->pubkey = $data[ 'pubkey' ];
         $wallet->createdAt = $data[ 'createdAt' ];
 

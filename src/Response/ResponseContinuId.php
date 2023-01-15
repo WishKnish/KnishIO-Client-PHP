@@ -76,7 +76,7 @@ class ResponseContinuId extends Response {
         // Check response
         $data = $this->data();
         if ( $data !== null ) {
-            return ResponseWalletList::toClientWallet( $data );
+            return ResponseWallets::toClientWallet( $data );
         }
 
         return null;

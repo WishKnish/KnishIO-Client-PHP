@@ -79,7 +79,7 @@ class ResponseBalance extends Response {
         }
 
         // Return a client wallet object
-        return ResponseWalletList::toClientWallet( $walletData );
+        return ResponseWallets::toClientWallet( $walletData );
     }
 
 }

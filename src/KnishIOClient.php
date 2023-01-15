@@ -88,7 +88,7 @@ use WishKnish\KnishIO\Client\Query\QueryWallets;
 use WishKnish\KnishIO\Client\Response\Response;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Client\Response\ResponseWallets;
 
 /**
  * Class KnishIO
@@ -604,47 +604,39 @@ class KnishIOClient {
         return $query->execute();
     }
 
-    /**
-     * @param string|null $bundleHash
-     * @param string|null $tokenSlug
-     * @param bool $unspent
-     *
-     * @return array|null
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ?array {
+  /**
+   * @param string|null $bundleHash
+   * @param string|null $tokenSlug
+   * @param bool $unspent
+   *
+   * @return ResponseWallets
+   * @throws GuzzleException
+   * @throws JsonException
+   * @throws KnishIOException
+   */
+    public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ResponseWallets {
 
         /**
          * @var QueryWallets $query
          */
         $query = $this->createQuery( QueryWallets::class );
-
-        /**
-         * @var ResponseWalletList $response
-         */
-        $response = $query->execute( [
+        return $query->execute( [
             'bundleHash' => $bundleHash ?: $this->getBundleHash(),
             'tokenSlug' => $tokenSlug,
             'unspent' => $unspent
         ] );
-
-        return $response->getWallets();
     }
 
     /**
      * @param string $tokenSlug
      * @param string|null $bundleHash
      *
-     * @return array|null
+     * @return ResponseWallets
      * @throws GuzzleException
      * @throws JsonException
      * @throws KnishIOException
-     * @throws SodiumException
      */
-    public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ?array {
+    public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ResponseWallets {
         return $this->queryWallets( $bundleHash, $tokenSlug );
     }
 

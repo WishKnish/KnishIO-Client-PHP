@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
-use WishKnish\KnishIO\Client\Response\ResponseWalletList;
+use WishKnish\KnishIO\Client\Response\ResponseWallets;
 
 /**
  * Class QueryBalance
@@ -96,11 +96,11 @@ class QueryWallets extends Query {
     /**
      * @param string $response
      *
-     * @return ResponseWalletList
+     * @return ResponseWallets
      * @throws KnishIOException
      */
-    public function createResponse ( string $response ): ResponseWalletList {
-        return new ResponseWalletList( $this, $response );
+    public function createResponse ( string $response ): ResponseWallets {
+        return new ResponseWallets( $this, $response );
     }
 
 }
