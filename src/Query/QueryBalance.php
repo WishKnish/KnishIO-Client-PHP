@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseBalance;
  */
 class QueryBalance extends Query {
     // Query
-    protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $type: String, $tokenSlug: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, type: $type, token: $token, position: $position )
+    protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $type: String, $tokenSlug: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, type: $type, tokenSlug: $tokenSlug, position: $position )
 	 	@fields
 	 }';
 

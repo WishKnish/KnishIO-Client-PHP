@@ -162,7 +162,13 @@ class Response {
 
         // Check key & return custom data from the response
         if ( array_key_exists( 'errors', $this->response) ) {
-            throw new InvalidResponseException( 'GraphQL did not provide a valid response.', $this->response['errors'] );
+
+            $messages = '';
+            foreach( $this->response['errors'] as $error) {
+                $messages .= $error['message'].'; ';
+            }
+
+            throw new InvalidResponseException( 'GraphQL call returned '. count( $this->response['errors'] ) .' errors: ' . $messages, $this->response );
         }
 
         return $payload;

@@ -86,6 +86,7 @@ use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWallets;
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseBalance;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
 use WishKnish\KnishIO\Client\Response\ResponseWallets;
@@ -377,12 +378,12 @@ class KnishIOClient {
      * @param string|null $bundleHash
      * @param string $type
      *
-     * @return Response
+     * @return ResponseBalance
      * @throws GuzzleException
      * @throws JsonException
      * @throws KnishIOException
      */
-    public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): Response {
+    public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): ResponseBalance {
 
         // Create a query
         /** @var QueryBalance $query */
