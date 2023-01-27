@@ -49,6 +49,8 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Query;
 
+use GuzzleHttp\Exception\GuzzleException;
+use JsonException;
 use WishKnish\KnishIO\Client\Exception\KnishIOException;
 use WishKnish\KnishIO\Client\Response\ResponseWallets;
 
@@ -101,6 +103,19 @@ class QueryWallets extends Query {
      */
     public function createResponse ( string $response ): ResponseWallets {
         return new ResponseWallets( $this, $response );
+    }
+
+    /**
+     * @param array|null $variables
+     * @param array|null $fields
+     *
+     * @return ResponseWallets
+     * @throws KnishIOException
+     * @throws GuzzleException
+     * @throws JsonException
+     */
+    public function execute ( array $variables = null, array $fields = null ): ResponseWallets {
+        return parent::execute( $variables, $fields );
     }
 
 }

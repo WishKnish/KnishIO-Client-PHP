@@ -135,7 +135,7 @@ class KnishIOClient {
     /**
      * @var AuthToken|null
      */
-    private ?AuthToken $authToken;
+    private ?AuthToken $authToken = null;
 
     /**
      * @var bool

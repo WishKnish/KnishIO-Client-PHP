@@ -165,7 +165,7 @@ class Response {
 
             $messages = '';
             foreach( $this->response['errors'] as $error) {
-                $messages .= $error['message'].'; ';
+                $messages .= $error['debugMessage'].'; ';
             }
 
             throw new InvalidResponseException( 'GraphQL call returned '. count( $this->response['errors'] ) .' errors: ' . $messages, $this->response );

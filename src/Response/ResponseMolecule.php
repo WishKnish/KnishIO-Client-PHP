@@ -67,7 +67,7 @@ class ResponseMolecule extends Response {
     /**
      * @var mixed
      */
-    protected mixed $payload;
+    protected mixed $payload = null;
 
     /**
      * Initialization
