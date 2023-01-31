@@ -50,14 +50,9 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use JsonException;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
-use WishKnish\KnishIO\Client\Traits\Json;
 
 /**
  * Class MoleculeStructure
@@ -302,27 +297,19 @@ class MoleculeStructure {
    * @return static
    */
   public static function toObject ( array $data ): MoleculeStructure {
-    $molecule = new self;
-    foreach( [
-      'cellSlug', 'molecularHash', 'counterparty', 'bundle', 'status', 'local', 'createdAt',
-    ] as $property ) {
-      $value = array_get( $data, $property );
 
-      // Special typed modification
-      switch ( $property ) {
-        case 'local':
-          $value = (int) $value;
-          break;
-        case 'createdAt':
-          $value = (string) $value;
-          break;
-      }
-      $molecule->$property = $value;
+    // Create & fill molecule with base properties
+    $molecule = new self;
+    foreach( [ 'cellSlug', 'molecularHash', 'counterparty', 'bundle', 'status', ] as $property ) {
+      $molecule->$property = array_get( $data, $property );
     }
+
+    // Special typed modification
+    $molecule->local = (int) array_get( $data, 'local' );
+    $molecule->createdAt = (string) array_get( $data, 'createdAt' );
+
+    // Add atoms
     foreach( array_get( $data, 'atoms', [] ) as $atom ) {
-      if ( !array_has( $atom, 'meta' ) ) {
-        dd( $atom );
-      }
       $molecule->atoms[] = new Atom(
         array_get( $atom, 'position' ),
         array_get( $atom, 'walletAddress' ),
@@ -339,6 +326,7 @@ class MoleculeStructure {
       );
     }
     $molecule->atoms = Atom::sortAtoms( $molecule->atoms );
+
     return $molecule;
   }
 

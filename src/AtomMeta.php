@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use Illuminate\Support\Arr;
 use JsonException;
 
 /**
@@ -259,6 +260,56 @@ class AtomMeta {
     $wallet->address = array_get( $this->meta, 'signingAddress' );
     $wallet->pubkey = array_get( $this->meta, 'signingPubkey' );
     return $wallet;
+  }
+
+  /**
+   * @param bool $onlyId
+   *
+   * @return array
+   * @throws JsonException
+   */
+  public function getTokenUnits ( bool $onlyId = false ): array {
+
+    // Get a units key
+    $metas = array_get( $this->meta, 'tokenUnits', [] );
+    if ( !is_string( $metas ) ) {
+      return [];
+    }
+
+    // Is a json data?
+    $metas = json_decode( $metas, true );
+    if ( !$metas ) {
+      return [];
+    }
+
+    // Final units preparing
+    $tokenUnits = Wallet::getTokenUnits( $metas );
+    if ( $onlyId ) {
+      return Arr::pluck( $tokenUnits, 'id' );
+    }
+    return $tokenUnits;
+  }
+
+
+  /**
+   * @return array
+   * @throws JsonException
+   */
+  public function getTradeRates (): array {
+
+    // Get a units key
+    $tradeRates = array_get( $this->meta, 'tradeRates', [] );
+    if ( !is_string( $tradeRates ) ) {
+      return [];
+    }
+
+    // Is a json data?
+    $tradeRates = json_decode( $tradeRates, true );
+    if ( !$tradeRates ) {
+      return [];
+    }
+
+    return $tradeRates;
   }
 
   /**
