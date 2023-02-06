@@ -92,7 +92,7 @@ class ResponseWallets extends Response {
             $wallet->tokenName = array_get( $data, 'token.name' );
             $wallet->tokenSupply = array_get( $data, 'token.amount' );
         }
-        if ( array_has( $data, 'molecules' ) ) {
+        if ( array_has( $data, 'molecules' ) && $data[ 'molecules' ] !== null ) {
             $wallet->molecules = $data[ 'molecules' ];
         }
 
