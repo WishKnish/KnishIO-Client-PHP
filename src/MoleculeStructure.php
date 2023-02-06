@@ -294,7 +294,7 @@ class MoleculeStructure {
         foreach ( $object->atoms as $key => $atomData ) {
 
             $atom = new Atom(
-                $atomData[ 'position' ],
+                $atomData[ 'walletPosition' ],
                 $atomData[ 'walletAddress' ],
                 $atomData[ 'isotope' ],
                 $atomData[ 'tokenSlug' ],

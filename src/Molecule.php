@@ -99,36 +99,6 @@ class Molecule extends MoleculeStructure {
     }
 
     /**
-     * @param MoleculeStructure $moleculeStructure
-     */
-    public function fill ( MoleculeStructure $moleculeStructure ): void {
-        foreach ( get_object_vars( $moleculeStructure ) as $key => $value ) {
-            $this->$key = $value;
-        }
-    }
-
-    /**
-     * @return string
-     */
-    public function secret (): string {
-        return $this->secret;
-    }
-
-    /**
-     * Source wallet
-     */
-    public function sourceWallet (): ?Wallet {
-        return $this->sourceWallet;
-    }
-
-    /**
-     * @return Wallet|null
-     */
-    public function remainderWallet (): ?Wallet {
-        return $this->remainderWallet;
-    }
-
-    /**
      * Clears the instance of the data, leads the instance to a state equivalent to that after new Molecule()
      *
      * @return self
@@ -144,58 +114,26 @@ class Molecule extends MoleculeStructure {
     }
 
     /**
-     * @param Atom $atom
-     *
-     * @return $this
-     * @throws SodiumException
-     * @throws KnishIOException
+     * @param MoleculeStructure $moleculeStructure
      */
-    public function addAtom ( Atom $atom ): Molecule {
-
-        // Reset molecular hash
-        $this->molecularHash = null;
-
-        // Set atom's index
-        $atom->index = $this->generateIndex();
-
-        // Add source wallet if not already set when adding first atom
-        if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
-            $this->sourceWallet = new Wallet( $this->secret(), $atom->tokenSlug, $atom->position, $atom->batchId );
+    public function fill ( MoleculeStructure $moleculeStructure ): void {
+        foreach ( get_object_vars( $moleculeStructure ) as $key => $value ) {
+            $this->$key = $value;
         }
-
-        // Add atom
-        $this->atoms[] = $atom;
-
-        // Sort atoms
-        $this->atoms = Atom::sortAtoms( $this->atoms );
-
-        return $this;
     }
 
     /**
-     * Add continuID atom
-     *
-     * @return $this
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
+     * Source wallet
      */
-    public function addContinuIdAtom (): Molecule {
+    public function sourceWallet (): ?Wallet {
+        return $this->sourceWallet;
+    }
 
-        // Creating a remainder wallet if needed
-        if ( !$this->remainderWallet || $this->remainderWallet->tokenSlug !== 'USER' ) {
-            $this->remainderWallet = new Wallet( $this->secret() );
-        }
-
-        $this->addAtom( Atom::create(
-            'I',
-            $this->remainderWallet,
-            null,
-            'walletBundle',
-            $this->remainderWallet->bundleHash
-        ) );
-
-        return $this;
+    /**
+     * @return Wallet|null
+     */
+    public function remainderWallet (): ?Wallet {
+        return $this->remainderWallet;
     }
 
     /**
@@ -230,6 +168,58 @@ class Molecule extends MoleculeStructure {
         ) );
 
         return $this;
+    }
+
+    /**
+     * @param Atom $atom
+     *
+     * @return $this
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function addAtom ( Atom $atom ): Molecule {
+
+        // Reset molecular hash
+        $this->molecularHash = null;
+
+        // Set atom's index
+        $atom->index = $this->generateIndex();
+
+        // Add source wallet if not already set when adding first atom
+        if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
+            $this->sourceWallet = new Wallet( $this->secret(), $atom->tokenSlug, $atom->walletPosition, $atom->batchId );
+        }
+
+        // Add atom
+        $this->atoms[] = $atom;
+
+        // Sort atoms
+        $this->atoms = Atom::sortAtoms( $this->atoms );
+
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function generateIndex (): int {
+        return static::generateNextAtomIndex( $this->atoms );
+    }
+
+    /**
+     * @param array $atoms
+     *
+     * @return int
+     */
+    public static function generateNextAtomIndex ( array $atoms = [] ): int {
+        return count( $atoms );
+    }
+
+    /**
+     * @return string
+     */
+    public function secret (): string {
+        return $this->secret;
     }
 
     /**
@@ -280,6 +270,32 @@ class Molecule extends MoleculeStructure {
 
         // Add continuID atom
         $this->addContinuIdAtom();
+
+        return $this;
+    }
+
+    /**
+     * Add continuID atom
+     *
+     * @return $this
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function addContinuIdAtom (): Molecule {
+
+        // Creating a remainder wallet if needed
+        if ( !$this->remainderWallet || $this->remainderWallet->tokenSlug !== 'USER' ) {
+            $this->remainderWallet = new Wallet( $this->secret() );
+        }
+
+        $this->addAtom( Atom::create(
+            'I',
+            $this->remainderWallet,
+            null,
+            'walletBundle',
+            $this->remainderWallet->bundleHash
+        ) );
 
         return $this;
     }
@@ -742,17 +758,20 @@ class Molecule extends MoleculeStructure {
      */
     public function initMeta ( array $metas, string $metaType, string $metaId, array $policy = [] ): Molecule {
 
+        $atomMetas = new AtomMeta( $metas );
+
+        if ( count( $policy ) ) {
+            $atomMetas->addPolicy( $policy );
+        }
+
         $this->addAtom( Atom::create(
             'M',
             $this->sourceWallet,
             null,
             $metaType,
             $metaId,
-            new AtomMeta( $metas )
+            $atomMetas
         ) );
-
-        // Add policy atom
-        $this->addPolicyAtom( $metaType, $metaId, $metas, $policy );
 
         // Add continuID atom
         $this->addContinuIdAtom();
@@ -877,7 +896,7 @@ class Molecule extends MoleculeStructure {
         $firstAtom = reset( $this->atoms );
 
         // Set signing position from the first atom
-        $signingPosition = $firstAtom->position;
+        $signingPosition = $firstAtom->walletPosition;
 
         // Try to get custom signing position from the metas (local molecule with server secret)
         if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
@@ -905,22 +924,6 @@ class Molecule extends MoleculeStructure {
         foreach ( $chunkedSignature as $chunkCount => $chunk ) {
             $this->atoms[ $chunkCount ]->otsFragment = $chunk;
         }
-    }
-
-    /**
-     * @return int
-     */
-    public function generateIndex (): int {
-        return static::generateNextAtomIndex( $this->atoms );
-    }
-
-    /**
-     * @param array $atoms
-     *
-     * @return int
-     */
-    public static function generateNextAtomIndex ( array $atoms = [] ): int {
-        return count( $atoms );
     }
 
 }

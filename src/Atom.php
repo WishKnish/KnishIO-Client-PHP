@@ -61,7 +61,7 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * Class Atom
  * @package WishKnish\KnishIO\Client
  *
- * @property string $position
+ * @property string $walletPosition
  * @property string $walletAddress
  * @property string $isotope
  * @property string|null $tokenSlug
@@ -85,7 +85,7 @@ class Atom {
     public static function getHashableProps (): array {
         return [
             'index',
-            'position',
+            'walletPosition',
             'walletAddress',
             'isotope',
             'tokenSlug',
@@ -99,7 +99,7 @@ class Atom {
     }
 
     /**
-     * @param string|null $position
+     * @param string|null $walletPosition
      * @param string|null $walletAddress
      * @param string $isotope
      * @param string|null $tokenSlug
@@ -115,7 +115,7 @@ class Atom {
      * @throws JsonException
      */
     public function __construct (
-        public ?string $position,
+        public ?string $walletPosition,
         public ?string $walletAddress,
         public string $isotope,
         public ?string $tokenSlug = null,
