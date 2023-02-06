@@ -64,12 +64,12 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * Class Wallets
  * @package WishKnish\KnishIO\Client
  *
- * @property string $position
+ * @property string $walletPosition
  * @property string $tokenSlug
  * @property string|null $batchId
  * @property string|null $characters
  * @property string|null $key
- * @property string|null $address
+ * @property string|null $walletAddress
  * @property int $balance
  * @property string|null $type
  * @property string|null $bundleHash
@@ -90,7 +90,7 @@ class Wallet {
     /**
      * @var string|null
      */
-    public ?string $address = null;
+    public ?string $walletAddress = null;
 
     /**
      * @var string|null
@@ -155,7 +155,7 @@ class Wallet {
     /**
      * @param string|null $secret
      * @param string $tokenSlug
-     * @param string|null $position
+     * @param string|null $walletPosition
      * @param string|null $batchId
      * @param string|null $characters
      *
@@ -165,7 +165,7 @@ class Wallet {
     public function __construct (
         string $secret = null,
         public string $tokenSlug = 'USER',
-        public ?string $position = null,
+        public ?string $walletPosition = null,
         public ?string $batchId = null,
         public ?string $characters = null
     ) {
@@ -175,11 +175,11 @@ class Wallet {
             $this->bundleHash = Crypto::generateBundleHash( $secret );
 
             // Generate a position for non-shadow wallet if not initialized
-            $this->position = $this->position ?? static::generatePosition();
+            $this->walletPosition = $this->walletPosition ?? static::generatePosition();
 
             // Key & address initialization
-            $this->key = static::generateKey( $secret, $this->tokenSlug, $this->position );
-            $this->address = static::generateAddress( $this->key );
+            $this->key = static::generateKey( $secret, $this->tokenSlug, $this->walletPosition );
+            $this->walletAddress = static::generateAddress( $this->key );
 
             // Soda object initialization
             $this->soda = new Soda( $this->characters );
@@ -206,10 +206,10 @@ class Wallet {
     public static function create ( string $secretOrBundleHash, string $tokenSlug = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
         $secret = Crypto::isBundleHash( $secretOrBundleHash ) ? null : $secretOrBundleHash;
         $bundleHash = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundleHash;
-        $position = $secret ? static::generatePosition() : null;
+        $walletPosition = $secret ? static::generatePosition() : null;
 
         // Wallets initialization
-        $wallet = new Wallet( $secret, $tokenSlug, $position, $batchId, $characters );
+        $wallet = new Wallet( $secret, $tokenSlug, $walletPosition, $batchId, $characters );
         $wallet->bundleHash = $bundleHash;
         return $wallet;
     }
@@ -232,7 +232,7 @@ class Wallet {
      * @return bool
      */
     public function isShadow (): bool {
-        return !$this->position && !$this->address;
+        return !$this->walletPosition && !$this->walletAddress;
     }
 
     /**
@@ -427,16 +427,16 @@ class Wallet {
     /**
      * @param string $secret
      * @param string $tokenSlug
-     * @param string $position
+     * @param string $walletPosition
      *
      * @return string
      * @throws KnishIOException
      */
-    public static function generateKey ( string $secret, string $tokenSlug, string $position ): string {
+    public static function generateKey ( string $secret, string $tokenSlug, string $walletPosition ): string {
 
         // Converting secret to bigInt
         // Adding new position to the user secret to produce the indexed key
-        $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $position, 16 ) );
+        $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $walletPosition, 16 ) );
 
         try {
             // Hashing the indexed key to produce the intermediate key

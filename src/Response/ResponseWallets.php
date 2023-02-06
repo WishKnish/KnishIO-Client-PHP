@@ -76,14 +76,14 @@ class ResponseWallets extends Response {
     public static function toClientWallet ( array $data, string $secret = null ): Wallet {
 
         // Shadow wallet
-        if ( $data[ 'position' ] === null ) {
+        if ( $data[ 'walletPosition' ] === null ) {
             $wallet = Wallet::create( $data[ 'bundleHash' ], $data[ 'tokenSlug' ], $data[ 'batchId' ], $data[ 'characters' ] );
         }
 
         // Regular wallet
         else {
-            $wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ], $data[ 'batchId' ], $data[ 'characters' ] );
-            $wallet->address = $data[ 'address' ];
+            $wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'walletPosition' ], $data[ 'batchId' ], $data[ 'characters' ] );
+            $wallet->walletAddress = $data[ 'walletAddress' ];
             $wallet->bundleHash = $data[ 'bundleHash' ];
         }
 

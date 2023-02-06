@@ -601,10 +601,10 @@ class Molecule extends MoleculeStructure {
     public function initWalletCreation ( Wallet $newWallet ): Molecule {
 
         $atomMeta = new AtomMeta( [
-            'address' => $newWallet->address,
+            'walletAddress' => $newWallet->walletAddress,
             'token' => $newWallet->tokenSlug,
             'bundleHash' => $newWallet->bundleHash,
-            'position' => $newWallet->position,
+            'walletPosition' => $newWallet->walletPosition,
             'batch_id' => $newWallet->batchId,
         ] );
 
@@ -614,7 +614,7 @@ class Molecule extends MoleculeStructure {
             $this->sourceWallet,
             null,
             'wallet',
-            $newWallet->address,
+            $newWallet->walletAddress,
             $atomMeta,
         ) );
 
@@ -678,8 +678,8 @@ class Molecule extends MoleculeStructure {
 
         // Fill metas with wallet property
         foreach ( [
-            'walletAddress' => 'address',
-            'walletPosition' => 'position',
+            'walletAddress' => 'walletAddress',
+            'walletPosition' => 'walletPosition',
             'walletPubkey' => 'pubkey',
             'walletCharacters' => 'characters',
         ] as $metaKey => $walletProperty ) {
@@ -720,8 +720,8 @@ class Molecule extends MoleculeStructure {
 
         $atomMeta = new AtomMeta( [
             'tokenSlug' => $tokenSlug,
-            'walletAddress' => $wallet->address,
-            'walletPosition' => $wallet->position,
+            'walletAddress' => $wallet->walletAddress,
+            'walletPosition' => $wallet->walletPosition,
             'pubkey' => $wallet->pubkey,
             'characters' => $wallet->characters,
             'batchId' => $wallet->batchId,
@@ -733,7 +733,7 @@ class Molecule extends MoleculeStructure {
             $this->sourceWallet,
             null,
             'wallet',
-            $wallet->address,
+            $wallet->walletAddress,
             $atomMeta,
         ) );
 
@@ -900,7 +900,7 @@ class Molecule extends MoleculeStructure {
 
         // Try to get custom signing position from the metas (local molecule with server secret)
         if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-            $signingPosition = array_get( json_decode( $signingWallet, true ), 'position' );
+            $signingPosition = array_get( json_decode( $signingWallet, true ), 'walletPosition' );
         }
 
         // Signing position is required

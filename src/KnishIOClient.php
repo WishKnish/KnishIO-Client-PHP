@@ -420,7 +420,7 @@ class KnishIOClient {
         }
 
         // Check shadow wallet
-        if ( !$fromWallet->position || !$fromWallet->address ) {
+        if ( !$fromWallet->walletPosition || !$fromWallet->walletAddress ) {
             throw new WalletShadowException( 'Source wallet can not be a shadow wallet.' );
         }
 

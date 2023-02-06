@@ -69,7 +69,7 @@ class QueryWalletBundle extends Query {
         'slug',
         'metas' => [
             'molecularHash',
-            'position',
+            'walletPosition',
             'metaType',
             'metaId',
             'key',

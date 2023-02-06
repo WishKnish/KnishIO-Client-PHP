@@ -39,7 +39,7 @@ class AuthToken {
      * @throws KnishIOException
      */
     public static function restore ( array $snapshot, string $secret ): self {
-        $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
+        $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.walletPosition' ), null, array_get( $snapshot, 'wallet.characters' ) );
         return static::create( [
             'token' => array_get( $snapshot, 'token' ),
             'expiresAt' => array_get( $snapshot, 'expiresAt' ),
@@ -93,7 +93,7 @@ class AuthToken {
             'pubkey' => $this->pubkey,
             'encrypt' => $this->encrypt,
             'wallet' => [
-                'position' => $this->wallet->position,
+                'walletPosition' => $this->wallet->walletPosition,
                 'characters' => $this->wallet->characters,
             ],
         ];

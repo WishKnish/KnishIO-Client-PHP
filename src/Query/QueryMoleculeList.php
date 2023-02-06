@@ -72,7 +72,7 @@ class QueryMoleculeList extends Query {
         'createdAt',
         'processedAt',
         'atoms' => [
-            'position',
+            'walletPosition',
             'isotope',
             'walletAddress',
             'tokenSlug',

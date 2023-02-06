@@ -102,12 +102,17 @@ class Response {
         // Origin response
         $this->originResponse = $json;
 
-        // Json decode
-        try {
-            $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
+        if( $json ) {
+            // Json decode
+            try {
+                $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
+            }
+            catch ( JsonException $e ) {
+                throw new ResponseJsonException( 'Json exception thrown when decoding response: ' . $e->getMessage(), $json );
+            }
         }
-        catch( JsonException $e ) {
-            throw new ResponseJsonException('Json exception thrown when decoding response: '. $e->getMessage(), $json);
+        else {
+            $this->response = null;
         }
 
         // Set datakey from
@@ -132,7 +137,7 @@ class Response {
 
         // No-json response - error
         if ( $this->response === null ) {
-            throw new InvalidResponseException( 'No GraphQL response returned.' );
+            throw new InvalidResponseException( 'No GraphQL response returned.', $query );
         }
 
         $this->init();

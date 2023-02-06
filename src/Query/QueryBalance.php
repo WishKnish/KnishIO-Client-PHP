@@ -58,18 +58,18 @@ use WishKnish\KnishIO\Client\Response\ResponseBalance;
  */
 class QueryBalance extends Query {
     // Query
-    protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $type: String, $tokenSlug: String, $position: String ) { Balance( address: $address, bundleHash: $bundleHash, type: $type, tokenSlug: $tokenSlug, position: $position )
+    protected static string $defaultQuery = 'query( $walletAddress: String, $bundleHash: String, $type: String, $tokenSlug: String, $walletPosition: String ) { Balance( walletAddress: $walletAddress, bundleHash: $bundleHash, type: $type, tokenSlug: $tokenSlug, walletPosition: $walletPosition )
 	 	@fields
 	 }';
 
     // Fields
     protected array $fields = [
         'type',
-        'address',
+        'walletAddress',
         'bundleHash',
         'tokenSlug',
         'batchId',
-        'position',
+        'walletPosition',
         'amount',
         'characters',
         'pubkey',

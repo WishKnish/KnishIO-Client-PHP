@@ -68,10 +68,10 @@ class QueryContinuId extends Query {
     // Fields
     protected array $fields = [
         'type',
-        'address',
+        'walletAddress',
         'bundleHash',
         'tokenSlug',
-        'position',
+        'walletPosition',
         'batchId',
         'characters',
         'pubkey',

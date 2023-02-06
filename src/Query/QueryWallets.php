@@ -60,14 +60,14 @@ use WishKnish\KnishIO\Client\Response\ResponseWallets;
  */
 class QueryWallets extends Query {
     // Query
-    protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $tokenSlug: String, $position: String, $unspent: Boolean ) { Wallets( address: $address, bundleHash: $bundleHash, tokenSlug: $tokenSlug, position: $position, unspent: $unspent )
+    protected static string $defaultQuery = 'query( $walletAddress: String, $bundleHash: String, $tokenSlug: String, $walletPosition: String, $unspent: Boolean ) { Wallets( walletAddress: $walletAddress, bundleHash: $bundleHash, tokenSlug: $tokenSlug, walletPosition: $walletPosition, unspent: $unspent )
 	 	@fields
 	}';
 
     // Fields
     protected array $fields = [
         'type',
-        'address',
+        'walletAddress',
         'bundleHash',
         'token' => [
             'name',
@@ -88,7 +88,7 @@ class QueryWallets extends Query {
         ],
         'tokenSlug',
         'batchId',
-        'position',
+        'walletPosition',
         'amount',
         'characters',
         'pubkey',

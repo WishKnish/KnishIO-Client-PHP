@@ -256,7 +256,7 @@ class CheckMolecule {
 
             if ( $metaType === 'wallet' ) {
                 $checkRequiredMetaKeys( [
-                    'position',
+                    'walletPosition',
                     'bundleHash'
                 ] );
             }
@@ -518,7 +518,7 @@ class CheckMolecule {
 
         // Try to get custom signing position from the metas (local molecule with server secret)
         if ( $signingWallet = array_get( $firstAtom->aggregatedMeta(), 'signingWallet' ) ) {
-            $signingAddress = array_get( json_decode( $signingWallet, true ), 'address' );
+            $signingAddress = array_get( json_decode( $signingWallet, true ), 'walletAddress' );
         }
 
         // Check the first atom's wallet: is what the molecule must be signed with

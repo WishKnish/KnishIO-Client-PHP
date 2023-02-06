@@ -71,7 +71,7 @@ class QueryMetaType extends Query {
             'createdAt',
             'metas' => [
                 'molecularHash',
-                'position',
+                'walletPosition',
                 'metaType',
                 'metaId',
                 'key',
@@ -80,7 +80,7 @@ class QueryMetaType extends Query {
             ],
             'atoms' => [
                 'molecularHash',
-                'position',
+                'walletPosition',
                 'isotope',
                 'walletAddress',
                 'tokenSlug',
@@ -106,7 +106,7 @@ class QueryMetaType extends Query {
         ],
         'metas' => [
             'molecularHash',
-            'position',
+            'walletPosition',
             'metaType',
             'metaId',
             'key',

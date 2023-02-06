@@ -132,10 +132,10 @@ class ResponseMolecule extends Response {
     }
 
     /**
-     * @return string
+     * @return string|null
      * @throws KnishIOException
      */
-    public function reason (): string {
+    public function reason (): ?string {
         return array_get( $this->data(), 'reason', 'Invalid response from server' );
     }
 

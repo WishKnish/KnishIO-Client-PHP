@@ -174,8 +174,8 @@ class Atom {
 
         // Create the final atom's object
         return new Atom(
-            $wallet?->position,
-            $wallet?->address,
+            $wallet?->walletPosition,
+            $wallet?->walletAddress,
             $isotope,
             $wallet?->tokenSlug,
             $value,

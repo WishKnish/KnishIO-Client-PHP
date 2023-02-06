@@ -65,7 +65,7 @@ class QueryMeta extends Query {
     // Fields
     protected array $fields = [
         'molecularHash',
-        'position',
+        'walletPosition',
         'metaType',
         'metaId',
         'key',

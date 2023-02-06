@@ -68,7 +68,7 @@ class QueryBatch extends Query {
         'type',
         'createdAt',
         'wallet' => [
-            'address',
+            'walletAddress',
             'bundleHash',
             'amount',
         ],

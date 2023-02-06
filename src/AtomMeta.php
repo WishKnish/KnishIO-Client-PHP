@@ -132,8 +132,8 @@ class AtomMeta {
     public function addSigningWallet ( Wallet $signingWallet ): self {
         $this->merge( [
             'signingWallet' => json_encode( [
-                'address' => $signingWallet->address,
-                'walletPosition' => $signingWallet->position,
+                'walletAddress' => $signingWallet->walletAddress,
+                'walletPosition' => $signingWallet->walletPosition,
                 'pubkey' => $signingWallet->pubkey,
                 'characters' => $signingWallet->characters,
             ], JSON_THROW_ON_ERROR ),
