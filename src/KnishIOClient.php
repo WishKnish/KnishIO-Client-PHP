@@ -83,6 +83,7 @@ use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryActiveSession;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
+use WishKnish\KnishIO\Client\Query\QueryBatchHistory;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryToken;
@@ -463,9 +464,21 @@ class KnishIOClient {
 
     // Execute the query
     return $this->createQuery( QueryBatch::class )
-      ->execute( [
-        'batchId' => $batchId
-      ] );
+      ->execute( [ 'batchId' => $batchId ] );
+  }
+
+  /**
+   * @param string $batchId
+   *
+   * @return Response
+   * @throws GuzzleException
+   * @throws JsonException
+   */
+  public function queryBatchHistory ( string $batchId ): Response {
+
+    // Execute the query
+    return $this->createQuery( QueryBatchHistory::class )
+      ->execute( [ 'batchId' => $batchId ] );
   }
 
   /**

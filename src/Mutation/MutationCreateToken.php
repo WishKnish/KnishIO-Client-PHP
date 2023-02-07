@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseTokenCreate;
+use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -78,15 +78,13 @@ class MutationCreateToken extends MutationProposeMolecule {
   }
 
   /**
-   * Create a response
-   *
    * @param string $response
    *
-   * @return ResponseTokenCreate
+   * @return ResponseMolecule
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseTokenCreate {
-    return new ResponseTokenCreate( $this, $response );
+  public function createResponse ( string $response ): ResponseMolecule {
+    return new ResponseMolecule( $this, $response );
   }
 
 }

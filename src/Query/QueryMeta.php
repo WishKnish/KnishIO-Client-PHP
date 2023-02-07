@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseMeta;
+use WishKnish\KnishIO\Client\Response\Response;
 
 /**
  * Class QueryMeta
@@ -111,11 +111,11 @@ class QueryMeta extends Query {
   /**
    * @param string $response
    *
-   * @return ResponseMeta
+   * @return Response
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseMeta {
-    return new ResponseMeta( $this, $response );
+  public function createResponse ( string $response ): Response {
+    return new Response( $this, $response, 'data.Meta' );
   }
 
 }

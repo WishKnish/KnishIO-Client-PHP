@@ -50,7 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Query;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
+use WishKnish\KnishIO\Client\Response\Response;
 
 /**
  * Class QueryWalletBundle
@@ -81,11 +81,11 @@ class QueryWalletBundle extends Query {
   /**
    * @param string $response
    *
-   * @return ResponseWalletBundle
+   * @return Response
    * @throws JsonException
    */
-  public function createResponse ( string $response ): ResponseWalletBundle {
-    return new ResponseWalletBundle( $this, $response );
+  public function createResponse ( string $response ): Response {
+    return new Response( $this, $response, 'data.WalletBundle' );
   }
 
 }
