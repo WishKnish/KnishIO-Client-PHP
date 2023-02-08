@@ -78,6 +78,7 @@ use WishKnish\KnishIO\Client\Mutation\MutationRequestTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationWithdrawBufferToken;
 use WishKnish\KnishIO\Client\Query\Query;
+use WishKnish\KnishIO\Client\Query\QueryAtoms;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
@@ -425,6 +426,32 @@ class KnishIOClient {
         }
 
         return $fromWallet;
+    }
+
+    /**
+     * @param array|string $metaType
+     * @param array|string|null $metaId
+     * @param array|string|null $key
+     * @param array|string|null $value
+     * @param bool $latest
+     * @param array|null $fields
+     *
+     * @return array|null
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function queryAtoms ( string $metaType, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false, array $fields = null ): ?array {
+
+        // Create a query
+        /** @var QueryAtoms $query */
+        $query = $this->createQuery( QueryAtoms::class );
+        $variables = QueryAtoms::createVariables( $metaType, $metaId, $key, $value, $latest );
+
+        dd( $query->execute($variables, $fields) );
+        // Execute the query
+        return $query->execute( $variables, $fields )
+            ->getPayload();
     }
 
     /**
