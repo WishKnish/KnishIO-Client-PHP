@@ -49,6 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
+use Illuminate\Support\Arr;
 use JsonException;
 
 /**
@@ -225,14 +226,12 @@ class AtomMeta {
    */
   public function setSigningWallet ( Wallet $signingWallet ): self {
     $this->merge( [
-      'signingWallet' => json_encode( [
-        'tokenSlug' => $signingWallet->token,
-        'bundleHash' => $signingWallet->bundle,
-        'address' => $signingWallet->address,
-        'position' => $signingWallet->position,
-        'pubkey' => $signingWallet->pubkey,
-        'characters' => $signingWallet->characters,
-      ], JSON_THROW_ON_ERROR ),
+      'signingTokenSlug' => $signingWallet->token,
+      'signingBundleHash' => $signingWallet->bundle,
+      'signingAddress' => $signingWallet->address,
+      'signingPosition' => $signingWallet->position,
+      'signingPubkey' => $signingWallet->pubkey,
+      'signingCharacters' => $signingWallet->characters,
     ] );
     return $this;
   }
@@ -245,25 +244,72 @@ class AtomMeta {
   public function getSigningWallet(): ?Wallet {
 
     // Signing wallet key does not found in metas: the value is not set
-    if ( !array_has( $this->meta, 'signingWallet' ) ) {
+    if ( !array_has( $this->meta, 'signingBundleHash' ) ) {
       return null;
     }
-
-    // Get wallet's data from the meta key
-    $walletData = json_decode( array_get( $this->meta, 'signingWallet' ), true );
 
     // Create a wallet with all existing data
     $wallet = new Wallet(
       null,
-      array_get( $walletData, 'tokenSlug' ),
-      array_get( $walletData, 'position' ),
+      array_get( $this->meta, 'signingTokenSlug' ),
+      array_get( $this->meta, 'signingPosition' ),
       null,
-      array_get( $walletData, 'characters' )
+      array_get( $this->meta, 'signingCharacters' )
     );
-    $wallet->bundle = array_get( $walletData, 'bundleHash' );
-    $wallet->address = array_get( $walletData, 'address' );
-    $wallet->pubkey = array_get( $walletData, 'pubkey' );
+    $wallet->bundle = array_get( $this->meta, 'signingBundleHash' );
+    $wallet->address = array_get( $this->meta, 'signingAddress' );
+    $wallet->pubkey = array_get( $this->meta, 'signingPubkey' );
     return $wallet;
+  }
+
+  /**
+   * @param bool $onlyId
+   *
+   * @return array
+   * @throws JsonException
+   */
+  public function getTokenUnits ( bool $onlyId = false ): array {
+
+    // Get a units key
+    $metas = array_get( $this->meta, 'tokenUnits', [] );
+    if ( !is_string( $metas ) ) {
+      return [];
+    }
+
+    // Is a json data?
+    $metas = json_decode( $metas, true );
+    if ( !$metas ) {
+      return [];
+    }
+
+    // Final units preparing
+    $tokenUnits = Wallet::getTokenUnits( $metas );
+    if ( $onlyId ) {
+      return Arr::pluck( $tokenUnits, 'id' );
+    }
+    return $tokenUnits;
+  }
+
+
+  /**
+   * @return array
+   * @throws JsonException
+   */
+  public function getTradeRates (): array {
+
+    // Get a units key
+    $tradeRates = array_get( $this->meta, 'tradeRates', [] );
+    if ( !is_string( $tradeRates ) ) {
+      return [];
+    }
+
+    // Is a json data?
+    $tradeRates = json_decode( $tradeRates, true );
+    if ( !$tradeRates ) {
+      return [];
+    }
+
+    return $tradeRates;
   }
 
   /**
