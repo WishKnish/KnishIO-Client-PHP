@@ -63,10 +63,10 @@ class ResponseAtoms extends Response {
     protected string $dataKey = 'data.Atoms';
 
     /**
-     * @return array|array[]
+     * @return array{ data: array, paginatorInfo: array{ count: int, currentPage: int, firstItem: int, hasMorePages: bool, lastItem: int, lastPage: int, perPage: int, total: int } }
      * @throws KnishIOException
      */
-    public function payload (): array {
+    public function getPayload (): array {
         return $this->data();
     }
 

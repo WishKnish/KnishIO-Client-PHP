@@ -125,14 +125,14 @@ class Molecule extends MoleculeStructure {
     /**
      * Source wallet
      */
-    public function sourceWallet (): ?Wallet {
+    public function getSourceWallet (): ?Wallet {
         return $this->sourceWallet;
     }
 
     /**
      * @return Wallet|null
      */
-    public function remainderWallet (): ?Wallet {
+    public function getRemainderWallet (): ?Wallet {
         return $this->remainderWallet;
     }
 
@@ -187,7 +187,7 @@ class Molecule extends MoleculeStructure {
 
         // Add source wallet if not already set when adding first atom
         if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
-            $this->sourceWallet = new Wallet( $this->secret(), $atom->tokenSlug, $atom->walletPosition, $atom->batchId );
+            $this->sourceWallet = new Wallet( $this->getSecret(), $atom->tokenSlug, $atom->walletPosition, $atom->batchId );
         }
 
         // Add atom
@@ -218,7 +218,7 @@ class Molecule extends MoleculeStructure {
     /**
      * @return string
      */
-    public function secret (): string {
+    public function getSecret (): string {
         return $this->secret;
     }
 
@@ -286,7 +286,7 @@ class Molecule extends MoleculeStructure {
 
         // Creating a remainder wallet if needed
         if ( !$this->remainderWallet || $this->remainderWallet->tokenSlug !== 'USER' ) {
-            $this->remainderWallet = new Wallet( $this->secret() );
+            $this->remainderWallet = new Wallet( $this->getSecret() );
         }
 
         $this->addAtom( Atom::create(

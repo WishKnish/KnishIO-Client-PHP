@@ -87,6 +87,7 @@ use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWallets;
 use WishKnish\KnishIO\Client\Response\Response;
+use WishKnish\KnishIO\Client\Response\ResponseAtoms;
 use WishKnish\KnishIO\Client\Response\ResponseBalance;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 use WishKnish\KnishIO\Client\Response\ResponseRequestAuthorization;
@@ -172,21 +173,12 @@ class KnishIOClient {
     }
 
     /**
-     * @param bool $encrypt
-     *
-     * @return bool
+     * Reset common properties
      */
-    public function switchEncryption ( bool $encrypt = false ): bool {
-        if ( $this->encrypt === $encrypt ) {
-            return false;
-        }
-
-        // Set encryption
-        $this->encrypt = $encrypt;
-        $this->client()
-            ->setEncryption( $encrypt );
-
-        return true;
+    public function reset (): void {
+        $this->secret = null;
+        $this->bundleHash = null;
+        $this->remainderWallet = null;
     }
 
     /**
@@ -205,26 +197,10 @@ class KnishIOClient {
     }
 
     /**
-     * Reset common properties
-     */
-    public function reset (): void {
-        $this->secret = null;
-        $this->bundleHash = null;
-        $this->remainderWallet = null;
-    }
-
-    /**
      * @return string|null
      */
     public function cellSlug (): ?string {
         return $this->cellSlug;
-    }
-
-    /**
-     * @param string|null $cellSlug
-     */
-    public function setCellSlug ( ?string $cellSlug ): void {
-        $this->cellSlug = $cellSlug;
     }
 
     /**
@@ -235,54 +211,10 @@ class KnishIOClient {
     }
 
     /**
-     * @return HttpClient
-     * @todo rename to HttpClient!
-     */
-    public function client (): HttpClient {
-        return $this->client;
-    }
-
-    /**
      * Has a secret?
      */
     public function hasSecret (): bool {
         return (bool) $this->secret;
-    }
-
-    /**
-     * @param string $secret
-     *
-     * @return void
-     * @throws KnishIOException
-     */
-    public function setSecret ( string $secret ): void {
-        $this->secret = $secret;
-        $this->bundleHash = Crypto::generateBundleHash( $secret );
-    }
-
-    /**
-     * @return string|null
-     * @throws KnishIOException
-     */
-    public function getSecret (): ?string {
-        if ( !$this->secret ) {
-            throw new UnauthenticatedException();
-        }
-
-        return $this->secret;
-    }
-
-    /**
-     * Returns the bundle hash for this session
-     *
-     * @returns {string}
-     * @throws KnishIOException
-     */
-    public function getBundleHash (): ?string {
-        if ( !$this->bundleHash ) {
-            throw new UnauthenticatedException();
-        }
-        return $this->bundleHash;
     }
 
     /**
@@ -293,47 +225,39 @@ class KnishIOClient {
     }
 
     /**
-     * @param string|null $secret
-     * @param Wallet|null $sourceWallet
-     * @param Wallet|null $remainderWallet
+     * @param string|null $moleculeHash
+     * @param string|null $isotope
+     * @param string|array|null $metaType
+     * @param string|array|null $metaId
+     * @param array|null $where
+     * @param bool|null $latest
+     * @param array|null $orderBy
+     * @param array|null $pagination
+     * @param array|null $fields
      *
-     * @return Molecule
+     * @return ResponseAtoms
      * @throws GuzzleException
      * @throws JsonException
-     * @throws SodiumException
      * @throws KnishIOException
      */
-    public function createMolecule ( string $secret = null, Wallet $sourceWallet = null, Wallet $remainderWallet = null ): Molecule {
+    public function queryAtoms ( string $moleculeHash = null, string $isotope = null, string|array $metaType = null, string|array $metaId = null, array $where = null, bool $latest = null, array $orderBy = null, array $pagination = null, array $fields = null ): ResponseAtoms {
 
-        $secret = $secret ?: $this->getSecret();
+        // Create a query
+        /** @var QueryAtoms $query */
+        $query = $this->createQuery( QueryAtoms::class );
+        $variables = QueryAtoms::createVariables(
+            $moleculeHash,
+            $isotope,
+            $metaType,
+            $metaId,
+            $where,
+            $latest,
+            $orderBy,
+            $pagination
+        );
 
-        // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
-        if (
-            $sourceWallet === null &&
-            $this->remainderWallet &&
-            $this->remainderWallet->tokenSlug === 'USER' &&
-            $this->lastMoleculeQuery
-        ) {
-
-            /**
-             * @var ResponseMolecule $response
-             */
-            $response = $this->lastMoleculeQuery->response();
-
-            if ( $response && $response->success() ) {
-                $sourceWallet = $this->remainderWallet;
-            }
-        }
-
-        // Get source wallet by ContinuID query
-        if ( $sourceWallet === null ) {
-            $sourceWallet = $this->getSourceWallet();
-        }
-
-        // Remainder wallet
-        $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters );
-
-        return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
+        // Execute the query
+        return $query->execute( $variables, $fields );
     }
 
     /**
@@ -343,115 +267,6 @@ class KnishIOClient {
      */
     public function createQuery ( string $class ): Query {
         return new $class( $this->client );
-    }
-
-    /**
-     * @param string $class
-     * @param Molecule|null $molecule
-     *
-     * @return MutationProposeMolecule
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
-
-        // Init molecule
-        $molecule = $molecule ?: $this->createMolecule();
-
-        // Create base query
-        $query = new $class ( $this->client, $molecule );
-
-        // Only instances of MutationProposeMolecule supported
-        if ( !$query instanceof MutationProposeMolecule ) {
-            throw new MoleculeMutationClassException( 'Attempting to create a Mutation using class not inherited from MutationProposeMolecule.', $class );
-        }
-
-        // Save the last molecule query
-        $this->lastMoleculeQuery = $query;
-
-        return $query;
-    }
-
-    /**
-     * @param string $tokenSlug
-     * @param string|null $bundleHash
-     * @param string $type
-     *
-     * @return ResponseBalance
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): ResponseBalance {
-
-        // Create a query
-        /** @var QueryBalance $query */
-        $query = $this->createQuery( QueryBalance::class );
-
-        // Execute the query
-        return $query->execute( [
-            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
-            'tokenSlug' => $tokenSlug,
-            'type' => $type
-        ] );
-    }
-
-    /**
-     * @param string $tokenSlug
-     * @param int $amount
-     * @param string $type
-     *
-     * @return Wallet
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function querySourceWallet ( string $tokenSlug, int $amount, string $type = 'regular' ): Wallet {
-
-        // Get a from wallet
-        /** @var Wallet|null $fromWallet */
-        $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundleHash(), $type )
-            ->getPayload();
-
-        // Check source wallet balance
-        if ( !$fromWallet || !$fromWallet->hasEnoughBalance( $amount ) ) {
-            throw new TransferBalanceException('Insufficient balance to complete transfer.', $fromWallet->balance );
-        }
-
-        // Check shadow wallet
-        if ( !$fromWallet->walletPosition || !$fromWallet->walletAddress ) {
-            throw new WalletShadowException( 'Source wallet can not be a shadow wallet.' );
-        }
-
-        return $fromWallet;
-    }
-
-    /**
-     * @param array|string $metaType
-     * @param array|string|null $metaId
-     * @param array|string|null $key
-     * @param array|string|null $value
-     * @param bool $latest
-     * @param array|null $fields
-     *
-     * @return array|null
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function queryAtoms ( string $metaType, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false, array $fields = null ): ?array {
-
-        // Create a query
-        /** @var QueryAtoms $query */
-        $query = $this->createQuery( QueryAtoms::class );
-        $variables = QueryAtoms::createVariables( $metaType, $metaId, $key, $value, $latest );
-
-        dd( $query->execute($variables, $fields) );
-        // Execute the query
-        return $query->execute( $variables, $fields )
-            ->getPayload();
     }
 
     /**
@@ -516,6 +331,153 @@ class KnishIOClient {
 
         // Execute the query
         return $query->execute();
+    }
+
+    /**
+     * @return string|null
+     * @throws KnishIOException
+     */
+    public function getSecret (): ?string {
+        if ( !$this->secret ) {
+            throw new UnauthenticatedException();
+        }
+
+        return $this->secret;
+    }
+
+    /**
+     * @param string $secret
+     *
+     * @return void
+     * @throws KnishIOException
+     */
+    public function setSecret ( string $secret ): void {
+        $this->secret = $secret;
+        $this->bundleHash = Crypto::generateBundleHash( $secret );
+    }
+
+    /**
+     * @param string $class
+     * @param Molecule|null $molecule
+     *
+     * @return MutationProposeMolecule
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
+
+        // Init molecule
+        $molecule = $molecule ?: $this->createMolecule();
+
+        // Create base query
+        $query = new $class ( $this->client, $molecule );
+
+        // Only instances of MutationProposeMolecule supported
+        if ( !$query instanceof MutationProposeMolecule ) {
+            throw new MoleculeMutationClassException( 'Attempting to create a Mutation using class not inherited from MutationProposeMolecule.', $class );
+        }
+
+        // Save the last molecule query
+        $this->lastMoleculeQuery = $query;
+
+        return $query;
+    }
+
+    /**
+     * @param string|null $secret
+     * @param Wallet|null $sourceWallet
+     * @param Wallet|null $remainderWallet
+     *
+     * @return Molecule
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function createMolecule ( string $secret = null, Wallet $sourceWallet = null, Wallet $remainderWallet = null ): Molecule {
+
+        $secret = $secret ?: $this->getSecret();
+
+        // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
+        if (
+            $sourceWallet === null &&
+            $this->remainderWallet &&
+            $this->remainderWallet->tokenSlug === 'USER' &&
+            $this->lastMoleculeQuery
+        ) {
+
+            /**
+             * @var ResponseMolecule $response
+             */
+            $response = $this->lastMoleculeQuery->response();
+
+            if ( $response && $response->success() ) {
+                $sourceWallet = $this->remainderWallet;
+            }
+        }
+
+        // Get source wallet by ContinuID query
+        if ( $sourceWallet === null ) {
+            $sourceWallet = $this->getSourceWallet();
+        }
+
+        // Remainder wallet
+        $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters );
+
+        return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
+    }
+
+    /**
+     * @return Wallet
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function getSourceWallet (): Wallet {
+        // Has a ContinuID wallet?
+        $sourceWallet = $this->queryContinuId( $this->getBundleHash() )
+            ->getPayload();
+        if ( !$sourceWallet ) {
+            $sourceWallet = new Wallet( $this->getSecret() );
+        }
+
+        // Return final source wallet
+        return $sourceWallet;
+    }
+
+    /**
+     * @param string $bundleHash
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function queryContinuId ( string $bundleHash ): Response {
+        /**
+         * Create & execute the query
+         *
+         * @var QueryContinuId $query
+         */
+        $query = $this->createQuery( QueryContinuId::class );
+
+        return $query->execute( [ 'bundleHash' => $bundleHash ] );
+    }
+
+    /**
+     * Returns the bundle hash for this session
+     *
+     * @returns {string}
+     * @throws KnishIOException
+     */
+    public function getBundleHash (): ?string {
+        if ( !$this->bundleHash ) {
+            throw new UnauthenticatedException();
+        }
+        return $this->bundleHash;
     }
 
     /**
@@ -632,42 +594,6 @@ class KnishIOClient {
         return $query->execute();
     }
 
-  /**
-   * @param string|null $bundleHash
-   * @param string|null $tokenSlug
-   * @param bool $unspent
-   *
-   * @return ResponseWallets
-   * @throws GuzzleException
-   * @throws JsonException
-   * @throws KnishIOException
-   */
-    public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ResponseWallets {
-
-        /**
-         * @var QueryWallets $query
-         */
-        $query = $this->createQuery( QueryWallets::class );
-        return $query->execute( [
-            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
-            'tokenSlug' => $tokenSlug,
-            'unspent' => $unspent
-        ] );
-    }
-
-    /**
-     * @param string $tokenSlug
-     * @param string|null $bundleHash
-     *
-     * @return ResponseWallets
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ResponseWallets {
-        return $this->queryWallets( $bundleHash, $tokenSlug );
-    }
-
     /**
      * @param string|null $bundleHash
      * @param string|null $key
@@ -758,31 +684,6 @@ class KnishIOClient {
     }
 
     /**
-     * Claim a shadow wallet
-     *
-     * @param string $tokenSlug
-     * @param string|null $batchId
-     * @param $molecule
-     *
-     * @return Response
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
-        /**
-         * Create a query
-         * @var MutationClaimShadowWallet $query
-         */
-        $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-        $query->fillMolecule( $tokenSlug, $batchId );
-
-        // Return a response
-        return $query->execute();
-    }
-
-    /**
      * @param string $tokenSlug
      *
      * @return array
@@ -812,6 +713,67 @@ class KnishIOClient {
             $responses[] = $this->claimShadowWallet( $tokenSlug, $shadowWallet->batchId );
         }
         return $responses;
+    }
+
+    /**
+     * @param string $tokenSlug
+     * @param string|null $bundleHash
+     *
+     * @return ResponseWallets
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function queryShadowWallets ( string $tokenSlug = 'KNISH', string $bundleHash = null ): ResponseWallets {
+        return $this->queryWallets( $bundleHash, $tokenSlug );
+    }
+
+    /**
+     * @param string|null $bundleHash
+     * @param string|null $tokenSlug
+     * @param bool $unspent
+     *
+     * @return ResponseWallets
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function queryWallets ( ?string $bundleHash = null, ?string $tokenSlug = null, bool $unspent = true ): ResponseWallets {
+
+        /**
+         * @var QueryWallets $query
+         */
+        $query = $this->createQuery( QueryWallets::class );
+        return $query->execute( [
+            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
+            'tokenSlug' => $tokenSlug,
+            'unspent' => $unspent
+        ] );
+    }
+
+    /**
+     * Claim a shadow wallet
+     *
+     * @param string $tokenSlug
+     * @param string|null $batchId
+     * @param $molecule
+     *
+     * @return Response
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws SodiumException
+     * @throws KnishIOException
+     */
+    public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
+        /**
+         * Create a query
+         * @var MutationClaimShadowWallet $query
+         */
+        $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
+        $query->fillMolecule( $tokenSlug, $batchId );
+
+        // Return a response
+        return $query->execute();
     }
 
     /**
@@ -879,6 +841,60 @@ class KnishIOClient {
 
         // Execute a query
         return $query->execute();
+    }
+
+    /**
+     * @param string $tokenSlug
+     * @param int $amount
+     * @param string $type
+     *
+     * @return Wallet
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function querySourceWallet ( string $tokenSlug, int $amount, string $type = 'regular' ): Wallet {
+
+        // Get a from wallet
+        /** @var Wallet|null $fromWallet */
+        $fromWallet = $this->queryBalance( $tokenSlug, $this->getBundleHash(), $type )
+            ->getPayload();
+
+        // Check source wallet balance
+        if ( !$fromWallet || !$fromWallet->hasEnoughBalance( $amount ) ) {
+            throw new TransferBalanceException( 'Insufficient balance to complete transfer.', $fromWallet->balance );
+        }
+
+        // Check shadow wallet
+        if ( !$fromWallet->walletPosition || !$fromWallet->walletAddress ) {
+            throw new WalletShadowException( 'Source wallet can not be a shadow wallet.' );
+        }
+
+        return $fromWallet;
+    }
+
+    /**
+     * @param string $tokenSlug
+     * @param string|null $bundleHash
+     * @param string $type
+     *
+     * @return ResponseBalance
+     * @throws GuzzleException
+     * @throws JsonException
+     * @throws KnishIOException
+     */
+    public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): ResponseBalance {
+
+        // Create a query
+        /** @var QueryBalance $query */
+        $query = $this->createQuery( QueryBalance::class );
+
+        // Execute the query
+        return $query->execute( [
+            'bundleHash' => $bundleHash ?: $this->getBundleHash(),
+            'tokenSlug' => $tokenSlug,
+            'type' => $type
+        ] );
     }
 
     /**
@@ -1105,44 +1121,6 @@ class KnishIOClient {
     }
 
     /**
-     * @return Wallet
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws SodiumException
-     * @throws KnishIOException
-     */
-    public function getSourceWallet (): Wallet {
-        // Has a ContinuID wallet?
-        $sourceWallet = $this->queryContinuId( $this->getBundleHash() )
-            ->getPayload();
-        if ( !$sourceWallet ) {
-            $sourceWallet = new Wallet( $this->getSecret() );
-        }
-
-        // Return final source wallet
-        return $sourceWallet;
-    }
-
-    /**
-     * @param string $bundleHash
-     *
-     * @return Response
-     * @throws GuzzleException
-     * @throws JsonException
-     * @throws KnishIOException
-     */
-    public function queryContinuId ( string $bundleHash ): Response {
-        /**
-         * Create & execute the query
-         *
-         * @var QueryContinuId $query
-         */
-        $query = $this->createQuery( QueryContinuId::class );
-
-        return $query->execute( [ 'bundleHash' => $bundleHash ] );
-    }
-
-    /**
      * @param string $secret
      * @param string|null $cellSlug
      * @param bool $encrypt
@@ -1155,7 +1133,7 @@ class KnishIOClient {
      */
     public function requestAuthToken ( string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
         // Set a cell slug
-        if( $cellSlug ) {
+        if ( $cellSlug ) {
             $this->setCellSlug( $cellSlug );
         }
 
@@ -1180,7 +1158,8 @@ class KnishIOClient {
          */
         $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
         $query->fillMolecule( [ 'encrypt' => $encrypt ? 'true' : 'false' ] );
-        $query->molecule()->sign();
+        $query->molecule()
+            ->sign();
 
         /**
          * Get a response
@@ -1192,7 +1171,7 @@ class KnishIOClient {
         // Create & set an auth token object if the response is successful
         if ( $response->success() ) {
             $payload = $response->getPayload();
-            $authToken = AuthToken::create( $payload['U'], $wallet, $encrypt );
+            $authToken = AuthToken::create( $payload[ 'U' ], $wallet, $encrypt );
             $this->setAuthToken( $authToken );
         }
 
@@ -1201,6 +1180,48 @@ class KnishIOClient {
 
         // Return full response
         return $response;
+    }
+
+    /**
+     * @param string|null $cellSlug
+     */
+    public function setCellSlug ( ?string $cellSlug ): void {
+        $this->cellSlug = $cellSlug;
+    }
+
+    /**
+     * @param bool $encrypt
+     *
+     * @return bool
+     */
+    public function switchEncryption ( bool $encrypt = false ): bool {
+        if ( $this->encrypt === $encrypt ) {
+            return false;
+        }
+
+        // Set encryption
+        $this->encrypt = $encrypt;
+        $this->client()
+            ->setEncryption( $encrypt );
+
+        return true;
+    }
+
+    /**
+     * @return HttpClient
+     * @todo rename to HttpClient!
+     */
+    public function client (): HttpClient {
+        return $this->client;
+    }
+
+    /**
+     * Returns the current authorization token
+     *
+     * @return AuthToken|null
+     */
+    public function getAuthToken (): ?AuthToken {
+        return $this->authToken;
     }
 
     /**
@@ -1221,15 +1242,6 @@ class KnishIOClient {
 
         // Save a full auth token object with expireAt key
         $this->authToken = $authToken;
-    }
-
-    /**
-     * Returns the current authorization token
-     *
-     * @return AuthToken|null
-     */
-    public function getAuthToken (): ?AuthToken {
-        return $this->authToken;
     }
 
 }

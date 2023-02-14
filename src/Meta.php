@@ -119,7 +119,12 @@ class Meta {
                 $metaEntry = (array) $metaEntry;
             }
 
-            $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
+            try {
+                $aggregate[ $metaEntry[ 'key' ] ] = json_decode( $metaEntry[ 'value' ], true, 512, JSON_THROW_ON_ERROR );
+            }
+            catch (\Throwable){
+                $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
+            }
         }
 
         return $aggregate;

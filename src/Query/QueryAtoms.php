@@ -58,61 +58,102 @@ use WishKnish\KnishIO\Client\Response\ResponseAtoms;
  */
 class QueryAtoms extends Query {
     // Query
-    protected static string $defaultQuery = 'query( $filter: [AtomFilter] ) { Atoms( filter: $filter )
+    protected static string $defaultQuery = 'query( $molecularHash: String, $isotope: Isotope, $metaTypes: [String], $metaIds: [String], $where: QueryAtomsWhereWhereConditions, $latest: Boolean, $orderBy: OrderByClause, $pagination: PaginationClause ) { Atoms( molecularHash: $molecularHash, isotope: $isotope, metaTypes: $metaTypes, metaIds: $metaIds, where: $where, latest: $latest, orderBy: $orderBy, pagination: $pagination )
 		@fields
 	}';
 
     // Fields
     protected array $fields = [
-        'molecularHash',
-        'walletPosition',
-        'isotope',
-        'walletAddress',
-        'tokenSlug',
-        'batchId',
-        'value',
-        'index',
-        'metaType',
-        'metaId',
-        'metas' => [
-            'key',
-            'value'
+        'data' => [
+            'molecularHash',
+            'walletPosition',
+            'isotope',
+            'walletAddress',
+            'tokenSlug',
+            'batchId',
+            'value',
+            'index',
+            'metaType',
+            'metaId',
+            'metas' => [
+                'key',
+                'value'
+            ],
+            'otsFragment',
+            'createdAt'
         ],
-        'otsFragment',
-        'createdAt',
+        'paginatorInfo' => [
+            'count',
+            'currentPage',
+            'firstItem',
+            'hasMorePages',
+            'lastItem',
+            'lastPage',
+            'perPage',
+            'total'
+        ]
     ];
 
     /**
      * Builds a GraphQL-friendly variables object based on input fields
      *
-     * @param array|string|null $metaType
-     * @param array|string|null $metaId
-     * @param array|string|null $key
-     * @param array|string|null $value
-     * @param bool $latest
+     * @param string|null $molecularHash
+     * @param string|null $isotope
+     * @param string|array|null $metaType
+     * @param string|array|null $metaId
+     * @param array|null $where
+     * @param bool|null $latest
+     * @param array|null $orderBy
+     * @param array|null $pagination
      *
      * @return array
      */
-    public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false ): array {
+    public static function createVariables ( string $molecularHash = null, string $isotope = null, string|array $metaType = null, string|array $metaId = null, array $where = null, bool $latest = null, array $orderBy = null, array $pagination = null ): array {
         $variables = [];
 
+        if ( $molecularHash ) {
+            $variables[ 'molecularHash' ] = $molecularHash;
+        }
+
+        if ( $isotope ) {
+            $variables[ 'isotope' ] = $isotope;
+        }
+
         if ( $metaType ) {
-            $variables[ is_string( $metaType ) ? 'metaType' : 'metaTypes' ] = $metaType;
+            if ( is_string( $metaType ) ) {
+                $variables[ 'metaTypes' ] = [ $metaType ];
+            }
+            else {
+                $variables[ 'metaTypes' ] = $metaType;
+            }
         }
 
         if ( $metaId ) {
-            $variables[ is_string( $metaId ) ? 'metaId' : 'metaIds' ] = $metaId;
+            if ( is_string( $metaId ) ) {
+                $variables[ 'metaIds' ] = [ $metaId ];
+            }
+            else {
+                $variables[ 'metaIds' ] = $metaId;
+            }
         }
 
-        if ( $key ) {
-            $variables[ is_string( $key ) ? 'key' : 'keys' ] = $key;
+        if ( $where ) {
+            $variables[ 'where' ] = $where;
         }
 
-        if ( $value ) {
-            $variables[ is_string( $value ) ? 'value' : 'values' ] = $value;
+        if ( $latest ) {
+            $variables[ 'latest' ] = $latest;
         }
 
-        $variables[ 'latest' ] = $latest;
+        // Setting result sort
+        if ( $orderBy ) {
+            $variables[ 'orderBy' ] = $orderBy;
+        }
+
+        // Setting result sort
+        if ( $pagination ) {
+            $variables[ 'pagination' ] = $pagination;
+        }
 
         return $variables;
     }

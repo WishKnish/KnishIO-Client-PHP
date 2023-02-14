@@ -71,7 +71,7 @@ class MutationDepositBufferToken extends MutationProposeMolecule {
     public function fillMolecule ( int $amount, array $tradeRates ): self {
         $this->molecule->initDepositBuffer( $amount, $tradeRates );
         $this->molecule->sign();
-        $this->molecule->check( $this->molecule->sourceWallet() );
+        $this->molecule->check( $this->molecule->getSourceWallet() );
 
         return $this;
     }
