@@ -200,4 +200,35 @@ class Strings {
         return bin2hex( base64_decode( $str ) );
     }
 
+    /**
+     * Removes undesirable special characters from a string
+     *
+     * @param string $dirty
+     * @param string $pattern
+     *
+     * @return string
+     */
+    public static function sanitizeString ( string $dirty, string $pattern = '/[^\00-\255]+/u' ): string {
+        return preg_replace($pattern, '', $dirty); // Removes special chars.
+    }
+
+    /**
+     * Returns a microtime formatted timestamp
+     *
+     * @param string|null $microtime
+     *
+     * @return string
+     */
+    public static function timeMillis ( string $microtime = null ): string {
+
+        $microtime = $microtime ?? (string) microtime();
+
+        [
+            $usec,
+            $sec,
+        ] = explode( ' ', $microtime );
+
+        return (string) round( ( ( float ) $usec + ( float ) $sec ) * 1000 );
+
+    }
 }
