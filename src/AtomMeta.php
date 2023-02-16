@@ -62,7 +62,9 @@ class AtomMeta {
     public function __construct (
         private array $metas = [],
     ) {
-
+        foreach($metas as $metaIndex => $meta) {
+            $this->metas[$metaIndex] = json_encode($meta);
+        }
     }
 
     /**
