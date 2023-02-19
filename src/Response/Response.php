@@ -108,7 +108,7 @@ class Response {
                 $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
             }
             catch ( JsonException $e ) {
-                throw new ResponseJsonException( 'Json exception thrown when decoding response: ' . $e->getMessage(), $json );
+                throw new ResponseJsonException( 'Json exception thrown when decoding response: ' . $e->getMessage(). '; '.$json, $json );
             }
         }
         else {
@@ -170,7 +170,7 @@ class Response {
 
             $messages = '';
             foreach( $this->response['errors'] as $error) {
-                $messages .= $error['debugMessage'].'; ';
+                $messages .= json_encode( $error ).'; ';
             }
 
             throw new InvalidResponseException( 'GraphQL call returned '. count( $this->response['errors'] ) .' errors: ' . $messages, $this->response );

@@ -761,7 +761,7 @@ class Molecule extends MoleculeStructure {
         $atomMetas = new AtomMeta( $metas );
 
         if ( count( $policy ) ) {
-            $atomMetas->addPolicy( $policy );
+             $atomMetas->addPolicy( $policy );
         }
 
         $this->addAtom( Atom::create(

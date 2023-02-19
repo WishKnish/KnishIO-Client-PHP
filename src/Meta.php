@@ -74,19 +74,7 @@ class Meta {
 
         foreach ( $metas as $key => $value ) {
 
-            // Handling non-string meta values
-            if ( !is_string( $value ) ) {
-
-                // Is value numeric?
-                if ( is_numeric( $value ) ) {
-                    $value = (string) $value;
-                }
-
-                // Is value an object?
-                if ( is_object( $value ) || is_array( $value ) ) {
-                    $value = json_encode( $value, JSON_THROW_ON_ERROR );
-                }
-            }
+            $value = json_encode( $value, JSON_THROW_ON_ERROR );
 
             // Adding normalized meta
             $result[] = [
@@ -94,6 +82,7 @@ class Meta {
                 'value' => $value,
             ];
         }
+
         return $result;
     }
 

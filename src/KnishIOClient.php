@@ -1157,7 +1157,11 @@ class KnishIOClient {
          * @var MutationRequestAuthorization $query
          */
         $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-        $query->fillMolecule( [ 'encrypt' => $encrypt ? 'true' : 'false' ] );
+        $query->fillMolecule( [ [
+            'key' => 'encrypt',
+            'value' => $encrypt ? 'true' : 'false'
+        ] ] );
+
         $query->molecule()
             ->sign();
 

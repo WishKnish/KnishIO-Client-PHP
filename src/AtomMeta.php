@@ -58,13 +58,13 @@ class AtomMeta {
 
     /**
      * @param array $metas
+     *
+     * @throws JsonException
      */
     public function __construct (
         private array $metas = [],
     ) {
-        foreach($metas as $metaIndex => $meta) {
-            $this->metas[$metaIndex] = json_encode($meta);
-        }
+        $this->metas = Meta::normalize( $metas ) ;
     }
 
     /**
@@ -94,17 +94,38 @@ class AtomMeta {
      * @throws JsonException
      */
     public function addWallet ( Wallet $wallet ): self {
+
+        // Adding wallet metadata to the atom metas
         $walletMetas = [
-            'pubkey' => $wallet->pubkey,
-            'characters' => $wallet->characters,
+            [
+                'key' => 'pubkey',
+                'value' => $wallet->pubkey
+            ],
+            [
+                'key' => 'characters',
+                'value' => $wallet->characters
+            ]
         ];
+
+        // Adding token units metadata
         if ( $wallet->tokenUnits ) {
-            $walletMetas[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+            $walletMetas[] = [
+                'key' => 'tokenUnits',
+                'value' => json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR )
+            ];
         }
+
+        // Adding trade rates metadata
         if ( $wallet->tradeRates ) {
-            $walletMetas[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
+            $walletMetas[] = [
+                'key' => 'tradeRates',
+                'value' => json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR )
+            ];
         }
+
+        // Merging new metadata with atom metas
         $this->merge( $walletMetas );
+
         return $this;
     }
 
