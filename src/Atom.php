@@ -209,6 +209,7 @@ class Atom {
                 $hashableValues[] = ( string ) $value;
             }
         }
+
         return $hashableValues;
     }
 

@@ -77,7 +77,13 @@ class QueryAtoms extends Query {
             'metaId',
             'metas' => [
                 'key',
-                'value'
+                'value',
+                'policy' => [
+                    'read',
+                    'write',
+                    'log',
+                    'eraseAt'
+                ]
             ],
             'otsFragment',
             'createdAt'

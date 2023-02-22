@@ -63,20 +63,12 @@ class MutationCreateMeta extends MutationProposeMolecule {
     /**
      * @param string $metaType
      * @param string $metaId
-     * @param array $metadata
-     *
-     * @return void
-     * @throws JsonException
-     */
-    /**
-     * @param string $metaType
-     * @param string $metaId
      * @param array $metas
      *
      * @return void
      * @throws JsonException
-     * @throws SodiumException
      * @throws KnishIOException
+     * @throws SodiumException
      */
     public function fillMolecule ( string $metaType, string $metaId, array $metas ): void {
         $this->molecule->initMeta( $metas, $metaType, $metaId );
