@@ -61,15 +61,15 @@ class MutationDepositBufferToken extends MutationProposeMolecule {
 
     /**
      * @param int $amount
-     * @param array $tradeRates
+     * @param array $swapRates
      *
      * @return $this
      * @throws JsonException
      * @throws SodiumException
      * @throws KnishIOException
      */
-    public function fillMolecule ( int $amount, array $tradeRates ): self {
-        $this->molecule->initDepositBuffer( $amount, $tradeRates );
+    public function fillMolecule ( int $amount, array $swapRates ): self {
+        $this->molecule->initDepositBuffer( $amount, $swapRates );
         $this->molecule->sign();
         $this->molecule->check( $this->molecule->getSourceWallet() );
 

@@ -81,6 +81,13 @@ class MoleculeStructure {
     public ?array $payload = null;
 
     /**
+     * @param string|null $cellSlug
+     */
+    public function __construct ( public ?string $cellSlug = null ) {
+
+    }
+
+    /**
      * @param string|array $isotopes
      * @param array $atoms
      *
@@ -105,31 +112,59 @@ class MoleculeStructure {
     }
 
     /**
-     * @param string|array $isotopes
+     * @param array $data
      *
-     * @return array
-     */
-    public function getIsotopes ( string|array $isotopes ): array {
-        return static::isotopeFilter( $isotopes, $this->atoms );
-    }
-
-    /**
-     * @return string
-     */
-    public function logString (): string {
-        return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
-    }
-
-    /**
-     * @param int $index
-     *
-     * @return string
-     * @throws KnishIOException
+     * @return static
      * @throws JsonException
      */
-    public function getBatchId ( int $index ): string {
-        $molecularHash = Atom::hashAtoms( $this->atoms );
-        return Crypto::generateBatchId( $molecularHash, $index );
+    public static function toObject ( array $data ): MoleculeStructure {
+        $object = static::arrayToObject( $data );
+        foreach ( $object->atoms as $key => $atomData ) {
+
+            $atom = new Atom(
+                $atomData[ 'walletPosition' ],
+                $atomData[ 'walletAddress' ],
+                $atomData[ 'isotope' ],
+                $atomData[ 'tokenSlug' ],
+                $atomData[ 'metaType' ],
+                $atomData[ 'metaId' ],
+                $atomData[ 'metas' ],
+                $atomData[ 'value' ],
+                $atomData[ 'valueUnits' ],
+                $atomData[ 'swapRates' ],
+                $atomData[ 'batchId' ],
+                $atomData[ 'characters' ],
+                $atomData[ 'pubkey' ],
+                $atomData[ 'otsFragment' ],
+                $atomData[ 'index' ],
+                $atomData[ 'createdAt' ]
+            );
+
+            $object->atoms[ $key ] = $atom;
+        }
+        $object->atoms = Atom::sortAtoms( $object->atoms );
+        return $object;
+    }
+
+    /**
+     * @param string $string
+     * @param string|null $secret
+     *
+     * @return MoleculeStructure
+     * @throws KnishIOException
+     */
+    public static function jsonToObject ( string $string, string $secret = null ): static {
+        $secret = $secret ?? Crypto::generateSecret();
+        $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
+        $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
+
+        foreach ( $object->atoms as $idx => $atom ) {
+            $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
+        }
+
+        $object->atoms = Atom::sortAtoms( $object->atoms );
+
+        return $object;
     }
 
     /**
@@ -221,10 +256,31 @@ class MoleculeStructure {
     }
 
     /**
-     * @param string|null $cellSlug
+     * @param string|array $isotopes
+     *
+     * @return array
      */
-    public function __construct ( public ?string $cellSlug = null ) {
+    public function getIsotopes ( string|array $isotopes ): array {
+        return static::isotopeFilter( $isotopes, $this->atoms );
+    }
 
+    /**
+     * @return string
+     */
+    public function logString (): string {
+        return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
+    }
+
+    /**
+     * @param int $index
+     *
+     * @return string
+     * @throws KnishIOException
+     * @throws JsonException
+     */
+    public function getBatchId ( int $index ): string {
+        $molecularHash = Atom::hashAtoms( $this->atoms );
+        return Crypto::generateBatchId( $molecularHash, $index );
     }
 
     /**
@@ -281,58 +337,6 @@ class MoleculeStructure {
         }
 
         return $signatureFragments;
-    }
-
-    /**
-     * @param array $data
-     *
-     * @return static
-     * @throws JsonException
-     */
-    public static function toObject ( array $data ): MoleculeStructure {
-        $object = static::arrayToObject( $data );
-        foreach ( $object->atoms as $key => $atomData ) {
-
-            $atom = new Atom(
-                $atomData[ 'walletPosition' ],
-                $atomData[ 'walletAddress' ],
-                $atomData[ 'isotope' ],
-                $atomData[ 'tokenSlug' ],
-                $atomData[ 'value' ],
-                $atomData[ 'batchId' ],
-                $atomData[ 'metaType' ],
-                $atomData[ 'metaId' ],
-                $atomData[ 'metas' ],
-                $atomData[ 'otsFragment' ],
-                $atomData[ 'index' ],
-                $atomData[ 'createdAt' ]
-            );
-
-            $object->atoms[ $key ] = $atom;
-        }
-        $object->atoms = Atom::sortAtoms( $object->atoms );
-        return $object;
-    }
-
-    /**
-     * @param string $string
-     * @param string|null $secret
-     *
-     * @return MoleculeStructure
-     * @throws KnishIOException
-     */
-    public static function jsonToObject ( string $string, string $secret = null ): static {
-        $secret = $secret ?? Crypto::generateSecret();
-        $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-        $object = $serializer->deserialize( $string, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
-
-        foreach ( $object->atoms as $idx => $atom ) {
-            $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
-        }
-
-        $object->atoms = Atom::sortAtoms( $object->atoms );
-
-        return $object;
     }
 
     /**

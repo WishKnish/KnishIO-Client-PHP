@@ -84,7 +84,6 @@ class ResponseWallets extends Response {
         else {
             $wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'walletPosition' ], $data[ 'batchId' ], $data[ 'characters' ] );
             $wallet->walletAddress = $data[ 'walletAddress' ];
-            $wallet->bundleHash = $data[ 'bundleHash' ];
         }
 
         // Bind other data
@@ -98,22 +97,22 @@ class ResponseWallets extends Response {
 
         // Get token units from the response
         $tokenUnits = array_get( $data, 'tokenUnits', [] );
-        if( $tokenUnits ) {
+        if ( $tokenUnits ) {
             foreach ( $tokenUnits as $tokenUnit ) {
                 $wallet->tokenUnits[] = TokenUnit::createFromGraphQL( $tokenUnit );
             }
         }
 
         // Set trade rates
-        $tradeRates = array_get( $data, 'tradeRates', [] );
-        if( $tradeRates ) {
-            foreach ( $tradeRates as $tradeRate ) {
-                $wallet->tradeRates[ $tradeRate[ 'tokenSlug' ] ] = $tradeRate[ 'amount' ];
+        $swapRates = array_get( $data, 'swapRates', [] );
+        if ( $swapRates ) {
+            foreach ( $swapRates as $swapRate ) {
+                $wallet->swapRates[ $swapRate[ 'tokenSlug' ] ] = $swapRate[ 'amount' ];
             }
         }
 
         $wallet->type = $data[ 'type' ];
-        $wallet->balance = $data[ 'amount' ] ?: 0;
+        $wallet->balance = $data[ 'amount' ] ?? 0;
         $wallet->pubkey = $data[ 'pubkey' ];
         $wallet->createdAt = $data[ 'createdAt' ];
 

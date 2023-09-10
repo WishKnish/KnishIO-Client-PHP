@@ -77,7 +77,7 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * @property string|null $pubkey
  * @property string|null $createdAt
  * @property array $tokenUnits
- * @property array $tradeRates
+ * @property array $swapRates
  * @property Soda $soda
  */
 class Wallet {
@@ -111,46 +111,38 @@ class Wallet {
      * @var string|null
      */
     public ?string $pubkey = null;
-
-    /**
-     * @var string|null
-     */
-    private ?string $privkey = null;
-
     /**
      * @var string|null
      */
     public ?string $createdAt = null;
-
     /**
      * @var string|null
      */
     public ?string $tokenName = null;
-
     /**
      * @var string|null
      */
     public ?string $tokenSupply = null;
-
     /**
      * @var array
      */
     public array $tokenUnits = [];
-
     /**
      * @var array
      */
-    public array $tradeRates = [];
-
+    public array $swapRates = [];
     /**
      * @var array
      */
     public array $molecules = [];
-
     /**
      * @var Soda|null
      */
     protected ?Soda $soda = null;
+    /**
+     * @var string|null
+     */
+    private ?string $privkey = null;
 
     /**
      * @param string|null $secret
@@ -226,6 +218,78 @@ class Wallet {
             $result[] = TokenUnit::createFromDB( $unitData );
         }
         return $result;
+    }
+
+    /**
+     * @param string $secret
+     * @param string $tokenSlug
+     * @param string $walletPosition
+     *
+     * @return string
+     * @throws KnishIOException
+     */
+    public static function generateKey ( string $secret, string $tokenSlug, string $walletPosition ): string {
+
+        // Converting secret to bigInt
+        // Adding new position to the user secret to produce the indexed key
+        $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $walletPosition, 16 ) );
+
+        try {
+            // Hashing the indexed key to produce the intermediate key
+            $intermediateKeySponge = Crypto\Shake256::init()
+                ->absorb( $indexedKey->toString( 16 ) );
+
+            if ( $tokenSlug !== '' ) {
+                $intermediateKeySponge->absorb( $tokenSlug );
+            }
+
+            // Hashing the intermediate key to produce the private key
+            return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
+        }
+        catch ( Exception $e ) {
+            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
+        }
+    }
+
+    /**
+     * @param int $saltLength
+     *
+     * @return string
+     * @throws KnishIOException
+     */
+    protected static function generatePosition ( int $saltLength = 64 ): string {
+        return Strings::randomString( $saltLength );
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return string
+     * @throws KnishIOException
+     */
+    protected static function generateAddress ( string $key ): string {
+
+        $digestSponge = Crypto\Shake256::init();
+
+        foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
+            foreach ( range( 1, 16 ) as $ignored ) {
+                $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
+            }
+
+            try {
+                $digestSponge->absorb( $workingFragment );
+            }
+            catch ( Exception $e ) {
+                throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
+            }
+        }
+
+        try {
+            return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
+        }
+        catch ( Exception $e ) {
+            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
+        }
     }
 
     /**
@@ -381,78 +445,6 @@ class Wallet {
         }
 
         return $this->soda->decrypt( $encrypted, $this->privkey, $this->pubkey );
-    }
-
-    /**
-     * @param int $saltLength
-     *
-     * @return string
-     * @throws KnishIOException
-     */
-    protected static function generatePosition ( int $saltLength = 64 ): string {
-        return Strings::randomString( $saltLength );
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return string
-     * @throws KnishIOException
-     */
-    protected static function generateAddress ( string $key ): string {
-
-        $digestSponge = Crypto\Shake256::init();
-
-        foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
-            foreach ( range( 1, 16 ) as $ignored ) {
-                $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
-            }
-
-            try {
-                $digestSponge->absorb( $workingFragment );
-            }
-            catch ( Exception $e ) {
-                throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
-            }
-        }
-
-        try {
-            return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
-        }
-        catch ( Exception $e ) {
-            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
-        }
-    }
-
-    /**
-     * @param string $secret
-     * @param string $tokenSlug
-     * @param string $walletPosition
-     *
-     * @return string
-     * @throws KnishIOException
-     */
-    public static function generateKey ( string $secret, string $tokenSlug, string $walletPosition ): string {
-
-        // Converting secret to bigInt
-        // Adding new position to the user secret to produce the indexed key
-        $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $walletPosition, 16 ) );
-
-        try {
-            // Hashing the indexed key to produce the intermediate key
-            $intermediateKeySponge = Crypto\Shake256::init()
-                ->absorb( $indexedKey->toString( 16 ) );
-
-            if ( $tokenSlug !== '' ) {
-                $intermediateKeySponge->absorb( $tokenSlug );
-            }
-
-            // Hashing the intermediate key to produce the private key
-            return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
-        }
-        catch ( Exception $e ) {
-            throw new CryptoException( $e->getMessage(), null, $e->getCode(), $e );
-        }
     }
 
     /**

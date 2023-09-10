@@ -65,12 +65,16 @@ use WishKnish\KnishIO\Client\Traits\Json;
  * @property string $walletAddress
  * @property string $isotope
  * @property string|null $tokenSlug
- * @property string|null $value
- * @property string|null $batchId
  * @property string|null $metaType
  * @property string|null $metaId
  * @property array $metas
- * @property integer|null $index
+ * @property string|null $value
+ * @property array|null $valueUnits
+ * @property array|null $swapRates
+ * @property string|null $batchId
+ * @property string|null $characters
+ * @property string|null $pubkey
+ * @property int|null $index
  * @property string|null $otsFragment
  * @property string $createdAt
  *
@@ -80,34 +84,19 @@ class Atom {
     use Json;
 
     /**
-     * @return string[]
-     */
-    public static function getHashableProps (): array {
-        return [
-            'index',
-            'walletPosition',
-            'walletAddress',
-            'isotope',
-            'tokenSlug',
-            'value',
-            'batchId',
-            'metaType',
-            'metaId',
-            'metas',
-            'createdAt',
-        ];
-    }
-
-    /**
      * @param string|null $walletPosition
      * @param string|null $walletAddress
      * @param string $isotope
      * @param string|null $tokenSlug
-     * @param string|null $value
-     * @param string|null $batchId
      * @param string|null $metaType
      * @param string|null $metaId
-     * @param array $metas
+     * @param array|null $metas
+     * @param string|null $value
+     * @param array|null $valueUnits
+     * @param array|null $swapRates
+     * @param string|null $batchId
+     * @param string|null $characters
+     * @param string|null $pubkey
      * @param string|null $otsFragment
      * @param int|null $index
      * @param string|null $createdAt
@@ -119,11 +108,15 @@ class Atom {
         public ?string $walletAddress,
         public string $isotope,
         public ?string $tokenSlug = null,
-        public ?string $value = null,
-        public ?string $batchId = null,
         public ?string $metaType = null,
         public ?string $metaId = null,
-        public array $metas = [],
+        public ?array $metas = null,
+        public ?string $value = null,
+        public ?array $valueUnits = null,
+        public ?array $swapRates = null,
+        public ?string $batchId = null,
+        public ?string $characters = 'BASE64',
+        public ?string $pubkey = null,
         public ?string $otsFragment = null,
         public ?int $index = null,
         public ?string $createdAt = null,
@@ -141,13 +134,40 @@ class Atom {
     }
 
     /**
+     * @return string[]
+     */
+    public static function getHashableProps (): array {
+        return [
+            'walletPosition',
+            'walletAddress',
+            'isotope',
+            'tokenSlug',
+            'metaType',
+            'metaId',
+            'metas',
+            'value',
+            'valueUnits',
+            'swapRates',
+            'batchId',
+            'index',
+            'characters',
+            'pubkey',
+            'createdAt',
+        ];
+    }
+
+    /**
      * @param string $isotope
      * @param Wallet|null $wallet
-     * @param string|null $value
      * @param string|null $metaType
      * @param string|null $metaId
      * @param AtomMeta|null $metas
+     * @param string|null $value
+     * @param array|null $valueUnits
+     * @param array|null $swapRates
      * @param string|null $batchId
+     * @param string|null $characters
+     * @param string|null $pubkey
      *
      * @return static
      * @throws JsonException
@@ -155,11 +175,15 @@ class Atom {
     public static function create (
         string $isotope,
         Wallet $wallet = null,
-        string $value = null,
         string $metaType = null,
         string $metaId = null,
         AtomMeta $metas = null,
+        string $value = null,
+        array $valueUnits = null,
+        array $swapRates = null,
         string $batchId = null,
+        string $characters = null,
+        string $pubkey = null
     ): self {
 
         // If meta is not passed - create it
@@ -168,9 +192,9 @@ class Atom {
         }
 
         // If wallet has been passed => add related metas
-        if ( $wallet ) {
-            $metas->addWallet( $wallet );
-        }
+        // if ( $wallet ) {
+        //    $metas->addWallet( $wallet );
+        // }
 
         // Create the final atom's object
         return new Atom(
@@ -178,39 +202,16 @@ class Atom {
             $wallet?->walletAddress,
             $isotope,
             $wallet?->tokenSlug,
-            $value,
-            $batchId ?? $wallet?->batchId,
             $metaType,
             $metaId,
             $metas->get(),
+            $value,
+            $valueUnits,
+            $swapRates,
+            $batchId ?? $wallet?->batchId,
+            $characters ?? $wallet->characters,
+            $pubkey ?? $wallet->pubkey
         );
-    }
-
-    /**
-     * @return array
-     * @throws JsonException
-     */
-    public function getHashableValues (): array {
-        $hashableValues = [];
-        foreach ( static::getHashableProps() as $property ) {
-            $value = $this->$property;
-
-            // All null values won't get hashed
-            if ( $value === null ) {
-                continue;
-            }
-
-            // Special code for meta property
-            if ( $property === 'metas' ) {
-                $hashableValues[] = json_encode( $value, JSON_THROW_ON_ERROR );
-            }
-            // Default value
-            else {
-                $hashableValues[] = ( string ) $value;
-            }
-        }
-
-        return $hashableValues;
     }
 
     /**
@@ -280,6 +281,33 @@ class Atom {
             return $atom1->index < $atom2->index ? -1 : 1;
         } );
         return $atoms;
+    }
+
+    /**
+     * @return array
+     * @throws JsonException
+     */
+    public function getHashableValues (): array {
+        $hashableValues = [];
+        foreach ( static::getHashableProps() as $property ) {
+            $value = $this->$property;
+
+            // All null values won't get hashed
+            if ( $value === null ) {
+                continue;
+            }
+
+            // Special code for meta property
+            if ( $property === 'metas' ) {
+                $hashableValues[] = json_encode( $value, JSON_THROW_ON_ERROR );
+            }
+            // Default value
+            else {
+                $hashableValues[] = ( string ) $value;
+            }
+        }
+
+        return $hashableValues;
     }
 
     /**

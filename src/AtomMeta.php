@@ -64,7 +64,7 @@ class AtomMeta {
     public function __construct (
         private array $metas = [],
     ) {
-        $this->metas = Meta::normalize( $metas ) ;
+        $this->metas = Meta::normalize( $metas );
     }
 
     /**
@@ -116,10 +116,10 @@ class AtomMeta {
         }
 
         // Adding trade rates metadata
-        if ( $wallet->tradeRates ) {
+        if ( $wallet->swapRates ) {
             $walletMetas[] = [
-                'key' => 'tradeRates',
-                'value' => json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR )
+                'key' => 'swapRates',
+                'value' => json_encode( $wallet->swapRates, JSON_THROW_ON_ERROR )
             ];
         }
 

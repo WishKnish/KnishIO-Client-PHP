@@ -82,7 +82,7 @@ class QueryWallets extends Query {
             'name',
             'metas',
         ],
-        'tradeRates' => [
+        'swapRates' => [
             'tokenSlug',
             'amount',
         ],
