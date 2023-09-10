@@ -14,6 +14,17 @@ use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
 class TokenUnit {
 
     /**
+     * TokenUnit constructor.
+     *
+     * @param string $id
+     * @param string|null $name
+     * @param array $metas
+     */
+    public function __construct ( public string $id, public ?string $name = null, public array $metas = [] ) {
+
+    }
+
+    /**
      * @param Wallet $sourceWallet
      * @param array|null $sendTokenUnits
      *
@@ -130,17 +141,6 @@ class TokenUnit {
 
         // Standard token unit format
         return static::create( $tokenUnitId, array_get( $data, 1 ), array_get( $data, 2, [] ) );
-    }
-
-    /**
-     * TokenUnit constructor.
-     *
-     * @param string $id
-     * @param string|null $name
-     * @param array $metas
-     */
-    public function __construct ( public string $id, public ?string $name = null, public array $metas = [] ) {
-
     }
 
     /**

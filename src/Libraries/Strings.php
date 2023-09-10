@@ -167,17 +167,6 @@ class Strings {
     }
 
     /**
-     * @param string $str
-     * @param int $index
-     *
-     * @return int
-     */
-    private static function utf8CharCodeAt ( string $str, int $index ): int {
-        $char = mb_substr( $str, $index, 1, 'UTF-8' );
-        return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0;
-    }
-
-    /**
      * Compresses a given string for web sharing
      *
      * @param string $str
@@ -209,7 +198,7 @@ class Strings {
      * @return string
      */
     public static function sanitizeString ( string $dirty, string $pattern = '/[^\00-\255]+/u' ): string {
-        return preg_replace($pattern, '', $dirty); // Removes special chars.
+        return preg_replace( $pattern, '', $dirty ); // Removes special chars.
     }
 
     /**
@@ -230,5 +219,16 @@ class Strings {
 
         return (string) round( ( ( float ) $usec + ( float ) $sec ) * 1000 );
 
+    }
+
+    /**
+     * @param string $str
+     * @param int $index
+     *
+     * @return int
+     */
+    private static function utf8CharCodeAt ( string $str, int $index ): int {
+        $char = mb_substr( $str, $index, 1, 'UTF-8' );
+        return mb_check_encoding( $char, 'UTF-8' ) ? hexdec( bin2hex( mb_convert_encoding( $char, 'UTF-16BE', 'UTF-8' ) ) ) : 0;
     }
 }

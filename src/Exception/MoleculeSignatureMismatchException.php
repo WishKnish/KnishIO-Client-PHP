@@ -56,15 +56,15 @@ use Throwable;
  * @package WishKnish\KnishIO\Client\Exception
  */
 class MoleculeSignatureMismatchException extends KnishIOException {
-  /**
-   * MoleculeSignatureMismatchException constructor.
-   *
-   * @param string $message
-   * @param $payload
-   * @param int $code
-   * @param Throwable|null $previous
-   */
-  public function __construct ( string $message = 'OTS mismatch', $payload = null, int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $payload, $code, $previous );
-  }
+    /**
+     * MoleculeSignatureMismatchException constructor.
+     *
+     * @param string $message
+     * @param $payload
+     * @param int $code
+     * @param Throwable|null $previous
+     */
+    public function __construct ( string $message = 'OTS mismatch', $payload = null, int $code = 1, Throwable $previous = null ) {
+        parent::__construct( $message, $payload, $code, $previous );
+    }
 }

@@ -126,7 +126,6 @@ class MutationProposeMolecule extends Query {
         return $this->remainderWallet;
     }
 
-
     /**
      * @param array $variables
      *

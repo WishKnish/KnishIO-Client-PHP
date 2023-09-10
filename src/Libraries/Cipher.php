@@ -90,6 +90,43 @@ class Cipher {
     }
 
     /**
+     * @throws SyntaxError
+     */
+    public static function graphqlParse ( $content, string $type = 'type' ): ?string {
+
+        $operation = strtolower( $type );
+
+        if ( in_array( $operation, [
+            'type',
+            'name'
+        ], true ) ) {
+
+            /** @var DocumentNode $type */
+            $documents = Parser::parse( $content );
+
+            if ( $documents->definitions->count() > 0 ) {
+
+                /** @var OperationDefinitionNode $node */
+                $item = $documents->definitions[ 0 ];
+
+                /** @var FieldNode $node */
+                $node = $item->selectionSet->selections[ 0 ];
+
+                // Type & name initialization
+                if ( in_array( $item->operation, [
+                    'query',
+                    'mutation',
+                    'subscription'
+                ] ) ) {
+                    return $operation === 'type' ? $item->operation : $node->name->value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @param Wallet|null $wallet
      */
     public function setWallet ( ?Wallet $wallet ): void {
@@ -108,13 +145,6 @@ class Cipher {
     }
 
     /**
-     * @param string|null $pubkey
-     */
-    public function setPubkey ( ?string $pubkey ): void {
-        $this->pubkey = $pubkey;
-    }
-
-    /**
      * @return string
      * @throws KnishIOException
      */
@@ -124,6 +154,25 @@ class Cipher {
         }
 
         return $this->pubkey;
+    }
+
+    /**
+     * @param string|null $pubkey
+     */
+    public function setPubkey ( ?string $pubkey ): void {
+        $this->pubkey = $pubkey;
+    }
+
+    /**
+     * @return HandlerStack
+     */
+    public function stack (): HandlerStack {
+
+        $stack = new HandlerStack();
+        $stack->setHandler( new CurlHandler() );
+        $stack->push( $this->handler() );
+
+        return $stack;
     }
 
     /**
@@ -228,55 +277,6 @@ class Cipher {
 
             return $response;
         };
-    }
-
-    /**
-     * @return HandlerStack
-     */
-    public function stack (): HandlerStack {
-
-        $stack = new HandlerStack();
-        $stack->setHandler( new CurlHandler() );
-        $stack->push( $this->handler() );
-
-        return $stack;
-    }
-
-    /**
-     * @throws SyntaxError
-     */
-    public static function graphqlParse ( $content, string $type = 'type' ): ?string {
-
-        $operation = strtolower( $type );
-
-        if ( in_array( $operation, [
-            'type',
-            'name'
-        ], true ) ) {
-
-            /** @var DocumentNode $type */
-            $documents = Parser::parse( $content );
-
-            if ( $documents->definitions->count() > 0 ) {
-
-                /** @var OperationDefinitionNode $node */
-                $item = $documents->definitions[ 0 ];
-
-                /** @var FieldNode $node */
-                $node = $item->selectionSet->selections[ 0 ];
-
-                // Type & name initialization
-                if ( in_array( $item->operation, [
-                    'query',
-                    'mutation',
-                    'subscription'
-                ] ) ) {
-                    return $operation === 'type' ? $item->operation : $node->name->value;
-                }
-            }
-        }
-
-        return null;
     }
 
 }

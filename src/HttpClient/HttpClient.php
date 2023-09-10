@@ -67,15 +67,13 @@ use WishKnish\KnishIO\Client\Wallet;
 class HttpClient extends Client implements HttpClientInterface {
 
     /**
-     * @var string|null
-     */
-    private ?string $authToken;
-
-    /**
      * @var string
      */
     protected string $uri;
-
+    /**
+     * @var string|null
+     */
+    private ?string $authToken;
     /**
      * @var Cipher
      */
@@ -177,17 +175,17 @@ class HttpClient extends Client implements HttpClientInterface {
     }
 
     /**
-     * @param string $authToken
-     */
-    public function setAuthToken ( string $authToken ): void {
-        $this->authToken = $authToken;
-    }
-
-    /**
      * @return string|null
      */
     public function getAuthToken (): ?string {
         return $this->authToken;
+    }
+
+    /**
+     * @param string $authToken
+     */
+    public function setAuthToken ( string $authToken ): void {
+        $this->authToken = $authToken;
     }
 
     /**

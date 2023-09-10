@@ -102,13 +102,13 @@ class Response {
         // Origin response
         $this->originResponse = $json;
 
-        if( $json ) {
+        if ( $json ) {
             // Json decode
             try {
                 $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
             }
             catch ( JsonException $e ) {
-                throw new ResponseJsonException( 'Json exception thrown when decoding response: ' . $e->getMessage(). '; '.$json, $json );
+                throw new ResponseJsonException( 'Json exception thrown when decoding response: ' . $e->getMessage() . '; ' . $json, $json );
             }
         }
         else {
@@ -166,14 +166,14 @@ class Response {
         $payload = array_get( $this->response, $this->dataKey );
 
         // Check key & return custom data from the response
-        if ( array_key_exists( 'errors', $this->response) ) {
+        if ( array_key_exists( 'errors', $this->response ) ) {
 
             $messages = '';
-            foreach( $this->response['errors'] as $error) {
-                $messages .= json_encode( $error ).'; ';
+            foreach ( $this->response[ 'errors' ] as $error ) {
+                $messages .= json_encode( $error ) . '; ';
             }
 
-            throw new InvalidResponseException( 'GraphQL call returned '. count( $this->response['errors'] ) .' errors: ' . $messages, $this->response );
+            throw new InvalidResponseException( 'GraphQL call returned ' . count( $this->response[ 'errors' ] ) . ' errors: ' . $messages, $this->response );
         }
 
         return $payload;

@@ -18,6 +18,21 @@ class AuthToken {
     protected ?Wallet $wallet;
 
     /**
+     * @param string $token
+     * @param string $expiresAt
+     * @param string|null $pubkey
+     * @param bool $encrypt
+     */
+    public function __construct (
+        protected string $token,
+        protected string $expiresAt,
+        protected ?string $pubkey,
+        protected bool $encrypt,
+    ) {
+
+    }
+
+    /**
      * @param array $data
      * @param Wallet $wallet
      * @param bool $encrypt
@@ -48,18 +63,10 @@ class AuthToken {
     }
 
     /**
-     * @param string $token
-     * @param string $expiresAt
-     * @param string|null $pubkey
-     * @param bool $encrypt
+     * @return Wallet
      */
-    public function __construct (
-        protected string $token,
-        protected string $expiresAt,
-        protected ?string $pubkey,
-        protected bool $encrypt,
-    ) {
-
+    public function getWallet (): Wallet {
+        return $this->wallet;
     }
 
     /**
@@ -67,13 +74,6 @@ class AuthToken {
      */
     public function setWallet ( Wallet $wallet ): void {
         $this->wallet = $wallet;
-    }
-
-    /**
-     * @return Wallet
-     */
-    public function getWallet (): Wallet {
-        return $this->wallet;
     }
 
     /**

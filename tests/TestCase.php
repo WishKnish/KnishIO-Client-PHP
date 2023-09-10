@@ -59,23 +59,23 @@ use Exception;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase {
 
-  /**
-   * Before execute
-   *
-   * @throws Exception
-   */
-  protected function beforeExecute (): void {
-  }
-
-  /**
-   * Output
-   *
-   * @param array|string $info
-   */
-  protected function output ( array|string $info ): void {
-    if ( is_array( $info ) ) {
-      $info = implode( "\r\n", $info );
+    /**
+     * Before execute
+     *
+     * @throws Exception
+     */
+    protected function beforeExecute (): void {
     }
-    echo $info . "\r\n\r\n";
-  }
+
+    /**
+     * Output
+     *
+     * @param array|string $info
+     */
+    protected function output ( array|string $info ): void {
+        if ( is_array( $info ) ) {
+            $info = implode( "\r\n", $info );
+        }
+        echo $info . "\r\n\r\n";
+    }
 }

@@ -94,24 +94,24 @@ class Meta {
     public static function aggregate ( array|string $metas ): array {
 
         // Handling stringified metas
-        if( is_string( $metas ) ) {
+        if ( is_string( $metas ) ) {
             $metas = json_decode( $metas, true );
         }
 
         $aggregate = [];
         foreach ( $metas as $metaEntry ) {
-            if( is_string( $metaEntry ) ) {
+            if ( is_string( $metaEntry ) ) {
                 $metaEntry = json_decode( $metaEntry, true );
             }
 
-            if( is_object( $metaEntry ) ) {
+            if ( is_object( $metaEntry ) ) {
                 $metaEntry = (array) $metaEntry;
             }
 
             try {
                 $aggregate[ $metaEntry[ 'key' ] ] = json_decode( $metaEntry[ 'value' ], true, 512, JSON_THROW_ON_ERROR );
             }
-            catch (\Throwable){
+            catch ( \Throwable ) {
                 $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
             }
         }

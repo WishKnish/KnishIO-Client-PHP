@@ -63,6 +63,15 @@ class PolicyMeta {
 
     /**
      * @param array $policy
+     * @param array $metaKeys
+     */
+    public function __construct ( array $policy = [], array $metaKeys = [] ) {
+        $this->policy = static::normalizePolicy( $policy );
+        $this->fillDefault( $metaKeys );
+    }
+
+    /**
+     * @param array $policy
      *
      * @return array
      */
@@ -79,15 +88,6 @@ class PolicyMeta {
             }
         }
         return $policyMeta;
-    }
-
-    /**
-     * @param array $policy
-     * @param array $metaKeys
-     */
-    public function __construct ( array $policy = [], array $metaKeys = [] ) {
-        $this->policy = static::normalizePolicy( $policy );
-        $this->fillDefault( $metaKeys );
     }
 
     /**

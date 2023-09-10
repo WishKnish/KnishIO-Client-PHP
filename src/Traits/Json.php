@@ -59,13 +59,6 @@ use Symfony\Component\Serializer\Serializer;
  */
 trait Json {
     /**
-     * @return string
-     */
-    public function toJson (): string {
-        return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
-    }
-
-    /**
      * @param array $data
      * @param null $object
      *
@@ -96,5 +89,12 @@ trait Json {
      */
     public static function jsonToObject ( string $string ): object|array {
         return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );
+    }
+
+    /**
+     * @return string
+     */
+    public function toJson (): string {
+        return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
     }
 }

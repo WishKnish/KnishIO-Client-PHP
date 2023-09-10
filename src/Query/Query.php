@@ -63,30 +63,25 @@ use WishKnish\KnishIO\Client\Response\Response;
  */
 abstract class Query {
     /**
+     * @var string
+     */
+    protected static string $defaultQuery;
+    /**
      * @var HttpClientInterface
      */
     protected HttpClientInterface $client;
-
     /**
      * @var string
      */
     protected string $query;
-
     /**
      * @var Request
      */
     protected Request $request;
-
     /**
      * @var Response|null
      */
     protected ?Response $response = null;
-
-    /**
-     * @var string
-     */
-    protected static string $defaultQuery;
-
     /**
      * @var array
      */
