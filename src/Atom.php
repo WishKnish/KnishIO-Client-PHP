@@ -198,6 +198,7 @@ class Atom {
       // Special code for meta property
       if ( $property === 'meta' ) {
         foreach ( $value as $meta ) {
+
           if ( isset( $meta[ 'value' ] ) ) {
             $hashableValues[] = ( string ) $meta[ 'key' ];
             $hashableValues[] = ( string ) $meta[ 'value' ];
@@ -222,15 +223,14 @@ class Atom {
   public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
-    $numberOfAtoms = count( $atomList );
+    $numberOfAtoms = (string) count( $atomList );
 
     $hashableValues = [];
     foreach ( $atomList as $atom ) {
 
-      // !!! @todo: why does this code works for every interaction of atoms, maybe it needs to be taken out of the loop?
-      $hashableValues[] = (string) $numberOfAtoms;
+      $hashableValues[] = $numberOfAtoms;
 
-      $hashableValues = array_merge( $hashableValues, $atom->getHashableValues() );
+      $hashableValues = [...$hashableValues, ...$atom->getHashableValues()];
     }
 
     // Add hash values to the sponge

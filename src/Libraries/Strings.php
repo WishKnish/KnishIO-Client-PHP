@@ -184,7 +184,7 @@ class Strings {
    * @return string
    */
   public static function hexToBase64 ( string $str ): string {
-    return base64_encode( hex2bin( $str ) );
+    return base64_encode( $str );
   }
 
   /**
@@ -196,7 +196,7 @@ class Strings {
    */
   #[Pure]
   public static function base64ToHex ( string $str ): string {
-    return bin2hex( base64_decode( $str ) );
+    return base64_decode( $str );
   }
 
 }

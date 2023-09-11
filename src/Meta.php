@@ -68,6 +68,11 @@ class Meta {
 
     foreach ( $meta as $key => $value ) {
 
+      if ( is_array( $value ) && array_key_exists( 'key', $value ) && array_key_exists( 'value', $value ) ) {
+        $result[] = $value;
+        continue;
+      }
+
       // Handling non-string meta values
       if ( !is_string( $value ) ) {
 
@@ -98,9 +103,16 @@ class Meta {
    */
   public static function aggregate ( array $meta ): array {
     $aggregate = [];
-    foreach ( $meta as $metaEntry ) {
-      $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
+    foreach ( $meta as $key => $metaEntry ) {
+
+      if ( is_array( $metaEntry ) && array_key_exists( 'key', $metaEntry ) && array_key_exists( 'value', $metaEntry ) ) {
+        $aggregate[ $metaEntry[ 'key' ] ] = $metaEntry[ 'value' ];
+        continue;
+      }
+
+      $aggregate[ $key ] = $metaEntry;
     }
+
     return $aggregate;
   }
 }
