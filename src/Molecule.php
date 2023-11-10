@@ -84,7 +84,8 @@ class Molecule extends MoleculeStructure {
     private readonly string $secret,
     private ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
-    ?string $cellSlug = null
+    ?string $cellSlug = null,
+    private ?string $version = null
   ) {
     parent::__construct( $cellSlug );
 
@@ -137,6 +138,7 @@ class Molecule extends MoleculeStructure {
     $this->status = null;
     $this->createdAt = Strings::currentTimeMillis();
     $this->atoms = [];
+    $this->version = null;
 
     return $this;
   }
@@ -154,7 +156,7 @@ class Molecule extends MoleculeStructure {
 
     // Set atom's index
     $atom->index = $this->generateIndex();
-
+    $atom->version = ($this->version !== null) ? (string) $this->version : null;
     // Add source wallet if not already set when adding first atom
     if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
       $this->sourceWallet = new Wallet( $this->secret(), $atom->token, $atom->position, $atom->batchId );

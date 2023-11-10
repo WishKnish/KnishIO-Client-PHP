@@ -337,6 +337,7 @@ class MoleculeStructure {
         array_get( $atom, 'otsFragment' ),
         array_get( $atom, 'index' ),
         array_get( $atom, 'createdAt' ),
+        array_get( $atom, 'version' ),
       );
     }
     $molecule->atoms = Atom::sortAtoms( $molecule->atoms );

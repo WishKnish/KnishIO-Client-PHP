@@ -52,9 +52,11 @@ namespace WishKnish\KnishIO\Client;
 use Exception;
 use JsonException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
+use WishKnish\KnishIO\Client\Versions\Versions;
 
 /**
  * Class Atom
@@ -123,6 +125,7 @@ class Atom {
     public ?string $otsFragment = null,
     public ?int $index = null,
     public ?string $createdAt = null,
+    public ?string $version = null
   ) {
 
     // Normalize meta
@@ -223,23 +226,48 @@ class Atom {
   public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
-    $numberOfAtoms = (string) count( $atomList );
+    $versions = new Versions();
 
-    $hashableValues = [];
-    foreach ( $atomList as $atom ) {
-
-      $hashableValues[] = $numberOfAtoms;
-
-      $hashableValues = [...$hashableValues, ...$atom->getHashableValues()];
+    if (empty($atomList)) {
+      throw new MoleculeAtomsMissingException();
     }
 
-    // Add hash values to the sponge
-    foreach( $hashableValues as $hashableValue ) {
+    array_walk($atomList, function ($atom) {
+      if (!($atom instanceof self)) {
+        throw new MoleculeAtomsMissingException();
+      }
+    });
+
+    //We check that all atoms have an implemented version of reflection
+    $availability = array_unique(array_map(static fn(self $atom) => isset($atom->version, $versions->{$atom->version}), $atomList));
+
+    if ( !in_array( false, $availability, true ) ) {
       try {
-        $molecularSponge->absorb( $hashableValue );
+        $reflection = array_map(static fn (self $atom) => $versions->{$atom->version}::create($atom)->view(), $atomList);
+        $molecularSponge->absorb( json_encode( $reflection, JSON_THROW_ON_ERROR ) );
       }
       catch ( Exception $e ) {
         throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      }
+    }
+    // we use the old hashing method
+    else {
+      $numberOfAtoms = (string) count( $atomList );
+      $hashableValues = [];
+
+      foreach ( $atomList as $atom ) {
+        $hashableValues[] = $numberOfAtoms;
+        $hashableValues = [...$hashableValues, ...$atom->getHashableValues()];
+      }
+
+      // Add hash values to the sponge
+      foreach( $hashableValues as $hashableValue ) {
+        try {
+          $molecularSponge->absorb( $hashableValue );
+        }
+        catch ( Exception $e ) {
+          throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+        }
       }
     }
 
