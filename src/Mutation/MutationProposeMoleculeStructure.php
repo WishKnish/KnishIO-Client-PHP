@@ -74,10 +74,7 @@ class MutationProposeMoleculeStructure extends Query {
     'status',
     'reason',
     'payload',
-    'createdAt',
-    'receivedAt',
-    'processedAt',
-    'broadcastedAt',
+    'createdAt'
   ];
 
   // Molecule

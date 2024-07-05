@@ -91,11 +91,6 @@ class MoleculeStructure {
   public string $createdAt;
 
   /**
-   * @var string|null
-   */
-  public ?string $receivedAt = null;
-
-  /**
    * @var array
    */
   public array $atoms = [];
