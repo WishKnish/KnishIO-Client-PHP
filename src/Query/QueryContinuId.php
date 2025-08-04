@@ -66,7 +66,18 @@ class QueryContinuId extends Query {
     }';
 
   // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'tokenSlug', 'position', 'batchId', 'characters', 'pubkey', 'amount', 'createdAt', ];
+  protected array $fields = [
+    'type',
+    'address',
+    'bundleHash',
+    'tokenSlug',
+    'position',
+    'batchId',
+    'characters',
+    'pubkey',
+    'amount',
+    'createdAt',
+  ];
 
   /**
    * Create a response

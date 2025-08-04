@@ -61,7 +61,10 @@ class MutationAccessToken extends Mutation {
   protected static string $defaultQuery = 'mutation( $cellSlug: String ) { AccessToken( cellSlug: $cellSlug ) @fields }';
 
   // Fields
-  protected array $fields = [ 'token', 'time', ];
+  protected array $fields = [
+    'token',
+    'time',
+  ];
 
   /**
    * Create a response

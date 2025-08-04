@@ -47,61 +47,24 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use JsonException;
-use WishKnish\KnishIO\Client\Meta;
-use WishKnish\KnishIO\Client\MoleculeStructure;
+use Throwable;
 
 /**
- * Class ResponseMoleculeList
- * @package WishKnish\KnishIO\Client\Response
+ * Class WalletSignatureException
+ * @package WishKnish\KnishIO\Client\Exception
  */
-class ResponseMoleculeList extends Response {
+class WalletSignatureException extends BaseException {
 
   /**
-   * @var string
-   */
-  protected string $dataKey = 'data.Molecule';
-
-  /**
-   * @param array $data
+   * WalletSignatureException constructor.
    *
-   * @return MoleculeStructure
-   * @throws JsonException
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public static function toClientMolecule ( array $data ): MoleculeStructure {
-
-    $data[ 'bundle' ] = $data[ 'bundleHash' ];
-    unset( $data[ 'bundleHash' ] );
-
-    foreach( $data[ 'atoms' ] as $key => $atom ) {
-      $atom[ 'token' ] = $atom[ 'tokenSlug' ];
-      $atom[ 'meta' ] = Meta::normalize( json_decode( $atom[ 'metasJson' ], true ) );
-      unset( $atom[ 'tokenSlug' ], $atom[ 'metasJson' ] );
-
-      $data[ 'atoms' ][ $key ] = $atom;
-    }
-
-    return MoleculeStructure::toObject( $data );
+  public function __construct ( string $message = 'Signing wallet is invalid.', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
-
-  /**
-   * @return array
-   * @throws JsonException
-   */
-  public function payload (): array {
-    // Get data
-    $list = $this->data();
-
-    // Get a list of client molecules
-    $molecules = [];
-    foreach ( $list as $item ) {
-      $molecules[] = static::toClientMolecule( $item );
-    }
-
-    // Return a molecules list
-    return $molecules;
-  }
-
 }

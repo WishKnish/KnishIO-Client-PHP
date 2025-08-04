@@ -47,61 +47,31 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Response;
+namespace WishKnish\KnishIO\Client\Mutation;
 
 use JsonException;
-use WishKnish\KnishIO\Client\Meta;
-use WishKnish\KnishIO\Client\MoleculeStructure;
+use SodiumException;
 
 /**
- * Class ResponseMoleculeList
- * @package WishKnish\KnishIO\Client\Response
+ * Class MutationDepositBufferToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class ResponseMoleculeList extends Response {
+class MutationDepositBufferToken extends MutationProposeMolecule {
 
   /**
-   * @var string
-   */
-  protected string $dataKey = 'data.Molecule';
-
-  /**
-   * @param array $data
+   * @param int $amount
+   * @param array $tradeRates
    *
-   * @return MoleculeStructure
+   * @return $this
    * @throws JsonException
+   * @throws SodiumException
    */
-  public static function toClientMolecule ( array $data ): MoleculeStructure {
+  public function fillMolecule ( int $amount, array $tradeRates ): self {
+    $this->molecule->initDepositBuffer( $amount, $tradeRates );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
 
-    $data[ 'bundle' ] = $data[ 'bundleHash' ];
-    unset( $data[ 'bundleHash' ] );
-
-    foreach( $data[ 'atoms' ] as $key => $atom ) {
-      $atom[ 'token' ] = $atom[ 'tokenSlug' ];
-      $atom[ 'meta' ] = Meta::normalize( json_decode( $atom[ 'metasJson' ], true ) );
-      unset( $atom[ 'tokenSlug' ], $atom[ 'metasJson' ] );
-
-      $data[ 'atoms' ][ $key ] = $atom;
-    }
-
-    return MoleculeStructure::toObject( $data );
-  }
-
-  /**
-   * @return array
-   * @throws JsonException
-   */
-  public function payload (): array {
-    // Get data
-    $list = $this->data();
-
-    // Get a list of client molecules
-    $molecules = [];
-    foreach ( $list as $item ) {
-      $molecules[] = static::toClientMolecule( $item );
-    }
-
-    // Return a molecules list
-    return $molecules;
+    return $this;
   }
 
 }

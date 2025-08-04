@@ -72,7 +72,7 @@ class Response {
   /**
    * @var string
    */
-  protected string $origin_response;
+  protected string $originResponse;
 
   /**
    * @var mixed
@@ -98,7 +98,7 @@ class Response {
     $this->query = $query;
 
     // Origin response
-    $this->origin_response = $json;
+    $this->originResponse = $json;
 
     // Json decode
     $this->response = json_decode( $json, true, 512, JSON_THROW_ON_ERROR );
@@ -152,7 +152,13 @@ class Response {
 
     // Check key & return custom data from the response
     if ( !array_has( $this->response, $this->dataKey ) ) {
-      throw new InvalidResponseException();
+      if(array_has( $this->response, 'errors' )) {
+        $error = json_encode( $this->response['errors'] );
+      }
+      else {
+        $error = 'GraphQL did not provide a valid response.';
+      }
+      throw new InvalidResponseException( $error );
     }
 
     return array_get( $this->response, $this->dataKey );

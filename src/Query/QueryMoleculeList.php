@@ -65,7 +65,29 @@ class QueryMoleculeList extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'molecularHash', 'cellSlug', 'counterparty', 'bundleHash', 'createdAt', 'processedAt', 'atoms' => [ 'position', 'isotope', 'walletAddress', 'tokenSlug', 'batchId', 'value', 'index', 'metaType', 'metaId', 'metasJson', 'otsFragment', 'createdAt', ], ];
+  protected array $fields = [
+    'molecularHash',
+    'cellSlug',
+    'counterparty',
+    'bundleHash',
+    'status',
+    'local',
+    'createdAt',
+    'atoms' => [
+      'position',
+      'walletAddress',
+      'isotope',
+      'tokenSlug',
+      'value',
+      'batchId',
+      'metaType',
+      'metaId',
+      'metasJson',
+      'otsFragment',
+      'index',
+      'createdAt',
+    ],
+  ];
 
   /**
    * @param string $response

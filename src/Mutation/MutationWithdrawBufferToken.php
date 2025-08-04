@@ -47,28 +47,32 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Exception;
+namespace WishKnish\KnishIO\Client\Mutation;
 
-use Throwable;
+use JsonException;
+use SodiumException;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
- * Class AtomIndexException
- * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
+ * Class MutationWithdrawBufferToken
+ * @package WishKnish\KnishIO\Client\Mutation
  */
-class AtomIndexException extends BaseException {
+class MutationWithdrawBufferToken extends MutationProposeMolecule {
+
   /**
-   * AtomIndexException constructor.
+   * @param array $recipients : key/value array: key - bundle hash, value - amount
+   * @param Wallet|null $signingWallet
    *
-   * @param string $message
-   * @param int $code
-   * @param Throwable|null $previous
+   * @return $this
+   * @throws JsonException
+   * @throws SodiumException
    */
-  public function __construct ( string $message = 'There is an atom without an index', int $code = 1, Throwable $previous = null ) {
-    parent::__construct( $message, $code, $previous );
+  public function fillMolecule ( array $recipients, ?Wallet $signingWallet = null ): self {
+    $this->molecule->initWithdrawBuffer( $recipients, $signingWallet );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
+
+    return $this;
   }
+
 }

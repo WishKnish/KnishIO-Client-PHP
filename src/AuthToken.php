@@ -2,20 +2,18 @@
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Pure;
+use SodiumException;
 
 /**
  * Class AuthToken
  */
 class AuthToken {
 
-  protected string $token;
-  protected string $expiresAt;
-  protected string $pubkey;
-  protected bool $encrypt;
-
+  /**
+   * @var Wallet|null
+   */
   protected ?Wallet $wallet;
 
   /**
@@ -26,12 +24,7 @@ class AuthToken {
    * @return static
    */
   public static function create ( array $data, Wallet $wallet, bool $encrypt ): self {
-    $authToken = new static (
-      $data[ 'token' ],
-      $data[ 'expiresAt' ],
-      $data[ 'pubkey' ],
-      $encrypt,
-    );
+    $authToken = new static ( $data[ 'token' ], $data[ 'expiresAt' ], $data[ 'pubkey' ], $encrypt, );
     $authToken->setWallet( $wallet );
     return $authToken;
   }
@@ -41,16 +34,10 @@ class AuthToken {
    * @param string $secret
    *
    * @return static
-   * @throws Exception
+   * @throws SodiumException
    */
   public static function restore ( array $snapshot, string $secret ): self {
-    $wallet = new Wallet (
-      $secret,
-      'AUTH',
-      array_get( $snapshot, 'wallet.position' ),
-      null,
-      array_get( $snapshot, 'wallet.characters' )
-    );
+    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
       'expiresAt' => array_get( $snapshot, 'expiresAt' ),
@@ -59,23 +46,18 @@ class AuthToken {
   }
 
   /**
-   * AuthToken constructor.
-   *
-   * @param $token
-   * @param $expiresAt
-   * @param $pubkey
-   * @param $encrypt
+   * @param string $token
+   * @param string $expiresAt
+   * @param string $pubkey
+   * @param bool $encrypt
    */
   public function __construct (
-    string $token,
-    string $expiresAt,
-    string $pubkey,
-    bool $encrypt
+    protected string $token,
+    protected string $expiresAt,
+    protected string $pubkey,
+    protected bool $encrypt,
   ) {
-    $this->token = $token;
-    $this->expiresAt = $expiresAt;
-    $this->pubkey = $pubkey;
-    $this->encrypt = $encrypt;
+
   }
 
   /**
@@ -97,7 +79,7 @@ class AuthToken {
    */
   #[ArrayShape( [
     'token' => "string",
-    'expiresAt' => "int|null",
+    'expiresAt' => "string",
     'pubkey' => "string",
     'encrypt' => "bool",
     'wallet' => "array"
@@ -154,9 +136,9 @@ class AuthToken {
    */
   #[Pure]
   #[ArrayShape( [
-    'token' => "mixed|string",
-    'pubkey' => "mixed|string",
-    'wallet' => "mixed|\WishKnish\KnishIO\Client\Wallet"
+    'token' => "string",
+    'pubkey' => "string",
+    'wallet' => Wallet::class
   ] )]
   public function getAuthData (): array {
     return [

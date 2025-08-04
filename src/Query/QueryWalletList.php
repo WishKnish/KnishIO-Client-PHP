@@ -58,12 +58,38 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletList;
  */
 class QueryWalletList extends Query {
   // Query
-  protected static string $defaultQuery = 'query( $address: String, $bundleHash: String, $token: String, $position: String ) { Wallet( address: $address, bundleHash: $bundleHash, token: $token, position: $position )
+  protected static string $defaultQuery = 'query( $bundleHash: String, $tokenSlug: String ) { Wallet( bundleHash: $bundleHash, tokenSlug: $tokenSlug )
 	 	@fields
 	}';
 
   // Fields
-  protected array $fields = [ 'address', 'bundleHash', 'token' => [ 'name', 'amount' ], 'molecules' => [ 'molecularHash', 'createdAt', ], 'tokenSlug', 'batchId', 'position', 'amount', 'characters', 'pubkey', 'createdAt', ];
+  protected array $fields = [
+    'type',
+    'address',
+    'bundleHash',
+    'token' => [
+      'name',
+      'amount',
+      'fungibility',
+      'supply',
+    ],
+    'tokenUnits' => [
+      'id',
+      'name',
+      'metas',
+    ],
+    'tradeRates' => [
+      'tokenSlug',
+      'amount',
+    ],
+    'tokenSlug',
+    'batchId',
+    'position',
+    'amount',
+    'characters',
+    'pubkey',
+    'createdAt',
+  ];
 
   /**
    * @param string $response

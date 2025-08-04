@@ -137,7 +137,7 @@ if ( !function_exists( 'array_every' ) ) {
    *
    * @return bool
    */
-  function array_every( array $array, callable $callable ): bool {
+  function array_every ( array $array, callable $callable ): bool {
     foreach ( $array as $value ) {
       if ( !$callable( $value ) ) {
         return false;

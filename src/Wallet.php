@@ -52,10 +52,11 @@ namespace WishKnish\KnishIO\Client;
 use BI\BigInteger;
 use Exception;
 use JsonException;
-use ReflectionException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
@@ -64,37 +65,26 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  *
  * @property string $position
  * @property string $token
+ * @property string|null $batchId
+ * @property string|null $characters
  * @property string|null $key
  * @property string|null $address
- * @property float $balance
- * @property array $molecules
+ * @property int $balance
+ * @property string|null $type
  * @property string|null $bundle
  * @property string|null $privkey
  * @property string|null $pubkey
- * @property string|null $batchId
- * @property string|null $characters
- *
+ * @property string|null $createdAt
+ * @property array $tokenUnits
+ * @property array $tradeRates
+ * @property Soda $soda
  */
 class Wallet {
-  /**
-   * @var string|null
-   */
-  public ?string $batchId = null;
 
   /**
-   * @var array
+   * @var int
    */
-  public array $molecules = [];
-
-  /**
-   * @var array
-   */
-  public array $tokenUnits = [];
-
-  /**
-   * @var float
-   */
-  public float $balance = 0;
+  public int $balance = 0;
 
   /**
    * @var string|null
@@ -104,17 +94,12 @@ class Wallet {
   /**
    * @var string|null
    */
-  public ?string $position = null;
-
-  /**
-   * @var string|null
-   */
   public ?string $bundle = null;
 
   /**
    * @var string
    */
-  public string $token;
+  public string $type = 'regular';
 
   /**
    * @var string|null
@@ -132,30 +117,82 @@ class Wallet {
   private ?string $privkey = null;
 
   /**
-   * Wallet constructor.
-   *
+   * @var string|null
+   */
+  public ?string $createdAt = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenName = null;
+
+  /**
+   * @var int
+   */
+  public int $tokenAmount = 0;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenSupply = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $tokenFungibility = null;
+
+  /**
+   * @var array
+   */
+  public array $tokenUnits = [];
+
+  /**
+   * @var array
+   */
+  public array $tradeRates = [];
+
+  /**
+   * @var Soda|null
+   */
+  protected ?Soda $soda = null;
+
+  /**
    * @param string|null $secret
-   * @param string $token
+   * @param string|null $token
    * @param string|null $position
    * @param string|null $batchId
    * @param string|null $characters
    *
-   * @throws Exception
+   * @throws SodiumException
    */
-  public function __construct ( string $secret = null, string $token = 'USER', string $position = null, string $batchId = null, string $characters = null ) {
-    $this->token = $token;
-    $this->bundle = $secret ? Crypto::generateBundleHash( $secret ) : null;
-    $this->batchId = $batchId;
-    $this->characters = $characters ?? 'BASE64';
-    $this->position = $position;
-
+  public function __construct (
+    string $secret = null,
+    public ?string $token = 'USER',
+    public ?string $position = null,
+    public ?string $batchId = null,
+    public ?string $characters = null
+  ) {
     if ( $secret ) {
 
+      // Set bundle from the secret
+      $this->bundle = Crypto::generateBundleHash( $secret );
+
       // Generate a position for non-shadow wallet if not initialized
-      $this->position = $this->position ?? static::generateWalletPosition();
+      $this->position = $this->position ?? static::generatePosition();
 
-      $this->prepareKeys( $secret );
+      // Key & address initialization
+      $this->key = static::generateKey( $secret, $this->token, $this->position );
+      $this->address = static::generateAddress( $this->key );
 
+      // Soda object initialization
+      $this->soda = new Soda( $this->characters );
+
+      // Private & pubkey initialization
+      $this->privkey = $this->soda->generatePrivateKey( $this->key );
+      $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
+
+      // Set characters
+      $this->characters = $this->characters ?? 'BASE64';
     }
   }
 
@@ -166,12 +203,12 @@ class Wallet {
    * @param string|null $characters
    *
    * @return Wallet
-   * @throws Exception
+   * @throws SodiumException
    */
   public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
-    $secret = static::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
+    $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
-    $position = $secret ? static::generateWalletPosition() : null;
+    $position = $secret ? static::generatePosition() : null;
 
     // Wallet initialization
     $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
@@ -186,18 +223,8 @@ class Wallet {
    */
   public static function getTokenUnits ( array $unitsData ): array {
     $result = [];
-
     foreach ( $unitsData as $unitData ) {
-
-      // !!! @todo supporting wrong token creation with simple array: need to be deleted after db clearing
-      if ( !is_array( $unitData ) ) {
-        $result[] = [ 'id' => $unitData, 'name' => null, 'metas' => [], ];
-      }
-
-      // Standard token unit format
-      else {
-        $result[] = [ 'id' => array_shift( $unitData ), 'name' => array_shift( $unitData ), 'metas' => $unitData, ];
-      }
+      $result[] = TokenUnit::createFromDB( $unitData );
     }
     return $result;
   }
@@ -212,8 +239,6 @@ class Wallet {
   /**
    * @param Wallet $sourceWallet
    * @param bool $isRemainder
-   *
-   * @throws Exception
    */
   public function initBatchId ( Wallet $sourceWallet, bool $isRemainder = false ): void {
     if ( $sourceWallet->batchId ) {
@@ -222,28 +247,14 @@ class Wallet {
   }
 
   /**
-   * @return bool
+   * @return array
    */
-  public function hasTokenUnits (): bool {
-    return property_exists( $this, 'tokenUnits' ) && count( $this->tokenUnits ) > 0;
-  }
-
-  /**
-   * @return string|null
-   * @throws JsonException
-   */
-  public function tokenUnitsJson (): ?string {
-
-    if ( $this->hasTokenUnits() ) {
-
-      $result = array_map( static function ( $tokenUnit ) {
-        return array_merge( [ $tokenUnit[ 'id' ], $tokenUnit[ 'name' ] ], $tokenUnit[ 'metas' ] );
-      }, $this->tokenUnits, [] );
-
-      return json_encode( $result, JSON_THROW_ON_ERROR );
+  public function getTokenUnitsData (): array {
+    $result = [];
+    foreach ( $this->tokenUnits as $tokenUnit ) {
+      $result[] = $tokenUnit->toData();
     }
-
-    return null;
+    return $result;
   }
 
   /**
@@ -262,7 +273,7 @@ class Wallet {
     $recipientTokenUnits = [];
     $remainderTokenUnits = [];
     foreach ( $this->tokenUnits as $tokenUnit ) {
-      if ( in_array( $tokenUnit[ 'id' ], $sendTokenUnits, true ) ) {
+      if ( in_array( $tokenUnit->id, $sendTokenUnits, true ) ) {
         $recipientTokenUnits[] = $tokenUnit;
       }
       else {
@@ -284,97 +295,13 @@ class Wallet {
   /**
    * @param string $secret
    *
-   * @throws Exception
+   * @return Wallet
+   * @throws SodiumException
    */
-  public function prepareKeys ( string $secret ): void {
-    if ( $this->key === null && $this->address === null ) {
-
-      $this->key = static::generateWalletKey( $secret, $this->token, $this->position );
-      $this->address = static::generateWalletAddress( $this->key );
-      $this->getMyEncPrivateKey();
-      $this->getMyEncPublicKey();
-
-    }
-  }
-
-  /**
-   * @param string $code
-   *
-   * @return bool
-   */
-  public static function isBundleHash ( string $code ): bool {
-    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
-  }
-
-  /**
-   * @param int $saltLength
-   *
-   * @return string
-   * @throws Exception
-   */
-  protected static function generateWalletPosition ( int $saltLength = 64 ): string {
-    return Strings::randomString( $saltLength );
-  }
-
-  /**
-   * @param string $key
-   *
-   * @return string
-   * @throws Exception
-   */
-  protected static function generateWalletAddress ( string $key ): string {
-
-    $digestSponge = Crypto\Shake256::init();
-
-    foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
-      foreach ( range( 1, 16 ) as $ignored ) {
-        $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
-      }
-
-      $digestSponge->absorb( $workingFragment );
-    }
-
-    return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
-  }
-
-  /**
-   * Derives a private key for encrypting data with this wallet's key
-   *
-   * @return string|null
-   * @throws Exception
-   */
-  public function getMyEncPrivateKey (): ?string {
-
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
-    }
-
-    if ( $this->privkey === null && $this->key !== null ) {
-      $this->privkey = Crypto::generateEncPrivateKey( $this->key );
-    }
-
-    return $this->privkey;
-  }
-
-  /**
-   * Derives a public key for encrypting data for this wallet's consumption
-   *
-   * @return string|null
-   * @throws Exception
-   */
-  public function getMyEncPublicKey (): ?string {
-
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
-    }
-
-    $privateKey = $this->getMyEncPrivateKey();
-
-    if ( $this->pubkey === null && $privateKey !== null ) {
-      $this->pubkey = Crypto::generateEncPublicKey( $privateKey );
-    }
-
-    return $this->pubkey;
+  public function createRemainder( string $secret ): self {
+    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters );
+    $remainderWallet->initBatchId( $this, true );
+    return $remainderWallet;
   }
 
   /**
@@ -382,10 +309,11 @@ class Wallet {
    * @param ...$pubkeys
    *
    * @return array
-   * @throws ReflectionException
+   * @throws JsonException
+   * @throws SodiumException
    */
   public function encryptBinary ( string $message, ...$pubkeys ): array {
-    return $this->encryptMyMessage( base64_encode( $message ), ...$pubkeys );
+    return $this->encryptMessage( base64_encode( $message ), ...$pubkeys );
   }
 
   /**
@@ -393,11 +321,10 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
   public function decryptBinary ( array|string $message ): mixed {
-    $decrypt = $this->decryptMyMessage( $message );
+    $decrypt = $this->decryptMessage( $message );
 
     if ( $decrypt !== null ) {
       $decrypt = base64_decode( $decrypt, true );
@@ -416,19 +343,18 @@ class Wallet {
    *
    * @return array
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
-  public function encryptMyMessage ( mixed $message, ...$pubkeys ): array {
+  public function encryptMessage ( mixed $message, ...$pubkeys ): array {
 
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
+    if ( !$this->soda ) {
+      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
     }
 
     $encrypt = [];
-
     foreach ( $pubkeys as $pubkey ) {
-      $encrypt[ Crypto::hashShare( $pubkey ) ] = Crypto::encryptMessage( $message, $pubkey );
+      // $pubkey = $pubkey instanceof self ? $pubkey->pubkey : $pubkey; // Can use a list of wallets
+      $encrypt[ $this->soda->shortHash( $pubkey ) ] = $this->soda->encrypt( $message, $pubkey );
     }
 
     return $encrypt;
@@ -441,30 +367,66 @@ class Wallet {
    *
    * @return mixed
    * @throws JsonException
-   * @throws ReflectionException
    * @throws SodiumException
    */
-  public function decryptMyMessage ( array|string $message ): mixed {
+  public function decryptMessage ( array|string $message ): mixed {
 
-    if ( $this->characters ) {
-      Crypto::setCharacters( $this->characters );
+    if ( !$this->soda ) {
+      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
     }
-
-    $pubkey = $this->getMyEncPublicKey();
 
     $encrypted = $message;
     if ( is_array( $message ) ) {
 
-      $hash = Crypto::hashShare( $pubkey );
+      $hash = $this->soda->shortHash( $this->pubkey );
 
       if ( !array_key_exists( $hash, $message ) ) {
-        throw new CodeException( 'Wallet::decryptMyMessage - hash does not found for the wallet\'s pubkey.' );
+        throw new CodeException( 'Wallet::decryptMessage - hash does not found for the wallet\'s pubkey.' );
       }
 
       $encrypted = $message[ $hash ];
     }
 
-    return Crypto::decryptMessage( $encrypted, $this->getMyEncPrivateKey(), $pubkey );
+    return $this->soda->decrypt( $encrypted, $this->privkey, $this->pubkey );
+  }
+
+  /**
+   * @param int $saltLength
+   *
+   * @return string
+   */
+  protected static function generatePosition ( int $saltLength = 64 ): string {
+    return Strings::randomString( $saltLength );
+  }
+
+  /**
+   * @param string $key
+   *
+   * @return string
+   */
+  protected static function generateAddress ( string $key ): string {
+
+    $digestSponge = Crypto\Shake256::init();
+
+    foreach ( Strings::chunkSubstr( $key, 128 ) as $workingFragment ) {
+      foreach ( range( 1, 16 ) as $ignored ) {
+        $workingFragment = bin2hex( Crypto\Shake256::hash( $workingFragment, 64 ) );
+      }
+
+      try {
+        $digestSponge->absorb( $workingFragment );
+      }
+      catch ( Exception $e ) {
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      }
+    }
+
+    try {
+      return bin2hex( Crypto\Shake256::hash( bin2hex( $digestSponge->squeeze( 1024 ) ), 32 ) );
+    }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+    }
   }
 
   /**
@@ -473,24 +435,37 @@ class Wallet {
    * @param string $position
    *
    * @return string
-   * @throws Exception
    */
-  public static function generateWalletKey ( string $secret, string $token, string $position ): string {
+  public static function generateKey ( string $secret, string $token, string $position ): string {
 
     // Converting secret to bigInt
     // Adding new position to the user secret to produce the indexed key
     $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $position, 16 ) );
 
-    // Hashing the indexed key to produce the intermediate key
-    $intermediateKeySponge = Crypto\Shake256::init()
-      ->absorb( $indexedKey->toString( 16 ) );
+    try {
+      // Hashing the indexed key to produce the intermediate key
+      $intermediateKeySponge = Crypto\Shake256::init()
+        ->absorb( $indexedKey->toString( 16 ) );
 
-    if ( $token !== '' ) {
-      $intermediateKeySponge->absorb( $token );
+      if ( $token !== '' ) {
+        $intermediateKeySponge->absorb( $token );
+      }
+
+      // Hashing the intermediate key to produce the private key
+      return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
     }
+    catch ( Exception $e ) {
+      throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+    }
+  }
 
-    // Hashing the intermediate key to produce the private key
-    return bin2hex( Crypto\Shake256::hash( bin2hex( $intermediateKeySponge->squeeze( 1024 ) ), 1024 ) );
+  /**
+   * @param int $amount
+   *
+   * @return bool
+   */
+  public function hasEnoughBalance ( int $amount ): bool {
+    return $this->balance >= $amount;
   }
 
 }

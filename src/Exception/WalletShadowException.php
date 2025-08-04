@@ -57,7 +57,7 @@ use Throwable;
  */
 class WalletShadowException extends BaseException {
   /**
-   * TransferMismatchedException constructor.
+   * WalletShadowException constructor.
    *
    * @param string $message
    * @param int $code

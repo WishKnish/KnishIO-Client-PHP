@@ -49,17 +49,20 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use Exception;
+use Illuminate\Support\Facades\Log;
 use JsonException;
+use SodiumException;
 use WishKnish\KnishIO\Client\Atom;
-use WishKnish\KnishIO\Client\Exception\AtomIndexException;
-use WishKnish\KnishIO\Client\Exception\AtomsMissingException;
-use WishKnish\KnishIO\Client\Exception\BatchIdException;
+use WishKnish\KnishIO\Client\AtomMeta;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
-use WishKnish\KnishIO\Client\Exception\MolecularHashMismatchException;
-use WishKnish\KnishIO\Client\Exception\MolecularHashMissingException;
-use WishKnish\KnishIO\Client\Exception\SignatureMalformedException;
-use WishKnish\KnishIO\Client\Exception\SignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomIndexException;
+use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMismatchException;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException;
+use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\TokenTypeException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
 use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
@@ -67,9 +70,8 @@ use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
-use WishKnish\KnishIO\Client\Exception\WrongTokenTypeException;
+use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
-use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -81,22 +83,25 @@ use WishKnish\KnishIO\Client\Wallet;
 class CheckMolecule {
 
   /**
-   * CheckMolecule constructor.
-   *
    * @param MoleculeStructure $molecule
    */
-  public function __construct(
-    private MoleculeStructure $molecule
-  )
-  {
+  public function __construct ( private readonly MoleculeStructure $molecule ) {
+
     // No molecular hash?
     if ( $molecule->molecularHash === null ) {
-      throw new MolecularHashMissingException();
+      throw new MoleculeHashMissingException();
     }
 
     // No atoms?
     if ( empty( $molecule->atoms ) ) {
-      throw new AtomsMissingException();
+      throw new MoleculeAtomsMissingException();
+    }
+
+    // Check atom indexes
+    foreach ( $this->molecule->atoms as $atom ) {
+      if ( null === $atom->index ) {
+        throw new MoleculeAtomIndexException();
+      }
     }
   }
 
@@ -104,19 +109,18 @@ class CheckMolecule {
    * @param Wallet|null $fromWallet
    *
    * @throws JsonException
+   * @throws SodiumException
    */
   public function verify ( Wallet $fromWallet = null ): void {
     $this->molecularHash();
     $this->ots();
     $this->isotopeM();
-    $this->isotopeP();
     $this->isotopeR();
     $this->isotopeC();
-    $this->isotopeV( $fromWallet );
+    $this->isotopeVB( $fromWallet );
     $this->isotopeT();
     $this->isotopeI();
     $this->isotopeU();
-    $this->index();
     $this->batchId();
   }
 
@@ -134,12 +138,12 @@ class CheckMolecule {
       $remainderAtom = $atoms[ count( $atoms ) - 1 ];
 
       if ( $sourceAtom->batchId !== $remainderAtom->batchId ) {
-        throw new BatchIdException( 'Source batch ID is not equal to the remainder one.' );
+        throw new WalletBatchException( 'Source batch ID is not equal to the remainder one.' );
       }
 
       array_walk( $atoms, static function ( Atom $atom ) {
         if ( $atom->batchId === null ) {
-          throw new BatchIdException( 'Batch ID can not be null.' );
+          throw new WalletBatchException( 'Batch ID can not be null.' );
         }
       } );
     }
@@ -153,13 +157,14 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'R' ) as $atom ) {
 
-      $metas = Meta::aggregateMeta( $atom->meta );
+      $metas = $atom->aggregatedMeta();
 
       if ( array_key_exists( 'policy', $metas ) ) {
         $policy = json_decode( $metas[ 'policy' ], true, 512, JSON_THROW_ON_ERROR );
 
         if ( !array_every( array_keys( $policy ), static fn( $value ) => in_array( $value, [
-          'read', 'write'
+          'read',
+          'write'
         ], true ) ) ) {
           throw new MetaMissingException( 'Check::isotopeR() - Mixing rules with politics!' );
         }
@@ -168,7 +173,9 @@ class CheckMolecule {
       if ( array_key_exists( 'rule', $metas ) ) {
 
         foreach ( [
-          'callback', 'conditions', 'rule',
+          'callback',
+          'conditions',
+          'rule',
         ] as $key ) {
           if ( !array_key_exists( $key, $metas ) ) {
             throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
@@ -186,7 +193,9 @@ class CheckMolecule {
             $keys = array_keys( $condition );
 
             if ( count( array_intersect( $keys, [
-                'key', 'value', 'comparison',
+                'key',
+                'value',
+                'comparison',
               ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
               throw new MetaMissingException( 'Missing field in conditions.' );
             }
@@ -194,7 +203,8 @@ class CheckMolecule {
         }
 
         if ( !in_array( strtolower( $metas[ 'callback' ] ), [
-          'reject', 'unseat',
+          'reject',
+          'unseat',
         ], true ) ) {
           $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
 
@@ -215,20 +225,9 @@ class CheckMolecule {
     $atom = reset( $this->molecule->atoms );
 
     if ( $atom->token === 'USER' && count( $this->molecule->getIsotopes( 'I' ) ) < 1 ) {
-      throw new AtomsMissingException( 'Missing atom ContinuID' );
+      throw new MoleculeAtomsMissingException( 'Missing atom ContinuID' );
     }
 
-  }
-
-  /**
-   * Check index
-   */
-  public function index (): void {
-    foreach ( $this->molecule->atoms as $atom ) {
-      if ( null === $atom->index ) {
-        throw new AtomIndexException();
-      }
-    }
   }
 
   /**
@@ -239,7 +238,7 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'T' ) as $atom ) {
 
-      $meta = Meta::aggregateMeta( $atom->meta );
+      $meta = $atom->aggregatedMeta();
       $metaType = strtolower( ( string ) $atom->metaType );
 
       // Check required meta keys closure
@@ -252,26 +251,22 @@ class CheckMolecule {
       };
 
       if ( $metaType === 'wallet' ) {
-        $checkRequiredMetaKeys( [ 'position', 'bundle' ] );
+        $checkRequiredMetaKeys( [
+          'position',
+          'bundle'
+        ] );
       }
 
       $checkRequiredMetaKeys( [ 'token' ] );
 
       if ( $atom->token !== 'USER' ) {
-        throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 
       if ( $atom->index !== 0 ) {
-        throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
+        throw new MoleculeAtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
-  }
-
-  /**
-   * Check isotope P
-   */
-  public function isotopeP (): void {
-    $this->isotopeC();
   }
 
   /**
@@ -283,11 +278,11 @@ class CheckMolecule {
     foreach ( $this->molecule->getIsotopes( 'C' ) as $atom ) {
 
       if ( $atom->token !== 'USER' ) {
-        throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 
       if ( $atom->index !== 0 ) {
-        throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
+        throw new MoleculeAtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
   }
@@ -301,11 +296,11 @@ class CheckMolecule {
     foreach ( $this->molecule->getIsotopes( 'I' ) as $atom ) {
 
       if ( $atom->token !== 'USER' ) {
-        throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 
       if ( $atom->index === 0 ) {
-        throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
+        throw new MoleculeAtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
   }
@@ -318,12 +313,12 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
-      /* if ( $atom->token !== 'AUTH' ) {
-          throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
-      } */
+      if ( $atom->token !== 'AUTH' ) {
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+      }
 
       if ( $atom->index !== 0 ) {
-        throw new AtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
+        throw new MoleculeAtomIndexException( 'Invalid isotope "' . $atom->isotope . '" index' );
       }
     }
   }
@@ -341,42 +336,46 @@ class CheckMolecule {
       }
 
       if ( $atom->token !== 'USER' ) {
-        throw new WrongTokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
+        throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
     }
   }
 
   /**
-   * Verification of V-isotope molecules checks to make sure that:
+   * Verification of V, B isotope molecules checks to make sure that:
    * 1. we're sending and receiving the same token
    * 2. we're only subtracting on the first atom
    *
    * @param Wallet|null $senderWallet
    */
-  public function isotopeV ( Wallet $senderWallet = null ): void {
+  public function isotopeVB ( Wallet $senderWallet = null ): void {
 
-    $isotopeV = $this->molecule->getIsotopes( 'V' );
+    // Get atoms with V OR B isotopes
+    $atoms = $this->molecule->getIsotopes( [
+      'V',
+      'B'
+    ] );
 
-    // Select all atoms V
-    if ( empty( $isotopeV ) ) {
+    // V & B isotopes does not found
+    if ( !$atoms ) {
       return;
     }
 
     // Grabbing the first atom
     /** @var Atom $firstAtom */
-    $firstAtom = reset( $this->molecule->atoms );
+    $firstAtom = $atoms[ 0 ];
 
     // if there are only two atoms, then this is the burning of tokens
-    if ( $firstAtom->isotope === 'V' && count( $isotopeV ) === 2 ) {
+    if ( count( $atoms ) === 2 ) {
 
       /** @var Atom $endAtom */
-      $endAtom = end( $isotopeV );
+      $endAtom = end( $atoms );
 
       if ( $firstAtom->token !== $endAtom->token ) {
         throw new TransferMismatchedException();
       }
 
-      if ( $endAtom->value < 0 ) {
+      if ( $endAtom->getValue() < 0 ) {
         throw new TransferMalformedException();
       }
 
@@ -384,24 +383,19 @@ class CheckMolecule {
     }
 
     // Looping through each V-isotope atom
-    $sum = 0.0;
-    $value = 0.0;
+    $sum = 0;
+    $value = 0;
 
     // Check sender atom
-    if ( Decimal::cmp( $firstAtom->value, 0.0 ) >= 0 ) {
-      throw new TransferMalformedException( 'Sender can\'t send negative value.' );
+    if ( $firstAtom->getValue() >= 0 ) {
+      throw new TransferMalformedException( 'Sender can\'t send negative value or zero.' );
     }
 
     /** @var Atom $vAtom */
-    foreach ( $this->molecule->atoms as $index => $vAtom ) {
-
-      // Not V? Next...
-      if ( $vAtom->isotope !== 'V' ) {
-        continue;
-      }
+    foreach ( $atoms as $index => $vAtom ) {
 
       // Making sure we're in integer land
-      $value = 1.0 * $vAtom->value;
+      $value = $vAtom->getValue();
 
       // Making sure all V atoms of the same token
       if ( $vAtom->token !== $firstAtom->token ) {
@@ -412,12 +406,14 @@ class CheckMolecule {
       if ( $index > 0 ) {
 
         // Negative V atom in a non-primary position?
-        if ( Decimal::cmp( $value, 0.0 ) < 0 ) {
+        if ( $value < 0 ) {
           throw new TransferMalformedException();
         }
 
         // Cannot be sending and receiving from the same address
-        if ( $vAtom->walletAddress === $firstAtom->walletAddress ) {
+        if ( $vAtom->walletAddress === $firstAtom->walletAddress && // Check wallet address
+          !( $firstAtom->isotope === 'B' && $vAtom->isotope === 'B' ) // BVB transaction, do not check wallet address
+        ) {
           throw new TransferToSelfException();
         }
       }
@@ -427,39 +423,38 @@ class CheckMolecule {
     }
 
     // Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-    if ( !Decimal::equal( $sum, $value ) ) {
+    if ( $sum !== $value ) {
       throw new TransferUnbalancedException();
     }
 
     // If we're provided with a senderWallet argument, we can perform additional checks
     if ( $senderWallet ) {
 
-      $remainder = $senderWallet->balance + $firstAtom->value;
+      $remainder = $senderWallet->balance + $firstAtom->getValue();
 
       // Is there enough balance to send?
-      if ( Decimal::cmp( $remainder, 0 ) < 0 ) {
+      if ( $remainder < 0 ) {
         throw new TransferBalanceException();
       }
 
       // Does the remainder match what should be there in the source wallet, if provided?
-      if ( !Decimal::equal( $remainder, $sum ) ) {
+      if ( $remainder !== $sum ) {
         throw new TransferRemainderException();
       }
 
-    } // No senderWallet, but have a remainder?
-    else if ( !Decimal::equal( $value, 0.0 ) ) {
+    }
+    // No senderWallet, but have a remainder?
+    else if ( $value !== 0 ) {
       throw new TransferWalletException();
     }
   }
 
   /**
    * Verifies if the hash of all the atoms matches the molecular hash to ensure content has not been messed with
-   *
-   * @throws Exception
    */
   public function molecularHash (): void {
     if ( $this->molecule->molecularHash !== Atom::hashAtoms( $this->molecule->atoms ) ) {
-      throw new MolecularHashMismatchException();
+      throw new MoleculeHashMismatchException();
     }
   }
 
@@ -468,7 +463,8 @@ class CheckMolecule {
    * of signature fragments Om and a molecular hash Hm into a single-use wallet address to be matched against
    * the sender’s address.
    *
-   * @throws Exception|MolecularHashMissingException|AtomsMissingException|SignatureMalformedException|SignatureMismatchException
+   * @throws CryptoException|MoleculeHashMissingException|MoleculeAtomsMissingException|MoleculeSignatureMalformedException|MoleculeSignatureMismatchException
+   * @throws SodiumException
    */
   public function ots (): void {
 
@@ -492,7 +488,7 @@ class CheckMolecule {
 
       // Still wrong? That's a failure
       if ( mb_strlen( $ots ) !== 2048 ) {
-        throw new SignatureMalformedException();
+        throw new MoleculeSignatureMalformedException();
       }
     }
 
@@ -505,9 +501,18 @@ class CheckMolecule {
     // Squeeze the sponge to retrieve a 128 byte (64 character) string that should match the sender’s wallet address
     $address = bin2hex( Shake256::hash( $digest, 32 ) );
 
+    // Get a signing address
+    $signingAddress = $firstAtom->walletAddress;
+
+    // Try to get other specified signing wallet from the metas & override signing address
+    $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
+    if ( $signingWallet ) {
+      $signingAddress = $signingWallet->address;
+    }
+
     // Check the first atom's wallet: is what the molecule must be signed with
-    if ( $address !== $firstAtom->walletAddress ) {
-      throw new SignatureMismatchException();
+    if ( $address !== $signingAddress ) {
+      throw new MoleculeSignatureMismatchException();
     }
   }
 

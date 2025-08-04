@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class WrongTokenTypeException
+ * Class MoleculeHashMismatchException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -60,15 +60,15 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class WrongTokenTypeException extends BaseException {
+class MoleculeHashMismatchException extends BaseException {
   /**
-   * WrongTokenTypeException constructor.
+   * MoleculeHashMismatchException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Wrong type of token for this isotope', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'The molecular hash does not match', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

@@ -47,54 +47,28 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Traits;
+namespace WishKnish\KnishIO\Client\Exception;
 
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use Throwable;
 
 /**
- * Trait Json
- * @package WishKnish\KnishIO\Client\Traits
+ * Class MoleculeAtomsMissingException
+ * @package WishKnish\KnishIO\Client\Exception
+ *
+ * @property string $message
+ * @property integer $code
+ * @property string $file
+ * @property integer $line
  */
-trait Json {
+class MoleculeAtomsMissingException extends BaseException {
   /**
-   * @return string
-   */
-  public function toJson (): string {
-    return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->serialize( $this, 'json' );
-  }
-
-  /**
-   * @param array $data
-   * @param null $object
+   * MoleculeAtomsMissingException constructor.
    *
-   * @return static
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  public static function arrayToObject ( array $data, $object = null ): static {
-    $object = $object ?? new static();
-    foreach ( $data as $property => $value ) {
-
-      // Has a setProperty customization function
-      if ( method_exists( $object, 'setProperty' ) ) {
-        $object->setProperty( $property, $value );
-      }
-
-      // Default property set
-      else {
-        $object->$property = $value;
-      }
-
-    }
-    return $object;
-  }
-
-  /**
-   * @param string $string
-   *
-   * @return array|object
-   */
-  public static function jsonToObject ( string $string ): object|array {
-    return ( new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] ) )->deserialize( $string, static::class, 'json' );
+  public function __construct ( string $message = 'The molecule does not contain atoms', int $code = 1, Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
 }

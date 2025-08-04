@@ -143,19 +143,27 @@ class Cipher {
             $requestName = static::graphqlParse( $original[ 'query' ], 'name' );
             $requestType = static::graphqlParse( $original[ 'query' ] );
             $isMoleculeMutation = ( $requestType === 'mutation' && $requestName === 'ProposeMolecule' );
-            $conditions = [ ( $requestType === 'query' && in_array( $requestName, [ '__schema', 'ContinuId' ] ) ), ( $requestType === 'mutation' && $requestName === 'AccessToken' ), ( $isMoleculeMutation && array_get( $original, 'variables.molecule.atoms.0.isotope' ) === 'U' ) ];
+            $conditions = [
+              ( $requestType === 'query' && in_array( $requestName, [
+                  '__schema',
+                  'ContinuId'
+                ] ) ),
+              ( $requestType === 'mutation' && $requestName === 'AccessToken' ),
+              ( $isMoleculeMutation && array_get( $original, 'variables.molecule.atoms.0.isotope' ) === 'U' )
+            ];
 
             if ( in_array( true, $conditions, true ) ) {
               return $handler( $request, $options );
             }
 
-            // Wallet::encryptMyMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
+            // Wallet::encryptMessage() result => [ hash1 => encrypted_message1, hash2 => encrypted_message2, ... ]
             $encryptedMessage = $this->wallet()
-              ->encryptMyMessage( $original, $this->getPubkey() );
+              ->encryptMessage( $original, $this->getPubkey() );
 
             // Full request context
             $content = [
-              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }', 'variables' => [
+              'query' => 'query ( $Hash: String! ) { CipherHash ( Hash: $Hash ) { hash } }',
+              'variables' => [
                 'Hash' => json_encode( $encryptedMessage, JSON_THROW_ON_ERROR ),
               ],
             ];
@@ -199,7 +207,7 @@ class Cipher {
             if ( $encrypted ) {
 
               $decryption = $this->wallet()
-                ->decryptMyMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
+                ->decryptMessage( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
 
               if ( $decryption === null ) {
                 throw new InvalidResponseException( 'Error decoding response.' );
@@ -238,7 +246,10 @@ class Cipher {
 
     $operation = strtolower( $type );
 
-    if ( in_array( $operation, [ 'type', 'name' ], true ) ) {
+    if ( in_array( $operation, [
+      'type',
+      'name'
+    ], true ) ) {
 
       /** @var DocumentNode $type */
       $documents = Parser::parse( $content );
@@ -252,7 +263,11 @@ class Cipher {
         $node = $item->selectionSet->selections[ 0 ];
 
         // Type & name initialization
-        if ( in_array( $item->operation, [ 'query', 'mutation', 'subscription' ] ) ) {
+        if ( in_array( $item->operation, [
+          'query',
+          'mutation',
+          'subscription'
+        ] ) ) {
           return $operation === 'type' ? $item->operation : $node->name->value;
         }
       }

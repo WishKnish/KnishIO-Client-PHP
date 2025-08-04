@@ -52,18 +52,23 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class BatchIdException
+ * Class MoleculeSignatureMalformedException
  * @package WishKnish\KnishIO\Client\Exception
+ *
+ * @property string $message
+ * @property integer $code
+ * @property string $file
+ * @property integer $line
  */
-class BatchIdException extends BaseException {
+class MoleculeSignatureMalformedException extends BaseException {
   /**
-   * BatchIdException constructor.
+   * MoleculeSignatureMalformedException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'OTS malformed', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

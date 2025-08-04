@@ -67,7 +67,15 @@ class MutationProposeMoleculeStructure extends Query {
 	}';
 
   // Fields
-  protected array $fields = [ 'molecularHash', 'height', 'depth', 'status', 'reason', 'payload', 'createdAt', 'receivedAt', 'processedAt', 'broadcastedAt', ];
+  protected array $fields = [
+    'molecularHash',
+    'height',
+    'depth',
+    'status',
+    'reason',
+    'payload',
+    'createdAt'
+  ];
 
   // Molecule
   protected MoleculeStructure $moleculeStructure;

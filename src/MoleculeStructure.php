@@ -49,15 +49,10 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client;
 
-use Exception;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use JsonException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
-use WishKnish\KnishIO\Client\Libraries\Strings;
-use WishKnish\KnishIO\Client\Traits\Json;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
  * Class MoleculeStructure
@@ -65,47 +60,74 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
  */
 class MoleculeStructure {
 
-  use Json;
-
+  /**
+   * @var string|null
+   */
   public ?string $molecularHash;
-  public ?string $cellSlug;
-  public ?string $counterparty = null;
-  public ?string $bundle;
-  public ?string $status;
-  public int $local = 0;
-  public string $createdAt;
-  public array $atoms = [];
-
 
   /**
-   * @param string $isotope
+   * @var string|null
+   */
+  public ?string $counterparty = null;
+
+  /**
+   * @var string|null
+   */
+  public ?string $bundle;
+
+  /**
+   * @var string|null
+   */
+  public ?string $status;
+
+  /**
+   * @var int
+   */
+  public int $local = 0;
+
+  /**
+   * @var string
+   */
+  public string $createdAt;
+
+  /**
+   * @var array
+   */
+  public array $atoms = [];
+
+  /**
+   * @param string|array $isotopes
    * @param array $atoms
    *
    * @return array
    */
-  public static function isotopeFilter ( string $isotope, array $atoms ): array {
-    return array_filter( $atoms, static function ( Atom $atom ) use ( $isotope ) {
-      return ( $isotope === $atom->isotope );
-    } );
+  public static function isotopeFilter ( string|array $isotopes, array $atoms ): array {
+    if ( is_string( $isotopes ) ) {
+      $isotopes = [ $isotopes ];
+    }
+    $result = [];
+    foreach ( $atoms as $atom ) {
+      if ( in_array( $atom->isotope, $isotopes, true ) ) {
+        $result[] = $atom;
+      }
+    }
+    return $result;
   }
 
-
   /**
-   * @param string $isotope
+   * @param string|array $isotopes
    *
    * @return array
    */
-  public function getIsotopes( string $isotope ): array {
-    return static::isotopeFilter( $isotope, $this->atoms );
+  public function getIsotopes ( string|array $isotopes ): array {
+    return static::isotopeFilter( $isotopes, $this->atoms );
   }
-
 
   /**
    * @return string
    */
-  public function logString(): string {
-    return $this->molecularHash .
-      ' [ '. implode( ',', array_column( $this->atoms, 'isotope' ) ) .' ] ';
+  public function logString (): string {
+    return $this->molecularHash . ' [ ' . implode( ',', array_column( $this->atoms, 'isotope' ) ) . ' ] ';
   }
 
   /**
@@ -122,7 +144,6 @@ class MoleculeStructure {
    * @param int $index
    *
    * @return string
-   * @throws Exception
    */
   public function getBatchId ( int $index ): string {
     $molecularHash = Atom::hashAtoms( $this->atoms );
@@ -144,7 +165,25 @@ class MoleculeStructure {
   protected static function enumerate ( string $hash ): array {
 
     $target = [];
-    $mapped = [ '0' => -8, '1' => -7, '2' => -6, '3' => -5, '4' => -4, '5' => -3, '6' => -2, '7' => -1, '8' => 0, '9' => 1, 'a' => 2, 'b' => 3, 'c' => 4, 'd' => 5, 'e' => 6, 'f' => 7, 'g' => 8, ];
+    $mapped = [
+      '0' => -8,
+      '1' => -7,
+      '2' => -6,
+      '3' => -5,
+      '4' => -4,
+      '5' => -3,
+      '6' => -2,
+      '7' => -1,
+      '8' => 0,
+      '9' => 1,
+      'a' => 2,
+      'b' => 3,
+      'c' => 4,
+      'd' => 5,
+      'e' => 6,
+      'f' => 7,
+      'g' => 8,
+    ];
 
     foreach ( str_split( $hash ) as $index => $symbol ) {
 
@@ -181,7 +220,13 @@ class MoleculeStructure {
 
         if ( $totalCondition ? $value < 8 : $value > -8 ) {
 
-          $totalCondition ? [ ++$mappedHashArray[ $key ], ++$total, ] : [ --$mappedHashArray[ $key ], --$total, ];
+          $totalCondition ? [
+            ++$mappedHashArray[ $key ],
+            ++$total,
+          ] : [
+            --$mappedHashArray[ $key ],
+            --$total,
+          ];
 
           if ( $total === 0 ) {
             break;
@@ -194,29 +239,19 @@ class MoleculeStructure {
   }
 
   /**
-   * MoleculeStructure constructor.
-   *
    * @param string|null $cellSlug
    */
-  public function __construct ( string $cellSlug = null ) {
-    $this->cellSlug = $cellSlug;
+  public function __construct ( public ?string $cellSlug = null ) {
+
   }
 
   /**
    * @param Wallet|null $senderWallet
    *
-   * @throws \JsonException
+   * @throws JsonException
    */
   public function check ( Wallet $senderWallet = null ): void {
-    ( new CheckMolecule( $this ) )
-      ->verify( $senderWallet );
-  }
-
-  /**
-   * @return string
-   */
-  public function __toString (): string {
-    return $this->toJson();
+    ( new CheckMolecule( $this ) )->verify( $senderWallet );
   }
 
   /**
@@ -232,7 +267,6 @@ class MoleculeStructure {
    * @param bool $encode
    *
    * @return string
-   * @throws Exception
    */
   public function signatureFragments ( string $key, bool $encode = true ): string {
     // Subdivide Kk into 16 segments of 256 bytes (128 characters) each
@@ -261,48 +295,48 @@ class MoleculeStructure {
    * @param array $data
    *
    * @return static
+   * @throws JsonException
    */
   public static function toObject ( array $data ): MoleculeStructure {
-    $object = static::arrayToObject( $data );
-    foreach ( $object->atoms as $key => $atom_data ) {
-      $atom = new Atom( $atom_data[ 'position' ], $atom_data[ 'walletAddress' ], $atom_data[ 'isotope' ] );
-      $object->atoms[ $key ] = Atom::arrayToObject( $atom_data, $atom );
+    $molecule = new self;
+    foreach( [
+      'cellSlug', 'molecularHash', 'counterparty', 'bundle', 'status', 'local', 'createdAt',
+    ] as $property ) {
+      $value = array_get( $data, $property );
+
+      // Special typed modification
+      switch ( $property ) {
+        case 'local':
+          $value = (int) $value;
+          break;
+        case 'createdAt':
+          $value = (string) $value;
+          break;
+      }
+      $molecule->$property = $value;
     }
-    $object->atoms = Atom::sortAtoms( $object->atoms );
-    return $object;
-  }
-
-  /**
-   * @param string $json
-   * @param string|null $secret
-   *
-   * @return MoleculeStructure
-   * @throws Exception
-   */
-  public static function jsonToObject ( string $json, string $secret = null ): static {
-    $secret = $secret ?? Crypto::generateSecret();
-    $serializer = new Serializer( [ new ObjectNormalizer(), ], [ new JsonEncoder(), ] );
-    $object = $serializer->deserialize( $json, static::class, 'json', [ AbstractNormalizer::DEFAULT_CONSTRUCTOR_ARGUMENTS => [ static::class => [ 'secret' => $secret, ], ], ] );
-
-    foreach ( $object->atoms as $idx => $atom ) {
-      $object->atoms[ $idx ] = Atom::jsonToObject( $serializer->serialize( $atom, 'json' ) );
+    foreach( array_get( $data, 'atoms', [] ) as $atom ) {
+      // if ( !array_has( $atom, 'meta' ) ) {
+        // dd( $atom );
+      // }
+      $molecule->atoms[] = new Atom(
+        array_get( $atom, 'position' ),
+        array_get( $atom, 'walletAddress' ),
+        array_get( $atom, 'isotope' ),
+        array_get( $atom, 'token' ),
+        array_get( $atom, 'value' ),
+        array_get( $atom, 'batchId' ),
+        array_get( $atom, 'metaType' ),
+        array_get( $atom, 'metaId' ),
+        array_get( $atom, 'meta' ),
+        array_get( $atom, 'otsFragment' ),
+        array_get( $atom, 'index' ),
+        array_get( $atom, 'createdAt' ),
+        array_get( $atom, 'version' ),
+      );
     }
-
-    $object->atoms = Atom::sortAtoms( $object->atoms );
-
-    return $object;
-  }
-
-  /**
-   * @param string $property
-   * @param $value
-   *
-   * @todo change to __set?
-   */
-  public function setProperty ( string $property, $value ): void {
-    $property = array_get( [ 'bundleHash' => 'bundle' ], $property, $property );
-
-    $this->$property = $value;
+    $molecule->atoms = Atom::sortAtoms( $molecule->atoms );
+    return $molecule;
   }
 
 }

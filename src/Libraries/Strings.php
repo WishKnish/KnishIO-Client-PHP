@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Libraries;
 use BI\BigInteger;
 use Exception;
 use JetBrains\PhpStorm\Pure;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 
 /**
  * Class Str
@@ -85,11 +86,16 @@ class Strings {
    * @param string $alphabet
    *
    * @return string
-   * @throws Exception
+   * @throws CryptoException
    */
   public static function randomString ( int $length = 256, string $alphabet = 'abcdef0123456789' ): string {
     $array = array_map( static function () {
-      return random_int( 0, 255 );
+      try {
+        return random_int( 0, 255 );
+      }
+      catch ( Exception $e ) {
+        throw new CryptoException( $e->getMessage(), $e->getCode(), $e );
+      }
     }, array_pad( [], $length, 0 ) );
     return implode( array_map( static function ( $int ) use ( $alphabet ) {
       return mb_chr( static::utf8CharCodeAt( $alphabet, $int % mb_strlen( $alphabet ) ) );
@@ -178,7 +184,7 @@ class Strings {
    * @return string
    */
   public static function hexToBase64 ( string $str ): string {
-    return base64_encode( hex2bin( $str ) );
+    return base64_encode( hex2bin($str) );
   }
 
   /**

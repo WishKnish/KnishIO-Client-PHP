@@ -49,36 +49,36 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use Exception;
 use JsonException;
 use SodiumException;
+use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 
 /**
  * Class Soda
  * @package WishKnish\KnishIO\Client\Libraries
  *
- * @property string|null $characters
+ * @property array $characters
  *
  */
 class Soda {
+
   /**
    * @var array
    */
-  public array $characters;
+  private array $characters;
 
   /**
    * Soda constructor.
    *
    * @param string|null $characters
    *
-   * @throws Exception
    */
   public function __construct ( string $characters = null ) {
     $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
 
     if ( !extension_loaded( 'sodium' ) ) {
-      Sodium::libsodium2sodium();
+      throw new CryptoException( 'Sodium extension is not found.' );
     }
   }
 
@@ -122,7 +122,6 @@ class Soda {
    *
    * @return string
    * @throws SodiumException
-   * @throws Exception
    */
   public function generatePrivateKey ( string $key ): string {
     return $this->encode( sodium_crypto_box_secretkey( Shake256::hash( $key, SODIUM_CRYPTO_BOX_KEYPAIRBYTES ) ) );
@@ -144,7 +143,6 @@ class Soda {
    * @param string $key
    *
    * @return string
-   * @throws Exception
    */
   public function shortHash ( string $key ): string {
     return $this->encode( Shake256::hash( $key, 8 ) );

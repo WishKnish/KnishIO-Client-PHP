@@ -62,7 +62,7 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-abstract class BaseException extends LogicException implements IException {
+abstract class BaseException extends LogicException implements BaseExceptionInterface {
   protected $message = 'Unknown exception';
   protected $code = 0;
 

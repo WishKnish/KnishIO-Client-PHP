@@ -52,23 +52,18 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class AtomsMissingException
+ * Class CryptoException
  * @package WishKnish\KnishIO\Client\Exception
- *
- * @property string $message
- * @property integer $code
- * @property string $file
- * @property integer $line
  */
-class AtomsMissingException extends BaseException {
+class CryptoException extends BaseException {
   /**
-   * AtomsMissingException constructor.
+   * CryptoException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'The molecule does not contain atoms', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Error thrown by key cryptographic functions.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

@@ -52,7 +52,7 @@ namespace WishKnish\KnishIO\Client\Exception;
 use Throwable;
 
 /**
- * Class MolecularHashMismatchException
+ * Class TransferAmountException
  * @package WishKnish\KnishIO\Client\Exception
  *
  * @property string $message
@@ -60,15 +60,15 @@ use Throwable;
  * @property string $file
  * @property integer $line
  */
-class MolecularHashMismatchException extends BaseException {
+class TransferAmountException extends BaseException {
   /**
-   * MolecularHashMismatchException constructor.
+   * TransferAmountException constructor.
    *
    * @param string $message
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'The molecular hash does not match', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'An invalid transfer amount was provided.', int $code = 1, Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }
