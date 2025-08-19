@@ -113,7 +113,7 @@ class Strings {
    *
    * @return bool|int|string
    */
-  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, string $srcSymbolTable = null, string $destSymbolTable = null ): bool|int|string {
+  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, ?string $srcSymbolTable = null, ?string $destSymbolTable = null ): bool|int|string {
     // The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
     $baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 

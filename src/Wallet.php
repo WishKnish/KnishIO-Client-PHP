@@ -56,6 +56,7 @@ use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\PostQuantumCrypto;
 use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
@@ -117,6 +118,16 @@ class Wallet {
   private ?string $privkey = null;
 
   /**
+   * @var string|null ML-KEM768 public key (Base64)
+   */
+  private ?string $mlkemPublicKey = null;
+
+  /**
+   * @var string|null ML-KEM768 private key (Base64)
+   */
+  private ?string $mlkemPrivateKey = null;
+
+  /**
    * @var string|null
    */
   public ?string $createdAt = null;
@@ -166,7 +177,7 @@ class Wallet {
    * @throws SodiumException
    */
   public function __construct (
-    string $secret = null,
+    ?string $secret = null,
     public ?string $token = 'USER',
     public ?string $position = null,
     public ?string $batchId = null,
@@ -187,9 +198,11 @@ class Wallet {
       // Soda object initialization
       $this->soda = new Soda( $this->characters );
 
-      // Private & pubkey initialization
+      // Private key initialization for classical crypto
       $this->privkey = $this->soda->generatePrivateKey( $this->key );
-      $this->pubkey = $this->soda->generatePublicKey( $this->privkey );
+      
+      // Initialize ML-KEM768 keys for quantum resistance
+      $this->initializeMLKEM();
 
       // Set characters
       $this->characters = $this->characters ?? 'BASE64';
@@ -214,6 +227,32 @@ class Wallet {
     $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
     $wallet->bundle = $bundle;
     return $wallet;
+  }
+
+  /**
+   * Initialize ML-KEM768 keys for quantum resistance
+   * 
+   * @return void
+   * @throws Exception
+   */
+  private function initializeMLKEM(): void {
+    if (!$this->key) {
+      return;
+    }
+    
+    // Generate a 64-byte (512-bit) seed from the Knish.IO private key
+    // generateSecret returns hex, so we need 128 hex chars for 64 bytes
+    $seedHex = Crypto::generateSecret($this->key, 128);
+    
+    // Generate ML-KEM768 key pair from seed
+    $keyPair = PostQuantumCrypto::generateMLKEMKeyPairFromSeed($seedHex);
+    
+    // Store the ML-KEM keys
+    $this->mlkemPublicKey = $keyPair['publicKey'];
+    $this->mlkemPrivateKey = $keyPair['privateKey'];
+    
+    // Set pubkey to the ML-KEM768 public key (1580 chars) for quantum resistance
+    $this->pubkey = $this->mlkemPublicKey;
   }
 
   /**

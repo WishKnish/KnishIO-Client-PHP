@@ -64,8 +64,8 @@ class Crypto {
    *
    * @return string
    */
-  public static function generateSecret ( string $seed = null, int $length = 2048 ): string {
-    return $seed ? bin2hex( Shake256::hash( $seed, $length / 4 ) ) : Strings::randomString( $length );
+  public static function generateSecret ( ?string $seed = null, int $length = 2048 ): string {
+    return $seed ? bin2hex( Shake256::hash( $seed, $length / 2 ) ) : Strings::randomString( $length );
   }
 
   /**
@@ -105,6 +105,19 @@ class Crypto {
    */
   public static function isBundleHash ( string $code ): bool {
     return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
+  }
+
+  /**
+   * SHAKE256 hash function
+   *
+   * @param string $input - The input string to hash
+   * @param int $outputLength - The desired output length in bits
+   *
+   * @return string - The hex-encoded hash
+   */
+  public static function shake256 ( string $input, int $outputLength ): string {
+    // Convert bits to bytes (outputLength is in bits, Shake256::hash expects bytes)
+    return bin2hex( Shake256::hash( $input, $outputLength / 8 ) );
   }
 
 }
