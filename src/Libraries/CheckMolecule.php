@@ -422,8 +422,8 @@ class CheckMolecule {
       $sum += $value;
     }
 
-    // Does the total sum of all atoms equal the remainder atom's value? (all other atoms must add up to zero)
-    if ( $sum !== $value ) {
+    // All atoms must sum to zero for a balanced transaction
+    if ( $sum !== 0 ) {
       throw new TransferUnbalancedException();
     }
 
