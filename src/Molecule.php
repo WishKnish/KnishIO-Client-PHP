@@ -217,9 +217,19 @@ class Molecule extends MoleculeStructure {
     $atomMeta = new AtomMeta( $metas );
     $atomMeta->addPolicy( $policy );
 
+    // Create a wallet for the R isotope atom (following JavaScript pattern)
+    $wallet = Wallet::create(
+      $this->secret,
+      'USER',
+      null,
+      null,
+      null,
+      $this->sourceWallet->bundle
+    );
+
     $this->addAtom( Atom::create(
       'R',
-      null,
+      $wallet,
       null,
       $metaType,
       $metaId,

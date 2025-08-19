@@ -158,7 +158,7 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
     $this->initialize( $uri, $client, $serverSdkVersion );
   }
 
@@ -169,7 +169,7 @@ class KnishIOClient {
    *
    * @return void
    */
-  public function initialize ( string|array $uri, HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
     $this->reset();
 
     // Init uris
@@ -306,7 +306,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function createMolecule ( string $secret = null, Wallet $sourceWallet = null, Wallet $remainderWallet = null ): Molecule {
+  public function createMolecule ( ?string $secret = null, ?Wallet $sourceWallet = null, ?Wallet $remainderWallet = null ): Molecule {
 
     $secret = $secret ?: $this->getSecret();
 
@@ -357,7 +357,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function createMoleculeMutation ( string $class, Molecule $molecule = null ): MutationProposeMolecule {
+  public function createMoleculeMutation ( string $class, ?Molecule $molecule = null ): MutationProposeMolecule {
 
     // Init molecule
     $molecule = $molecule ?: $this->createMolecule();
@@ -385,7 +385,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryBalance ( string $tokenSlug, string $bundleHash = null, string $type = 'regular' ): Response {
+  public function queryBalance ( string $tokenSlug, ?string $bundleHash = null, string $type = 'regular' ): Response {
 
     // Create a query
     /** @var QueryBalance $query */
@@ -440,7 +440,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryMeta ( array|string $metaType, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false, array $fields = null ): ?array {
+  public function queryMeta ( array|string $metaType, array|string|null $metaId = null, array|string|null $key = null, array|string|null $value = null, bool $latest = false, ?array $fields = null ): ?array {
 
     // Create a query
     /** @var QueryMetaType $query */
@@ -748,7 +748,7 @@ class KnishIOClient {
    * @return Response
    * @throws GuzzleException|JsonException
    */
-  public function queryBundle ( string $bundleHash = null, array $fields = null ): Response {
+  public function queryBundle ( ?string $bundleHash = null, ?array $fields = null ): Response {
     /**
      * Create a query
      *
@@ -773,7 +773,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function requestTokens ( string $tokenSlug, int $amount, string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
+  public function requestTokens ( string $tokenSlug, int $amount, ?string $recipientBundle = null, array $meta = [], ?string $batchId = null, array $units = [] ): Response {
 
     // No bundle? Use our own
     $recipientBundle = $recipientBundle ?? $this->getBundle();
@@ -1271,7 +1271,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function requestAuthToken ( ?string $secret, string $cellSlug = null, bool $encrypt = false ): Response {
+  public function requestAuthToken ( ?string $secret, ?string $cellSlug = null, bool $encrypt = false ): Response {
     // Set a cell slug
     $this->setCellSlug( $cellSlug );
 
