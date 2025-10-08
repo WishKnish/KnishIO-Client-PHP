@@ -47,80 +47,54 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Libraries;
-
-use WishKnish\KnishIO\Client\Exception\CryptoException;
-use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
+namespace WishKnish\KnishIO\Client\Response;
 
 /**
- * Class Crypto
- * @package WishKnish\KnishIO\Client\Libraries
+ * Class ResponseMetaTypeViaAtom
+ * @package WishKnish\KnishIO\Client\Response
  */
-class Crypto {
+class ResponseMetaTypeViaAtom extends Response {
 
   /**
-   * @param string|null $seed
-   * @param int $length
-   *
-   * @return string
+   * @var string
    */
-  public static function generateSecret ( ?string $seed = null, int $length = 2048 ): string {
-    // Match JavaScript SDK behavior: outputLen: length * 2 bits = length / 2 bytes
-    // JavaScript: for length=2048 → 4096 bits = 512 bytes = 1024 hex chars
-    // JavaScript: for length=128 → 256 bits = 32 bytes = 64 hex chars
-    return $seed ? bin2hex( Shake256::hash( $seed, $length / 2 ) ) : Strings::randomString( $length );
-  }
+  protected string $dataKey = 'data.MetaTypeViaAtom';
 
   /**
-   * @param string|null $molecularHash
-   * @param int|null $index
-   *
-   * @return string
-   * @throws CryptoException
+   * @return array|array[]
    */
-  public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
-
-    if ( !in_array( null, [
-      $molecularHash,
-      $index
-    ], true ) ) {
-      return static::generateBundleHash( $molecularHash . $index );
+  public function payload (): array {
+    $metaTypeData = $this->data();
+    
+    if ( !$metaTypeData || empty( $metaTypeData ) ) {
+      return [
+        'instances' => [],
+        'instanceCount' => [],
+        'paginatorInfo' => []
+      ];
     }
 
-    return Strings::randomString( 64 );
-  }
+    $response = [
+      'instances' => [],
+      'instanceCount' => [],
+      'paginatorInfo' => []
+    ];
 
-  /**
-   * Hashes the user secret to produce a bundle hash
-   *
-   * @param string $secret
-   *
-   * @return string
-   */
-  public static function generateBundleHash ( string $secret ): string {
-    return bin2hex( Shake256::hash( $secret, 32 ) );
-  }
+    // Get the last meta type data (matching JS SDK behavior)
+    $metaData = is_array( $metaTypeData ) ? array_pop( $metaTypeData ) : $metaTypeData;
 
-  /**
-   * @param string $code
-   *
-   * @return bool
-   */
-  public static function isBundleHash ( string $code ): bool {
-    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
-  }
+    if ( isset( $metaData[ 'instances' ] ) ) {
+      $response[ 'instances' ] = $metaData[ 'instances' ];
+    }
 
-  /**
-   * SHAKE256 hash function
-   *
-   * @param string $input - The input string to hash
-   * @param int $outputLength - The desired output length in bits
-   *
-   * @return string - The hex-encoded hash
-   */
-  public static function shake256 ( string $input, int $outputLength ): string {
-    // Convert bits to bytes (outputLength is in bits, Shake256::hash expects bytes)
-    return bin2hex( Shake256::hash( $input, $outputLength / 8 ) );
-  }
+    if ( isset( $metaData[ 'instanceCount' ] ) ) {
+      $response[ 'instanceCount' ] = $metaData[ 'instanceCount' ];
+    }
 
+    if ( isset( $metaData[ 'paginatorInfo' ] ) ) {
+      $response[ 'paginatorInfo' ] = $metaData[ 'paginatorInfo' ];
+    }
+
+    return $response;
+  }
 }

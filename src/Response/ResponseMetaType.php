@@ -75,7 +75,8 @@ class ResponseMetaType extends Response {
       'paginatorInfo' => [],
     ];
 
-    $metaData = $data[ 0 ];
+    // The data comes from GraphQL as an array
+    $metaData = is_array($data) && isset($data[0]) ? $data[0] : $data;
 
     // Duplicate logic from js (@todo $result = $data[ 0 ]?)
     foreach ( $result as $key => $value ) {

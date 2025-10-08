@@ -70,9 +70,11 @@ use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateIdentifier;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
+use WishKnish\KnishIO\Client\Mutation\MutationCreateRule;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateWallet;
 use WishKnish\KnishIO\Client\Mutation\MutationDepositBufferToken;
+use WishKnish\KnishIO\Client\Mutation\MutationLinkIdentifier;
 use WishKnish\KnishIO\Client\Mutation\MutationProposeMolecule;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorization;
 use WishKnish\KnishIO\Client\Mutation\MutationRequestAuthorizationGuest;
@@ -81,10 +83,14 @@ use WishKnish\KnishIO\Client\Mutation\MutationTransferTokens;
 use WishKnish\KnishIO\Client\Mutation\MutationWithdrawBufferToken;
 use WishKnish\KnishIO\Client\Query\Query;
 use WishKnish\KnishIO\Client\Query\QueryActiveSession;
+use WishKnish\KnishIO\Client\Query\QueryAtom;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryBatch;
+use WishKnish\KnishIO\Client\Query\QueryBatchHistory;
 use WishKnish\KnishIO\Client\Query\QueryContinuId;
+use WishKnish\KnishIO\Client\Query\QueryPolicy;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
+use WishKnish\KnishIO\Client\Query\QueryMetaTypeViaAtom;
 use WishKnish\KnishIO\Client\Query\QueryToken;
 use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
@@ -435,17 +441,28 @@ class KnishIOClient {
    * @param array|string|null $value
    * @param bool $latest
    * @param array|null $fields
+   * @param bool $throughAtom
+   * @param array|null $keys
+   * @param array|null $values
+   * @param array|null $atomValues
    *
    * @return array|null
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryMeta ( array|string $metaType, array|string|null $metaId = null, array|string|null $key = null, array|string|null $value = null, bool $latest = false, ?array $fields = null ): ?array {
+  public function queryMeta ( array|string $metaType, array|string|null $metaId = null, array|string|null $key = null, array|string|null $value = null, bool $latest = false, ?array $fields = null, bool $throughAtom = true, ?array $keys = null, ?array $values = null, ?array $atomValues = null ): ?array {
 
-    // Create a query
-    /** @var QueryMetaType $query */
-    $query = $this->createQuery( QueryMetaType::class );
-    $variables = QueryMetaType::createVariables( $metaType, $metaId, $key, $value, $latest );
+    if ( $throughAtom ) {
+      // Use QueryMetaTypeViaAtom (matching JS and Python SDKs default behavior)
+      /** @var QueryMetaTypeViaAtom $query */
+      $query = $this->createQuery( QueryMetaTypeViaAtom::class );
+      $variables = QueryMetaTypeViaAtom::createVariables( $metaType, $metaId, $key, $value, $atomValues, $latest, null, null, null, $this->cellSlug );
+    } else {
+      // Use QueryMetaType
+      /** @var QueryMetaType $query */
+      $query = $this->createQuery( QueryMetaType::class );
+      $variables = QueryMetaType::createVariables( $metaType, $metaId, $key, $value, $latest, $this->cellSlug );
+    }
 
     // Execute the query
     return $query->execute( $variables, $fields )
@@ -466,6 +483,56 @@ class KnishIOClient {
       ->execute( [
         'batchId' => $batchId
       ] );
+  }
+
+  /**
+   * Query batch history with cascading meta instances
+   *
+   * @param string $batchId
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException
+   */
+  public function queryBatchHistory(string $batchId): Response {
+    return $this->createQuery(QueryBatchHistory::class)
+      ->execute(['batchId' => $batchId]);
+  }
+
+  /**
+   * Query atoms with comprehensive filtering
+   *
+   * @param array $params - Can include:
+   *   - molecularHashes, molecularHash, bundleHashes, bundleHash
+   *   - positions, position, walletAddresses, walletAddress  
+   *   - isotopes, isotope, tokenSlugs, tokenSlug
+   *   - cellSlugs, cellSlug, batchIds, batchId
+   *   - values, value, metaTypes, metaType
+   *   - metaIds, metaId, indexes, index
+   *   - filter, latest, queryArgs
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException
+   */
+  public function queryAtom(array $params = []): Response {
+    return $this->createQuery(QueryAtom::class)
+      ->execute(QueryAtom::createVariables($params));
+  }
+
+  /**
+   * Query policy for a given metaType and metaId
+   *
+   * @param string $metaType
+   * @param string $metaId
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException
+   */
+  public function queryPolicy(string $metaType, string $metaId): Response {
+    return $this->createQuery(QueryPolicy::class)
+      ->execute([
+        'metaType' => $metaType,
+        'metaId' => $metaId
+      ]);
   }
 
   /**
@@ -708,6 +775,46 @@ class KnishIOClient {
     // Create & execute a mutation
     $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
     return $query->execute();
+  }
+
+  /**
+   * Create a rule for a given metaType and metaId
+   *
+   * @param string $metaType
+   * @param string $metaId
+   * @param array $rule
+   * @param array $policy
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException|SodiumException
+   */
+  public function createRule(string $metaType, string $metaId, array $rule, array $policy = []): Response {
+    /**
+     * @var MutationCreateRule $query
+     */
+    $query = $this->createMoleculeMutation(MutationCreateRule::class);
+    $query->fillMolecule($metaType, $metaId, $rule, $policy);
+    
+    return $query->execute();
+  }
+
+  /**
+   * Link an identifier to a wallet bundle
+   *
+   * @param string $bundle
+   * @param string $type
+   * @param string $content
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException
+   */
+  public function linkIdentifier(string $bundle, string $type, string $content): Response {
+    return $this->createQuery(MutationLinkIdentifier::class)
+      ->execute([
+        'bundle' => $bundle,
+        'type' => $type,
+        'content' => $content
+      ]);
   }
 
   /**
@@ -1272,6 +1379,7 @@ class KnishIOClient {
    * @throws JsonException
    */
   public function requestAuthToken ( ?string $secret, ?string $cellSlug = null, bool $encrypt = false ): Response {
+
     // Set a cell slug
     $this->setCellSlug( $cellSlug );
 
@@ -1312,6 +1420,51 @@ class KnishIOClient {
    */
   public function getAuthToken (): ?AuthToken {
     return $this->authToken;
+  }
+
+  /**
+   * Get the server SDK version
+   *
+   * @return int
+   */
+  public function getServerSdkVersion(): int {
+    return $this->serverSdkVersion;
+  }
+
+  /**
+   * Get a device fingerprint for guest authentication
+   * This is a simplified version - in production you might want to use
+   * a more sophisticated fingerprinting library
+   *
+   * @return string
+   */
+  public function getFingerprint(): string {
+    // Combine various server and request variables to create a fingerprint
+    $components = [
+      $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+      $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'unknown',
+      $_SERVER['HTTP_ACCEPT_ENCODING'] ?? 'unknown',
+      $_SERVER['HTTP_ACCEPT'] ?? 'unknown',
+      // Add more components as needed
+    ];
+    
+    return hash('sha256', implode('|', $components));
+  }
+
+  /**
+   * Get fingerprint data components
+   *
+   * @return array
+   */
+  public function getFingerprintData(): array {
+    return [
+      'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+      'acceptLanguage' => $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'unknown',
+      'acceptEncoding' => $_SERVER['HTTP_ACCEPT_ENCODING'] ?? 'unknown',
+      'accept' => $_SERVER['HTTP_ACCEPT'] ?? 'unknown',
+      'remoteAddr' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+      // Add more data as needed
+    ];
   }
 
 }

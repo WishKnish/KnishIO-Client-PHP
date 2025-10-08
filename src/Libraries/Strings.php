@@ -162,6 +162,12 @@ class Strings {
    * @return string
    */
   public static function currentTimeMillis (): string {
+    // Support deterministic testing with KNISHIO_FIXED_TIMESTAMP environment variable
+    $fixedTimestamp = getenv('KNISHIO_FIXED_TIMESTAMP');
+    if ($fixedTimestamp !== false) {
+      return strval(intval($fixedTimestamp) * 1000);  // Convert from seconds to milliseconds
+    }
+    
     return ( string ) round( array_sum( explode( ' ', microtime() ) ) * 1000 );
   }
 

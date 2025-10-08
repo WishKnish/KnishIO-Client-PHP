@@ -197,6 +197,9 @@ abstract class Query {
     foreach ( $fields as $key => $field ) {
       if ( is_array( $field ) ) {
         $fields[ $key ] = $key . ' ' . $this->compiledFields( $field );
+      } elseif ( $field === null ) {
+        // When field value is null, just use the field name
+        $fields[ $key ] = $key;
       }
     }
     return '{' . implode( ', ', $fields ) . '}';

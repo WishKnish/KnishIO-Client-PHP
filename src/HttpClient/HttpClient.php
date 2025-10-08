@@ -100,6 +100,8 @@ class HttpClient extends Client implements HttpClientInterface {
       'base_uri' => $uri,
       'handler' => $this->cipher->stack(),
       'encrypt' => $encrypt,
+      RequestOptions::TIMEOUT => 60,         // 60 seconds for complete request (debug)
+      RequestOptions::CONNECT_TIMEOUT => 30, // 30 seconds to establish connection (debug)
       RequestOptions::VERIFY => false,
       RequestOptions::HTTP_ERRORS => false,
       RequestOptions::HEADERS => [

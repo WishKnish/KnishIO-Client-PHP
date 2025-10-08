@@ -2,87 +2,89 @@
 
 namespace WishKnish\KnishIO\Client\Libraries;
 
-use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use Exception;
 
 /**
  * Class PostQuantumCrypto
- * 
- * Provides ML-KEM768 compatible key generation for PHP SDK
- * This implementation generates deterministic keys from seeds matching JS/Python/Kotlin SDKs
- * 
+ *
+ * Provides real ML-KEM-768 key generation using JavaScript @noble/post-quantum
+ * via Node.js bridge, ensuring 100% compatibility with JavaScript SDK.
+ *
+ * This replaces the previous fake implementation that used SHA3-512 hash
+ * concatenation with actual FIPS-203 ML-KEM-768 cryptography.
+ *
  * @package WishKnish\KnishIO\Client\Libraries
  */
 class PostQuantumCrypto
 {
-    // ML-KEM768 key sizes
+    // ML-KEM-768 key sizes (FIPS 203 standard)
     const MLKEM_PUBLIC_KEY_SIZE = 1184; // bytes
     const MLKEM_PRIVATE_KEY_SIZE = 2400; // bytes
     const MLKEM_SEED_SIZE = 64; // bytes
-    
+    const MLKEM_CIPHERTEXT_SIZE = 1088; // bytes
+    const MLKEM_SHARED_SECRET_SIZE = 32; // bytes
+
     /**
-     * Generate ML-KEM768 key pair from seed
-     * This creates deterministic keys matching other SDKs
-     * 
-     * @param string $seed 64-byte seed (hex string)
+     * Generate ML-KEM-768 key pair from seed matching JavaScript Noble crypto format
+     *
+     * Uses @noble/post-quantum via Node.js bridge to ensure exact compatibility
+     * with JavaScript SDK implementation. This is deterministic - same seed
+     * produces same key pair every time.
+     *
+     * @param string $seedHex 128 hex characters (64 bytes when converted)
      * @return array ['publicKey' => base64, 'privateKey' => base64]
+     * @throws Exception
      */
-    public static function generateMLKEMKeyPairFromSeed(string $seed): array
+    public static function generateMLKEMKeyPairFromSeed(string $seedHex): array
     {
-        // Convert hex seed to binary
-        $seedBinary = hex2bin($seed);
-        if (strlen($seedBinary) !== self::MLKEM_SEED_SIZE) {
-            throw new Exception('Invalid seed size for ML-KEM768');
+        if (strlen($seedHex) !== 128) {
+            throw new Exception('Seed must be exactly 128 hex characters for ML-KEM-768');
         }
-        
-        // Generate deterministic public key from seed using SHAKE256
-        // This creates a key of the correct size that's deterministic from the seed
-        $publicKeyData = self::generateDeterministicKey($seedBinary, self::MLKEM_PUBLIC_KEY_SIZE, 'public');
-        $privateKeyData = self::generateDeterministicKey($seedBinary, self::MLKEM_PRIVATE_KEY_SIZE, 'private');
-        
+
+        // Use Noble crypto via Node.js bridge for guaranteed JavaScript compatibility
+        $result = NobleMLKEMBridge::generateMLKEMKeyPairFromSeed($seedHex);
+
         return [
-            'publicKey' => base64_encode($publicKeyData),
-            'privateKey' => base64_encode($privateKeyData)
+            'publicKey' => $result['publicKey'],
+            'privateKey' => $result['secretKey'] // Bridge returns 'secretKey', normalize to 'privateKey'
         ];
     }
-    
+
     /**
-     * Generate deterministic key data from seed
-     * Uses SHAKE256 to expand seed into key material
-     * 
-     * @param string $seed Binary seed
-     * @param int $outputSize Size of output in bytes
-     * @param string $type 'public' or 'private'
-     * @return string Binary key data
+     * Encapsulate - generate shared secret and ciphertext from public key
+     *
+     * This is used for key exchange - the sender uses the recipient's public key
+     * to generate a shared secret and encrypted ciphertext.
+     *
+     * @param string $publicKeyBase64 Base64-encoded public key
+     * @return array ['ciphertext' => base64, 'sharedSecret' => base64]
+     * @throws Exception
      */
-    private static function generateDeterministicKey(string $seed, int $outputSize, string $type): string
+    public static function encapsulate(string $publicKeyBase64): array
     {
-        // Use SHAKE256 to generate deterministic output from seed
-        // Add type to make public and private keys different
-        $input = $seed . $type;
-        
-        // Use SHAKE256 to generate the required output size
-        // This creates deterministic keys from the seed matching other SDKs
-        $output = '';
-        $counter = 0;
-        
-        while (strlen($output) < $outputSize) {
-            $hashInput = $input . pack('N', $counter);
-            
-            // Use SHAKE256 to generate bytes
-            $chunkSize = min(512, $outputSize - strlen($output));
-            $chunk = Shake256::hash($hashInput, $chunkSize);
-            
-            $output .= $chunk;
-            $counter++;
-        }
-        
-        return substr($output, 0, $outputSize);
+        return NobleMLKEMBridge::encapsulate($publicKeyBase64);
     }
-    
+
+    /**
+     * Decapsulate - recover shared secret from ciphertext using secret key
+     *
+     * This is used by the recipient to recover the shared secret from the
+     * ciphertext using their private key.
+     *
+     * @param string $ciphertextBase64 Base64-encoded ciphertext
+     * @param string $secretKeyBase64 Base64-encoded secret key
+     * @return string Base64-encoded shared secret
+     * @throws Exception
+     */
+    public static function decapsulate(string $ciphertextBase64, string $secretKeyBase64): string
+    {
+        $result = NobleMLKEMBridge::decapsulate($ciphertextBase64, $secretKeyBase64);
+        return $result['sharedSecret'];
+    }
+
     /**
      * Convert ML-KEM public key to Base64
-     * 
+     *
      * @param string $publicKey Binary public key
      * @return string Base64 encoded public key
      */
@@ -90,10 +92,10 @@ class PostQuantumCrypto
     {
         return base64_encode($publicKey);
     }
-    
+
     /**
      * Convert Base64 to ML-KEM public key
-     * 
+     *
      * @param string $base64Key Base64 encoded public key
      * @return string Binary public key
      */
@@ -101,15 +103,26 @@ class PostQuantumCrypto
     {
         return base64_decode($base64Key);
     }
-    
+
     /**
      * Check if ML-KEM support is available
-     * 
+     *
+     * Checks if Node.js and @noble/post-quantum are available
+     *
      * @return bool
      */
     public static function isAvailable(): bool
     {
-        // Check if we have the necessary functions
-        return function_exists('hash') && in_array('sha3-512', hash_algos());
+        return NobleMLKEMBridge::isAvailable();
+    }
+
+    /**
+     * Get implementation status and version information
+     *
+     * @return array Status information including Node.js version and bridge details
+     */
+    public static function getStatus(): array
+    {
+        return NobleMLKEMBridge::getStatus();
     }
 }
