@@ -145,7 +145,7 @@ abstract class Query {
       'x-auth-token' => $this->client->getAuthToken(),
     ] ), json_encode( [
       'query' => $this->compiledQuery( $fields ),
-      'variables' => $this->variables,
+      'variables' => empty($this->variables) ? (object)[] : $this->variables,
     ], JSON_THROW_ON_ERROR ) );
   }
 

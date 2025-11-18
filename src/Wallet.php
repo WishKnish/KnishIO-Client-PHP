@@ -658,4 +658,128 @@ class Wallet {
     return $this->decryptWithAESGCM($ciphertext, $sharedSecret, $iv);
   }
 
+  /**
+   * Encrypt message for multiple recipients using ML-KEM768
+   * Returns array with recipient pubkey hash as key
+   *
+   * @param mixed $message Message to encrypt
+   * @param string ...$pubkeys Recipient public keys
+   * @return array Encrypted messages keyed by pubkey hash
+   * @throws Exception
+   */
+  public function encryptMessageML768Multi(mixed $message, string ...$pubkeys): array {
+    if (!$this->soda) {
+      throw new CryptoException('To use encryption, the wallet must be initialized with a secret argument.');
+    }
+
+    $encrypt = [];
+    foreach ($pubkeys as $pubkey) {
+      $hash = $this->soda->shortHash($pubkey);
+      $encrypt[$hash] = $this->encryptMessageML768($message, $pubkey);
+    }
+
+    return $encrypt;
+  }
+
+  /**
+   * Decrypt message from multi-recipient encrypted data
+   * Automatically finds this wallet's encrypted message by pubkey hash
+   *
+   * @param array $multiEncryptedData Multi-recipient encrypted data from encryptMessageML768Multi()
+   * @return mixed Decrypted message
+   * @throws Exception
+   */
+  public function decryptMessageML768Multi(array $multiEncryptedData): mixed {
+    if (!$this->soda) {
+      throw new CryptoException('To use encryption, the wallet must be initialized with a secret argument.');
+    }
+
+    // Calculate hash of our own pubkey
+    $ourHash = $this->soda->shortHash($this->pubkey);
+
+    // Find our encrypted message
+    if (!isset($multiEncryptedData[$ourHash])) {
+      throw new CryptoException('No encrypted message found for this wallet');
+    }
+
+    // Decrypt our message
+    return $this->decryptMessageML768($multiEncryptedData[$ourHash]);
+  }
+
+  /**
+   * Encrypt binary data using ML-KEM768
+   * Does not JSON encode - encrypts raw bytes directly
+   *
+   * @param string $binaryData Binary data to encrypt
+   * @param string $recipientPubkey Recipient's ML-KEM768 public key
+   * @return array Encrypted data structure
+   * @throws Exception
+   */
+  public function encryptBinaryML768(string $binaryData, string $recipientPubkey): array {
+    try {
+      // For binary data, use raw bytes without JSON encoding
+      $messageBytes = $binaryData;
+
+      // Perform ML-KEM768 encapsulation
+      $encapsulateResult = PostQuantumCrypto::encapsulate($recipientPubkey);
+      $sharedSecretBase64 = $encapsulateResult['sharedSecret'];
+      $cipherTextBase64 = $encapsulateResult['ciphertext'];
+
+      // Decode shared secret for AES-GCM encryption
+      $sharedSecret = base64_decode($sharedSecretBase64);
+
+      // Encrypt binary data using AES-GCM
+      $iv = random_bytes(12); // 96-bit IV for AES-GCM
+      $encryptedContent = $this->encryptWithAESGCM($messageBytes, $sharedSecret, $iv);
+      $encryptedMessage = $iv . $encryptedContent; // Prepend IV
+
+      return [
+        'cipherText' => $cipherTextBase64,
+        'encryptedMessage' => base64_encode($encryptedMessage),
+        'isBinary' => true  // Flag to indicate binary data
+      ];
+    } catch (Exception $e) {
+      throw new CryptoException('ML-KEM768 binary encryption failed: ' . $e->getMessage());
+    }
+  }
+
+  /**
+   * Decrypt binary data using ML-KEM768
+   * Returns raw bytes without JSON decoding
+   *
+   * @param array $encryptedData Encrypted data structure
+   * @return string Decrypted binary data
+   * @throws Exception
+   */
+  public function decryptBinaryML768(array $encryptedData): string {
+    try {
+      // Decode encryptedMessage (IV + encrypted content)
+      $encryptedMessage = base64_decode($encryptedData['encryptedMessage']);
+
+      // Use this wallet's ML-KEM768 private key for decapsulation
+      if (!$this->mlkemPrivateKey) {
+        throw new Exception('ML-KEM768 private key not available');
+      }
+
+      // Perform ML-KEM768 decapsulation
+      $sharedSecretBase64 = PostQuantumCrypto::decapsulate($encryptedData['cipherText'], $this->mlkemPrivateKey);
+      $sharedSecret = base64_decode($sharedSecretBase64);
+
+      // Extract IV and encrypted content
+      if (strlen($encryptedMessage) < 12) {
+        throw new Exception('Invalid encrypted message format');
+      }
+
+      $iv = substr($encryptedMessage, 0, 12);
+      $encryptedContent = substr($encryptedMessage, 12);
+
+      // Decrypt using AES-GCM and return raw bytes (no JSON decoding)
+      return $this->decryptWithAESGCM($encryptedContent, $sharedSecret, $iv);
+
+    } catch (Exception $e) {
+      error_log('Wallet::decryptBinaryML768() - Decryption failed: ' . $e->getMessage());
+      throw new CryptoException('ML-KEM768 binary decryption failed: ' . $e->getMessage());
+    }
+  }
+
 }
