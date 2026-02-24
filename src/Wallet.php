@@ -478,14 +478,21 @@ class Wallet {
    */
   public static function generateKey ( string $secret, string $token, string $position ): string {
 
+    // Normalize non-hex secret via SHAKE256 (matching Rust/Kotlin behavior)
+    $secretHex = ctype_xdigit( $secret ) ? $secret : bin2hex( Crypto\Shake256::hash( $secret, 128 ) );
+    // Normalize non-hex position via SHAKE256
+    $positionHex = ctype_xdigit( $position ) ? $position : bin2hex( Crypto\Shake256::hash( $position, 32 ) );
+
     // Converting secret to bigInt
     // Adding new position to the user secret to produce the indexed key
-    $indexedKey = ( new BigInteger( $secret, 16 ) )->add( new BigInteger( $position, 16 ) );
+    $indexedKey = ( new BigInteger( $secretHex, 16 ) )->add( new BigInteger( $positionHex, 16 ) );
 
     try {
       // Hashing the indexed key to produce the intermediate key
+      // Strip leading zeros to match JS BigInt.toString(16) / Rust format!("{:x}")
+      $indexedKeyHex = ltrim( $indexedKey->toString( 16 ), '0' ) ?: '0';
       $intermediateKeySponge = Crypto\Shake256::init()
-        ->absorb( $indexedKey->toString( 16 ) );
+        ->absorb( $indexedKeyHex );
 
       if ( $token !== '' ) {
         $intermediateKeySponge->absorb( $token );

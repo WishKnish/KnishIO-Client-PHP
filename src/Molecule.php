@@ -490,11 +490,11 @@ class Molecule extends MoleculeStructure {
     $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
     $bufferWallet->tradeRates = $tradeRates;
 
-    // Initializing a new Atom to remove tokens from source
+    // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
     ) );
 
     // Initializing a new Atom to add tokens to recipient
@@ -544,11 +544,11 @@ class Molecule extends MoleculeStructure {
       $firstAtomMeta->setSigningWallet( $signingWallet );
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
     $this->addAtom( Atom::create(
       'B',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
       'walletBundle',
       $this->sourceWallet->bundle,
       $firstAtomMeta
@@ -810,8 +810,9 @@ class Molecule extends MoleculeStructure {
     // Set molecule as local
     $this->local = 1;
 
-    // Set meta token
+    // Set meta token and amount
     $meta[ 'token' ] = $token;
+    $meta[ 'amount' ] = (string) $amount;
 
     $this->addAtom( Atom::create(
       'T',
