@@ -145,7 +145,7 @@ abstract class Query {
       'x-auth-token' => $this->client->getAuthToken(),
     ] ), json_encode( [
       'query' => $this->compiledQuery( $fields ),
-      'variables' => $this->variables,
+      'variables' => empty($this->variables) ? (object)[] : $this->variables,
     ], JSON_THROW_ON_ERROR ) );
   }
 
@@ -197,6 +197,9 @@ abstract class Query {
     foreach ( $fields as $key => $field ) {
       if ( is_array( $field ) ) {
         $fields[ $key ] = $key . ' ' . $this->compiledFields( $field );
+      } elseif ( $field === null ) {
+        // When field value is null, just use the field name
+        $fields[ $key ] = $key;
       }
     }
     return '{' . implode( ', ', $fields ) . '}';

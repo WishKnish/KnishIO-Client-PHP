@@ -74,7 +74,7 @@ class Soda {
    * @param string|null $characters
    *
    */
-  public function __construct ( string $characters = null ) {
+  public function __construct ( ?string $characters = null ) {
     $this->characters = [ 'characters' => $characters ?? 'BASE64' ];
 
     if ( !extension_loaded( 'sodium' ) ) {

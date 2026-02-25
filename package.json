@@ -1,0 +1,30 @@
+{
+  "name": "knishio-client-php",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "<div style=\"text-align:center\">   <img src=\"https://raw.githubusercontent.com/WishKnish/KnishIO-Technical-Whitepaper/master/KnishIO-Logo.png\" alt=\"Knish.IO: Post-Blockchain Platform\" /> </div> <div style=\"text-align:center\">info@wishknish.com | https://wishknish.com</div>",
+  "main": "index.js",
+  "bin": {
+    "knishio-client-php": "bin/noble-mlkem-bridge.js"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WishKnish/KnishIO-Client-PHP.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WishKnish/KnishIO-Client-PHP/issues"
+  },
+  "homepage": "https://github.com/WishKnish/KnishIO-Client-PHP#readme",
+  "dependencies": {
+    "@noble/post-quantum": "^0.5.2"
+  }
+}

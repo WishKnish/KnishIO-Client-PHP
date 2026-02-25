@@ -113,7 +113,7 @@ class Strings {
    *
    * @return bool|int|string
    */
-  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, string $srcSymbolTable = null, string $destSymbolTable = null ): bool|int|string {
+  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, ?string $srcSymbolTable = null, ?string $destSymbolTable = null ): bool|int|string {
     // The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
     $baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 
@@ -162,6 +162,12 @@ class Strings {
    * @return string
    */
   public static function currentTimeMillis (): string {
+    // Support deterministic testing with KNISHIO_FIXED_TIMESTAMP environment variable
+    $fixedTimestamp = getenv('KNISHIO_FIXED_TIMESTAMP');
+    if ($fixedTimestamp !== false) {
+      return strval(intval($fixedTimestamp) * 1000);  // Convert from seconds to milliseconds
+    }
+    
     return ( string ) round( array_sum( explode( ' ', microtime() ) ) * 1000 );
   }
 

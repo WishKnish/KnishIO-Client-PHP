@@ -95,17 +95,19 @@ class AtomMeta {
    * @throws JsonException
    */
   public function setAtomWallet ( Wallet $wallet ): self {
-    $walletMeta = [
-      'pubkey' => $wallet->pubkey,
-      'characters' => $wallet->characters,
-    ];
+    $walletMeta = [];
+
     if ( $wallet->tokenUnits ) {
       $walletMeta[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
     }
     if ( $wallet->tradeRates ) {
       $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
     }
-    $this->merge( $walletMeta );
+
+    // Merge all wallet's metas (if any)
+    if ( !empty( $walletMeta ) ) {
+      $this->merge( $walletMeta );
+    }
     return $this;
   }
 

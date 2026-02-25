@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaType;
  */
 class QueryMetaType extends Query {
   // Query
-  protected static string $defaultQuery = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latestMetas: Boolean, $latest: Boolean) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, latestMetas: $latestMetas, latest: $latest )
+  protected static string $defaultQuery = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latest: Boolean, $cellSlug: String) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, cellSlug: $cellSlug )
 		@fields
 	}';
 
@@ -68,7 +68,7 @@ class QueryMetaType extends Query {
       'metaType',
       'metaId',
       'createdAt',
-      'metas' => [
+      'metas(latest:$latest)' => [
         'molecularHash',
         'position',
         'metaType',
@@ -127,10 +127,11 @@ class QueryMetaType extends Query {
    * @param array|string|null $key
    * @param array|string|null $value
    * @param bool $latest
+   * @param string|null $cellSlug
    *
    * @return array
    */
-  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false ): array {
+  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = false, string $cellSlug = null ): array {
     $variables = [];
 
     if ( $metaType ) {
@@ -150,6 +151,10 @@ class QueryMetaType extends Query {
     }
 
     $variables[ 'latest' ] = $latest;
+
+    if ( $cellSlug ) {
+      $variables[ 'cellSlug' ] = $cellSlug;
+    }
 
     return $variables;
   }

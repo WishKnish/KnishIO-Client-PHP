@@ -47,80 +47,43 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-namespace WishKnish\KnishIO\Client\Libraries;
+namespace WishKnish\KnishIO\Client\Query;
 
-use WishKnish\KnishIO\Client\Exception\CryptoException;
-use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
+use JsonException;
+use WishKnish\KnishIO\Client\Response\Response;
 
 /**
- * Class Crypto
- * @package WishKnish\KnishIO\Client\Libraries
+ * Query for retrieving batch history with cascading meta instances
+ * @package WishKnish\KnishIO\Client\Query
  */
-class Crypto {
-
-  /**
-   * @param string|null $seed
-   * @param int $length
-   *
-   * @return string
-   */
-  public static function generateSecret ( ?string $seed = null, int $length = 2048 ): string {
-    // Match JavaScript SDK behavior: outputLen: length * 2 bits = length / 2 bytes
-    // JavaScript: for length=2048 → 4096 bits = 512 bytes = 1024 hex chars
-    // JavaScript: for length=128 → 256 bits = 32 bytes = 64 hex chars
-    return $seed ? bin2hex( Shake256::hash( $seed, $length / 2 ) ) : Strings::randomString( $length );
-  }
-
-  /**
-   * @param string|null $molecularHash
-   * @param int|null $index
-   *
-   * @return string
-   * @throws CryptoException
-   */
-  public static function generateBatchId ( ?string $molecularHash = null, ?int $index = null ): string {
-
-    if ( !in_array( null, [
-      $molecularHash,
-      $index
-    ], true ) ) {
-      return static::generateBundleHash( $molecularHash . $index );
+class QueryBatchHistory extends Query {
+  // Query - reuses fields from QueryBatch
+  protected static string $defaultQuery = 'query( $batchId: String ) { 
+    BatchHistory( batchId: $batchId ) {
+      batchId
+      type
+      createdAt
+      wallet {
+        address
+        bundleHash
+        amount
+      }
+      metas {
+        key
+        value
+      }
     }
-
-    return Strings::randomString( 64 );
-  }
+  }';
 
   /**
-   * Hashes the user secret to produce a bundle hash
+   * @param string $response
    *
-   * @param string $secret
-   *
-   * @return string
+   * @return Response
+   * @throws JsonException
    */
-  public static function generateBundleHash ( string $secret ): string {
-    return bin2hex( Shake256::hash( $secret, 32 ) );
+  public function createResponse(string $response): Response {
+    $responseObject = new Response($this, $response);
+    $responseObject->dataKey = 'data.BatchHistory';
+    return $responseObject;
   }
-
-  /**
-   * @param string $code
-   *
-   * @return bool
-   */
-  public static function isBundleHash ( string $code ): bool {
-    return mb_strlen( $code ) === 64 && ctype_xdigit( $code );
-  }
-
-  /**
-   * SHAKE256 hash function
-   *
-   * @param string $input - The input string to hash
-   * @param int $outputLength - The desired output length in bits
-   *
-   * @return string - The hex-encoded hash
-   */
-  public static function shake256 ( string $input, int $outputLength ): string {
-    // Convert bits to bytes (outputLength is in bits, Shake256::hash expects bytes)
-    return bin2hex( Shake256::hash( $input, $outputLength / 8 ) );
-  }
-
 }

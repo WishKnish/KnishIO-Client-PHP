@@ -136,7 +136,13 @@ class Molecule extends MoleculeStructure {
     $this->molecularHash = null;
     $this->bundle = null;
     $this->status = null;
-    $this->createdAt = Strings::currentTimeMillis();
+    // Support deterministic testing with KNISHIO_FIXED_TIMESTAMP environment variable
+    $fixedTimestamp = getenv('KNISHIO_FIXED_TIMESTAMP');
+    if ($fixedTimestamp !== false) {
+      $this->createdAt = strval(intval($fixedTimestamp) * 1000);
+    } else {
+      $this->createdAt = Strings::currentTimeMillis();
+    }
     $this->atoms = [];
     $this->version = null;
 
@@ -217,9 +223,19 @@ class Molecule extends MoleculeStructure {
     $atomMeta = new AtomMeta( $metas );
     $atomMeta->addPolicy( $policy );
 
+    // Create a wallet for the R isotope atom (following JavaScript pattern)
+    $wallet = Wallet::create(
+      $this->secret,
+      'USER',
+      null,
+      null,
+      null,
+      $this->sourceWallet->bundle
+    );
+
     $this->addAtom( Atom::create(
       'R',
-      null,
+      $wallet,
       null,
       $metaType,
       $metaId,
@@ -428,11 +444,11 @@ class Molecule extends MoleculeStructure {
       throw new TransferBalanceException();
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // Initializing a new Atom to remove entire balance from source (UTXO model)
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
     ) );
 
     // Initializing a new Atom to add tokens to recipient
@@ -474,11 +490,11 @@ class Molecule extends MoleculeStructure {
     $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
     $bufferWallet->tradeRates = $tradeRates;
 
-    // Initializing a new Atom to remove tokens from source
+    // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
     ) );
 
     // Initializing a new Atom to add tokens to recipient
@@ -528,11 +544,11 @@ class Molecule extends MoleculeStructure {
       $firstAtomMeta->setSigningWallet( $signingWallet );
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
     $this->addAtom( Atom::create(
       'B',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
       'walletBundle',
       $this->sourceWallet->bundle,
       $firstAtomMeta
@@ -735,8 +751,10 @@ class Molecule extends MoleculeStructure {
       new AtomMeta( $meta )
     ) );
 
-    // Add policy atom
-    $this->addPolicyAtom( $metaType, $metaId, $meta, $policy );
+    // Only add policy atom if policy is provided and not empty (matches JavaScript SDK)
+    if (!empty($policy)) {
+      $this->addPolicyAtom( $metaType, $metaId, $meta, $policy );
+    }
 
     // Add continuID atom
     $this->addContinuIdAtom();
@@ -792,8 +810,9 @@ class Molecule extends MoleculeStructure {
     // Set molecule as local
     $this->local = 1;
 
-    // Set meta token
+    // Set meta token and amount
     $meta[ 'token' ] = $token;
+    $meta[ 'amount' ] = (string) $amount;
 
     $this->addAtom( Atom::create(
       'T',
@@ -907,6 +926,195 @@ class Molecule extends MoleculeStructure {
    */
   public static function generateNextAtomIndex ( array $atoms = [] ): int {
     return count( $atoms );
+  }
+
+  /**
+   * Convert molecule to JSON for cross-SDK validation
+   * Matches JavaScript SDK toJSON method - excludes sensitive fields but keeps wallet data
+   *
+   * @return string
+   */
+  public function toJSON(): string {
+    $data = [];
+    
+    // Get public properties via reflection
+    $reflection = new \ReflectionClass($this);
+    foreach ($reflection->getProperties(\ReflectionProperty::IS_PUBLIC) as $property) {
+      $name = $property->getName();
+      $data[$name] = $property->getValue($this);
+    }
+    
+    // Explicitly add wallet data for cross-SDK validation (private properties)
+    if ($this->sourceWallet) {
+      $data['sourceWallet'] = [
+        'address' => $this->sourceWallet->address,
+        'position' => $this->sourceWallet->position,
+        'token' => $this->sourceWallet->token,
+        'balance' => $this->sourceWallet->balance
+      ];
+    }
+    
+    if ($this->remainderWallet) {
+      $data['remainderWallet'] = [
+        'address' => $this->remainderWallet->address,
+        'position' => $this->remainderWallet->position,
+        'token' => $this->remainderWallet->token,
+        'balance' => $this->remainderWallet->balance ?? 0
+      ];
+    }
+    
+    // Remove PHP-specific fields and sensitive data for compatibility
+    $excludeFields = ['secret', 'cellSlugOrigin', 'version', 'counterparty', 'local'];
+    foreach ($excludeFields as $field) {
+      unset($data[$field]);
+    }
+    
+    return json_encode($data);
+  }
+
+  /**
+   * Get source wallet for cross-SDK validation
+   * @return Wallet|null
+   */
+  public function getSourceWallet(): ?Wallet {
+    return $this->sourceWallet;
+  }
+
+  /**
+   * Get remainder wallet for cross-SDK validation  
+   * @return Wallet|null
+   */
+  public function getRemainderWallet(): ?Wallet {
+    return $this->remainderWallet;
+  }
+
+  /**
+   * Creates a Molecule instance from JSON data (PHP best practices)
+   * 
+   * Handles cross-SDK deserialization with robust error handling following
+   * JavaScript canonical patterns for perfect cross-platform compatibility.
+   *
+   * @param string $json JSON string to deserialize
+   * @param bool $includeValidationContext Reconstruct sourceWallet/remainderWallet (default: true)
+   * @param bool $validateStructure Validate required fields (default: true)
+   * @return Molecule Reconstructed molecule instance
+   * @throws Exception If JSON is invalid or required fields are missing
+   */
+  public static function fromJSON(
+    string $json, 
+    bool $includeValidationContext = true, 
+    bool $validateStructure = true
+  ): Molecule {
+    try {
+      // Parse JSON safely
+      $data = json_decode($json, true);
+      if ($data === null) {
+        throw new \Exception("Invalid JSON string");
+      }
+
+      // Validate required fields if requested
+      if ($validateStructure) {
+        if (empty($data['molecularHash']) || !isset($data['atoms']) || !is_array($data['atoms'])) {
+          throw new \Exception('Invalid molecule data: missing molecularHash or atoms array');
+        }
+      }
+
+      // Create minimal molecule instance (never include secret from JSON)
+      $molecule = new Molecule(
+        secret: '',  // Empty string for security (PHP requires non-null)
+        sourceWallet: null,
+        remainderWallet: null,
+        cellSlug: $data['cellSlug'] ?? null
+      );
+
+      // Populate core properties
+      $molecule->status = $data['status'] ?? null;
+      $molecule->molecularHash = $data['molecularHash'] ?? null;
+      $molecule->createdAt = $data['createdAt'] ?? null;
+      $molecule->bundle = $data['bundle'] ?? null;
+
+      // Reconstruct atoms array with proper Atom instances
+      if (isset($data['atoms']) && is_array($data['atoms'])) {
+        $molecule->atoms = [];
+        
+        foreach ($data['atoms'] as $index => $atomData) {
+          try {
+            // Create atom with required fields
+            $atom = new Atom(
+              position: $atomData['position'] ?? '',
+              walletAddress: $atomData['walletAddress'] ?? '',
+              isotope: $atomData['isotope'] ?? 'V',
+              token: $atomData['token'] ?? '',
+              value: $atomData['value'] ?? null,
+              batchId: $atomData['batchId'] ?? null,
+              metaType: $atomData['metaType'] ?? null,
+              metaId: $atomData['metaId'] ?? null,
+              meta: $atomData['meta'] ?? []
+            );
+            
+            // Set additional properties
+            if (isset($atomData['index'])) {
+              $atom->index = $atomData['index'];
+            }
+            if (isset($atomData['otsFragment'])) {
+              $atom->otsFragment = $atomData['otsFragment'];
+            }
+            if (isset($atomData['createdAt'])) {
+              $atom->createdAt = $atomData['createdAt'];
+            }
+            
+            $molecule->atoms[] = $atom;
+            
+          } catch (\Exception $e) {
+            throw new \Exception("Failed to reconstruct atom $index: " . $e->getMessage());
+          }
+        }
+      }
+
+      // Reconstruct validation context if available and requested
+      if ($includeValidationContext) {
+        if (isset($data['sourceWallet']) && $data['sourceWallet']) {
+          $swData = $data['sourceWallet'];
+          
+          // Create source wallet for validation (without secret for security)
+          $sourceWallet = new Wallet(
+            secret: '',  // Empty string for security (PHP requires non-null)
+            token: $swData['token'] ?? 'TEST',
+            position: $swData['position'] ?? null
+          );
+          
+          // Set additional properties for validation context
+          $sourceWallet->balance = $swData['balance'] ?? 0;
+          $sourceWallet->address = $swData['address'] ?? null;
+          $sourceWallet->bundle = $swData['bundle'] ?? null;
+          
+          $molecule->sourceWallet = $sourceWallet;
+        }
+
+        if (isset($data['remainderWallet']) && $data['remainderWallet']) {
+          $rwData = $data['remainderWallet'];
+          
+          // Create remainder wallet for validation (without secret for security)
+          $remainderWallet = new Wallet(
+            secret: '',  // Empty string for security (PHP requires non-null)
+            token: $rwData['token'] ?? 'TEST',
+            position: $rwData['position'] ?? null
+          );
+          
+          // Set additional properties for validation context
+          $remainderWallet->balance = $rwData['balance'] ?? 0;
+          $remainderWallet->address = $rwData['address'] ?? null;
+          $remainderWallet->bundle = $rwData['bundle'] ?? null;
+          
+          $molecule->remainderWallet = $remainderWallet;
+        }
+      }
+
+      return $molecule;
+
+    } catch (\Exception $e) {
+      throw new \Exception("Molecule deserialization failed: " . $e->getMessage());
+    }
   }
 
 }
