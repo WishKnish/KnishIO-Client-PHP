@@ -36,6 +36,30 @@ class PatentVectorValidationTest extends TestCase {
   }
 
   // =========================================================================
+  // 0. generateSecret cross-SDK parity (Batch AO) — seed -> 2048 hex secret
+  // =========================================================================
+
+  /**
+   * Validates that generateSecret( seed ) produces the canonical 2048-char
+   * secret, byte-identical to JS/TS/Rust/Python/Kotlin.
+   */
+  public function testGenerateSecret (): void {
+    foreach ( $this->vectors[ 'generate_secret' ][ 'tests' ] as $test ) {
+      $secret = Crypto::generateSecret( $test[ 'seed' ] );
+      $this->assertEquals(
+        $test[ 'length' ],
+        strlen( $secret ),
+        'generateSecret: length mismatch for ' . $test[ 'name' ]
+      );
+      $this->assertEquals(
+        $test[ 'expectedSecret' ],
+        $secret,
+        'generateSecret: value mismatch (cross-SDK parity) for ' . $test[ 'name' ]
+      );
+    }
+  }
+
+  // =========================================================================
   // 1. ContinuID Chain Relay (Patent Claims 5, 12-14)
   // =========================================================================
 
