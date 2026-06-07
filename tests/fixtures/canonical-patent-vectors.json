@@ -19,6 +19,15 @@
         }
       ]
     },
+    "atom_value_format": {
+      "description": "An atom V/B/F numeric value MUST serialize as an integer string (the validator parses it as i128); whole-number floats carry NO trailing '.0'. JS String(n) is canonical; all SDKs MUST match. Cross-SDK parity lock (Batch AQ, 2026-06-05).",
+      "tests": [
+        { "name": "whole_positive", "value": 1000, "expected": "1000" },
+        { "name": "debit_negative", "value": -1000, "expected": "-1000" },
+        { "name": "zero", "value": 0, "expected": "0" },
+        { "name": "large_i64", "value": 9007199254740991, "expected": "9007199254740991" }
+      ]
+    },
     "continuid_chain": {
       "description": "ContinuID identity relay: two sequential wallet positions from same secret. Position2 is SHAKE256(position1, 256). Patent Claims 5, 12-14.",
       "tests": [

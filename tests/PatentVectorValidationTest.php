@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -55,6 +56,34 @@ class PatentVectorValidationTest extends TestCase {
         $test[ 'expectedSecret' ],
         $secret,
         'generateSecret: value mismatch (cross-SDK parity) for ' . $test[ 'name' ]
+      );
+    }
+  }
+
+  // =========================================================================
+  // 0b. Atom value format cross-SDK parity (Batch AQ) — integer string, no ".0"
+  // =========================================================================
+
+  /**
+   * Validates that an atom's numeric V/B/F value serializes as an integer
+   * string with NO trailing ".0" (the validator parses it as i128). PHP's
+   * Atom::$value is typed ?string, so a numeric amount coerces to its canonical
+   * string form on assignment — byte-identical to JS String(n) and to the
+   * Python/Kotlin/Rust SDKs. Cross-SDK parity lock.
+   */
+  public function testAtomValueFormat (): void {
+    foreach ( $this->vectors[ 'atom_value_format' ][ 'tests' ] as $test ) {
+      $atom = new Atom(
+        position: '0',
+        walletAddress: '0',
+        isotope: 'V',
+        token: 'TEST',
+        value: $test[ 'value' ]
+      );
+      $this->assertSame(
+        $test[ 'expected' ],
+        $atom->value,
+        'atom value format mismatch (cross-SDK parity) for ' . $test[ 'name' ]
       );
     }
   }
