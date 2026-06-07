@@ -223,19 +223,14 @@ class Molecule extends MoleculeStructure {
     $atomMeta = new AtomMeta( $metas );
     $atomMeta->addPolicy( $policy );
 
-    // Create a wallet for the R isotope atom (following JavaScript pattern)
-    $wallet = Wallet::create(
-      $this->secret,
-      'USER',
-      null,
-      null,
-      null,
-      $this->sourceWallet->bundle
-    );
-
+    // F-3 (cross-SDK parity, 2026-06-03): sign the policy (R-isotope) atom from the
+    // established ContinuID source wallet, NOT a freshly-created Wallet::create() at a
+    // random position. As the signing atom in createPolicy(), a fresh-wallet position
+    // is unknown to the validator -> "ContinuID chain validation failed: signing
+    // position ... not found as wallet". Mirrors createRule(), which uses $this->sourceWallet.
     $this->addAtom( Atom::create(
       'R',
-      $wallet,
+      $this->sourceWallet,
       null,
       $metaType,
       $metaId,

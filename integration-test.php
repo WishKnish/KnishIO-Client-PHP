@@ -151,28 +151,61 @@ function logSection(string $sectionName): void {
  */
 function executeGraphQLRequest(string $query, array $variables = []): array {
     global $httpClient, $config;
-    
+
+    // DEBUG: Log the request payload
+    // Ensure variables is an object (stdClass) when empty, not an array
+    $requestVariables = empty($variables) ? (object)[] : $variables;
+    $payload = [
+        'query' => $query,
+        'variables' => $requestVariables
+    ];
+    $jsonPayload = json_encode($payload, JSON_PRETTY_PRINT);
+    colorLog("\n[DEBUG] Request Payload:", 'yellow');
+    colorLog($jsonPayload, 'yellow');
+
     try {
         $response = $httpClient->post($config['server']['graphqlUrl'], [
             'json' => [
                 'query' => $query,
-                'variables' => $variables
-            ]
+                'variables' => $requestVariables
+            ],
+            'debug' => false // Disable Guzzle debug to keep output clean
         ]);
-        
+
         $body = (string)$response->getBody();
+
+        // DEBUG: Log the response
+        colorLog("\n[DEBUG] Response Status: " . $response->getStatusCode(), 'yellow');
+        colorLog("[DEBUG] Response Headers:", 'yellow');
+        foreach ($response->getHeaders() as $name => $values) {
+            colorLog("  {$name}: " . implode(', ', $values), 'yellow');
+        }
+        colorLog("[DEBUG] Response Body:", 'yellow');
+        colorLog($body, 'yellow');
+
         $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
-        
+
         if (isset($data['errors'])) {
             $errorMessages = array_column($data['errors'], 'message');
             throw new Exception('GraphQL Error: ' . implode(', ', $errorMessages));
         }
-        
+
         return $data['data'] ?? [];
-        
+
     } catch (RequestException $e) {
+        // DEBUG: Log the error response
+        colorLog("\n[DEBUG] RequestException caught:", 'red');
+        colorLog("[DEBUG] Error Message: " . $e->getMessage(), 'red');
+        if ($e->hasResponse()) {
+            $errorResponse = $e->getResponse();
+            $errorBody = (string)$errorResponse->getBody();
+            colorLog("[DEBUG] Error Response Status: " . $errorResponse->getStatusCode(), 'red');
+            colorLog("[DEBUG] Error Response Body: " . $errorBody, 'red');
+        }
         throw new Exception("HTTP Error: {$e->getMessage()}");
     } catch (JsonException $e) {
+        colorLog("\n[DEBUG] JsonException caught:", 'red');
+        colorLog("[DEBUG] JSON Error: " . $e->getMessage(), 'red');
         throw new Exception("JSON Error: {$e->getMessage()}");
     }
 }
@@ -201,11 +234,18 @@ function testServerConnectivity(): bool {
         ');
         
         $responseTime = (int)((microtime(true) - $startTime) * 1000);
-        
-        $hasValidSchema = ($schemaData['__schema']['queryType']['name'] ?? '') === 'Query' &&
-                         ($schemaData['__schema']['mutationType']['name'] ?? '') === 'Mutation';
-        
-        logTest('PHP GraphQL schema introspection', $hasValidSchema, 
+
+        // Validate schema structure (accept both standard and validator-specific names)
+        $queryTypeName = $schemaData['__schema']['queryType']['name'] ?? '';
+        $mutationTypeName = $schemaData['__schema']['mutationType']['name'] ?? '';
+
+        $hasValidSchema = (
+            // Accept both standard names and validator-specific names (QueryRoot, MutationRoot)
+            in_array($queryTypeName, ['Query', 'QueryRoot'], true) &&
+            in_array($mutationTypeName, ['Mutation', 'MutationRoot'], true)
+        );
+
+        logTest('PHP GraphQL schema introspection', $hasValidSchema,
             $hasValidSchema ? null : 'Invalid GraphQL schema structure', $responseTime);
         
         // Test ProposeMolecule availability
@@ -448,7 +488,10 @@ function testPhpQueryValidation(): bool {
             query TestContinuId($bundle: String!) {
                 ContinuId(bundle: $bundle) {
                     position
-                    token
+                    token {
+                        slug
+                        name
+                    }
                 }
             }
         ', [

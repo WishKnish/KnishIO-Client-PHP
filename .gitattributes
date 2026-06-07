@@ -1,0 +1,13 @@
+# Keep the packagist/composer dist tarball lean: ship only the runtime SDK
+# (src/, bin/noble-mlkem-bridge.js, composer.json, package.json + lock, README,
+# LICENSE, CHANGELOG, self-test.php). Exclude dev/test/demo material.
+/tests                 export-ignore
+/demo                  export-ignore
+/integration-test.php  export-ignore
+/test-determinism.php  export-ignore
+/phpunit.xml           export-ignore
+/.editorconfig         export-ignore
+/.gitignore            export-ignore
+/.gitattributes        export-ignore
+/.github               export-ignore
+.phpunit.result.cache  export-ignore

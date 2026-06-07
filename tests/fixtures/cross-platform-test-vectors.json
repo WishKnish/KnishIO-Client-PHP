@@ -1,0 +1,948 @@
+{
+  "version": "1.0.0",
+  "description": "Cross-platform compatibility test vectors for KnishIO Kotlin and JavaScript clients",
+  "generated": "2025-08-28T04:42:32.140124Z",
+  "vectors": {
+    "shake256": {
+      "description": "SHAKE256 hash function test vectors with various inputs and output lengths",
+      "tests": [
+        {
+          "name": "empty_string_32_bytes",
+          "input": "",
+          "outputLength": 32,
+          "expected": "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762f"
+        },
+        {
+          "name": "single_a_32_bytes",
+          "input": "a",
+          "outputLength": 32,
+          "expected": "867e2cb04f5a04dcbd592501a5e8fe9ceaafca50255626ca736c138042530ba4"
+        },
+        {
+          "name": "abc_32_bytes",
+          "input": "abc",
+          "outputLength": 32,
+          "expected": "483366601360a8771c6863080cc4114d8db44530f8f1e1ee4f94ea37e78b5739"
+        },
+        {
+          "name": "test_message_32_bytes",
+          "input": "Hello, KnishIO Cross-Platform World!",
+          "outputLength": 32,
+          "expected": "aa38f17dfb1fb903a399b92a69081071562d34a18afcd8e3e38bb94132a0e191"
+        },
+        {
+          "name": "unicode_message_32_bytes",
+          "input": "🌟🔐💎",
+          "outputLength": 32,
+          "expected": "bd23ef06f2363c86f41efef32c50cdc2e83ca64c5fdb5ac9fc6b23f0b10e1cf4"
+        },
+        {
+          "name": "long_string_32_bytes",
+          "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "outputLength": 32,
+          "expected": "25c4c9ab48f904a2f603e3e507ca28427c9cc7d1e8db3218159e06b6bcda2945"
+        },
+        {
+          "name": "hex_pattern_64_bytes",
+          "input": "0123456789abcdef",
+          "outputLength": 64,
+          "expected": "f205e448f13f75e242c237ac0c1505b0020cde5b8bd5e6f0b05c444299817ff7906cbdc8eb9a28bd69ed1bfd611cff8898a2f9a0ae4225d6c0ba7a6b3c8da9e1"
+        }
+      ]
+    },
+    "bundle_hash": {
+      "description": "Bundle hash generation test vectors using SHAKE256",
+      "tests": [
+        {
+          "name": "empty_secret",
+          "secret": "",
+          "expected": "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762f"
+        },
+        {
+          "name": "test_secret",
+          "secret": "test-secret",
+          "expected": "19b4651e22c7eacc512967632e3e2821043c33a7b23f13ddaf6cb3b82503a29b"
+        },
+        {
+          "name": "long_secret_2048",
+          "secret": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "expected": "169b7402f663ae024ac1b50a85cd6243ff8d09efcc72a2d764e7417080511ab0"
+        }
+      ]
+    },
+    "wallet_generation": {
+      "description": "Wallet address and key generation test vectors",
+      "tests": [
+        {
+          "name": "standard_wallet",
+          "secret": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "token": "TEST",
+          "position": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+          "expectedBundle": "169b7402f663ae024ac1b50a85cd6243ff8d09efcc72a2d764e7417080511ab0",
+          "expectedAddress": "3aa12567bd4db7b2576e83a3f5f80c7b159b5ac3c58b04fdc4623d75a1406ed8",
+          "expectedPrivateKey": "1ecb3b62e897ab6bc6e973b0d10cdcd7812ffa520d661490c5227ccb1d36fb98dac210675e9e69feffcfe855f9d461c71b0223207b9acbff65ba07fa579c026746d682ad32416da84267695ed09c6c51fd0c1eadb661dac15368aace79c9a697acc203b0d737c5aefb2993489b659ea1b2fbe02e022bbb41a9dc4b8c8312850ec928e18d00be4c3d158d97a209adac6d3a749b739419fb185e84b2239751f8b4070c76b84d78c878eb9a3c466f014e9bfa6c1aacbeccd4a0e17c4525007d561f9186fa0505fbc58ad5146dee4373e17e6c563ddbe897374567dd994f8896bd758a3ddd75dd89e793816b2d0c26ff2f3cb7e2eb5394bf8332768f4440e0e7c4897386e0a95d0692bf80f1176847f58d00f3f0b477a1266f80cb88b6e94a1381394d434fe3bf26c57979515815a2063ddc50fb722985b99487eb4695010417367b124f9c1ad85da3932e8394a6fc75357b60d0a8d357f261402c25e9bc493ca434d70f0b0a0b762c7144b860ef4eccc048005b0ac33745c5c37e3f2962aa4f8325529eea14efb3938ac358137990e5e1743eddb6f21a96b852ec936d948b290f2988b00194ebd8a0cc45eecb8e10da4a50315fee2cfb83ef9fffd860ef41b7a8bb07042f064e128d748e2a58d4cf4b5411345a53491c49c023c3737e35de23fcaa85a5b447b604c3c9bc59af821c24941703fec6d52806a789e4abfe6dcbb9365044285a6dc739405b4b38319b4b7dce6c1d9d3e79efd3174ecbc0189def1fc6addc05b66783c58ba5ac058af3218dcf42a258439a6a3130a8d09d2baadd0be49ac2bff5238c5776bb195d2c73769d7d49f3adc81a40ece6de3fa72231d21551035dc2d3837f6ad2c7ce61c6f59511ffdfe8cf65a07785dc10db26bd24bd4489759a661c6d66abda94dd572aa33ffb574e746fc9492c0a475abba7254fd8e98f5cd4d58fec3d2b3882690de6d1ab7697f227f1794291c9490047998566a04038265e6824325652a7e092e7b48b6cdd746a85d8eedcb449435a2b3b573508744302a029d4b16973cd19fdd1108072eace41fdf2c64b9120e84e2436fc5a27c90d48d7cc7f19b2ae9908ced12d30790d271947b884ff5a26a89cbc623b47bee305a1bb883f7a636c4db47d345176ade3bf88f081ea8c9447d825fcbdc46dba0f1b4ecc977e5bb590ea8e094508247851a7e678971a90f8b6a5cb5363f7dae3595d8c970b68589a07dc96b89b4ee9c897caee2694e1022d70d4e404bfc380e20ed7bbf44d3fed7dcb76ed452a65783a4ddc3d383db9f17b5c8678bc29168716f8daf6905ea532f911f8cf713a43fecff7ef4f053612f5600d0daf1a7dbbebf84ef785e3f61f9698870e345467531cb47631bd862382f38594f66149d15b85f89fa2791689c0e498fa48aaa0c08de508891ce5f4b544e19ebea68b2e48c444b4fbd698",
+          "expectedPublicKey": "BWZKN7wLuJBTaLgrVkk7nWS6GMAgxIkV94UpxHRnDnGz+XYfe5ZlseENithOQ4PPensnXCcU0+fB3xxNalKeCTadpNK1pMmwrzgfmSd0ptM1PCAgZ6eu2baZEWqantkUEvwnjviIrzjHpLU2oEKsFcWppgzLm4O2sAOZuPsazeIKO6d8czyIPdOs1hOTmRBsBlWw9hKPWRoDJocogJew5LwJalxdWDtJPHZjxFhjeWBcTMRqE1tI8sQkIjK+EpYUIhta35AIYWLCYsRc4GNOIqnEhmGm29AB0MGuUJaTPwdMNkGWCXquTiBSXdegIEhrrtw/FaQnMALH3CQMOVO+ZhyGA5ipbteVnpKHQNzNzlEa4MZdP9sZY+WNjvJ+hIOS09YIaFjIXBJMfhhcslOAeWhRTtbFyoN5n8BlrsAMp7teAbxaKJDNtFdWs9UA6aovtGsEqfeM8KEbSdZpNVU05OuXtQhvXbV0iGQOP1xj9VCCcOQYp1eUFCNg9iixtRIkm9xouNp5AeM1BMlhKClivro9lZswQntJ8goZ5bAgrUVMYyqjoQWotNVmUgaaJPkYlNIYEyAmibqS4ZazJ1VjOvfOx0dF75imLMavQCtwkIKwr1qmIWoQUyyYAJISmBJIw9GAGzJsCDOV/wKAFkIte1yvrLnMRyN6ZVOOJRcq0eMRaEB3IpIgc5W76Ih4OSFShEKkDymsSiwzJPxipRFk7LkBVDS91TEjmwqV0ZG+1wUfAcRiv7TEjDCgfkRNGVhb6TdokQNrKYR6qpSAEKas8lUV7ap6+rED+NnITXiWI7IBIapCvaVCCUwGWnVrD2AvedRqzKqjQ4J/j/WFFueLu1AnyJZd1LNka1Wn8QQvwyZYkxEGtkxEFhWPjDs9E0dzFfx9XMV/tECdUaqAGHIEcQcu9yMU+GaNCGY6TkVdnjJnEOMm6XUtMeITi5AEJux2rnB/+gmW3wUoc+zGfOKjzAEH33Z2JwVKapCLM8Moz7E2n3WfoQmh9SxYrkJKgXM88WqnZ5i5AKtu/vXHM0JEyGEmJ7sg9faRCTsG8tYmwtV2YVQNfudIb6pysota/LhbnwuHMzZ6vjO3egOcMNxiTorMByiFBCYAEokmjOg+sKuZChys7PRPioxaxJg2bTo9KlqloDjN4VKxzoc/hbw152pGKLoGFosLuyc643wG1DxP0FGE+XGaFlCpjxPDL7yEXsdnz5leo1yfohtJ2yMctwNDOKGYsdqsryZbaHeT0qJycle6aGVUCQOaOSRDGZsgzXy/x6FPfJZNQikL98nMaBdRVDoW3jUtbLQBVXTOkSWLtPA4ERVtMiRduFs5o2t3VVyiSYeEolsUsni7esR0tCpm5BF8xBRfdNAH+kmvRkc2tuek1nCvHUtlEUsy9kMZm6OCBmGmrLYRokeQ9owWWLGp/PHKc9Ehl5WzcoiWCAgZfSWSjGCkguxmMCAHHytSCqduP8wvf+uzZxW8etd999s9ZYzJxhC4n4JxxplbkhO+mBIjhqoCXaYGuuVRXuIyrZ3o+7aedAWfqJo9xjaEQsaoj3nHaB3v4RMV/lMkscQ\u003d"
+        },
+        {
+          "name": "user_wallet",
+          "secret": "test-user-secret",
+          "token": "USER",
+          "position": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+          "expectedBundle": "01938ce9751800f588a7e5db2731b9281c2877b3280f83c3d1f26c00b85f045e",
+          "expectedAddress": "84b19ae903f139c2eb2c438bf34048c90786050f6259381373caf2fe63ede728",
+          "expectedPrivateKey": "3424256902690194ebdd1724deff64e08437a04a1610ca7b971a9a94fe12d83934059f0497ddad9382a8364c0d3970a3dd71f614af512433ffabacaeb5ee04dd4ee9780374012f0ad554010ed57d812ff706e6f1c51b65569dccc91d671de9253125a2233cb78f183c003028c9484ce47e5b0926b0d47e55ecafb5a7c104436e80e6246857a6f901e161e08a594fec1d94cf08eb2697b121b8c3d8a4c3fbaf0700317088cd0a97e2092eb8a0b1a16b654f9b142d5c03f02625e0a3a5dfd2d1bc8879e80c3eab8412c646bc869ec2753785ee9c3d1f49124dbb0f6a467805c09a95d26b74aa3203bf52ca7e86d6049a78323f1a038c952afc751e5f2343a0987387a719f1653de760726e602db41cf70fe0407fe83f9459b228e356631120534f36838e2a66b96c06f2abcb3ba209b088f42b9138ca245efb1b2e47cce5888ded445c4db7b7d8cfc70b95a06e44ddce54f44bfd90b829d768c0af103a2be1ccb2ffa92532fc096774f4a975f76d68a78bf20ce9158ce20d131c4ab8e0ce28bcc2b0ce7e1a761a3994ff4ca36c749ef09edaa54d6e3c12d8dad45295617094ec9ba3d38693e333978d7a8efe7e967d655afa4dfee7826abecb6241bd70dc934d4961430c6ef30d2e34eda0f5a44bfeba7e7ab27ec4303a02d509db939f5d205dd19279cb0d404240c3fd9346b0d358a398a0878651c6cda6d28e28f9f9feeebc22c852122884a18f03b5b43c228d499f786c6a2d5f406874eb6e57ac87b95282eedc1066e637ae793050d9ee0b69c5d526ecb6f73ff05999964fe0e4284f82f0d1875de4ba876d7e26458b88a2861f045cdbc033088ac664e162c5c90b8b0277328d88dbd6a25ff969dcee77fbe0acdf2bed980cd8237910b3adab1e7337be76a04b6cbbaf32e0747acfc9e53bd5ebc5e232f28affb2b2752c356841e462768ac64f7c1a07b618c0fba97d3513498258e64c15178b3bded254417690e8afdac97fa7f46fc7bf4e0c1018ea29d394feac4b28f3c340e897105d6502d3bbca75c9c75d5b58f3fe06d3d4d2d61e0c82b68469d87f1c7201b84c43e1952ef43ccc510b1ee98065315fbf107ba6687a7f13b3f388f010c54ec229919f3b06aae471c4de2ca9ed8e56cdf816f509c186945f2002b95ed4a57ef59a4a2efe61a313aac7afeb9326f39f145dbf4cee3389beed1c32b070c16c83b8dbffc3695f98d79ad67ae20f12564aba799abf2d6c23111ec41b0d9d5e0c184db1d48986169860721027b8b3922ed59a68866c458d630af01b4cd9536e4f10402ce0c128b11ebfa38ec146d2cf77062690e89e8799c1b235dbd42b14f7ec6f7729b4d9063408d829fcb085593e295a513113d99544c54c2b65023cb68e76802573e3d0a5354606a4d6500a0ec803c2c22b4933bab68be995d020da2b50c7d05bdab22ae29d0f5d3cc1e9",
+          "expectedPublicKey": "eZUA5fGN7pEZmAhZEGYqtZFgl+VgnVBZ9jgUhqqBDLlg0jyQf3MMMUdZxtmDGvyAaemBnOomZBhCvjImoCpn13xLy4mp8PRpA5pv6ZNPIXrDmaa87kOx7Md6wPHIOFqAyflPk9nNFdW5s9IpAL05KpLJ0+CtJrJsTChcIbYLhjyS5xIC1UaF5PscMAhrpopPlDAjouKZ+UJSSnZ8KvU769PNSZhSbhIJ33g0xBR/4XWoJwpMKsZ1uow9Xjefp0wGxFaphMGMB6m3AVQ5eWNUZkxGiSeIQppFhXcQYnvGN6gmjbZPTyOCvlGjkphv4PKgFsumJzmTPVBOK4a+36lwKIoESxU5FotIJDynJGSbVtyEKNoCJ/p9DeNuKXGjkfJuYpUAjEgJhJwRtZa4c9S2VlwfnwN0YzMI/IaK7fGb1TFg/2aN6RHOrrVtn4E11nEey/Stc8etISaCxBxX+lhivLSitrE092GiYkeRIKRuAENifuAhW7Ve3xgc6VJus3i5UfKU50WumpgoT1Fnzshr1oQLg8SQHTpINAqL2SGuX0a4Mmq1noIN3bc66tp0pPUgeBhYSZxiCDUPAXRB9Ep1JxBpfKlbIAutr4KiTVRsK4g+4iApUlAksBQuAIcqYEFkq4JYC6Of+HkoFndwQ9x8TgUETJBNzQQEIUtaBWGcpjQF4gmsb6U0D3c5FjbERWtu4ByrUeu5+apsERZK6OKHYGrEYZR5dxEWu2o5FfpkkEguKEJ6AEY/veRM2/wM7Fe62LqwABRzg5vFFgRIuFsOaCtST1pvtyVYrNjKyiim/kFSFRxM8qGb9wXQUwapRvXLDrlDcOSWDWhIxmkCLAxOogS0EmxaW7FehFiyHRUOgDxgoHAT3qMO6PWzlBq7DuBzC0MBJgnHOJsbDfNzIJVOxiDIOcOfOoojhohlN9LMsXywJNQm0UV918S7YsGQjNWoxuQXT9uk8tOhuvQZL9BEVbkCXLglqglh2MddcPRLqdEkXVQtHdpg7eyHgrUkQ/FEDMIL4XnAf9VpIsC6N7hMBvysHBWwJgxeq6SAaSMqvQx6KjNS5FfPdZhL91MWKWKn2vegOjpde4hYlXxrrxBM9oAxi9LGKwMDLlZQU0HE7vgNXmQu5CpBnnCFgCx275yi3RbL5SyQjus0sBZHx4nGhvpqLeCHiMbNEwB/KSchLsRdV7SoS8qgLyB0M0ypx5GFA9c+9sgGhuvAgNuKWJksPRsz9qyPiUOWlQkLtnVaZOZx56yT8YELMcdsnDFbZpO1u7G6Y2NAu0uL+spPeUw/J4eJ5VrK+IMycrd5xPVrRKQa6Yx92hhNWUeAWvuwuVE7IxpreyGcKZx9sozDziGoqhu/hnsH3JxMZvUvT8y3uZezfOmvBOFpP7Mh5vm+ZfFoKXW9CBFx20mVF6csx+bHX6JCgmJrEZZMe+Bu40BAwTA62uBLKelkj8NrjqrCSGRbEfyFSxUS35bPZVCSFFvDugwfFCARYGE0KdNuwrh9mZWMfZeB8yWbbGlJFQp40kd/6kQieQn07i48MPcA+7mLexKtsP3I2f0D/RypR6foFCI\u003d"
+        },
+        {
+          "name": "bitcoin_wallet",
+          "secret": "btc-wallet-secret",
+          "token": "BTC",
+          "position": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+          "expectedBundle": "a2527f9d5638dd46dff35c347639938d0fbef5f44b9239b64ed7880422bfcc4a",
+          "expectedAddress": "f77a64c1b6e274a37dc0fdd2ad841662137f3ca6263b237cb3c76925edcdaf27",
+          "expectedPrivateKey": "d7d2151cd87fd00a8570055588c2b3e75355caa4a838bd2c274680b5f9cb4d3b67b1c11d68e869dce7e99ac5db21fbe05187fa2bec11159f46decb7e6ef57984608169d43c14fa8fdb2c5e7fb785c1a0c712f16d22d12039b25c433c4a1c0b1b9fc6c3e8a6b2dbfda39eb8cc536bb17078521eb77c324779ac417befca1d7bb952306aa17b9da80eff40a494a258637f0bce632deb337657cc5d69b00a5b8a8be122e8e533e8698dea1070760ad178b1c8fee304fa99d1998f6d5be2bab9fc0a173b1f840599fa1dabcb523f34be2b2a6c2a278cf9324a70a62da6dfdd1ec282c9475917251ddefffeec442f46c66eb16f5f92167522c74f3f83139bc6d0f4e39090063daa97c6a4cce4bd0e642644ca6c8d91aa91ed2138863ac206f9f342ba4e3726e71cd3b943934d5a810004a4156dfca373ba979b512777f33193d04c291ee6ba2ed32b99148bf3653679de15111b81a7981fd6c4649f34959a5e93023af434753619952b8a354de23c567e1457a8f5b700fe390c98adcf9191e6273e7151275eb3fee92730cc1a7a87ae637ec943fa0ed8ea6356de04447e07b188229dd45376f925c01e64659df95a95b986191254adddf28cede1ebd156331bf98c178b185e4f8f7cd85c27de86a031b4912880ecef805cf57d3b23519ce2e6af3103e79e5e7757eddfd10ef1ed7b76794154e1aaee1e7d012b359a401c967b721deb7fad21c59152965edb3748ea659e0a3c72529f3c1eec26db1655fbfcc6e0c42d1ef1f15438adda340b7582698917d0570d58a2b46990530dfe511f49829346e62a99281709df372810a0aee62927be723197a4baea93a2ddfe973de3280a3b63b3658201f5ef933d51994a058ef78c6f8377e5151fe422b10db3cfd2f4f01f50778b313c770b81b352a258f3929adce6099bad368984534cb51daff781144c5e3c90ffd2417e2e06918b3209d37649a8dda8adc386f76167eca12661a1a6cc3a11b25bfdab10516945f0cd0fb78da75b7ac5792ba3fcaf531e478ebd18b06dcb62f49b9ad67c14f143eafe46736191e136df405550d6150820cdd0945e7ddd8b2a5438e2b3361d0fc698ebd397897bf5dd53654d9c8d734b81f91d23b2ce133b38fafb76b38d11e4fd89623705ffc14cb732b2832ebc76017ffd6d6c0a508c00b06755fd471ab7ad819d0dad83e06754cb72a6bc8052fa1c2903d55ad9b590dfa21945463fa8b8f863dd53838a7cd62f844637999e586b7c3af0f88f007698e8f98e50b1fd0f3ed454b7ba0d2a4dbbcd47f8901db3281def59714e7fc8d436a2ae293ce9d8661ea9080c06f573d46171a40c9fd089c0273120cb03d5cbedbd731dbc534374b1aa2f3f8c8aa94b1a1f9bc0f3f5414cdcbd4be1a1d08027b6357ed308900fbe28b7f0c9a6e3727b9115ab9b4117784da5dbc565cb841418f89800",
+          "expectedPublicKey": "zgiZOWPCzVgaRAfHrXhVVUPDl/cHP/E0hUty0CcLSXw1n7cLkxanlnOga1uPe1hcK4MfRgvBNzu1QCInxMGEcMND2KxR8AG8drVy0Xx58+zPdqpIXIjMOFtdkwpCl9ZkebkTZAQyyRStTNfOmTHK21CSnfeEjOM82qt94Bmw0gBqabO2EQeSdCthhzCex/uDmeVMmcObSggR3loqIxRBRredQFNmQCCf7ONkRjQGQHF4x3Cn85V4eWh9iXiBJ3e7w5GznXBveWk36aMLXLslcsRHK2wea6B64mIx6MhOYeWr+sZop9drTqYKz0SwF0AgkNPBOqkGmaG6ZIlpOzWILdEMoWixICNv0jvKbaJLNMOweypI+/yK9Zs2ufKUotZFy5KqzlLC9EJhe8llqeheyzNYYEkp03McUew83HeiEHyhlDW/aKOB2CXFqmy6JVsTI5jIfzTGZFU4YaHO8/RX5uc+oau/mzcr3lFSBOtsp3R2BdJcGzt9GlwQBVE+c6Mu49FV+MKE4Zxo4hsHLkoDWSEvigaQVOkeCiNpk5Ari6eXG/yZimPGYOAixuRd+iik80Af3CMxPTtTFtQuqrNEZocEtlZYdvdg2ZNqyLHD4hW2AYywdWwF+7kY/VOQUiaHRdrKj2VIxCO/m9qOwgdZPPYTGeA3YaIeQ9FRHitdg0OiK3Ro51ANWwySx3OSGkKGuEUQ7wFlZfdBYiSS7pSLe3soVRQ8FpRwlQVThpwU0dtpWuK/L9sQQINgdLOdxAC7SgcrOJN8B5gKgZdEUqAnaycLVxq0qCNfX1dDXagDEmhg8Jud4XyddRCdTWw3V7cwR0i8nYTA1Wl+zzIIjKFVkOtnBJyUAtEA2CmznPdYKvYSD9JXzjhkrem37UDBtJMt8mx0nMAAe+jDsDLIh1VPj+EU+ggrTKip2ziZpHw+DUuuDXmkrSjLjqMqxee/GsimZ/Kf1/F9O8gkcbmbHVB9SQMoRrXGVDpKEsEL6zyP1ZyK3glNikcjPExKiVAHsLFv3+FeObNZhxWjfRApFRJD5+qaTBYF6KkieFJAJnRj5sKFY/bP3KicOso42NRjICtW3hXM82OJ31yBapqKPkqeUiRwMybBXutbf4x9XzbLxOmRm5J5CEVcTFkmSKnErDqQgOPDtju5coBpj4iICdbMkFESyvaZa9WQP6Cdx8vETusMc4qHp4Yrf1x+nNJ8+fe87bKpdxa9xUlHr8tistwavqiHneYbuYWNBwBaJmVh46V6RQEoo9I+4VWYp/lBTJQ2Atp6TLK4DfSNp2w4WTeSkAYOgrB4FzZzXEKcLBp2DWmvBdolTCGoGCp6L3IYpJogW2d4iuIYblZFN7YtW9dIQEwFC5WlaipHFfdpWTkpzmanfpcW+VqIoPJt9uXJmZZeXiqE39UdNAG4qsGNKYB38nJIkrMXjXU7RpxcV4PARPI8M8JtE8p3ySAAxVQ8+FS50kpmVTsJQdCODOl8SFWET/dLwDqKjIdKRBqy8FyoScghvBJB1/V06BEOr3BxuQxj8lwyZhlgigugz3eHiaRWL4V/2DXVkPN3wItCvVkrdsQ\u003d"
+        }
+      ]
+    },
+    "hash_normalization": {
+      "description": "WOTS+ hash normalization test vectors",
+      "tests": [
+        {
+          "name": "all_zeros",
+          "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "expectedEnumerated": {
+            "0": -8,
+            "1": -8,
+            "2": -8,
+            "3": -8,
+            "4": -8,
+            "5": -8,
+            "6": -8,
+            "7": -8,
+            "8": -8,
+            "9": -8,
+            "10": -8,
+            "11": -8,
+            "12": -8,
+            "13": -8,
+            "14": -8,
+            "15": -8,
+            "16": -8,
+            "17": -8,
+            "18": -8,
+            "19": -8,
+            "20": -8,
+            "21": -8,
+            "22": -8,
+            "23": -8,
+            "24": -8,
+            "25": -8,
+            "26": -8,
+            "27": -8,
+            "28": -8,
+            "29": -8,
+            "30": -8,
+            "31": -8,
+            "32": -8,
+            "33": -8,
+            "34": -8,
+            "35": -8,
+            "36": -8,
+            "37": -8,
+            "38": -8,
+            "39": -8,
+            "40": -8,
+            "41": -8,
+            "42": -8,
+            "43": -8,
+            "44": -8,
+            "45": -8,
+            "46": -8,
+            "47": -8,
+            "48": -8,
+            "49": -8,
+            "50": -8,
+            "51": -8,
+            "52": -8,
+            "53": -8,
+            "54": -8,
+            "55": -8,
+            "56": -8,
+            "57": -8,
+            "58": -8,
+            "59": -8,
+            "60": -8,
+            "61": -8,
+            "62": -8,
+            "63": -8
+          },
+          "expectedNormalized": {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 0,
+            "11": 0,
+            "12": 0,
+            "13": 0,
+            "14": 0,
+            "15": 0,
+            "16": 0,
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0,
+            "24": 0,
+            "25": 0,
+            "26": 0,
+            "27": 0,
+            "28": 0,
+            "29": 0,
+            "30": 0,
+            "31": 0,
+            "32": 0,
+            "33": 0,
+            "34": 0,
+            "35": 0,
+            "36": 0,
+            "37": 0,
+            "38": 0,
+            "39": 0,
+            "40": 0,
+            "41": 0,
+            "42": 0,
+            "43": 0,
+            "44": 0,
+            "45": 0,
+            "46": 0,
+            "47": 0,
+            "48": 0,
+            "49": 0,
+            "50": 0,
+            "51": 0,
+            "52": 0,
+            "53": 0,
+            "54": 0,
+            "55": 0,
+            "56": 0,
+            "57": 0,
+            "58": 0,
+            "59": 0,
+            "60": 0,
+            "61": 0,
+            "62": 0,
+            "63": 0
+          }
+        },
+        {
+          "name": "all_f",
+          "hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "expectedEnumerated": {
+            "0": 7,
+            "1": 7,
+            "2": 7,
+            "3": 7,
+            "4": 7,
+            "5": 7,
+            "6": 7,
+            "7": 7,
+            "8": 7,
+            "9": 7,
+            "10": 7,
+            "11": 7,
+            "12": 7,
+            "13": 7,
+            "14": 7,
+            "15": 7,
+            "16": 7,
+            "17": 7,
+            "18": 7,
+            "19": 7,
+            "20": 7,
+            "21": 7,
+            "22": 7,
+            "23": 7,
+            "24": 7,
+            "25": 7,
+            "26": 7,
+            "27": 7,
+            "28": 7,
+            "29": 7,
+            "30": 7,
+            "31": 7,
+            "32": 7,
+            "33": 7,
+            "34": 7,
+            "35": 7,
+            "36": 7,
+            "37": 7,
+            "38": 7,
+            "39": 7,
+            "40": 7,
+            "41": 7,
+            "42": 7,
+            "43": 7,
+            "44": 7,
+            "45": 7,
+            "46": 7,
+            "47": 7,
+            "48": 7,
+            "49": 7,
+            "50": 7,
+            "51": 7,
+            "52": 7,
+            "53": 7,
+            "54": 7,
+            "55": 7,
+            "56": 7,
+            "57": 7,
+            "58": 7,
+            "59": 7,
+            "60": 7,
+            "61": 7,
+            "62": 7,
+            "63": 7
+          },
+          "expectedNormalized": {
+            "0": 0,
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "7": 0,
+            "8": 0,
+            "9": 0,
+            "10": 0,
+            "11": 0,
+            "12": 0,
+            "13": 0,
+            "14": 0,
+            "15": 0,
+            "16": 0,
+            "17": 0,
+            "18": 0,
+            "19": 0,
+            "20": 0,
+            "21": 0,
+            "22": 0,
+            "23": 0,
+            "24": 0,
+            "25": 0,
+            "26": 0,
+            "27": 0,
+            "28": 0,
+            "29": 0,
+            "30": 0,
+            "31": 0,
+            "32": 0,
+            "33": 0,
+            "34": 0,
+            "35": 0,
+            "36": 0,
+            "37": 0,
+            "38": 0,
+            "39": 0,
+            "40": 0,
+            "41": 0,
+            "42": 0,
+            "43": 0,
+            "44": 0,
+            "45": 0,
+            "46": 0,
+            "47": 0,
+            "48": 0,
+            "49": 0,
+            "50": 0,
+            "51": 0,
+            "52": 0,
+            "53": 0,
+            "54": 0,
+            "55": 0,
+            "56": 0,
+            "57": 0,
+            "58": 0,
+            "59": 0,
+            "60": 0,
+            "61": 0,
+            "62": 0,
+            "63": 0
+          }
+        },
+        {
+          "name": "hex_pattern",
+          "hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          "expectedEnumerated": {
+            "0": -8,
+            "1": -7,
+            "2": -6,
+            "3": -5,
+            "4": -4,
+            "5": -3,
+            "6": -2,
+            "7": -1,
+            "8": 0,
+            "9": 1,
+            "10": 2,
+            "11": 3,
+            "12": 4,
+            "13": 5,
+            "14": 6,
+            "15": 7,
+            "16": -8,
+            "17": -7,
+            "18": -6,
+            "19": -5,
+            "20": -4,
+            "21": -3,
+            "22": -2,
+            "23": -1,
+            "24": 0,
+            "25": 1,
+            "26": 2,
+            "27": 3,
+            "28": 4,
+            "29": 5,
+            "30": 6,
+            "31": 7,
+            "32": -8,
+            "33": -7,
+            "34": -6,
+            "35": -5,
+            "36": -4,
+            "37": -3,
+            "38": -2,
+            "39": -1,
+            "40": 0,
+            "41": 1,
+            "42": 2,
+            "43": 3,
+            "44": 4,
+            "45": 5,
+            "46": 6,
+            "47": 7,
+            "48": -8,
+            "49": -7,
+            "50": -6,
+            "51": -5,
+            "52": -4,
+            "53": -3,
+            "54": -2,
+            "55": -1,
+            "56": 0,
+            "57": 1,
+            "58": 2,
+            "59": 3,
+            "60": 4,
+            "61": 5,
+            "62": 6,
+            "63": 7
+          },
+          "expectedNormalized": {
+            "0": -7,
+            "1": -6,
+            "2": -5,
+            "3": -4,
+            "4": -3,
+            "5": -2,
+            "6": -1,
+            "7": 0,
+            "8": 1,
+            "9": 2,
+            "10": 3,
+            "11": 4,
+            "12": 5,
+            "13": 6,
+            "14": 7,
+            "15": 8,
+            "16": -7,
+            "17": -6,
+            "18": -5,
+            "19": -4,
+            "20": -3,
+            "21": -2,
+            "22": -1,
+            "23": 0,
+            "24": 1,
+            "25": 2,
+            "26": 3,
+            "27": 4,
+            "28": 5,
+            "29": 6,
+            "30": 7,
+            "31": 8,
+            "32": -8,
+            "33": -7,
+            "34": -6,
+            "35": -5,
+            "36": -4,
+            "37": -3,
+            "38": -2,
+            "39": -1,
+            "40": 0,
+            "41": 1,
+            "42": 2,
+            "43": 3,
+            "44": 4,
+            "45": 5,
+            "46": 6,
+            "47": 7,
+            "48": -8,
+            "49": -7,
+            "50": -6,
+            "51": -5,
+            "52": -4,
+            "53": -3,
+            "54": -2,
+            "55": -1,
+            "56": 0,
+            "57": 1,
+            "58": 2,
+            "59": 3,
+            "60": 4,
+            "61": 5,
+            "62": 6,
+            "63": 7
+          }
+        },
+        {
+          "name": "mixed_pattern",
+          "hash": "deadbeef12345678cafebabe87654321feedface98765432abcdef0123456789",
+          "expectedEnumerated": {
+            "0": 5,
+            "1": 6,
+            "2": 2,
+            "3": 5,
+            "4": 3,
+            "5": 6,
+            "6": 6,
+            "7": 7,
+            "8": -7,
+            "9": -6,
+            "10": -5,
+            "11": -4,
+            "12": -3,
+            "13": -2,
+            "14": -1,
+            "15": 0,
+            "16": 4,
+            "17": 2,
+            "18": 7,
+            "19": 6,
+            "20": 3,
+            "21": 2,
+            "22": 3,
+            "23": 6,
+            "24": 0,
+            "25": -1,
+            "26": -2,
+            "27": -3,
+            "28": -4,
+            "29": -5,
+            "30": -6,
+            "31": -7,
+            "32": 7,
+            "33": 6,
+            "34": 6,
+            "35": 5,
+            "36": 7,
+            "37": 2,
+            "38": 4,
+            "39": 6,
+            "40": 1,
+            "41": 0,
+            "42": -1,
+            "43": -2,
+            "44": -3,
+            "45": -4,
+            "46": -5,
+            "47": -6,
+            "48": 2,
+            "49": 3,
+            "50": 4,
+            "51": 5,
+            "52": 6,
+            "53": 7,
+            "54": -8,
+            "55": -7,
+            "56": -6,
+            "57": -5,
+            "58": -4,
+            "59": -3,
+            "60": -2,
+            "61": -1,
+            "62": 0,
+            "63": 1
+          },
+          "expectedNormalized": {
+            "0": 4,
+            "1": 5,
+            "2": 1,
+            "3": 4,
+            "4": 2,
+            "5": 5,
+            "6": 5,
+            "7": 6,
+            "8": -8,
+            "9": -7,
+            "10": -6,
+            "11": -5,
+            "12": -4,
+            "13": -3,
+            "14": -2,
+            "15": -1,
+            "16": 3,
+            "17": 1,
+            "18": 6,
+            "19": 5,
+            "20": 2,
+            "21": 1,
+            "22": 2,
+            "23": 5,
+            "24": -1,
+            "25": -2,
+            "26": -3,
+            "27": -4,
+            "28": -5,
+            "29": -6,
+            "30": -7,
+            "31": -8,
+            "32": 7,
+            "33": 6,
+            "34": 6,
+            "35": 5,
+            "36": 7,
+            "37": 2,
+            "38": 4,
+            "39": 6,
+            "40": 1,
+            "41": 0,
+            "42": -1,
+            "43": -2,
+            "44": -3,
+            "45": -4,
+            "46": -5,
+            "47": -6,
+            "48": 2,
+            "49": 3,
+            "50": 4,
+            "51": 5,
+            "52": 6,
+            "53": 7,
+            "54": -8,
+            "55": -7,
+            "56": -6,
+            "57": -5,
+            "58": -4,
+            "59": -3,
+            "60": -2,
+            "61": -1,
+            "62": 0,
+            "63": 1
+          }
+        }
+      ]
+    },
+    "base58_encoding": {
+      "description": "Base58 encoding/decoding test vectors for all character sets",
+      "tests": [
+        {
+          "charset": "GMP",
+          "cases": [
+            {
+              "input": "",
+              "expected": ""
+            },
+            {
+              "input": "00",
+              "expected": "0"
+            },
+            {
+              "input": "0001",
+              "expected": "01"
+            },
+            {
+              "input": "48656c6c6f20576f726c64",
+              "expected": "HtE01QnsRM34AKa"
+            },
+            {
+              "input": "deadbeef",
+              "expected": "5e7ZNL"
+            },
+            {
+              "input": "00000000",
+              "expected": "0000"
+            }
+          ]
+        },
+        {
+          "charset": "BITCOIN",
+          "cases": [
+            {
+              "input": "",
+              "expected": ""
+            },
+            {
+              "input": "00",
+              "expected": "1"
+            },
+            {
+              "input": "0001",
+              "expected": "12"
+            },
+            {
+              "input": "48656c6c6f20576f726c64",
+              "expected": "JxF12TrwUP45BMd"
+            },
+            {
+              "input": "deadbeef",
+              "expected": "6h8cQN"
+            },
+            {
+              "input": "00000000",
+              "expected": "1111"
+            }
+          ]
+        },
+        {
+          "charset": "IPFS",
+          "cases": [
+            {
+              "input": "",
+              "expected": ""
+            },
+            {
+              "input": "00",
+              "expected": "1"
+            },
+            {
+              "input": "0001",
+              "expected": "12"
+            },
+            {
+              "input": "48656c6c6f20576f726c64",
+              "expected": "JxF12TrwUP45BMd"
+            },
+            {
+              "input": "deadbeef",
+              "expected": "6h8cQN"
+            },
+            {
+              "input": "00000000",
+              "expected": "1111"
+            }
+          ]
+        },
+        {
+          "charset": "RIPPLE",
+          "cases": [
+            {
+              "input": "",
+              "expected": ""
+            },
+            {
+              "input": "00",
+              "expected": "r"
+            },
+            {
+              "input": "0001",
+              "expected": "rp"
+            },
+            {
+              "input": "48656c6c6f20576f726c64",
+              "expected": "JxErpTiA7PhnBMd"
+            },
+            {
+              "input": "deadbeef",
+              "expected": "a63cQ4"
+            },
+            {
+              "input": "00000000",
+              "expected": "rrrr"
+            }
+          ]
+        },
+        {
+          "charset": "FLICKR",
+          "cases": [
+            {
+              "input": "",
+              "expected": ""
+            },
+            {
+              "input": "00",
+              "expected": "1"
+            },
+            {
+              "input": "0001",
+              "expected": "12"
+            },
+            {
+              "input": "48656c6c6f20576f726c64",
+              "expected": "iXf12sRWto45bmC"
+            },
+            {
+              "input": "deadbeef",
+              "expected": "6G8Bpn"
+            },
+            {
+              "input": "00000000",
+              "expected": "1111"
+            }
+          ]
+        }
+      ]
+    },
+    "molecular_hash": {
+      "description": "Molecular hash calculation test vectors. IMPORTANT: Value strings in atoms must be used VERBATIM — the molecular hash depends on exact string representation. The canonical format omits trailing '.0' for whole numbers (e.g., '-1000' not '-1000.0'). Some SDKs serialize with decimal points which produces a different hash.",
+      "tests": [
+        {
+          "name": "single_atom_molecule",
+          "atoms": [
+            {
+              "position": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+              "walletAddress": "3aa12567bd4db7b2576e83a3f5f80c7b159b5ac3c58b04fdc4623d75a1406ed8",
+              "isotope": "M",
+              "token": "TEST",
+              "metaType": "test",
+              "metaId": "test-123",
+              "meta": [
+                {
+                  "key": "test-key",
+                  "value": "test-value"
+                }
+              ],
+              "index": 0,
+              "createdAt": "1640995200000"
+            }
+          ],
+          "expectedHash": "04047beb434f11fd82a78c5dgd27ege4d03f8d7756cc17gdb8046c4786d33069"
+        },
+        {
+          "name": "multi_atom_molecule",
+          "atoms": [
+            {
+              "position": "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+              "walletAddress": "3aa12567bd4db7b2576e83a3f5f80c7b159b5ac3c58b04fdc4623d75a1406ed8",
+              "isotope": "V",
+              "token": "TEST",
+              "value": "-100.0",
+              "meta": [],
+              "index": 0,
+              "createdAt": "1640995200000"
+            },
+            {
+              "position": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321",
+              "walletAddress": "b2f085d7d509e19b39319a73f46b5ae18ffb2932f618162fb871f824f1560f03",
+              "isotope": "V",
+              "token": "TEST",
+              "value": "100.0",
+              "meta": [],
+              "index": 1,
+              "createdAt": "1640995200000"
+            }
+          ],
+          "expectedHash": "039g74642bb44c5fe12fa1aac78c5098g039f606db18f58e81000fe89fbd4106"
+        }
+      ]
+    },
+    "wots_signature": {
+      "description": "WOTS+ signature generation and verification test vectors",
+      "tests": [
+        {
+          "name": "standard_signature",
+          "privateKey": "e91f9f922d54f998cb33b33606b55489f07ebc73c1f5afb244b79a04e3e1dea3dce83799bad8156b3d9093505096ce9d7c677da79c4beb313ab5e371ba84d22257caa3a1a18e532908e31dc336624fdca71d0b4b17def523130af6693312ea1fab510301b4ea939df8e720cddc587da9744d6e40ec3792556f689fb48e0ad622f202cc1ae83407d461cb37b811a12fe5b0831fb365a9fccf8d582a1f0712cc0e9cf758ef33c305df22c344532c2226283d340c19a8a6b0a30bf7a3325e610575ae6697db6ab9581c983ea82ca8b249e23a11d157ed08dec9000f4d3cbe2085592429861280c8288f4ffb7fe23f249c2beef662f61a30632b039b8da57ae58c8a74bf4da70d1b0adad8d9cec054505d0ed7a932e31c7e7ce35983976e2789fbea254e52ec0e3fa3efed7c2d5944af10d9550066b4ba12d29e2f460cf13386061b63dce091fd0f80bb20ce844c6ee1741171deb679710f916d70f8002666e51057fac7ed2816118f6eddc7ae64ba578634a1078354e10bb32e95f7c60cd49f9fe04c2b2a2670331b782da41273e62774dc6f33d8057c7df674727fd042b2c0ccf0beb6d3594c6e2f1086adc50b8cce681e31c1e555906510b181fd05143802d3604e33e0b962f7098b69f7edc19b8d9873b5d4302faece44b9c1fb90027dc1ab7c26c907245b274d2481ae5161db069a0b2aa705e8cb131b65088eb1fedeaa66fef878e27d6fd85f372a23f3c788642871a24f7e34e44714fa9582cbf3b12fd8ba46ca6abaae4f7b06ecbfddd7e79a48236ba14af4f3048c835e6d8b701492fdbd9460d9fc3560e404a4c16cb7a6cddbda439f689a1120078be8afd7cc2cc8b1b740a9d096b9749f52728c6904e00ba2dbdd0aadea2f98f63c56b77f761985cd022aeb453ef1e7034c28e58a5cdb89a199b9f536a7c02920934ed42550058370c87ca52c3dd1d317751e04edcde3727675e4b9bf6c2c0e48b40ed59517dfe02fa77965a27cec6027a8560c1c5f7c6653a9097722a20d782e89b2c9800fd6aac873da9147e4c8f430b2b94a0866550e0808a1e1d9b4b7a3a328053c2a9c916a9e67c1ca54ec18b41156052fbaf1f3afeb1430166a9d0dd0018b6a0902de0a20bae2b1b90a124095fcde297773ab21138ea6ccf722ecc006d94098350ee2aaf5022ee638566d0aa49860677a7da2ba3caec3b975d35247593d3a8e42cd01956d3c89dcd7d49f74eb7a94b0632bd80374600e4ee770e990cab3c98982a089aebcff6c92e9a3bbe0dd56bd8a8a95b6a58888d500611fc250c4a7ca0557f5d384ea417b5dfdb0ea5237c2cbeea462a248264ff6fc659de2871a01615ac9a979f2ee9eae9361915104f789d480e7aa3c87d5d0a8281d77bdc99263291ef528c94068367d56f0e0700757453f74360b5ef5b9453f2eebf32e5b89245470f778056369f48e",
+          "molecularHash": "00397g2c10963891e787951g13a76b4cagc3f3911583e08g05g4ddg7d1g1f1d3",
+          "expectedSignatureFragments": "5875e15eed9b341edb67d3daa3236000e079c7ebef19d4ee15363c1bfdb0bf6d6e496dd81c9734294ce3a7b013ac2946522583ec07cd46791572cee63f4610545801ad604d685386a718edcec5a9e1311cb709322ec1a634ecfa4675f3f2bbbf18efd3412f09771fcdebea7f7e7fe49453ecca5d3eb81be33c1352309316fe1ef8c1c312e4232e549c53355a6d155a272d2a970bc81dcb6fd0bc6d6f75d99873a7314568f8d03f6360f8e1109ecb3aa2ad22c4f183cf2a7ad4fa00ef182fdc6af5e09cc1ffc19c793343beafb44c2ef04a7912b22d85e7f32d609b5ad8a4fdc013c5f06fa3d8e9c5c03da2f75ac02a511f879566c1842798a3e5df8d90a26318e53ecf9076980432308ef6d592ea2850d9e4e3d5e2538acfdf3c3e3f244980c245a1944d9416b1240dc0918412d50e338b2387bf367598d6bd3c5a5d367a92d71883b86a00766bd601c10fc4b83ea38651d7aa26dae80922aeb2ecca3477b539de1c260d0d4525fe3e9ec1220f364141d0139f60fbe62c4da4d084b6e62e5edf796de90c23d8567be7f3452a7b0354c9cdd50f7892a5252289ce1755a1ea207332f27874e2cabf12cfd58cbd0e4cc7327a8574fb820814a977fd6d5ee3536d7769d9fadd82e04f304674e4afa80a29a491d0def625a070481b4e40ab64ff25cd3ffcbb2011bf2add7c09f06b4a2fc97781c56fa949af3fac31a3e7356808eeacde1f05d2ea901c686c0a1485e9f943449b621e3d6a66d7f09ef8d4e3032cf8bfc36173404331604f7a4795985d9927ca97d8b7c45121061e8098a413d092c9fad051072879323420c51da0b5baf118d9dd561c3da2af1fd5555a57a8b43e0b97b1a0b096206fe19dac354d8bd96713ede6a3dd3897b7bdb9198ed83356bbce95e07ee0124ac1009a47ca682ef6d3bb8e541103cfcb7b5fbad26322c222431321795aa191df141e0107f73ead9e0d808d3d9b38a24e810fab19b9d92e4dad482e88b6e160d8ccf73a2ae6f9aa418438e8e6f1f9ec5e1fa89d210bd332ba21918e18ef03d7071099fc92e6481a700e6a7b18ecd815861bbc86bfe5afa54177d45aeede830edcbbead53d00d36a65083e4447c6ca742b4fa088eb54efa76ea8b3f963b88377a5c442b010547bb6cf733e2b3238aea1ecb7befdff2c31351a27188a69eea80967a6acf32b63fb97fb2e69d0a7a2fb12a7c83f78bea19428ecea5c77d6ad272e43f5c3ed8bd55667aa6f4036ed01cce67759c386f8d217160c1b4f986cfc83d536ae66dfe29b6abae2f8b033f95b0562fb33f56238db9e85f6776d95f3d2f6fa02615cd89d1c74f78aab0f194774156695bb7b58eb5513a607e6ff6dff88e7d561316b8c21c71cf99ec01ff323761a95ffec7560e79336ad3d53ecf087a95bfe435cd32bced9280b1765d19b1e48216a5dd0046fc8073e015b9e4fa4",
+          "expectedCompressedSignature": "6373d18b9414bf7716c7869119fd7d7dba122ad2af9717c542723d0b1d28a23b0b6084d3585068c727aed560ed2ab6940bd6c6ab00525521fe844a6b0bf07b9b2000ab6bf5502952c3ba3e5736e96cf15c617f3c9f206f6770a846b41b7c19468a37116ccc9ac4170c82eef5fa53222a3de4323198ef41b967bd3f0fe55cbd31da5a5066ecdd3a0ab0813c88ce16d61de4b85414c83fd59ba9296f4ed6eb0fde756e5bfeeb47856e183491021bdf276932235271e9c46d621c05fe407d0523fc7b366b18542deb591d2cd1ebf14af9c03d8438e096aef4b69c46aaf81d223ea4e500016fbc966ed5c1aa4b293e68663ba479e5ba45e00ad8a71e74a6ed2c8ae8e53ecf9076980432308ef6d592ea2850d9e4e3d5e2538acfdf3c3e3f244980c245a1944d9416b1240dc0918412d50e338b2387bf367598d6bd3c5a5d367a92d763dce091fd0f80bb20ce844c6ee1741171deb679710f916d70f8002666e51057fac7ed2816118f6eddc7ae64ba578634a1078354e10bb32e95f7c60cd49f9fe0bfaff18b9b8553cc6a84c43f1e00c2e6d8b1f4f4d4dcffb73ef846b7bc4a400b0039ba3279d49e0042ba8faa4bb3dd88cbe55e883d8957f9cc1e4129cf0d0141d8280989bffd3f1dae577b1f4c547c79f0586447b556ed01f73961f33c89b17036d2815e8d1f576d10f3151f69ebf77d3f64d3cdc24cb3ca077d3c19eefc878e33ec151af1ca9b1b0f352dad07ff0f1333ad9646a8e0e5696509bada5185fc0bd4a689d32e6f8c14fa92c41e1530341481291d941dc23a29614dc7f336cf946caefc568a310512f57fc4dac2d1613cf8b0df7e9a33c47264d2fdabd14cba0f8e4f7a6b4187c8d53bc798b41fab7417f36b945f8bfc1825710f0496d6a859050af604f2051b072645800d68f91c6687b67f97309407495090c9bd43005c933e63ab98ec41faf66e32751c0aa8269c72b5ec4752aa95006a2f8f29df1ddaa9378a0546dee84aed253080f003425fd90643ded56b5bbe2fb7e58dc6698c6056ac8b57eccab990b070f3adec5354e10db29b3533bea87e3b47f13ce596fc6a3b3293c799104efeb4d55a3a2028d856cf79e4e0e4f09bdd3565e0ca028eafd5cc5f21e034d99973015603ffa11ce2f3bfe3e8cfb32cd88269f4642897f78a62ddf796e5acad8f644943b03af68c9d66f001d8c6bb51d40d06d3fc67efde2eea08607bfe069bdc1b7bfbf4d3e1ec65a60e0558b4262edc9ff140a5ac93464aa0c14b31942d38736cd667acab126de844010069e91bd731d4b8219fd9512e39a26681057baccc3e74ad1764578b834eb7f239130313647f73cc74a1d9e526cd4a12c4e7ddf91a4ca7ad6c815c249393d5c46e90cc512ec8dbd7d5f611bf2dfd9e1a279a89f04d5073650356b3bbd8dff7f9ac58137a16a64d56d3c5834cb7daa118921f"
+        }
+      ]
+    },
+    "edge_cases": {
+      "description": "Edge case test vectors",
+      "tests": {
+        "unicode_handling": {
+          "inputs": [
+            "🌟🔐💎",
+            "测试",
+            "テスト",
+            "тест",
+            "🚀✨🌈🎯🔥"
+          ],
+          "expectedHashes": [
+            "bd23ef06f2363c86f41efef32c50cdc2e83ca64c5fdb5ac9fc6b23f0b10e1cf4",
+            "6a28211d83e52fac967742833eda1ee4b6bbeb83f048fb33d154eefa57364287",
+            "915ff28a3728a17c269745ec134d8cefc220b43c2ed4d452557d1dfbdbf20c96",
+            "911830e3410f4819433ec41aa439b11c42822ef50a506419926f9f7907084884",
+            "398e6a4e61156c5a338f306a6875577db87d23d1c018e6bf92d8f494f75df16b"
+          ]
+        },
+        "large_inputs": {
+          "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...[10000 total chars]",
+          "inputLength": 10000,
+          "expectedHash": "b9033e8e8f3739d7fd75ad20dce80f77ffc5a4ce4920b606c8a9e75757cffccd"
+        },
+        "boundary_values": {
+          "cases": [
+            {
+              "description": "Single character",
+              "input": "a",
+              "inputLength": 1,
+              "expectedHash": "867e2cb04f5a04dcbd592501a5e8fe9ceaafca50255626ca736c138042530ba4"
+            },
+            {
+              "description": "64 characters",
+              "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "inputLength": 64,
+              "expectedHash": "fb888b9159a4d0e670a114e83503202828aa1ece24807daf35ccd38154b665a0"
+            },
+            {
+              "description": "2048 characters",
+              "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "inputLength": 2048,
+              "expectedHash": "f3c086c75bfb46412c141c3ccfa2c148c22d6b52869e05d4e68aeb3687438042"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "implementation_notes": {
+    "kotlin": {
+      "shake256": "Uses BouncyCastle SHAKEDigest(256)",
+      "base58": "Custom implementation with support for multiple character sets",
+      "wots": "Custom WOTS+ implementation with hash normalization",
+      "encryption": "Supports NaCl Box (TweetNacl) and ML-KEM768+AES-GCM (BouncyCastle)"
+    },
+    "javascript": {
+      "shake256": "Should use compatible SHAKE256 implementation",
+      "base58": "Should use same character sets and encoding logic",
+      "wots": "Must implement identical hash normalization algorithm",
+      "encryption": "Should support same encryption modes and formats"
+    }
+  },
+  "validation_instructions": {
+    "setup": [
+      "1. Run this test vector generator in Kotlin to produce actual values",
+      "2. Use the generated test-vectors-generated.json file for validation",
+      "3. Run the JavaScript test suite with the same test vectors",
+      "4. Compare results to verify 100% compatibility"
+    ],
+    "continuous_validation": [
+      "1. Any changes to cryptographic functions should regenerate test vectors",
+      "2. Both platforms should run the same test vectors on each release",
+      "3. Failed compatibility tests should block releases until resolved"
+    ]
+  }
+}
