@@ -3,6 +3,9 @@
 vendor/
 composer.lock
 .claude
+.phpunit.result.cache
+test-determinism.php
+demo/
 /node_modules/@noble/curves/abstract/bls.d.ts
 /node_modules/@noble/curves/abstract/bls.d.ts.map
 /node_modules/@noble/curves/abstract/bls.js
