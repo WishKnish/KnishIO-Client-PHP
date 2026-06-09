@@ -6,6 +6,7 @@ use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 use WishKnish\KnishIO\Client\Wallet;
 
@@ -57,6 +58,49 @@ class PatentVectorValidationTest extends TestCase {
         $secret,
         'generateSecret: value mismatch (cross-SDK parity) for ' . $test[ 'name' ]
       );
+    }
+  }
+
+  // =========================================================================
+  // 0a. Buffer deposit conservation cross-SDK parity (Batch BF) — PHP is a
+  //     reference: initDepositBuffer debits the FULL source balance so a partial
+  //     deposit still conserves (sum V+B = 0). Rust+Python were fixed to match.
+  // =========================================================================
+
+  /**
+   * Validates that initDepositBuffer debits the full source balance, so a
+   * partial buffer deposit conserves: source V = -balance, buffer B = +amount,
+   * remainder V = balance-amount, sum(V+B) = 0.
+   */
+  public function testBufferDepositConservation (): void {
+    $secret = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+    foreach ( $this->vectors[ 'buffer_deposit_conservation' ][ 'tests' ] as $test ) {
+      $source = Wallet::create( $secret, 'BUFTOK' );
+      $source->balance = $test[ 'sourceBalance' ];
+
+      $molecule = new Molecule( $secret, $source, null, 'buftest' );
+      $molecule->initDepositBuffer( $test[ 'amount' ], [] );
+
+      $sum = 0;
+      $vValues = [];
+      $bValue = null;
+      foreach ( $molecule->atoms as $atom ) {
+        if ( $atom->isotope === 'V' || $atom->isotope === 'B' ) {
+          $sum += (int) $atom->value;
+          if ( $atom->isotope === 'V' ) {
+            $vValues[] = $atom->value;
+          }
+          else {
+            $bValue = $atom->value;
+          }
+        }
+      }
+
+      $this->assertEquals( $test[ 'expectedSum' ], (string) $sum, 'sum V+B for ' . $test[ 'name' ] );
+      // Emit order: source V (full-balance debit), buffer B (+amount), remainder V (+change).
+      $this->assertEquals( $test[ 'expectedSourceValue' ], $vValues[ 0 ], 'source V for ' . $test[ 'name' ] );
+      $this->assertEquals( $test[ 'expectedBufferValue' ], $bValue, 'buffer B for ' . $test[ 'name' ] );
+      $this->assertEquals( $test[ 'expectedRemainderValue' ], $vValues[ 1 ], 'remainder V for ' . $test[ 'name' ] );
     }
   }
 
