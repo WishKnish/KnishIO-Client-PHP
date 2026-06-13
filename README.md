@@ -443,6 +443,12 @@ This method involves individually building Atoms and Molecules, triggering the s
     2. `QueryWalletList` -> returns a list of `Wallet` instances
     3. `MutationProposeMolecule`, `MutationRequestAuthorization`, `MutationCreateIdentifier`, `MutationLinkIdentifier`, `MutationClaimShadowWallet`, `MutationCreateToken`, `MutationRequestTokens`, and `MutationTransferTokens` -> returns molecule metadata
 
+## Network Freshness
+
+The GraphQL transport (Guzzle) issues a fresh network request per query — there
+is **no response caching** — so a long-lived client never serves a stale read of
+ledger state. No fresh-read knob (e.g. a request policy) is required.
+
 ## Getting Help
 
 Knish.IO is under active development, and our team is ready to assist with integration questions. The best way to seek help is to stop by our [Telegram Support Channel](https://t.me/wishknish). You can also [send us a contact request](https://knish.io/contact) via our website.
