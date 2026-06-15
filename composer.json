@@ -1,5 +1,6 @@
 {
   "name" : "wishknish/knishio-client-php",
+  "version" : "0.8.1",
   "description" : "Knish.IO PHP API Client.",
   "keywords" : [
     "wishknish",

@@ -186,9 +186,30 @@ class Molecule extends MoleculeStructure {
    */
   public function addContinuIdAtom (): Molecule {
 
-    // Creating a remainder wallet if needed
+    // Creating a remainder wallet if needed (guard FIRST so pubkey/position below
+    // come from the post-guard remainder, matching JS Molecule.addContinuIdAtom).
     if( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
       $this->remainderWallet = new Wallet( $this->secret() );
+    }
+
+    // ContinuID metadata for chain-integrity validation (mirrors JS Molecule.addContinuIdAtom
+    // + the Rust validator's i_isotope requirement). Key ORDER is load-bearing for the
+    // molecular hash: previousPosition, pubkey, characters.
+    $continuIdMeta = [];
+
+    // previousPosition: the current ContinuID position being consumed (source wallet position).
+    if ( $this->sourceWallet && $this->sourceWallet->position ) {
+      $continuIdMeta[ 'previousPosition' ] = $this->sourceWallet->position;
+    }
+
+    // pubkey: ML-KEM768 public key (base64) for encrypted communication.
+    if ( $this->remainderWallet->pubkey ) {
+      $continuIdMeta[ 'pubkey' ] = $this->remainderWallet->pubkey;
+    }
+
+    // characters: encoding format for the wallet.
+    if ( $this->remainderWallet->characters ) {
+      $continuIdMeta[ 'characters' ] = $this->remainderWallet->characters;
     }
 
     $this->addAtom( Atom::create(
@@ -196,7 +217,8 @@ class Molecule extends MoleculeStructure {
       $this->remainderWallet,
       null,
       'walletBundle',
-      $this->remainderWallet->bundle
+      $this->remainderWallet->bundle,
+      new AtomMeta( $continuIdMeta )
     ) );
 
     return $this;
