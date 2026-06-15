@@ -109,6 +109,16 @@ $DEFAULT_CONFIG = [
             'token' => 'ENCRYPT',
             'position' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
             'plaintext' => 'Hello ML-KEM768 cross-platform test message!'
+        ],
+        'tokenCreation' => [
+            'sourceSeed' => 'TESTSEED',
+            'recipientSeed' => 'RECIPIENTSEED',
+            'amount' => 1000000,
+            'sourceToken' => 'USER',
+            'newToken' => 'TESTTOKEN',
+            'sourcePosition' => '0123456789abcdeffedcba9876543210fedcba9876543210fedcba9876543210',
+            'recipientPosition' => 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
+            'meta' => ['name' => 'Test Token', 'fungibility' => 'fungible', 'supply' => 'limited', 'decimals' => '0']
         ]
     ]
 ];
@@ -550,6 +560,82 @@ function test_complex_transfer() {
 }
 
 /**
+ * Test C1: Token Creation Test (cross-SDK parity with JS)
+ * C-atom (issue new token) + ContinuID I-atom; the prefixed setMetaWallet class
+ */
+function test_token_creation() {
+    log_message('\nC1. Token Creation Test', COLOR_BLUE);
+    global $config, $results;
+
+    $testConfig = $config['tests']['tokenCreation'];
+
+    try {
+        // Create source wallet (USER token)
+        $sourceSecret = Crypto::generateSecret($testConfig['sourceSeed'], 2048);
+
+        $sourceWallet = new Wallet(
+            $sourceSecret,
+            $testConfig['sourceToken'],
+            $testConfig['sourcePosition']
+        );
+        log_test('Source wallet creation', true);
+
+        // Create recipient wallet for the new token
+        $recipientSecret = Crypto::generateSecret($testConfig['recipientSeed'], 2048);
+        $recipientWallet = new Wallet(
+            $recipientSecret,
+            $testConfig['newToken'],
+            $testConfig['recipientPosition']
+        );
+        log_test('Recipient wallet creation', true);
+
+        // USER-token remainder so addContinuIdAtom's guard keeps the canonical bbbb... wallet
+        $remainderWallet = createFixedRemainderWallet($sourceSecret, $testConfig['sourceToken']);
+        log_test('Remainder wallet creation', true);
+
+        $molecule = new Molecule($sourceSecret, $sourceWallet, $remainderWallet);
+        $molecule->initTokenCreation($recipientWallet, $testConfig['amount'], $testConfig['meta']);
+        log_test('Token creation initialization', true);
+
+        setFixedTimestamps($molecule);
+        $molecule->sign(false);
+        log_test('Molecule signing', true);
+
+        inspect_molecule($molecule, 'token creation molecule');
+
+        $isValid = false;
+        $validationError = null;
+        try {
+            $checkMolecule = new CheckMolecule($molecule);
+            $checkMolecule->verify($sourceWallet);  // void method - throws on failure
+            $isValid = true;
+        } catch (Exception $error) {
+            $isValid = false;
+            $validationError = $error->getMessage();
+        }
+        log_test('Molecule validation', $isValid, $validationError);
+
+        $results['molecules']['tokenCreation'] = $molecule->toJSON();
+        $results['tests']['tokenCreation'] = [
+            'passed' => $isValid,
+            'molecularHash' => $molecule->molecularHash,
+            'atomCount' => count($molecule->atoms),
+            'validationError' => $validationError
+        ];
+
+        return $isValid;
+
+    } catch (Exception $e) {
+        log_message("  ❌ ERROR: " . $e->getMessage(), COLOR_RED);
+        $results['tests']['tokenCreation'] = [
+            'passed' => false,
+            'error' => $e->getMessage()
+        ];
+        return false;
+    }
+}
+
+/**
  * Test 5: ML-KEM768 Encryption Test
  * Tests post-quantum encryption/decryption compatibility
  */
@@ -976,13 +1062,14 @@ $cryptoResult = test_crypto();
 $metaResult = test_meta_creation();
 $simpleResult = test_simple_transfer();
 $complexResult = test_complex_transfer();
+$tokenCreationResult = test_token_creation();
 $mlkemResult = test_mlkem768();
 $negativeResult = test_negative_cases();
 $crossSdkResult = test_cross_sdk_validation();
 
 // Generate summary
-$totalTests = 6;
-$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0);
+$totalTests = 7;
+$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($tokenCreationResult ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0);
 $failedTests = [];
 
 if (!$metaResult) $failedTests[] = 'metaCreation: Validation failed';
