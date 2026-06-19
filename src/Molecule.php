@@ -426,13 +426,34 @@ class Molecule extends MoleculeStructure {
       throw new TransferBalanceException();
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // Burn-address wallet: the all-zeros bundle = token destruction. No secret, so it has
+    // no position/address (the wire + hash coerce null -> ""); the validator credits the burn
+    // amount to this unspendable bundle, satisfying V-isotope conservation (sum == 0) while
+    // permanently destroying the tokens. Mirrors JS burnToken.
+    $burnWallet = Wallet::create(
+      '0000000000000000000000000000000000000000000000000000000000000000',
+      $this->sourceWallet->token
+    );
+
+    // V-atom 1: debit the ENTIRE source balance (UTXO model). Must be -balance (not -amount):
+    // the burn target gets +amount and the remainder +(balance-amount), so the three V-atoms
+    // sum to zero. -amount left the molecule unbalanced (validator: 3-atom + sum==0 required).
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
     ) );
 
+    // V-atom 2: credit the burn amount to the all-zeros burn address (destruction)
+    $this->addAtom( Atom::create(
+      'V',
+      $burnWallet,
+      $amount,
+      'walletBundle',
+      $burnWallet->bundle,
+    ) );
+
+    // V-atom 3: remainder back to the source identity
     $this->addAtom( Atom::create(
       'V',
       $this->remainderWallet,

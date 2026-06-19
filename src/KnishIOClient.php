@@ -1154,7 +1154,11 @@ class KnishIOClient {
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
     $molecule->burnToken( $amount );
     $molecule->sign();
-    $molecule->check();
+    // Pass the source wallet so CheckMolecule::isotopeV validates the 3-atom value
+    // molecule via its senderWallet branch (balance/remainder). Without it, the no-sender
+    // branch rejects the non-zero remainder of a balanced burn. (The old 2-atom burn slipped
+    // through isotopeV's 2-atom early-return; the canonical burn is 3 atoms, like a transfer.)
+    $molecule->check( $fromWallet );
 
     // Create & execute a mutation
     $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
