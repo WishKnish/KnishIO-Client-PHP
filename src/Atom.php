@@ -76,7 +76,7 @@ use WishKnish\KnishIO\Client\Versions\Versions;
  * @property string $createdAt
  *
  */
-class Atom {
+class Atom implements \JsonSerializable {
 
   /**
    * @return string[]
@@ -144,6 +144,39 @@ class Atom {
         $this->createdAt = Strings::currentTimeMillis();
       }
     }
+  }
+
+  /**
+   * Wire serialization for the GraphQL `AtomInput` argument.
+   *
+   * `AtomInput.position` and `AtomInput.walletAddress` are REQUIRED `String`s, but
+   * a shadow/batched recipient wallet legitimately has neither (it is keyed by
+   * bundle + batchId; position/address are assigned at claim time). Default object
+   * serialization emits them as `null`, which the validator rejects ("Invalid value
+   * for argument molecule.atoms.N.position, expected type String"). Coerce both
+   * null -> "" — identical to how getHashableValues() hashes them (null is hashed as
+   * ""), so the wire value matches the signed molecular hash. All other fields are
+   * optional in AtomInput and pass through unchanged (null stays null, matching the
+   * hash which skips null non-position/-walletAddress fields).
+   *
+   * @return array
+   */
+  public function jsonSerialize (): array {
+    return [
+      'position' => $this->position ?? '',
+      'walletAddress' => $this->walletAddress ?? '',
+      'isotope' => $this->isotope,
+      'token' => $this->token,
+      'value' => $this->value,
+      'batchId' => $this->batchId,
+      'metaType' => $this->metaType,
+      'metaId' => $this->metaId,
+      'meta' => $this->meta,
+      'otsFragment' => $this->otsFragment,
+      'index' => $this->index,
+      'createdAt' => $this->createdAt,
+      'version' => $this->version,
+    ];
   }
 
   /**
