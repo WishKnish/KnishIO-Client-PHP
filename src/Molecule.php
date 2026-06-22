@@ -511,6 +511,56 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
+   * Initialize a MULTI-recipient V-type molecule: one source debits its FULL balance to fund
+   * N recipients (each its own amount + stackable units) plus a remainder back to the sender.
+   * Multi-recipient sibling of initValue (WP line 544). $recipientWallets is parallel to $amounts.
+   *
+   * @param Wallet[] $recipientWallets
+   * @param int[] $amounts
+   *
+   * @return $this
+   * @throws JsonException
+   * @throws SodiumException
+   */
+  public function initValues ( array $recipientWallets, array $amounts ): Molecule {
+
+    $total = array_sum( $amounts );
+
+    if ( !$this->sourceWallet->hasEnoughBalance( $total ) ) {
+      throw new TransferBalanceException();
+    }
+
+    // Source atom: debit the ENTIRE balance (UTXO drain); carries the SENT union of token units
+    $this->addAtom( Atom::create(
+      'V',
+      $this->sourceWallet,
+      -$this->sourceWallet->balance,
+    ) );
+
+    // One atom per recipient: +amount_i, walletBundle -> recipient bundle, its own SENT units
+    foreach ( $recipientWallets as $i => $recipientWallet ) {
+      $this->addAtom( Atom::create(
+        'V',
+        $recipientWallet,
+        $amounts[ $i ],
+        'walletBundle',
+        $recipientWallet->bundle,
+      ) );
+    }
+
+    // Remainder atom: +(balance - total), walletBundle -> sender bundle, KEPT units
+    $this->addAtom( Atom::create(
+      'V',
+      $this->remainderWallet,
+      $this->sourceWallet->balance - $total,
+      'walletBundle',
+      $this->remainderWallet->bundle,
+    ) );
+
+    return $this;
+  }
+
+  /**
    * @param int $amount
    * @param array $tradeRates
    *

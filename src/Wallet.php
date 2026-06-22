@@ -333,6 +333,46 @@ class Wallet {
   }
 
   /**
+   * Split token units across MULTIPLE recipients (N-way sibling of splitUnits).
+   *
+   * The source retains the SENT union (all units leaving), each recipient gets its own subset,
+   * and the remainder keeps the KEPT units (those not assigned to any recipient).
+   * $recipientUnitLists is parallel to $recipientWallets. No-op when no units are sent.
+   *
+   * @param array $recipientUnitLists  per-recipient arrays of token unit IDs
+   * @param array $recipientWallets    destination Wallets (parallel to $recipientUnitLists)
+   * @param Wallet $remainderWallet    wallet to receive the KEPT units
+   */
+  public function splitUnitsMulti ( array $recipientUnitLists, array $recipientWallets, Wallet $remainderWallet ): void {
+
+    // Collect the SENT union (id => true). Nothing to split (fungible) -> no-op.
+    $sentIds = [];
+    foreach ( $recipientUnitLists as $unitList ) {
+      foreach ( $unitList as $id ) {
+        $sentIds[ $id ] = true;
+      }
+    }
+    if ( count( $sentIds ) === 0 ) {
+      return;
+    }
+
+    // Each recipient gets its own subset of the source's token units
+    foreach ( $recipientWallets as $i => $recipientWallet ) {
+      $ids = $recipientUnitLists[ $i ] ?? [];
+      $recipientWallet->tokenUnits = array_values( array_filter( $this->tokenUnits,
+        static fn( $tokenUnit ) => in_array( $tokenUnit->id, $ids, true ) ) );
+    }
+
+    // The remainder keeps everything not sent to any recipient (KEPT)
+    $remainderWallet->tokenUnits = array_values( array_filter( $this->tokenUnits,
+      static fn( $tokenUnit ) => !isset( $sentIds[ $tokenUnit->id ] ) ) );
+
+    // The source carries the SENT union (the ownership authority the validator reads)
+    $this->tokenUnits = array_values( array_filter( $this->tokenUnits,
+      static fn( $tokenUnit ) => isset( $sentIds[ $tokenUnit->id ] ) ) );
+  }
+
+  /**
    * @param string $secret
    *
    * @return Wallet
