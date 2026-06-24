@@ -92,7 +92,6 @@ use WishKnish\KnishIO\Client\Query\QueryPolicy;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryMetaTypeViaAtom;
 use WishKnish\KnishIO\Client\Query\QueryToken;
-use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -627,21 +626,6 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryUserActivity ( string $bundleHash, string $metaType, string $metaId, string $ipAddress, string $browser, string $osCpu, string $resolution, string $timeZone, array $countBy, string $interval ): Response {
-    return $this->createQuery( QueryUserActivity::class )
-      ->execute( [
-        'bundleHash' => $bundleHash,
-        'metaType' => $metaType,
-        'metaId' => $metaId,
-        'ipAddress' => $ipAddress,
-        'browser' => $browser,
-        'osCpu' => $osCpu,
-        'resolution' => $resolution,
-        'timeZone' => $timeZone,
-        'countBy' => $countBy,
-        'interval' => $interval
-      ] );
-  }
 
   /**
    * @param string $tokenSlug
