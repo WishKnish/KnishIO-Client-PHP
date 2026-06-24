@@ -117,7 +117,7 @@ class QueryUserActivity extends Query {
    * @param HttpClientInterface $client
    * @param string|null $query
    */
-  public function __construct ( HttpClientInterface $client, string $query = null ) {
+  public function __construct ( HttpClientInterface $client, ?string $query = null ) {
     parent::__construct( $client, $query );
 
     $this->client = $client;

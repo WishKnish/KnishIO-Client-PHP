@@ -76,7 +76,7 @@ class MutationProposeMolecule extends MutationProposeMoleculeStructure {
    * @param Molecule $molecule
    * @param string|null $query
    */
-  public function __construct ( HttpClientInterface $client, Molecule $molecule, string $query = null ) {
+  public function __construct ( HttpClientInterface $client, Molecule $molecule, ?string $query = null ) {
     parent::__construct( $client, $molecule, $query );
 
     $this->molecule = $molecule;

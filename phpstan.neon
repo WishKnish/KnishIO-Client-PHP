@@ -3,13 +3,14 @@
 # Level 0 = the high-value real-bug baseline (undefined methods/functions/variables, wrong
 # arg counts, undefined properties) — the PHP analog of the Rust clippy::all / Python ruff-F
 # / clang-tidy bugprone gates. Analyzes the shipped package (src/) only; tests/, the
-# self-test, the demo, and the bin/ node bridge are out of scope. The analysis target is
-# the library's declared 8.2 floor (phpVersion below), so PHP 8.4+ implicit-nullable-param
-# deprecations are NOT flagged (that cleanup is a separate follow-up if the floor moves up).
+# self-test, the demo, and the bin/ node bridge are out of scope. Analyzed across the full
+# supported range (phpVersion below: composer "php": "^8.2" floor → 8.5 ceiling), so PHP 8.4+
+# implicit-nullable-param deprecations ARE flagged + the source is kept clean on every version.
 parameters:
     level: 0
-    phpVersion: 80200   # analyze at the library's declared floor (composer "php": "^8.2"); the
-                        # PHP 8.4+ implicit-nullable-param deprecation cleanup is a separate follow-up
+    phpVersion: 80500    # analyze at the 8.5 ceiling so PHP 8.4+ implicit-nullable-param
+                         # deprecations ARE flagged (a phpVersion range suppresses version-
+                         # conditional deprecations); the ?Type fixes are valid on the ^8.2 floor too.
     paths:
         - src
     ignoreErrors:

@@ -275,7 +275,7 @@ class MoleculeStructure implements \JsonSerializable {
    *
    * @throws JsonException
    */
-  public function check ( Wallet $senderWallet = null ): void {
+  public function check ( ?Wallet $senderWallet = null ): void {
     ( new CheckMolecule( $this ) )->verify( $senderWallet );
   }
 

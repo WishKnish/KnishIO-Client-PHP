@@ -82,7 +82,7 @@ class QueryMeta extends Query {
    *
    * @return array
    */
-  public static function createVariables ( array|string $metaType = null, array|string $metaId = null, array|string $key = null, array|string $value = null, bool $latest = true ): array {
+  public static function createVariables ( array|string|null $metaType = null, array|string|null $metaId = null, array|string|null $key = null, array|string|null $value = null, bool $latest = true ): array {
     $variables = [];
 
     if ( $metaType ) {

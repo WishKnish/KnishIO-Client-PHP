@@ -107,7 +107,7 @@ abstract class Query {
    * @param HttpClientInterface $client
    * @param string|null $query
    */
-  public function __construct ( HttpClientInterface $client, string $query = null ) {
+  public function __construct ( HttpClientInterface $client, ?string $query = null ) {
     $this->client = $client;
     $this->query = $query ?? static::$defaultQuery;
   }
@@ -134,7 +134,7 @@ abstract class Query {
    * @return Request
    * @throws JsonException
    */
-  public function createRequest ( array $variables = null, array $fields = null, array $headers = [] ): Request {
+  public function createRequest ( ?array $variables = null, ?array $fields = null, array $headers = [] ): Request {
 
     // Default value of variables
     $this->variables = $this->compiledVariables( $variables ?? [] );
@@ -157,7 +157,7 @@ abstract class Query {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function execute ( array $variables = null, array $fields = null ): Response {
+  public function execute ( ?array $variables = null, ?array $fields = null ): Response {
 
     // Set a request
     $this->request = $this->createRequest( $variables, $fields );
@@ -178,7 +178,7 @@ abstract class Query {
    *
    * @return array|string
    */
-  public function compiledQuery ( array $fields = null ): array|string {
+  public function compiledQuery ( ?array $fields = null ): array|string {
     // Overwrite default fields value
     if ( $fields ) {
       $this->fields = $fields;

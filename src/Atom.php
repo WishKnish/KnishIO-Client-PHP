@@ -193,12 +193,12 @@ class Atom implements \JsonSerializable {
    */
   public static function create(
     string $isotope,
-    Wallet $wallet = null,
-    string $value = null,
-    string $metaType = null,
-    string $metaId = null,
-    AtomMeta $meta = null,
-    string $batchId = null,
+    ?Wallet $wallet = null,
+    ?string $value = null,
+    ?string $metaType = null,
+    ?string $metaId = null,
+    ?AtomMeta $meta = null,
+    ?string $batchId = null,
   ): self {
 
     // If meta is not passed - create it

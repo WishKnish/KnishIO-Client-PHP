@@ -93,7 +93,7 @@ class Response {
    *
    * @throws JsonException
    */
-  public function __construct ( ?Query $query, string $json, string $dataKey = null ) {
+  public function __construct ( ?Query $query, string $json, ?string $dataKey = null ) {
     // Set a query
     $this->query = $query;
 

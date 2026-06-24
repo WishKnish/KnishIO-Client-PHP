@@ -63,7 +63,7 @@ class WalletBatchException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Incorrect BatchId', int $code = 1, ?Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

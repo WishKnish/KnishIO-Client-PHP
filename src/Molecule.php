@@ -676,7 +676,7 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initWalletCreation ( Wallet $wallet, AtomMeta $atomMeta = null ): Molecule {
+  public function initWalletCreation ( Wallet $wallet, ?AtomMeta $atomMeta = null ): Molecule {
 
     // Create an atom metadata
     $atomMeta = $atomMeta ?? new AtomMeta;
@@ -722,7 +722,7 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
+  public function initPeerCreation ( string $slug, string $host, ?string $peerId = null, ?string $name = null, array $cellSlugs = [] ): Molecule {
 
     // Metas
     $atomMeta = new AtomMeta( [
