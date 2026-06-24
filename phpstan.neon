@@ -3,22 +3,15 @@
 # Level 0 = the high-value real-bug baseline (undefined methods/functions/variables, wrong
 # arg counts, undefined properties) — the PHP analog of the Rust clippy::all / Python ruff-F
 # / clang-tidy bugprone gates. Analyzes the shipped package (src/) only; tests/, the
-# self-test, the demo, and the bin/ node bridge are out of scope. The running PHP (8.5)
-# is the analysis target, so PHP 8.4+ implicit-nullable-parameter deprecations are caught.
+# self-test, the demo, and the bin/ node bridge are out of scope. The analysis target is
+# the library's declared 8.2 floor (phpVersion below), so PHP 8.4+ implicit-nullable-param
+# deprecations are NOT flagged (that cleanup is a separate follow-up if the floor moves up).
 parameters:
     level: 0
     phpVersion: 80200   # analyze at the library's declared floor (composer "php": "^8.2"); the
                         # PHP 8.4+ implicit-nullable-param deprecation cleanup is a separate follow-up
     paths:
         - src
-    excludePaths:
-        # Incomplete, UNUSED "Standard*" config/response framework (not referenced by KnishIOClient,
-        # the self-test, or any test): references a MISSING InvalidConfigurationException (18x), has a
-        # static-vs-interface success() override conflict + a readonly double-assign. Excluded so the
-        # gate covers the shipped/used code; completing-or-removing this framework is a separate cycle.
-        - src/Config/StandardConfig.php
-        - src/Response/StandardResponse.php
-        - src/Response/StandardResponseInterface.php
     ignoreErrors:
         # `new static()` in the AuthToken / HashAtom polymorphic (versioned) factories is deliberate;
         # phpstan's new.static is a strictness warning, not a bug here.
