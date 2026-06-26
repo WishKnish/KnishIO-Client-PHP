@@ -418,6 +418,10 @@ class Wallet {
   }
 
   /**
+   * Encrypts for one or more recipients using CLASSICAL NaCl crypto_box_seal (via Soda) —
+   * NOT post-quantum. The live CipherHash transport (Libraries\Cipher) uses this path pending
+   * PQ migration. For the canonical post-quantum ML-KEM768 envelope see {@see encryptMessageML768()}.
+   *
    * @param mixed $message
    * @param mixed ...$pubkeys
    *
@@ -441,7 +445,11 @@ class Wallet {
   }
 
   /**
-   * Uses the current wallet's private key to decrypt the given message
+   * Uses the current wallet's private key to decrypt the given message.
+   *
+   * CLASSICAL NaCl crypto_box_seal (via Soda) — NOT post-quantum; the counterpart to
+   * {@see encryptMessage()}. For the canonical post-quantum ML-KEM768 envelope see
+   * {@see decryptMessageML768()}.
    *
    * @param array|string $message
    *
@@ -563,6 +571,11 @@ class Wallet {
    * Encrypt a message using ML-KEM768 post-quantum encryption
    * Compatible with JavaScript SDK encryptMessage() method
    *
+   * CANONICAL cross-SDK ML-KEM768 envelope: returns `{ cipherText, encryptedMessage }`
+   * (b64(KEM ciphertext) + b64(IV‖AES-256-GCM ct‖tag)) — the post-quantum envelope every
+   * KnishIO SDK interoperates on (asserted by the cross-platform vector layer + strong
+   * cross-validation). For the classical (non-PQ) NaCl path see {@see encryptMessage()}.
+   *
    * @param mixed $message Message to encrypt
    * @param string $recipientPubkey Recipient's ML-KEM768 public key (base64)
    * @return array{cipherText: string, encryptedMessage: string}
@@ -599,6 +612,10 @@ class Wallet {
   /**
    * Decrypt a message using ML-KEM768 post-quantum decryption  
    * Compatible with JavaScript SDK decryptMessage() method
+   *
+   * CANONICAL cross-SDK ML-KEM768 envelope: consumes `{ cipherText, encryptedMessage }` — the
+   * post-quantum envelope every KnishIO SDK interoperates on. For the classical (non-PQ) NaCl
+   * path see {@see decryptMessage()}.
    *
    * @param array{cipherText: string, encryptedMessage: string} $encryptedData
    * @return mixed Decrypted message
