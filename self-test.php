@@ -1080,29 +1080,26 @@ function test_cross_sdk_validation() {
                     $testConfig['position']
                 );
 
-                // Test: Can we encrypt a message for their public key?
-                $testMessage = "Cross-SDK ML-KEM768 compatibility test";
+                // STRONG cross-SDK check (cycle 138): decrypt THEIR encryptedData with our
+                // TESTSEED wallet (all 8 SDKs share the keypair) and assert the plaintext —
+                // real decrypt-interop, not just "their pubkey is encaps-usable" (the old weak form).
                 $mlkemValid = false;
 
                 try {
-                    $encryptedForThem = $ourWallet->encryptMessageML768(
-                        $testMessage,
-                        $mlkemData['publicKey']
-                    );
-
-                    // If encryption succeeded, that means their public key format is compatible
-                    $mlkemValid = isset($encryptedForThem['cipherText']) &&
-                                 isset($encryptedForThem['encryptedMessage']);
+                    $decrypted = $ourWallet->decryptMessageML768($mlkemData['encryptedData']);
+                    $mlkemValid = ($decrypted === ($mlkemData['originalPlaintext'] ?? null));
 
                     if ($mlkemValid) {
-                        log_message("    Successfully encrypted for $sdkName public key", COLOR_GREEN);
+                        log_message("    Successfully decrypted $sdkName's ML-KEM768 message", COLOR_GREEN);
+                    } else {
+                        log_message("    Decrypted $sdkName plaintext mismatch", COLOR_RED);
                     }
                 } catch (Exception $e) {
-                    log_message("    Failed to encrypt for $sdkName: " . $e->getMessage(), COLOR_RED);
+                    log_message("    Failed to decrypt $sdkName: " . $e->getMessage(), COLOR_RED);
                     $mlkemValid = false;
                 }
 
-                log_test("$sdkName mlkem768 encryption compatibility", $mlkemValid);
+                log_test("$sdkName mlkem768 decryption compatibility", $mlkemValid);
 
                 if (!$mlkemValid) {
                     $allValid = false;
