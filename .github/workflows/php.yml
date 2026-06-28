@@ -21,8 +21,16 @@ jobs:
           php-version: '8.2'
           extensions: sodium, json, mbstring
           tools: composer:v2
+        env:
+          # setup-php hits the GitHub API to fetch tools; the token avoids its own anon rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # composer resolves the evias/PHP-SHA3-Streamable VCS ("type":"github") dep via the GitHub
+      # API. Anonymous calls share the runner-pool 60/hr limit → intermittent HTTP 429 throttle
+      # (exit 100). Authenticating with the Actions GITHUB_TOKEN lifts it to 5000/hr → no flake.
       - name: composer install (runs the sha3 post-install hook)
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
         run: composer install --no-interaction --prefer-dist
 
       # The enforced dev gate: phpstan level 0 must be clean (0 errors).
