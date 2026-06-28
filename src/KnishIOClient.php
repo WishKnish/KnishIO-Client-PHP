@@ -295,6 +295,14 @@ class KnishIOClient {
   }
 
   /**
+   * Returns whether a bundle hash is being stored for this session.
+   * Cross-SDK parity with the JS client's hasBundle() (KnishIOClient.js).
+   */
+  public function hasBundle (): bool {
+    return (bool) $this->bundle;
+  }
+
+  /**
    * @return Wallet|null
    */
   public function getRemainderWallet (): ?Wallet {

@@ -89,6 +89,29 @@ class KnishIOClientTest extends TestCase {
   }
 
   /**
+   * Skip a live-server test when no KnishIO validator is reachable at the
+   * configured endpoint (mirrors the TS vitest gate / C++ self-test SKIP idiom).
+   * A short-timeout curl probe: a non-zero curl errno — connection refused (no
+   * validator) OR the `HTTP/0.9` protocol error from an HTTPS-only validator on
+   * the http:// endpoint — skips; a real HTTP GraphQL response (errno 0) runs.
+   */
+  private function requireValidator(): void {
+    $ch = curl_init( $this->testUri );
+    curl_setopt_array( $ch, [
+      CURLOPT_NOBODY         => true,
+      CURLOPT_CONNECTTIMEOUT => 2,
+      CURLOPT_TIMEOUT        => 3,
+      CURLOPT_RETURNTRANSFER => true,
+    ] );
+    curl_exec( $ch );
+    $errno = curl_errno( $ch );
+    curl_close( $ch );
+    if ( $errno !== 0 ) {
+      $this->markTestSkipped( "KnishIO validator not reachable at {$this->testUri} (curl errno {$errno}) — skipping live-server test" );
+    }
+  }
+
+  /**
    * Test client initialization
    */
   public function testClientInitialization(): void {
@@ -166,6 +189,7 @@ class KnishIOClientTest extends TestCase {
    * Test molecule creation
    */
   public function testMoleculeCreation(): void {
+    $this->requireValidator();
     $molecule = $this->client->createMolecule();
     
     $this->assertInstanceOf(Molecule::class, $molecule);
@@ -182,8 +206,8 @@ class KnishIOClientTest extends TestCase {
     
     $this->assertNotEmpty($wallet->address);
     $this->assertNotEmpty($wallet->position);
-    $this->assertNotEmpty($wallet->bundleHash);
-    $this->assertEquals('TEST', $wallet->tokenSlug);
+    $this->assertNotEmpty($wallet->bundle);
+    $this->assertEquals('TEST', $wallet->token);
   }
 
   /**
@@ -199,6 +223,7 @@ class KnishIOClientTest extends TestCase {
    * Test mutation creation
    */
   public function testMutationCreation(): void {
+    $this->requireValidator();
     $mutation = $this->client->createMoleculeMutation(MutationCreateToken::class);
     
     $this->assertInstanceOf(MutationCreateToken::class, $mutation);
@@ -275,6 +300,7 @@ class KnishIOClientTest extends TestCase {
    * Test cell slug management
    */
   public function testCellSlugManagement(): void {
+    $this->requireValidator();
     $cellSlug = 'TestCell';
     $this->client->setCellSlug($cellSlug);
     
@@ -286,6 +312,7 @@ class KnishIOClientTest extends TestCase {
    * Test source and remainder wallet retrieval
    */
   public function testWalletRetrieval(): void {
+    $this->requireValidator();
     $sourceWallet = $this->client->getSourceWallet();
     $this->assertNull($sourceWallet); // Should be null initially
     
