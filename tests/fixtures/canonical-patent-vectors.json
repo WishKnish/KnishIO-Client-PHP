@@ -181,6 +181,13 @@
         { "name": "partial_deposit", "sourceBalance": 100, "amount": 30, "expectedSourceValue": "-100", "expectedBufferValue": "30", "expectedRemainderValue": "70", "expectedSum": "0" },
         { "name": "full_deposit", "sourceBalance": 50, "amount": 50, "expectedSourceValue": "-50", "expectedBufferValue": "50", "expectedRemainderValue": "0", "expectedSum": "0" }
       ]
+    },
+    "buffer_withdraw_conservation": {
+      "description": "init_withdraw_buffer (B-isotope buffer withdraw) debits the FULL source balance for UTXO conservation (JS/PHP/TS/Kotlin/C++ reference); a partial withdraw must still conserve. Emitted atoms (in order): source B = -sourceBalance (metaType walletBundle), recipient V = +amount (metaType walletBundle), remainder B = +(sourceBalance-amount) (metaType walletBundle). The sum of all V+B atom values MUST equal 0 (the validator's b_isotope conservation check). Cross-SDK parity lock (cycle 148, 2026-06-28) — the withdraw analog of buffer_deposit_conservation. Rust+Python previously debited only -total/-amount, making partial withdraws non-conserving; fixed to match JS/PHP/TS/Kotlin/C++.",
+      "tests": [
+        { "name": "partial_withdraw", "sourceBalance": 100, "amount": 30, "expectedSourceValue": "-100", "expectedRecipientValue": "30", "expectedRemainderValue": "70", "expectedSum": "0" },
+        { "name": "full_withdraw", "sourceBalance": 50, "amount": 50, "expectedSourceValue": "-50", "expectedRecipientValue": "50", "expectedRemainderValue": "0", "expectedSum": "0" }
+      ]
     }
   }
 }
