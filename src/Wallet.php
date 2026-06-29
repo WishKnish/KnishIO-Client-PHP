@@ -771,6 +771,56 @@ class Wallet {
   }
 
   /**
+   * Canonical cross-SDK `hashShare` — the map key under which an ML-KEM768 envelope is stored for
+   * a recipient pubkey. Byte-matches the Rust validator's `hash_share` and the JS/Kotlin
+   * `hashShare`: standard (RFC-4648) base64 of the first 8 bytes of SHAKE256(pubkey-as-UTF-8).
+   *
+   * Deliberately NOT {@see Soda::shortHash()}, which encodes via BaseX (a big-integer base
+   * conversion, not RFC-4648) and therefore does NOT interoperate with the validator/other SDKs.
+   *
+   * @param string $pubkey Recipient ML-KEM768 public key (base64 string)
+   * @return string
+   * @throws Exception
+   */
+  public function hashShare ( string $pubkey ): string {
+    return base64_encode( Crypto\Shake256::hash( $pubkey, 8 ) );
+  }
+
+  /**
+   * Encrypt a message into the canonical single-recipient ML-KEM768 `CipherHash` envelope:
+   * `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`. This is the wire shape the
+   * validator's `CipherHash` handler decrypts (and that JS/Kotlin `encryptStringML768` produce).
+   *
+   * @param mixed $message
+   * @param string $pubkey Recipient ML-KEM768 public key (base64)
+   * @return array
+   * @throws JsonException|Exception
+   */
+  public function encryptStringML768 ( mixed $message, string $pubkey ): array {
+    return [ $this->hashShare( $pubkey ) => $this->encryptMessageML768( $message, $pubkey ) ];
+  }
+
+  /**
+   * Decrypt the canonical ML-KEM768 `CipherHash` envelope addressed to THIS wallet: looks up the
+   * entry keyed by `hashShare($this->pubkey)` and decrypts it with this wallet's ML-KEM private
+   * key. Mirrors the JS/Kotlin `decryptMyMessageML768`.
+   *
+   * @param array $map `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`
+   * @return mixed Decrypted message
+   * @throws JsonException|Exception
+   */
+  public function decryptMyMessageML768 ( array $map ): mixed {
+    if ( $this->pubkey === null ) {
+      throw new CryptoException( 'ML-KEM768 public key not available on this wallet.' );
+    }
+    $key = $this->hashShare( $this->pubkey );
+    if ( !array_key_exists( $key, $map ) ) {
+      throw new CryptoException( 'No ML-KEM768 envelope found for this wallet.' );
+    }
+    return $this->decryptMessageML768( $map[ $key ] );
+  }
+
+  /**
    * Encrypt binary data using ML-KEM768
    * Does not JSON encode - encrypts raw bytes directly
    *
