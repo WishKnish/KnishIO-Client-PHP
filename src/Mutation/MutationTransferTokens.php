@@ -75,4 +75,22 @@ class MutationTransferTokens extends MutationProposeMolecule {
     return $this;
   }
 
+  /**
+   * Fill the molecule for a MULTI-recipient transfer (one source funds N recipients).
+   *
+   * @param Wallet[] $recipientWallets
+   * @param int[] $amounts
+   *
+   * @return $this
+   * @throws JsonException
+   * @throws SodiumException
+   */
+  public function fillMoleculeMulti ( array $recipientWallets, array $amounts ): MutationTransferTokens {
+    $this->molecule->initValues( $recipientWallets, $amounts );
+    $this->molecule->sign();
+    $this->molecule->check( $this->molecule->sourceWallet() );
+
+    return $this;
+  }
+
 }

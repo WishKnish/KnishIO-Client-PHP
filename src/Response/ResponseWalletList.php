@@ -73,7 +73,7 @@ class ResponseWalletList extends Response {
    * @throws SodiumException
    * @throws JsonException
    */
-  public static function toClientWallet ( array $data, string $secret = null ): Wallet {
+  public static function toClientWallet ( array $data, ?string $secret = null ): Wallet {
 
     // Shadow wallet
     if ( $data[ 'position' ] === null ) {

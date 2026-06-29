@@ -92,7 +92,6 @@ use WishKnish\KnishIO\Client\Query\QueryPolicy;
 use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryMetaTypeViaAtom;
 use WishKnish\KnishIO\Client\Query\QueryToken;
-use WishKnish\KnishIO\Client\Query\QueryUserActivity;
 use WishKnish\KnishIO\Client\Query\QueryWalletBundle;
 use WishKnish\KnishIO\Client\Query\QueryWalletList;
 use WishKnish\KnishIO\Client\Response\Response;
@@ -293,6 +292,14 @@ class KnishIOClient {
       throw new UnauthenticatedException( 'KnishIOClient::getBundle() - Unable to find a stored bundle!' );
     }
     return $this->bundle;
+  }
+
+  /**
+   * Returns whether a bundle hash is being stored for this session.
+   * Cross-SDK parity with the JS client's hasBundle() (KnishIOClient.js).
+   */
+  public function hasBundle (): bool {
+    return (bool) $this->bundle;
   }
 
   /**
@@ -627,21 +634,6 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryUserActivity ( string $bundleHash, string $metaType, string $metaId, string $ipAddress, string $browser, string $osCpu, string $resolution, string $timeZone, array $countBy, string $interval ): Response {
-    return $this->createQuery( QueryUserActivity::class )
-      ->execute( [
-        'bundleHash' => $bundleHash,
-        'metaType' => $metaType,
-        'metaId' => $metaId,
-        'ipAddress' => $ipAddress,
-        'browser' => $browser,
-        'osCpu' => $osCpu,
-        'resolution' => $resolution,
-        'timeZone' => $timeZone,
-        'countBy' => $countBy,
-        'interval' => $interval
-      ] );
-  }
 
   /**
    * @param string $tokenSlug
@@ -1052,6 +1044,78 @@ class KnishIOClient {
   }
 
   /**
+   * Fund N recipients from a single source in ONE molecule (multi-recipient sibling of
+   * transferToken). Each recipient gets its own subset of stackable units (or a fungible amount);
+   * a remainder returns the rest to the sender. Conserves: -balance + Σamounts + (balance-Σ) = 0.
+   *
+   * @param string $tokenSlug
+   * @param array $recipients  each: ['bundleHash'=>string, 'units'=>string[], 'amount'=>int, 'batchId'=>?string]
+   *
+   * @return Response
+   * @throws GuzzleException|JsonException|SodiumException
+   */
+  public function transferTokens ( string $tokenSlug, array $recipients ): Response {
+
+    // Per-recipient amount: stackable -> unit count; fungible -> explicit amount (never both)
+    $amounts = [];
+    $total = 0;
+    foreach ( $recipients as $recipient ) {
+      $units = $recipient[ 'units' ] ?? [];
+      $amount = $recipient[ 'amount' ] ?? 0;
+      if ( count( $units ) > 0 && $amount > 0 ) {
+        throw new StackableUnitAmountException();
+      }
+      $amt = count( $units ) > 0 ? count( $units ) : $amount;
+      $amounts[] = $amt;
+      $total += $amt;
+    }
+
+    // Source = the client's on-ledger wallet for this token (queryBalance preserves tokenUnits)
+    /** @var Wallet $fromWallet */
+    $fromWallet = $this->querySourceWallet( $tokenSlug, $total );
+
+    // A shadow recipient wallet per destination + a distinct batch id
+    $recipientWallets = [];
+    foreach ( $recipients as $recipient ) {
+      $recipientWallet = Wallet::create( $recipient[ 'bundleHash' ], $tokenSlug );
+      if ( !empty( $recipient[ 'batchId' ] ) ) {
+        $recipientWallet->batchId = $recipient[ 'batchId' ];
+      }
+      else {
+        $recipientWallet->initBatchId( $fromWallet );
+      }
+      $recipientWallets[] = $recipientWallet;
+    }
+
+    // Canonical remainder (carries the source's token/characters; reuses the source batch id)
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+
+    // Stackable (NFT): partition the source's tokenUnits across source (SENT union), each recipient
+    // (its subset), and remainder (KEPT) BEFORE the molecule is built. No-op for fungible.
+    $unitLists = [];
+    $anyUnits = false;
+    foreach ( $recipients as $recipient ) {
+      $unitLists[] = $recipient[ 'units' ] ?? [];
+      if ( !empty( $recipient[ 'units' ] ) ) {
+        $anyUnits = true;
+      }
+    }
+    if ( $anyUnits ) {
+      $fromWallet->splitUnitsMulti( $unitLists, $recipientWallets, $remainderWallet );
+    }
+
+    // Create a molecule with the custom source wallet
+    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
+
+    /** @var MutationTransferTokens $query */
+    $query = $this->createMoleculeMutation( MutationTransferTokens::class, $molecule );
+
+    $query->fillMoleculeMulti( $recipientWallets, $amounts );
+
+    return $query->execute();
+  }
+
+  /**
    * @param string $tokenSlug
    * @param int $amount
    * @param array $tradeRates
@@ -1154,7 +1218,11 @@ class KnishIOClient {
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
     $molecule->burnToken( $amount );
     $molecule->sign();
-    $molecule->check();
+    // Pass the source wallet so CheckMolecule::isotopeV validates the 3-atom value
+    // molecule via its senderWallet branch (balance/remainder). Without it, the no-sender
+    // branch rejects the non-zero remainder of a balanced burn. (The old 2-atom burn slipped
+    // through isotopeV's 2-atom early-return; the canonical burn is 3 atoms, like a transfer.)
+    $molecule->check( $fromWallet );
 
     // Create & execute a mutation
     $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );
@@ -1272,8 +1340,11 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function getSourceWallet (): Wallet {
-    // Has a ContinuID wallet?
-    $sourceWallet = $this->queryContinuId( $this->getBundle() )
+    // Has a ContinuID wallet? Resolve the USER identity chain head explicitly — without the token
+    // arg the validator returns the FIRST wallet of the bundle (the AUTH wallet on a freshly-auth'd
+    // bundle), whose already-signed position a subsequent molecule (e.g. a shadow claim) would reuse
+    // -> OTS-position-reuse rejection. token:"USER" -> auth-only bundle returns null -> fresh genesis.
+    $sourceWallet = $this->queryContinuId( $this->getBundle(), 'USER' )
       ->payload();
     if ( !$sourceWallet ) {
       $sourceWallet = new Wallet( $this->getSecret() );
@@ -1290,7 +1361,7 @@ class KnishIOClient {
    * @throws GuzzleException
    * @throws JsonException
    */
-  public function queryContinuId ( string $bundleHash ): Response {
+  public function queryContinuId ( string $bundleHash, string $token = 'USER' ): Response {
     /**
      * Create & execute the query
      *
@@ -1298,7 +1369,7 @@ class KnishIOClient {
      */
     $query = $this->createQuery( QueryContinuId::class );
 
-    return $query->execute( [ 'bundle' => $bundleHash ] );
+    return $query->execute( [ 'bundle' => $bundleHash, 'token' => $token ] );
   }
 
   /**
@@ -1351,7 +1422,17 @@ class KnishIOClient {
      * @var MutationRequestAuthorization $query
      */
     $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
-    $query->fillMolecule( [ 'encrypt' => $encrypt ? 'true' : 'false' ] );
+
+    // PQ-transport (cycle 165): convey the AUTH source wallet's ML-KEM768 public key as a SIGNED
+    // `walletPubkey` meta on the U-atom (fillMolecule → initAuthorization → sign), so the validator
+    // can encrypt CipherHash responses back to THIS wallet (the one that decrypts them). Signed →
+    // a MITM can't swap the response-encryption target. Conveyed unconditionally (parity with JS/
+    // Kotlin), so even a plaintext auth primes the validator's enc_pubkey.
+    $authMeta = [ 'encrypt' => $encrypt ? 'true' : 'false' ];
+    if ( $wallet->pubkey ) {
+      $authMeta[ 'walletPubkey' ] = $wallet->pubkey;
+    }
+    $query->fillMolecule( $authMeta );
 
     /**
      * Get a response

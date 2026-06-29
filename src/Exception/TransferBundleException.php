@@ -68,7 +68,7 @@ class TransferBundleException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'An invalid recipient wallet bundle was provided.', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'An invalid recipient wallet bundle was provided.', int $code = 1, ?Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

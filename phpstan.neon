@@ -1,0 +1,21 @@
+# phpstan lint gate for the KnishIO PHP SDK (cycle 117).
+#
+# Level 0 = the high-value real-bug baseline (undefined methods/functions/variables, wrong
+# arg counts, undefined properties) — the PHP analog of the Rust clippy::all / Python ruff-F
+# / clang-tidy bugprone gates. Analyzes the shipped package (src/) only; tests/, the
+# self-test, the demo, and the bin/ node bridge are out of scope. Analyzed across the full
+# supported range (phpVersion below: composer "php": "^8.2" floor → 8.5 ceiling), so PHP 8.4+
+# implicit-nullable-param deprecations ARE flagged + the source is kept clean on every version.
+parameters:
+    level: 0
+    phpVersion: 80500    # analyze at the 8.5 ceiling so PHP 8.4+ implicit-nullable-param
+                         # deprecations ARE flagged (a phpVersion range suppresses version-
+                         # conditional deprecations); the ?Type fixes are valid on the ^8.2 floor too.
+    paths:
+        - src
+    ignoreErrors:
+        # `new static()` in the AuthToken / HashAtom polymorphic (versioned) factories is deliberate;
+        # phpstan's new.static is a strictness warning, not a bug here.
+        - identifier: new.static
+        # The SDK's HttpClient intentionally wraps Guzzle's @final-annotated Client (thin subclass).
+        - identifier: class.extendsFinalByPhpDoc

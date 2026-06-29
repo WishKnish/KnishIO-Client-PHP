@@ -64,7 +64,7 @@ class WalletSignatureException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Signing wallet is invalid.', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Signing wallet is invalid.', int $code = 1, ?Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

@@ -68,7 +68,7 @@ class TransferMismatchedException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Token transfer slugs are mismatched', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Token transfer slugs are mismatched', int $code = 1, ?Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

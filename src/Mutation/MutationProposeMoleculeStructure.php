@@ -94,7 +94,7 @@ class MutationProposeMoleculeStructure extends Query {
    *
    * @noinspection PhpPureAttributeCanBeAddedInspection
    */
-  public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, string $query = null ) {
+  public function __construct ( HttpClientInterface $client, MoleculeStructure $moleculeStructure, ?string $query = null ) {
     parent::__construct( $client, $query );
 
     // Create a molecule

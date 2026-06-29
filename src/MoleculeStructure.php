@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * Class MoleculeStructure
  * @package WishKnish\KnishIO\Client
  */
-class MoleculeStructure {
+class MoleculeStructure implements \JsonSerializable {
 
   /**
    * @var string|null
@@ -94,6 +94,31 @@ class MoleculeStructure {
    * @var array
    */
   public array $atoms = [];
+
+  /**
+   * Wire serialization for the GraphQL `MoleculeInput` argument.
+   *
+   * Emits ONLY the fields the validator's strict `MoleculeInput` accepts. Default
+   * object serialization dumps every public property, which leaks PHP-internal
+   * molecule fields (`counterparty`, `local`) the validator does not define and
+   * therefore rejects ("unknown field counterparty of type MoleculeInput") — this
+   * broke the live submission path (offline self-test uses toJSON(), so it was
+   * never caught). Atoms serialize via their own public props, a clean subset of
+   * `AtomInput`. `sourceWallet`/`remainderWallet`/`version` are optional tracking
+   * fields and intentionally omitted (the validator treats them as opaque/default).
+   *
+   * @return array
+   */
+  public function jsonSerialize (): array {
+    return [
+      'molecularHash' => $this->molecularHash,
+      'cellSlug' => $this->cellSlug,
+      'bundle' => $this->bundle,
+      'status' => $this->status,
+      'createdAt' => $this->createdAt,
+      'atoms' => $this->atoms,
+    ];
+  }
 
   /**
    * @param string|array $isotopes
@@ -250,7 +275,7 @@ class MoleculeStructure {
    *
    * @throws JsonException
    */
-  public function check ( Wallet $senderWallet = null ): void {
+  public function check ( ?Wallet $senderWallet = null ): void {
     ( new CheckMolecule( $this ) )->verify( $senderWallet );
   }
 

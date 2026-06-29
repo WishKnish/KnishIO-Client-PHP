@@ -69,7 +69,7 @@ class MutationCreatePeer extends MutationProposeMolecule {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function fillMolecule ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
+  public function fillMolecule ( string $slug, string $host, ?string $peerId = null, ?string $name = null, array $cellSlugs = [] ): MutationCreatePeer {
     // Set name as slug if it is not defined
     $name = $name ?: $slug;
 

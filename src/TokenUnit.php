@@ -96,6 +96,12 @@ class TokenUnit {
     if ( $metas ) {
       $metas = json_decode( $metas, true, 512, JSON_THROW_ON_ERROR );
     }
+    // The validator returns `metas` as null (or a JSON string / absent) for id-only genesis units;
+    // array_get returns null for a present-but-null key, so normalize any non-array to [] before
+    // create() (which requires an array). Otherwise queryBalance throws on every stackable wallet.
+    if ( !is_array( $metas ) ) {
+      $metas = [];
+    }
 
     // Get token unit ID
     $tokenUnitId = array_get( $data, 'id' );

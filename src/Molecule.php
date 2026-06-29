@@ -426,13 +426,34 @@ class Molecule extends MoleculeStructure {
       throw new TransferBalanceException();
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // Burn-address wallet: the all-zeros bundle = token destruction. No secret, so it has
+    // no position/address (the wire + hash coerce null -> ""); the validator credits the burn
+    // amount to this unspendable bundle, satisfying V-isotope conservation (sum == 0) while
+    // permanently destroying the tokens. Mirrors JS burnToken.
+    $burnWallet = Wallet::create(
+      '0000000000000000000000000000000000000000000000000000000000000000',
+      $this->sourceWallet->token
+    );
+
+    // V-atom 1: debit the ENTIRE source balance (UTXO model). Must be -balance (not -amount):
+    // the burn target gets +amount and the remainder +(balance-amount), so the three V-atoms
+    // sum to zero. -amount left the molecule unbalanced (validator: 3-atom + sum==0 required).
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$this->sourceWallet->balance,
     ) );
 
+    // V-atom 2: credit the burn amount to the all-zeros burn address (destruction)
+    $this->addAtom( Atom::create(
+      'V',
+      $burnWallet,
+      $amount,
+      'walletBundle',
+      $burnWallet->bundle,
+    ) );
+
+    // V-atom 3: remainder back to the source identity
     $this->addAtom( Atom::create(
       'V',
       $this->remainderWallet,
@@ -482,6 +503,56 @@ class Molecule extends MoleculeStructure {
       'V',
       $this->remainderWallet,
       $this->sourceWallet->balance - $amount,
+      'walletBundle',
+      $this->remainderWallet->bundle,
+    ) );
+
+    return $this;
+  }
+
+  /**
+   * Initialize a MULTI-recipient V-type molecule: one source debits its FULL balance to fund
+   * N recipients (each its own amount + stackable units) plus a remainder back to the sender.
+   * Multi-recipient sibling of initValue (WP line 544). $recipientWallets is parallel to $amounts.
+   *
+   * @param Wallet[] $recipientWallets
+   * @param int[] $amounts
+   *
+   * @return $this
+   * @throws JsonException
+   * @throws SodiumException
+   */
+  public function initValues ( array $recipientWallets, array $amounts ): Molecule {
+
+    $total = array_sum( $amounts );
+
+    if ( !$this->sourceWallet->hasEnoughBalance( $total ) ) {
+      throw new TransferBalanceException();
+    }
+
+    // Source atom: debit the ENTIRE balance (UTXO drain); carries the SENT union of token units
+    $this->addAtom( Atom::create(
+      'V',
+      $this->sourceWallet,
+      -$this->sourceWallet->balance,
+    ) );
+
+    // One atom per recipient: +amount_i, walletBundle -> recipient bundle, its own SENT units
+    foreach ( $recipientWallets as $i => $recipientWallet ) {
+      $this->addAtom( Atom::create(
+        'V',
+        $recipientWallet,
+        $amounts[ $i ],
+        'walletBundle',
+        $recipientWallet->bundle,
+      ) );
+    }
+
+    // Remainder atom: +(balance - total), walletBundle -> sender bundle, KEPT units
+    $this->addAtom( Atom::create(
+      'V',
+      $this->remainderWallet,
+      $this->sourceWallet->balance - $total,
       'walletBundle',
       $this->remainderWallet->bundle,
     ) );
@@ -605,7 +676,7 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initWalletCreation ( Wallet $wallet, AtomMeta $atomMeta = null ): Molecule {
+  public function initWalletCreation ( Wallet $wallet, ?AtomMeta $atomMeta = null ): Molecule {
 
     // Create an atom metadata
     $atomMeta = $atomMeta ?? new AtomMeta;
@@ -651,7 +722,7 @@ class Molecule extends MoleculeStructure {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initPeerCreation ( string $slug, string $host, string $peerId = null, string $name = null, array $cellSlugs = [] ): Molecule {
+  public function initPeerCreation ( string $slug, string $host, ?string $peerId = null, ?string $name = null, array $cellSlugs = [] ): Molecule {
 
     // Metas
     $atomMeta = new AtomMeta( [

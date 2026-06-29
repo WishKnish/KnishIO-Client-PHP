@@ -111,7 +111,7 @@ class CheckMolecule {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function verify ( Wallet $fromWallet = null ): void {
+  public function verify ( ?Wallet $fromWallet = null ): void {
     $this->molecularHash();
     $this->ots();
     $this->isotopeM();
@@ -348,7 +348,7 @@ class CheckMolecule {
    *
    * @param Wallet|null $senderWallet
    */
-  public function isotopeVB ( Wallet $senderWallet = null ): void {
+  public function isotopeVB ( ?Wallet $senderWallet = null ): void {
 
     // Get atoms with V OR B isotopes
     $atoms = $this->molecule->getIsotopes( [

@@ -63,7 +63,7 @@ class TokenUnitFormatException extends BaseException {
    * @param int $code
    * @param Throwable|null $previous
    */
-  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, Throwable $previous = null ) {
+  public function __construct ( string $message = 'Wrong token unit format.', int $code = 1, ?Throwable $previous = null ) {
     parent::__construct( $message, $code, $previous );
   }
 }

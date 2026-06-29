@@ -104,6 +104,46 @@ class PatentVectorValidationTest extends TestCase {
     }
   }
 
+  /**
+   * Validates that initWithdrawBuffer debits the full source balance, so a
+   * partial buffer withdraw conserves: source B = -balance, recipient V = +amount,
+   * remainder B = balance-amount, sum(B+V) = 0. The withdraw analog of
+   * testBufferDepositConservation (cross-SDK lock, cycle 149). PHP was already
+   * correct — this regression-locks it. Emits TWO B atoms + ONE V atom.
+   */
+  public function testBufferWithdrawConservation (): void {
+    $secret = 'abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+    foreach ( $this->vectors[ 'buffer_withdraw_conservation' ][ 'tests' ] as $test ) {
+      $source = Wallet::create( $secret, 'BUFTOK' );
+      $source->balance = $test[ 'sourceBalance' ];
+
+      $molecule = new Molecule( $secret, $source, null, 'buftest' );
+      // Withdraw to the caller's own bundle (single recipient), mirroring the client wrapper.
+      $molecule->initWithdrawBuffer( [ $source->bundle => $test[ 'amount' ] ] );
+
+      $sum = 0;
+      $bValues = [];
+      $vValue = null;
+      foreach ( $molecule->atoms as $atom ) {
+        if ( $atom->isotope === 'V' || $atom->isotope === 'B' ) {
+          $sum += (int) $atom->value;
+          if ( $atom->isotope === 'B' ) {
+            $bValues[] = $atom->value;
+          }
+          else {
+            $vValue = $atom->value;
+          }
+        }
+      }
+
+      $this->assertEquals( $test[ 'expectedSum' ], (string) $sum, 'sum B+V for ' . $test[ 'name' ] );
+      // Emit order: source B (full-balance debit), recipient V (+amount), remainder B (+change).
+      $this->assertEquals( $test[ 'expectedSourceValue' ], $bValues[ 0 ], 'source B for ' . $test[ 'name' ] );
+      $this->assertEquals( $test[ 'expectedRecipientValue' ], $vValue, 'recipient V for ' . $test[ 'name' ] );
+      $this->assertEquals( $test[ 'expectedRemainderValue' ], $bValues[ 1 ], 'remainder B for ' . $test[ 'name' ] );
+    }
+  }
+
   // =========================================================================
   // 0b. Atom value format cross-SDK parity (Batch AQ) — integer string, no ".0"
   // =========================================================================

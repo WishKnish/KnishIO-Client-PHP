@@ -1,0 +1,52 @@
+# PHP SDK CI — the PHP analog of the other SDKs' dev gates (clippy / ruff / detekt / clang-tidy).
+# Two gates, born-enforced (PHP's first CI):
+#   1. phpstan level 0  — the real-bug static-analysis gate (undefined methods/functions/vars, wrong arg counts).
+#   2. php self-test.php — the 6 FROZEN molecular-hash vectors + ML-KEM768 (cross-SDK parity proof).
+# NOT phpunit: KnishIOClientTest hits a live validator over the network; the offline suites
+# (CrossPlatformVectorsTest / PatentVectorValidationTest) are a local-dev gate, run by hand.
+name: PHP
+
+on: [push, pull_request]
+
+jobs:
+  gate:
+    name: phpstan + self-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2 (the library's declared floor)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: sodium, json, mbstring
+          tools: composer:v2
+        env:
+          # setup-php hits the GitHub API to fetch tools; the token avoids its own anon rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # composer resolves the evias/PHP-SHA3-Streamable VCS ("type":"github") dep via the GitHub
+      # API. Anonymous calls share the runner-pool 60/hr limit → intermittent HTTP 429 throttle
+      # (exit 100). Authenticating with the Actions GITHUB_TOKEN lifts it to 5000/hr → no flake.
+      - name: composer install (runs the sha3 post-install hook)
+        env:
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
+        run: composer install --no-interaction --prefer-dist
+
+      # The enforced dev gate: phpstan level 0 must be clean (0 errors).
+      - name: phpstan (static-analysis gate)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Setup Node 20 (for the @noble/post-quantum ML-KEM bridge)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install @noble/post-quantum (ML-KEM bridge dep)
+        run: npm install
+
+      # The parity gate: 9/9 incl. the 6 frozen molecular-hash vectors + ML-KEM768.
+      # Exit code = ($passedTests === $totalTests ? 0 : 1); cross-SDK validation is a
+      # no-op here (single-repo checkout has no sibling SDK dumps) and never fails the run.
+      - name: Self-test (6 frozen molecular hashes + ML-KEM768)
+        run: php self-test.php

@@ -333,6 +333,46 @@ class Wallet {
   }
 
   /**
+   * Split token units across MULTIPLE recipients (N-way sibling of splitUnits).
+   *
+   * The source retains the SENT union (all units leaving), each recipient gets its own subset,
+   * and the remainder keeps the KEPT units (those not assigned to any recipient).
+   * $recipientUnitLists is parallel to $recipientWallets. No-op when no units are sent.
+   *
+   * @param array $recipientUnitLists  per-recipient arrays of token unit IDs
+   * @param array $recipientWallets    destination Wallets (parallel to $recipientUnitLists)
+   * @param Wallet $remainderWallet    wallet to receive the KEPT units
+   */
+  public function splitUnitsMulti ( array $recipientUnitLists, array $recipientWallets, Wallet $remainderWallet ): void {
+
+    // Collect the SENT union (id => true). Nothing to split (fungible) -> no-op.
+    $sentIds = [];
+    foreach ( $recipientUnitLists as $unitList ) {
+      foreach ( $unitList as $id ) {
+        $sentIds[ $id ] = true;
+      }
+    }
+    if ( count( $sentIds ) === 0 ) {
+      return;
+    }
+
+    // Each recipient gets its own subset of the source's token units
+    foreach ( $recipientWallets as $i => $recipientWallet ) {
+      $ids = $recipientUnitLists[ $i ] ?? [];
+      $recipientWallet->tokenUnits = array_values( array_filter( $this->tokenUnits,
+        static fn( $tokenUnit ) => in_array( $tokenUnit->id, $ids, true ) ) );
+    }
+
+    // The remainder keeps everything not sent to any recipient (KEPT)
+    $remainderWallet->tokenUnits = array_values( array_filter( $this->tokenUnits,
+      static fn( $tokenUnit ) => !isset( $sentIds[ $tokenUnit->id ] ) ) );
+
+    // The source carries the SENT union (the ownership authority the validator reads)
+    $this->tokenUnits = array_values( array_filter( $this->tokenUnits,
+      static fn( $tokenUnit ) => isset( $sentIds[ $tokenUnit->id ] ) ) );
+  }
+
+  /**
    * @param string $secret
    *
    * @return Wallet
@@ -378,6 +418,10 @@ class Wallet {
   }
 
   /**
+   * Encrypts for one or more recipients using CLASSICAL NaCl crypto_box_seal (via Soda) —
+   * NOT post-quantum. The live CipherHash transport (Libraries\Cipher) uses this path pending
+   * PQ migration. For the canonical post-quantum ML-KEM768 envelope see {@see encryptMessageML768()}.
+   *
    * @param mixed $message
    * @param mixed ...$pubkeys
    *
@@ -401,7 +445,11 @@ class Wallet {
   }
 
   /**
-   * Uses the current wallet's private key to decrypt the given message
+   * Uses the current wallet's private key to decrypt the given message.
+   *
+   * CLASSICAL NaCl crypto_box_seal (via Soda) — NOT post-quantum; the counterpart to
+   * {@see encryptMessage()}. For the canonical post-quantum ML-KEM768 envelope see
+   * {@see decryptMessageML768()}.
    *
    * @param array|string $message
    *
@@ -523,6 +571,11 @@ class Wallet {
    * Encrypt a message using ML-KEM768 post-quantum encryption
    * Compatible with JavaScript SDK encryptMessage() method
    *
+   * CANONICAL cross-SDK ML-KEM768 envelope: returns `{ cipherText, encryptedMessage }`
+   * (b64(KEM ciphertext) + b64(IV‖AES-256-GCM ct‖tag)) — the post-quantum envelope every
+   * KnishIO SDK interoperates on (asserted by the cross-platform vector layer + strong
+   * cross-validation). For the classical (non-PQ) NaCl path see {@see encryptMessage()}.
+   *
    * @param mixed $message Message to encrypt
    * @param string $recipientPubkey Recipient's ML-KEM768 public key (base64)
    * @return array{cipherText: string, encryptedMessage: string}
@@ -559,6 +612,10 @@ class Wallet {
   /**
    * Decrypt a message using ML-KEM768 post-quantum decryption  
    * Compatible with JavaScript SDK decryptMessage() method
+   *
+   * CANONICAL cross-SDK ML-KEM768 envelope: consumes `{ cipherText, encryptedMessage }` — the
+   * post-quantum envelope every KnishIO SDK interoperates on. For the classical (non-PQ) NaCl
+   * path see {@see decryptMessage()}.
    *
    * @param array{cipherText: string, encryptedMessage: string} $encryptedData
    * @return mixed Decrypted message
@@ -711,6 +768,56 @@ class Wallet {
 
     // Decrypt our message
     return $this->decryptMessageML768($multiEncryptedData[$ourHash]);
+  }
+
+  /**
+   * Canonical cross-SDK `hashShare` — the map key under which an ML-KEM768 envelope is stored for
+   * a recipient pubkey. Byte-matches the Rust validator's `hash_share` and the JS/Kotlin
+   * `hashShare`: standard (RFC-4648) base64 of the first 8 bytes of SHAKE256(pubkey-as-UTF-8).
+   *
+   * Deliberately NOT {@see Soda::shortHash()}, which encodes via BaseX (a big-integer base
+   * conversion, not RFC-4648) and therefore does NOT interoperate with the validator/other SDKs.
+   *
+   * @param string $pubkey Recipient ML-KEM768 public key (base64 string)
+   * @return string
+   * @throws Exception
+   */
+  public function hashShare ( string $pubkey ): string {
+    return base64_encode( Crypto\Shake256::hash( $pubkey, 8 ) );
+  }
+
+  /**
+   * Encrypt a message into the canonical single-recipient ML-KEM768 `CipherHash` envelope:
+   * `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`. This is the wire shape the
+   * validator's `CipherHash` handler decrypts (and that JS/Kotlin `encryptStringML768` produce).
+   *
+   * @param mixed $message
+   * @param string $pubkey Recipient ML-KEM768 public key (base64)
+   * @return array
+   * @throws JsonException|Exception
+   */
+  public function encryptStringML768 ( mixed $message, string $pubkey ): array {
+    return [ $this->hashShare( $pubkey ) => $this->encryptMessageML768( $message, $pubkey ) ];
+  }
+
+  /**
+   * Decrypt the canonical ML-KEM768 `CipherHash` envelope addressed to THIS wallet: looks up the
+   * entry keyed by `hashShare($this->pubkey)` and decrypts it with this wallet's ML-KEM private
+   * key. Mirrors the JS/Kotlin `decryptMyMessageML768`.
+   *
+   * @param array $map `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`
+   * @return mixed Decrypted message
+   * @throws JsonException|Exception
+   */
+  public function decryptMyMessageML768 ( array $map ): mixed {
+    if ( $this->pubkey === null ) {
+      throw new CryptoException( 'ML-KEM768 public key not available on this wallet.' );
+    }
+    $key = $this->hashShare( $this->pubkey );
+    if ( !array_key_exists( $key, $map ) ) {
+      throw new CryptoException( 'No ML-KEM768 envelope found for this wallet.' );
+    }
+    return $this->decryptMessageML768( $map[ $key ] );
   }
 
   /**
