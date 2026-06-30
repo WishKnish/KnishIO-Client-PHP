@@ -114,4 +114,15 @@ class CrossPlatformVectorsTest extends TestCase {
     ] );
     $this->assertEquals( $v[ 'expectedPlaintext' ], $plaintext, 'ML-KEM768 decrypt plaintext mismatch' );
   }
+
+  // PQ-transport hardening: a stale/non-PQ validator advertises a ~48-byte `key`; encryptMessageML768
+  // must fail with an actionable error, not a cryptic bridge crash.
+  public function testMlkem768EncryptRejectsNon1184Key (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'keygen' ];
+    $wallet = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ] );
+    $shortKey = base64_encode( str_repeat( "\0", 48 ) );
+    $this->expectException( \WishKnish\KnishIO\Client\Exception\CryptoException::class );
+    $this->expectExceptionMessageMatches( '/expected 1184 \(ML-KEM-768\)/' );
+    $wallet->encryptMessageML768( [ 'q' => 1 ], $shortKey );
+  }
 }

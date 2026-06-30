@@ -582,6 +582,19 @@ class Wallet {
    * @throws JsonException|Exception
    */
   public function encryptMessageML768(mixed $message, string $recipientPubkey): array {
+    // ML-KEM-768 public keys are exactly 1184 bytes. A wrong-length key here almost always means the
+    // node did not advertise an ML-KEM public key in its auth `key` field (e.g. a validator predating
+    // the PQ-transport build). Fail with an actionable message rather than a cryptic bridge error.
+    // Guard BEFORE the try so this CryptoException isn't re-wrapped by the catch below.
+    $recipientPubkeyLen = strlen(base64_decode($recipientPubkey, true) ?: '');
+    if ($recipientPubkeyLen !== PostQuantumCrypto::MLKEM_PUBLIC_KEY_SIZE) {
+      throw new CryptoException(
+        "KnishIO: cannot ML-KEM-encrypt — recipient public key is {$recipientPubkeyLen} bytes, " .
+        'expected ' . PostQuantumCrypto::MLKEM_PUBLIC_KEY_SIZE . ' (ML-KEM-768). The node likely did not ' .
+        'advertise an ML-KEM public key (upgrade the validator to a PQ-transport build), or authenticate with encrypt=false.'
+      );
+    }
+
     try {
       // Serialize message to JSON string (matches JavaScript)
       $messageString = json_encode($message, JSON_THROW_ON_ERROR);
