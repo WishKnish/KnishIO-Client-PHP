@@ -251,3 +251,4 @@ demo/
 /node_modules/@noble/post-quantum/utils.js
 /node_modules/@noble/post-quantum/utils.js.map
 /node_modules/.package-lock.json
+.phpunit.cache/

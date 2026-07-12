@@ -66,16 +66,4 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase {
    */
   protected function beforeExecute (): void {
   }
-
-  /**
-   * Output
-   *
-   * @param array|string $info
-   */
-  protected function output ( array|string $info ): void {
-    if ( is_array( $info ) ) {
-      $info = implode( "\r\n", $info );
-    }
-    echo $info . "\r\n\r\n";
-  }
 }

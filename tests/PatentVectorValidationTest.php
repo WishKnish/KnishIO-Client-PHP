@@ -289,7 +289,7 @@ class PatentVectorValidationTest extends TestCase {
     );
   }
 
-  public function base17Provider (): array {
+  public static function base17Provider (): array {
     $path = __DIR__ . '/fixtures/canonical-patent-vectors.json';
     $vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
     $cases = [];
@@ -415,7 +415,7 @@ class PatentVectorValidationTest extends TestCase {
     );
   }
 
-  public function bigIntCarryProvider (): array {
+  public static function bigIntCarryProvider (): array {
     $path = __DIR__ . '/fixtures/canonical-patent-vectors.json';
     $vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
     $cases = [];

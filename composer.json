@@ -41,17 +41,16 @@
     "php" : "^8.2",
     "ext-json" : "*",
     "ext-sodium" : "*",
-    "desktopd/php-sha3-streamable" : "@dev",
     "simplito/bigint-wrapper-php" : "^1.0",
-    "symfony/serializer" : "^6.2",
     "symfony/polyfill-mbstring" : "^1.24",
-    "guzzlehttp/guzzle" : "^7.5",
+    "guzzlehttp/guzzle" : "^7.12.1",
+    "guzzlehttp/psr7" : "^2.12.1",
     "tuupola/base58" : "^2.1",
-    "webonyx/graphql-php" : "^15.12"
+    "webonyx/graphql-php" : "^15.32.3"
   },
   "require-dev" : {
-    "symfony/var-dumper" : "^5.0",
-    "phpunit/phpunit" : "^9",
+    "symfony/var-dumper" : "^6.4",
+    "phpunit/phpunit" : "^11",
     "phpstan/phpstan" : "^2",
     "jetbrains/phpstorm-attributes" : "^1.0"
   },
@@ -64,26 +63,17 @@
       "./src/Helpers/helpers.php"
     ]
   },
-  "repositories" : [
-    {
-      "type" : "github",
-      "url" : "https://github.com/evias/PHP-SHA3-Streamable"
-    }
-  ],
   "extra" : {
   },
-  "minimum-stability" : "dev",
+  "minimum-stability" : "stable",
   "prefer-stable" : true,
   "config" : {
-    "optimize-autoloader" : true
+    "optimize-autoloader" : true,
+    "platform" : {
+      "php" : "8.2.0"
+    }
   },
   "scripts" : {
-    "post-install-cmd" : [
-      "WishKnish\\KnishIO\\Client\\libraries\\AfterInstallation::sha3Fix"
-    ],
-    "post-update-cmd" : [
-      "WishKnish\\KnishIO\\Client\\libraries\\AfterInstallation::sha3Fix"
-    ],
     "phpstan" : "vendor/bin/phpstan analyse --memory-limit=1G"
   }
 }

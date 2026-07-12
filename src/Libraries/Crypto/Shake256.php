@@ -49,7 +49,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 
 namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 
-use desktopd\SHA3\Sponge as SHA3;
+use WishKnish\KnishIO\Client\Libraries\Crypto\SHA3\Sponge as SHA3;
 use Exception;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 

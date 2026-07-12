@@ -29,7 +29,7 @@ class CrossPlatformVectorsTest extends TestCase {
     $this->assertEquals( $expected, $result, "SHAKE256 mismatch for vector: $name" );
   }
 
-  public function shake256Provider (): array {
+  public static function shake256Provider (): array {
     $path = __DIR__ . '/fixtures/cross-platform-test-vectors.json';
     $vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
     $cases = [];
@@ -52,7 +52,7 @@ class CrossPlatformVectorsTest extends TestCase {
     $this->assertEquals( $expected, $result, "Bundle hash mismatch for vector: $name" );
   }
 
-  public function bundleHashProvider (): array {
+  public static function bundleHashProvider (): array {
     $path = __DIR__ . '/fixtures/cross-platform-test-vectors.json';
     $vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
     $cases = [];
@@ -79,7 +79,7 @@ class CrossPlatformVectorsTest extends TestCase {
     $this->assertEquals( $expectedAddress, $wallet->address, "Wallet address mismatch for wallet: $name" );
   }
 
-  public function walletProvider (): array {
+  public static function walletProvider (): array {
     $path = __DIR__ . '/fixtures/cross-platform-test-vectors.json';
     $vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
     $cases = [];

@@ -150,7 +150,7 @@ function logSection(string $sectionName): void {
  * Execute GraphQL request with proper error handling
  */
 function executeGraphQLRequest(string $query, array $variables = []): array {
-    global $httpClient, $config;
+    global $httpClient, $config, $authToken;
 
     // DEBUG: Log the request payload
     // Ensure variables is an object (stdClass) when empty, not an array
@@ -164,11 +164,19 @@ function executeGraphQLRequest(string $query, array $variables = []): array {
     colorLog($jsonPayload, 'yellow');
 
     try {
+        // The validator's auth model requires a bundle-bound JWT (X-Auth-Token)
+        // on every request once a token has been issued (JWT gate runs before
+        // molecule validation).
+        $headers = [];
+        if (!empty($authToken)) {
+            $headers['X-Auth-Token'] = $authToken;
+        }
         $response = $httpClient->post($config['server']['graphqlUrl'], [
             'json' => [
                 'query' => $query,
                 'variables' => $requestVariables
             ],
+            'headers' => $headers,
             'debug' => false // Disable Guzzle debug to keep output clean
         ]);
 
@@ -304,38 +312,32 @@ function testPhpAuthenticationToken(): bool {
         logTest('PHP auth wallet creation', true);
         
         $startTime = microtime(true);
-        
-        // Request access token (PHP to PHP server)
-        $tokenData = executeGraphQLRequest('
-            mutation RequestToken($cellSlug: String, $pubkey: String, $encrypt: Boolean) {
-                AccessToken(cellSlug: $cellSlug, pubkey: $pubkey, encrypt: $encrypt) {
-                    token
-                    expiresAt
-                }
-            }
-        ', [
-            'cellSlug' => $config['server']['cellSlug'],
-            'pubkey' => $authWallet->pubkey ?? 'php-test-pubkey',
-            'encrypt' => false
-        ]);
-        
+
+        // Full (profile) authorization through the SDK client — the validator's
+        // auth model requires a bundle-bound JWT for ProposeMolecule; a guest
+        // AccessToken alone is read-only.
+        $client = new \WishKnish\KnishIO\Client\KnishIOClient($config['server']['graphqlUrl']);
+        $client->requestAuthToken($testSecret, $config['server']['cellSlug']);
+        $authTokenObject = $client->getAuthToken();
+
         $responseTime = (int)((microtime(true) - $startTime) * 1000);
-        
-        $token = $tokenData['AccessToken']['token'] ?? null;
+
+        $token = $authTokenObject?->getToken();
         $tokenSuccess = !empty($token);
-        
+
         logTest('PHP access token generation', $tokenSuccess,
             $tokenSuccess ? null : 'Failed to generate token', $responseTime);
-        
+
         if ($tokenSuccess) {
             colorLog('PHP auth token: ' . substr($token, 0, 20) . '...', 'gray', 2);
+            // Attach to all subsequent requests (X-Auth-Token header).
+            $GLOBALS['authToken'] = $token;
         }
-        
+
         $testResults = [
             'passed' => $tokenSuccess,
             'responseTime' => $responseTime,
             'tokenLength' => strlen($token ?? ''),
-            'expiresAt' => $tokenData['AccessToken']['expiresAt'] ?? null,
             'language' => 'PHP',
             'serverLanguageMatch' => true
         ];
