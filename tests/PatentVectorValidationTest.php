@@ -619,11 +619,10 @@ class PatentVectorValidationTest extends TestCase {
       // Add a dummy atom to pass constructor validation
       $molStruct->atoms = [];
 
-      // Use reflection to access the protected normalize and enumerate methods
+      // Reflection to invoke the protected normalize + enumerate methods (reflection
+      // members are always accessible on PHP >= 8.1, so no setAccessible needed).
       $enumerateMethod = new \ReflectionMethod( MoleculeStructure::class, 'enumerate' );
-      $enumerateMethod->setAccessible( true );
       $normalizeMethod = new \ReflectionMethod( MoleculeStructure::class, 'normalize' );
-      $normalizeMethod->setAccessible( true );
 
       $enumerated = $enumerateMethod->invoke( null, $base17Padded );
       $normalized = $normalizeMethod->invoke( null, $enumerated );

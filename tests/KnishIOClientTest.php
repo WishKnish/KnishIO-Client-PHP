@@ -105,7 +105,6 @@ class KnishIOClientTest extends TestCase {
     ] );
     curl_exec( $ch );
     $errno = curl_errno( $ch );
-    curl_close( $ch );
     if ( $errno !== 0 ) {
       $this->markTestSkipped( "KnishIO validator not reachable at {$this->testUri} (curl errno {$errno}) — skipping live-server test" );
     }

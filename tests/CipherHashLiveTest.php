@@ -44,7 +44,6 @@ class CipherHashLiveTest extends TestCase {
     ] );
     curl_exec( $ch );
     $errno = curl_errno( $ch );
-    curl_close( $ch );
     if ( $errno !== 0 ) {
       $this->markTestSkipped( "No validator reachable at {$url} (curl errno {$errno}) — skipping live CipherHash test" );
     }
