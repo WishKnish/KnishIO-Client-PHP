@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Wallet;
@@ -20,9 +21,7 @@ class CrossPlatformVectorsTest extends TestCase {
     $this->vectors = json_decode( file_get_contents( $path ), true )[ 'vectors' ];
   }
 
-  /**
-   * @dataProvider shake256Provider
-   */
+  #[DataProvider('shake256Provider')]
   public function testShake256 ( string $name, string $input, int $outputLength, string $expected ): void {
     // Shake256::hash returns raw bytes; outputLength in the vector file is in bytes
     $result = bin2hex( Shake256::hash( $input, $outputLength ) );
@@ -44,9 +43,7 @@ class CrossPlatformVectorsTest extends TestCase {
     return $cases;
   }
 
-  /**
-   * @dataProvider bundleHashProvider
-   */
+  #[DataProvider('bundleHashProvider')]
   public function testBundleHash ( string $name, string $secret, string $expected ): void {
     $result = Crypto::generateBundleHash( $secret );
     $this->assertEquals( $expected, $result, "Bundle hash mismatch for vector: $name" );
@@ -66,9 +63,7 @@ class CrossPlatformVectorsTest extends TestCase {
     return $cases;
   }
 
-  /**
-   * @dataProvider walletProvider
-   */
+  #[DataProvider('walletProvider')]
   public function testWalletAddress ( string $name, string $secret, string $token, string $position, string $expectedBundle, string $expectedAddress ): void {
     // Bundle hash must match
     $bundle = Crypto::generateBundleHash( $secret );

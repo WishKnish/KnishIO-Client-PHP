@@ -2,6 +2,7 @@
 
 namespace WishKnish\KnishIO\Client\Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
@@ -247,11 +248,10 @@ class PatentVectorValidationTest extends TestCase {
   // =========================================================================
 
   /**
-   * @dataProvider base17Provider
-   *
    * Validates hex-to-Base17 conversion used in WOTS+ signature indexing.
    * Base17 digits: 0-9, a-g.
    */
+  #[DataProvider('base17Provider')]
   public function testBase17Enumeration ( string $name, string $hexInput, string $expectedBase17, int $normalizedSum ): void {
     // Use Strings::charsetBaseConvert which is the same function used in Atom::hashAtoms()
     $base17Result = Strings::charsetBaseConvert(
@@ -368,11 +368,10 @@ class PatentVectorValidationTest extends TestCase {
   // =========================================================================
 
   /**
-   * @dataProvider bigIntCarryProvider
-   *
    * Validates SHAKE256 hash outputs for edge-case inputs that stress
    * BigInt arithmetic boundaries: 65-char hex, max values, boundary values.
    */
+  #[DataProvider('bigIntCarryProvider')]
   public function testBigIntCarryEdge ( string $name, string $input, int $inputLength, string $expectedShake256, string $expectedBase17OfHash, int $expectedKeyLength ): void {
     // Verify input length
     $this->assertEquals(
