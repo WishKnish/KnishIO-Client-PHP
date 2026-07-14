@@ -888,6 +888,28 @@
         "expectedPlaintext": "Hello ML-KEM768 cross-platform test message!"
       }
     },
+    "nacl": {
+      "description": "Classical NaCl crypto_box (X25519 scalarmult_base + XSalsa20-Poly1305 secretbox) parity vectors, captured from the reference tweetnacl and reproduced byte-for-byte by the BouncyCastle NaClBox (Kotlin) and every SDK's classical encryption path. Values are Base64 unless the key name ends in Hex. crypto_box + scalarMultBase are deterministic; the sealed-box sample uses a fixed ephemeral key so its blob is frozen for a decrypt oracle (live seal() uses a random ephemeral).",
+      "scalarMultBase": [
+        { "secretKeyHex": "0101010101010101010101010101010101010101010101010101010101010101", "expectedPublicKey": "pOCSkrZRwni5dyxWn1+puxPZBrRqtoyd+dwrRAn4ogk=" },
+        { "secretKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "expectedPublicKey": "j0DFrbaPJWJK5bIU6nZ6bslNgp09e14a0bpvPiE4KF8=" },
+        { "secretKeyHex": "abababababababababababababababababababababababababababababababab", "expectedPublicKey": "43EthRoOXXm4McXjSrIrQaGYFx3iCbi4+sojoRxiSFk=" }
+      ],
+      "cryptoBox": {
+        "senderSecretKeyHex": "1111111111111111111111111111111111111111111111111111111111111111",
+        "recipientSecretKeyHex": "2222222222222222222222222222222222222222222222222222222222222222",
+        "recipientPublicKey": "D6poTtKIZ7l/Smot7l34zpdOdrcBjj8iocTPJnhXDyA=",
+        "nonce": "MzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz",
+        "plaintext": "KnishIO classical NaCl crypto_box vector",
+        "expectedBox": "uHhWvjnaC5POTWL/d9xuHn1yp+rWoKJ8w956UOqdpSSRN3+7smrxxhq4/qPwTJ44kpsmlrmHNzE="
+      },
+      "sealedBox": {
+        "recipientSecretKeyHex": "4444444444444444444444444444444444444444444444444444444444444444",
+        "recipientPublicKey": "/y7kVgHsG2cxDHeQQEWFrmlzMe7hwfjPJBlzHB//Pms=",
+        "sealed": "OKtmS9hvd9fma92a4HkpE6lP2LM6EmACfktGwfSITGfnulA5NLjAlfUNjaa9BhzTi4ZxZ5yfchXKHEyIa9oDxcAj5odUa5yjdkbKxOSZaqOGTDPn1TCkRg==",
+        "expectedPlaintext": "KnishIO classical NaCl sealed-box vector"
+      }
+    },
     "edge_cases": {
       "description": "Edge case test vectors",
       "tests": {

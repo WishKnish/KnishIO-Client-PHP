@@ -125,4 +125,38 @@ class CrossPlatformVectorsTest extends TestCase {
     $this->expectExceptionMessageMatches( '/expected 1184 \(ML-KEM-768\)/' );
     $wallet->encryptMessageML768( [ 'q' => 1 ], $shortKey );
   }
+
+  // Classical NaCl (X25519 scalarmult_base + crypto_box/secretbox + sealed-box),
+  // byte-frozen against the reference tweetnacl. ext-sodium (libsodium) must
+  // reproduce these byte-for-byte, proving classical cross-SDK parity.
+  public function testNaClVectors (): void {
+    $v = $this->vectors[ 'nacl' ];
+
+    // X25519 scalarmult_base: 32-byte secret → 32-byte public.
+    foreach ( $v[ 'scalarMultBase' ] as $c ) {
+      $pk = sodium_crypto_scalarmult_base( hex2bin( $c[ 'secretKeyHex' ] ) );
+      $this->assertEquals( $c[ 'expectedPublicKey' ], base64_encode( $pk ), 'X25519 scalarmult_base mismatch' );
+    }
+
+    // crypto_box with a fixed nonce → [MAC(16)‖ct], deterministic.
+    $cb = $v[ 'cryptoBox' ];
+    $boxed = sodium_crypto_box(
+      $cb[ 'plaintext' ],
+      base64_decode( $cb[ 'nonce' ] ),
+      sodium_crypto_box_keypair_from_secretkey_and_publickey(
+        hex2bin( $cb[ 'senderSecretKeyHex' ] ),
+        base64_decode( $cb[ 'recipientPublicKey' ] )
+      )
+    );
+    $this->assertEquals( $cb[ 'expectedBox' ], base64_encode( $boxed ), 'crypto_box ciphertext mismatch' );
+
+    // sealed-box: decrypt a frozen blob (encrypt is non-deterministic — random ephemeral).
+    $sb = $v[ 'sealedBox' ];
+    $keypair = sodium_crypto_box_keypair_from_secretkey_and_publickey(
+      hex2bin( $sb[ 'recipientSecretKeyHex' ] ),
+      base64_decode( $sb[ 'recipientPublicKey' ] )
+    );
+    $pt = sodium_crypto_box_seal_open( base64_decode( $sb[ 'sealed' ] ), $keypair );
+    $this->assertEquals( $sb[ 'expectedPlaintext' ], $pt, 'sealed-box open mismatch' );
+  }
 }
