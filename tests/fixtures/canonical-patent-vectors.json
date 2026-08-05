@@ -188,6 +188,48 @@
         { "name": "partial_withdraw", "sourceBalance": 100, "amount": 30, "expectedSourceValue": "-100", "expectedRecipientValue": "30", "expectedRemainderValue": "70", "expectedSum": "0" },
         { "name": "full_withdraw", "sourceBalance": 50, "amount": 50, "expectedSourceValue": "-50", "expectedRecipientValue": "50", "expectedRemainderValue": "0", "expectedSum": "0" }
       ]
+    },
+    "buffer_conservation_negative": {
+      "description": "NEGATIVE cases: buffer molecules every SDK must REJECT. The two conservation vectors above only assert that VALID molecules are accepted, and that gap concealed a live fail-open defect — Kotlin gated its V-only conservation on the presence of B/F atoms (stating 'the B/F atoms own the cross-isotope conservation') while having no isotopeB or isotopeF to own it, so a molecule destroying value verified clean and passed every positive vector. A validator never observed rejecting is indistinguishable from an absent one; these vectors make the SDK demonstrate the rejection. Added 2026-07-27.",
+      "recipe": "Do NOT hand-assemble atoms: a hand-built molecule is refused by unrelated checks (atom index, self-transfer) before conservation is ever evaluated, so the test passes while proving nothing. Instead build a VALID molecule with the SDK's own init_deposit_buffer/init_withdraw_buffer, apply the single `tamper` mutation below, re-sign, and assert the molecule is rejected. Tamper targets: firstV/lastV/firstB/lastB select the first or last atom of that isotope in emission order.",
+      "tests": [
+        {
+          "name": "unbalanced_deposit_remainder",
+          "buildFrom": "deposit",
+          "sourceBalance": 100,
+          "amount": 30,
+          "tamper": { "target": "lastV", "field": "value", "to": "50" },
+          "mustReject": true,
+          "reason": "remainder 70 -> 50 makes V+B sum -20 instead of 0; value is destroyed"
+        },
+        {
+          "name": "unbalanced_withdraw_remainder",
+          "buildFrom": "withdraw",
+          "sourceBalance": 100,
+          "amount": 30,
+          "tamper": { "target": "lastB", "field": "value", "to": "50" },
+          "mustReject": true,
+          "reason": "remainder 70 -> 50 makes B+V sum -20 instead of 0; value is destroyed"
+        },
+        {
+          "name": "deposit_b_atom_wrong_meta_type",
+          "buildFrom": "deposit",
+          "sourceBalance": 100,
+          "amount": 30,
+          "tamper": { "target": "firstB", "field": "metaType", "to": "notAWalletBundle" },
+          "mustReject": true,
+          "reason": "B-isotope atoms must carry metaType 'walletBundle'"
+        },
+        {
+          "name": "deposit_inflates_remainder",
+          "buildFrom": "deposit",
+          "sourceBalance": 100,
+          "amount": 30,
+          "tamper": { "target": "lastV", "field": "value", "to": "90" },
+          "mustReject": true,
+          "reason": "remainder 70 -> 90 makes V+B sum +20; value is created out of nothing"
+        }
+      ]
     }
   }
 }

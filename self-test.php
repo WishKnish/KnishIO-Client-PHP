@@ -63,6 +63,28 @@ function createFixedRemainderWallet($secret, $token) {
     );
 }
 
+/**
+ * Resolve the configured KNISHIO_SHARED_RESULTS directory to a filesystem path,
+ * WITHOUT calling realpath()/creating it (callers add that as they already do).
+ *
+ * Two bugs fixed here (found while wiring up the bufferFamily gate — cycle
+ * bufferFamilyPhpPython):
+ *  1. `$_ENV['KNISHIO_SHARED_RESULTS']` alone is a no-op on a stock php.ini: $_ENV is
+ *     only populated from the process environment when `variables_order` includes
+ *     "E", which is NOT the PHP default (default is "GPCS") — getenv() must be
+ *     checked first, matching the pattern already used for
+ *     KNISHIO_DISABLE_CROSS_VALIDATION / KNISHIO_CROSS_VALIDATION_ONLY below.
+ *  2. `__DIR__ . '/' . $sharedResultsDir` silently NESTS an absolute
+ *     KNISHIO_SHARED_RESULTS value under this script's directory instead of using
+ *     it as-is (string concatenation doesn't "reset to root" the way path-join
+ *     helpers do) — detect an absolute path and use it directly.
+ */
+function resolveSharedResultsBase(): string {
+    $configured = getenv('KNISHIO_SHARED_RESULTS') ?: ($_ENV['KNISHIO_SHARED_RESULTS'] ?? '../shared-test-results');
+    $isAbsolute = str_starts_with($configured, '/') || preg_match('#^[A-Za-z]:[\\/]#', $configured) === 1;
+    return $isAbsolute ? $configured : (__DIR__ . '/' . $configured);
+}
+
 // Embedded test configuration for SDK self-containment (PHP best practices)
 $DEFAULT_CONFIG = [
     'tests' => [
@@ -140,25 +162,48 @@ $DEFAULT_CONFIG = [
 ];
 
 // Support optional external config override via environment variable
-$configPath = $_ENV['KNISHIO_TEST_CONFIG'] ?? null;
+$configPath = getenv('KNISHIO_TEST_CONFIG') ?: ($_ENV['KNISHIO_TEST_CONFIG'] ?? null);
 if ($configPath && file_exists($configPath)) {
     $config = json_decode(file_get_contents($configPath), true);
 } else {
     $config = $DEFAULT_CONFIG;
 }
 
-// Get version from composer.json
-$composerData = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
-$version = $composerData['version'] ?? '1.0.0';
+// Get version from composer.json. Fail loudly rather than fabricate a version: a
+// silent '1.0.0' fallback here would misreport every results file as an unversioned,
+// never-released SDK (the same class of bug the Python self-test had — see SDK_VERSION
+// there) and would defeat the gauntlet's version-consistency gate instead of tripping it.
+$composerPath = __DIR__ . '/composer.json';
+if (!file_exists($composerPath)) {
+    fwrite(STDERR, "FATAL: composer.json not found at $composerPath - cannot determine SDK version.\n");
+    exit(1);
+}
+$composerData = json_decode(file_get_contents($composerPath), true);
+if (!is_array($composerData) || empty($composerData['version'])) {
+    fwrite(STDERR, "FATAL: composer.json is missing a \"version\" field - refusing to fabricate one.\n");
+    exit(1);
+}
+$version = $composerData['version'];
 
 // Test results storage (matches JavaScript SDK format)
 $results = [
     'sdk' => 'PHP',
     'version' => $version,
     'timestamp' => date('c'),
+    // Run identity. shared-test-results/ holds one mutable file per SDK with no record of
+    // which run wrote it, so a later standalone run silently replaces the evidence an
+    // already-published report was built from.
+    'runId' => (getenv('KNISHIO_RUN_ID') ?: null),
     'tests' => [],
     'molecules' => [],
-    'crossSdkCompatible' => true
+    // Starts false. This was true, making "fully cross-SDK compatible" the default state
+    // before a single peer molecule had been examined — so every early return out of
+    // testCrossSdkValidation published a pass. A verdict must be earned; the safe default
+    // for a check that has not run is "failed".
+    'crossSdkCompatible' => false,
+    // Coverage behind the verdict: the boolean alone cannot distinguish "validated seven
+    // peers, all passed" from "validated nothing and so found no failures".
+    'crossValidation' => ['ran' => false, 'targetsExpected' => 0, 'targetsValidated' => 0],
 ];
 
 function log_message($message, $color = COLOR_RESET) {
@@ -794,6 +839,231 @@ function test_shadow_wallet_claim() {
 }
 
 /**
+ * Test B1: Buffer Family (B-isotope deposit + withdraw), vector-driven.
+ *
+ * Deposit shape:  V(-sourceBalance) -> B(+amount) -> V(+remainder)
+ * Withdraw shape: B(-sourceBalance) -> V(+amount) -> B(+remainder)
+ *
+ * Both are cross-isotope conservation cases: the V and B atom values must sum to
+ * zero together, which a V-only conservation check reads as unbalanced. Drives off
+ * the canonical vectors so all eight SDKs assert against identical expectations.
+ *
+ * An absent fixture is recorded as an explicit `skipped`, never a silent pass — a
+ * skip that reported as a pass to the exit-code gate and as a failure to the summary
+ * is how this entire test family stayed invisible across the SDK fleet.
+ */
+function test_buffer_family() {
+    log_message("\nB1. Buffer Family Test (deposit + withdraw, vector-driven)", COLOR_BLUE);
+    global $results;
+
+    $candidates = [];
+    if ($env = getenv('KNISHIO_CANONICAL_VECTORS')) {
+        $candidates[] = $env;
+    }
+    $candidates[] = __DIR__ . '/tests/fixtures/canonical-patent-vectors.json';
+    $candidates[] = resolveSharedResultsBase() . '/canonical-patent-vectors.json';
+
+    $vectorsPath = null;
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            $vectorsPath = $candidate;
+            break;
+        }
+    }
+
+    if ($vectorsPath === null) {
+        // In an orchestrated cross-SDK run the vectors are mandatory: silently
+        // skipping parity coverage is the false-green this gate exists to stop.
+        $mustHave = getenv('KNISHIO_REQUIRE_VECTORS') === 'true';
+        $results['tests']['bufferFamily'] = [
+            'passed' => false,
+            'skipped' => !$mustHave,
+            'molecularHash' => null,
+            'atomCount' => 0,
+            'validationError' => 'canonical-patent-vectors.json absent',
+        ];
+        if ($mustHave) {
+            log_message('  FAILED: canonical-patent-vectors.json absent (KNISHIO_REQUIRE_VECTORS=true)', COLOR_RED);
+            return false;
+        }
+        log_message('  SKIPPED: canonical-patent-vectors.json absent (standalone CI)', COLOR_YELLOW);
+        return true; // skip, not fail — recorded as skipped, never counted as a pass
+    }
+
+    try {
+        $vectors = json_decode(file_get_contents($vectorsPath), true, 512, JSON_THROW_ON_ERROR)['vectors'];
+
+        $secret = Crypto::generateSecret('buffer-family-self-test-seed', 2048);
+        $token = 'BUFTOK';
+        $allPass = true;
+        $lastHash = null;
+        $atomTotal = 0;
+
+        // ---- DEPOSIT: V (source -balance) -> B (buffer +amount) -> V (remainder) ----
+        foreach ($vectors['buffer_deposit_conservation']['tests'] as $tv) {
+            $name = $tv['name'];
+
+            $source = new Wallet($secret, $token);          // fresh source -> valid OTS key
+            $source->balance = $tv['sourceBalance'];
+            $remainder = new Wallet($secret, $token);
+
+            $molecule = new Molecule($secret, $source, $remainder);
+            $molecule->initDepositBuffer($tv['amount'], []);
+            setFixedTimestamps($molecule);
+            $molecule->sign(false);
+
+            $sum = 0;
+            foreach ($molecule->atoms as $atom) {
+                if ($atom->isotope === 'V' || $atom->isotope === 'B') {
+                    $sum += (int) $atom->value;
+                }
+            }
+
+            $shape = count($molecule->atoms) === 3
+                && $molecule->atoms[0]->isotope === 'V' && (string) $molecule->atoms[0]->value === $tv['expectedSourceValue']
+                && $molecule->atoms[1]->isotope === 'B' && (string) $molecule->atoms[1]->value === $tv['expectedBufferValue']
+                && $molecule->atoms[2]->isotope === 'V' && (string) $molecule->atoms[2]->value === $tv['expectedRemainderValue'];
+
+            $verified = false;
+            $verifyError = null;
+            try {
+                (new CheckMolecule($molecule))->verify($source);
+                $verified = true;
+            } catch (Exception $error) {
+                $verifyError = $error->getMessage();
+                log_message('    check() error: ' . $verifyError, COLOR_RED);
+            }
+
+            $ok = $shape && ((string) $sum === $tv['expectedSum']) && $verified;
+            log_test("deposit $name conserves (V+B sum 0; cross-isotope bypass)", $ok, $verifyError);
+            $allPass = $allPass && $ok;
+            $lastHash = $molecule->molecularHash;
+            $atomTotal += count($molecule->atoms);
+        }
+
+        // ---- WITHDRAW: B (source -balance) -> V (recipient +amount) -> B (remainder) ----
+        foreach ($vectors['buffer_withdraw_conservation']['tests'] as $tv) {
+            $name = $tv['name'];
+
+            $source = new Wallet($secret, $token);          // the buffer wallet: B source AND remainder
+            $source->balance = $tv['sourceBalance'];
+
+            $molecule = new Molecule($secret, $source, $source);
+            $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ], $source);
+            setFixedTimestamps($molecule);
+            $molecule->sign(false);
+
+            $sum = 0;
+            foreach ($molecule->atoms as $atom) {
+                if ($atom->isotope === 'V' || $atom->isotope === 'B') {
+                    $sum += (int) $atom->value;
+                }
+            }
+
+            $shape = count($molecule->atoms) === 3
+                && $molecule->atoms[0]->isotope === 'B' && (string) $molecule->atoms[0]->value === $tv['expectedSourceValue']
+                && $molecule->atoms[1]->isotope === 'V' && (string) $molecule->atoms[1]->value === $tv['expectedRecipientValue']
+                && $molecule->atoms[2]->isotope === 'B' && (string) $molecule->atoms[2]->value === $tv['expectedRemainderValue'];
+
+            $verified = false;
+            $verifyError = null;
+            try {
+                (new CheckMolecule($molecule))->verify($source);
+                $verified = true;
+            } catch (Exception $error) {
+                $verifyError = $error->getMessage();
+                log_message('    check() error: ' . $verifyError, COLOR_RED);
+            }
+
+            $ok = $shape && ((string) $sum === $tv['expectedSum']) && $verified;
+            log_test("withdraw $name conserves (B+V sum 0; cross-isotope bypass)", $ok, $verifyError);
+            $allPass = $allPass && $ok;
+            $lastHash = $molecule->molecularHash;
+            $atomTotal += count($molecule->atoms);
+        }
+
+        // ---- NEGATIVE: molecules that must be REJECTED (buffer_conservation_negative) ----
+        // The two loops above only prove VALID molecules are ACCEPTED; that gap concealed a
+        // live fail-open defect in Kotlin (V-only conservation gated on B/F presence with no
+        // isotopeB/isotopeF to own it), so a molecule destroying value verified clean. Build a
+        // VALID molecule with the SDK's own builder, apply the vector's single tamper mutation,
+        // re-sign, and assert rejection. Missing key (older fixture) is a no-op, not a crash.
+        foreach (($vectors['buffer_conservation_negative']['tests'] ?? []) as $tv) {
+            $name = $tv['name'];
+
+            $source = new Wallet($secret, $token);
+            $source->balance = $tv['sourceBalance'];
+
+            $buildFrom = $tv['buildFrom'];
+            if ($buildFrom === 'deposit') {
+                $remainder = new Wallet($secret, $token);
+                $molecule = new Molecule($secret, $source, $remainder);
+                $molecule->initDepositBuffer($tv['amount'], []);
+            } elseif ($buildFrom === 'withdraw') {
+                $molecule = new Molecule($secret, $source, $source);
+                $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ], $source);
+            } else {
+                throw new Exception("unknown buildFrom '$buildFrom' in buffer_conservation_negative");
+            }
+
+            // Tamper target selects the first/last atom of that isotope in emission order.
+            // addAtom() sorts by index after every append, and index is assigned in append
+            // order, so $molecule->atoms is still in emission order here (pre-sign).
+            $tamper = $tv['tamper'];
+            $isotope = substr($tamper['target'], -1); // 'firstV'/'lastV' -> 'V'; 'firstB'/'lastB' -> 'B'
+            $matches = array_values(array_filter(
+                $molecule->atoms,
+                static fn($atom) => $atom->isotope === $isotope
+            ));
+            $targetAtom = str_starts_with($tamper['target'], 'first') ? $matches[0] : $matches[count($matches) - 1];
+            $field = $tamper['field'];
+            $targetAtom->$field = $tamper['to'];
+
+            setFixedTimestamps($molecule);
+            $molecule->sign(false);
+
+            $rejected = false;
+            $rejectReason = null;
+            try {
+                (new CheckMolecule($molecule))->verify($source);
+            } catch (Exception $error) {
+                $rejected = true;
+                $rejectReason = get_class($error) . ': ' . $error->getMessage();
+            }
+
+            log_test("$name rejected ({$tv['reason']})", $rejected, $rejected ? null : 'molecule was NOT rejected');
+            if ($rejected) {
+                log_message("    rejected via $rejectReason", COLOR_CYAN);
+            }
+            $allPass = $allPass && $rejected;
+            $lastHash = $molecule->molecularHash;
+            $atomTotal += count($molecule->atoms);
+        }
+
+        $results['tests']['bufferFamily'] = [
+            'passed' => $allPass,
+            'skipped' => false,
+            'molecularHash' => $lastHash,
+            'atomCount' => $atomTotal,
+            'validationError' => $allPass ? null : 'buffer family vector validation failed',
+        ];
+
+        return $allPass;
+
+    } catch (Exception $e) {
+        log_message('  ❌ ERROR: ' . $e->getMessage(), COLOR_RED);
+        $results['tests']['bufferFamily'] = [
+            'passed' => false,
+            'skipped' => false,
+            'molecularHash' => null,
+            'atomCount' => 0,
+            'validationError' => $e->getMessage(),
+        ];
+        return false;
+    }
+}
+
+/**
  * Test 5: ML-KEM768 Encryption Test
  * Tests post-quantum encryption/decryption compatibility
  */
@@ -1031,41 +1301,81 @@ function test_cross_sdk_validation() {
     log_message('\n7. Cross-SDK Validation', COLOR_BLUE);
     global $results, $config;
     
-    // Check if cross-validation is disabled (Round 1 molecule generation only)
+    global $results;
+
+    // Round 1 generates molecules and does not cross-validate, so it holds no opinion here
+    // and must not leave a verdict behind.
     if ((getenv('KNISHIO_DISABLE_CROSS_VALIDATION') ?: $_ENV['KNISHIO_DISABLE_CROSS_VALIDATION'] ?? '') === 'true') {
         log_message('  ⏭️  Cross-validation disabled for Round 1 (molecule generation only)', COLOR_YELLOW);
+        $results['crossValidation'] = ['ran' => false, 'targetsExpected' => 0, 'targetsValidated' => 0];
         return true;
     }
-    
+
     // Configurable shared results directory for cross-platform testing
-    $sharedResultsDir = $_ENV['KNISHIO_SHARED_RESULTS'] ?? '../shared-test-results';
-    $resultsDir = realpath(__DIR__ . '/' . $sharedResultsDir);
-    
-    if (!is_dir($resultsDir)) {
-        log_message('  ⏭️  No other SDK results found for cross-validation', COLOR_YELLOW);
-        return true;
+    $resultsDir = realpath(resolveSharedResultsBase());
+    $results['crossValidation']['ran'] = true;
+
+    // A missing shared directory in Round 2 is a HARD FAILURE, not a skip. This returned
+    // true — "compatible" — having found nothing to check. Absence of evidence must never
+    // be reported as evidence of compatibility.
+    if (!$resultsDir || !is_dir($resultsDir)) {
+        log_message('  ❌ Shared results directory not found — cross-validation CANNOT run', COLOR_RED);
+        $results['crossSdkCompatible'] = false;
+        return false;
     }
-    
+
+    // Scope to *-results.json. `str_ends_with($f, '.json')` also matched the canonical
+    // vector MASTERS that live in this directory (canonical-patent-vectors.json,
+    // cross-platform-test-vectors.json) and fed them into the peer loop as SDK results.
+    // They carry no 'molecules' key, so they inflated the apparent peer count while
+    // contributing to neither pass nor fail.
     $resultFiles = array_filter(
         scandir($resultsDir),
         function($f) {
-            return str_ends_with($f, '.json') && !str_contains($f, 'php');
+            return str_ends_with($f, '-results.json') && !str_contains($f, 'php');
         }
     );
-    
+
+    // Zero peers in Round 2 means Round 2 did not happen.
     if (empty($resultFiles)) {
-        log_message('  ⏭️  No other SDK results found for cross-validation', COLOR_YELLOW);
-        return true;
+        log_message('  ❌ No peer SDK results found — nothing to cross-validate', COLOR_RED);
+        $results['crossSdkCompatible'] = false;
+        return false;
     }
-    
+
+    // Canonical set mirrors requiredMoleculeKeys in sdks/canonical-test-keys.json.
+    $requiredMoleculeTypes = [
+        'metadata', 'simpleTransfer', 'complexTransfer', 'tokenCreation',
+        'walletCreation', 'shadowWalletClaim', 'mlkem768',
+    ];
+
+    $results['crossValidation']['targetsExpected'] = count($resultFiles);
+    $peersValidated = 0;
     $allValid = true;
-    
+
     foreach ($resultFiles as $file) {
         $sdkName = str_replace('-results.json', '', $file);
         $otherResults = json_decode(file_get_contents($resultsDir . '/' . $file), true);
-        
+
+        // A peer must publish every molecule type before we can claim to have validated
+        // it. The loop below iterates the keys that are PRESENT, so an omitted molecule is
+        // indistinguishable from a validated one — which is how Kotlin's Round-2 drop of
+        // tokenCreation/walletCreation/shadowWalletClaim passed every peer on 2026-07-27.
+        $published = $otherResults['molecules'] ?? [];
+        $absent = array_values(array_filter(
+            $requiredMoleculeTypes,
+            function ($t) use ($published) { return empty($published[$t]); }
+        ));
+        if (!empty($absent)) {
+            log_message("    ❌ {$sdkName} published no molecule for: " . implode(', ', $absent), COLOR_RED);
+            log_test("{$sdkName} publishes all required molecules", false);
+            $allValid = false;
+        }
+
+        $peersValidated++;
+
         // Validate molecules from other SDK
-        foreach ($otherResults['molecules'] ?? [] as $moleculeType => $moleculeData) {
+        foreach ($published as $moleculeType => $moleculeData) {
             if ($moleculeType === 'mlkem768') {
                 // Special handling for ML-KEM768 cross-SDK compatibility
                 $mlkemData = json_decode($moleculeData, true);
@@ -1142,8 +1452,20 @@ function test_cross_sdk_validation() {
         }
     }
     
-    $results['crossSdkCompatible'] = $allValid;
-    return $allValid;
+    // COVERAGE FLOOR. `$allValid` starts true and only becomes false on a DETECTED
+    // failure, so it records "nothing went wrong", not "everything was checked". Those
+    // differ whenever the loop examined fewer peers than it should have. Require both.
+    $results['crossValidation']['targetsValidated'] = $peersValidated;
+    $expected = $results['crossValidation']['targetsExpected'];
+
+    $fullCoverage = ($peersValidated === $expected);
+    if (!$fullCoverage) {
+        log_message("  ❌ Incomplete coverage: validated {$peersValidated}/{$expected} peer SDKs", COLOR_RED);
+    }
+    log_message("  📊 Cross-validation coverage: {$peersValidated}/{$expected} peer SDKs", COLOR_BLUE);
+
+    $results['crossSdkCompatible'] = $allValid && $fullCoverage;
+    return $results['crossSdkCompatible'];
 }
 
 // Main execution
@@ -1157,8 +1479,7 @@ if ((getenv('KNISHIO_CROSS_VALIDATION_ONLY') ?: $_ENV['KNISHIO_CROSS_VALIDATION_
     $config = $DEFAULT_CONFIG;
 
     // CRITICAL FIX: Load existing Round 1 results to preserve molecules
-    $sharedResultsDir = $_ENV['KNISHIO_SHARED_RESULTS'] ?? '../shared-test-results';
-    $existingResultsPath = __DIR__ . '/' . $sharedResultsDir . '/php-results.json';
+    $existingResultsPath = resolveSharedResultsBase() . '/php-results.json';
     if (file_exists($existingResultsPath)) {
         try {
             $existingData = json_decode(file_get_contents($existingResultsPath), true);
@@ -1184,10 +1505,9 @@ if ((getenv('KNISHIO_CROSS_VALIDATION_ONLY') ?: $_ENV['KNISHIO_CROSS_VALIDATION_
 
     // Save results and print summary (cross-validation only)
     // Configurable shared results directory
-    $sharedResultsDir = $_ENV['KNISHIO_SHARED_RESULTS'] ?? '../shared-test-results';
-    $resultsDir = realpath(__DIR__ . '/' . $sharedResultsDir);
+    $resultsDir = realpath(resolveSharedResultsBase());
     if (!$resultsDir) {
-        $resultsDir = __DIR__ . '/' . $sharedResultsDir;
+        $resultsDir = resolveSharedResultsBase();
         if (!is_dir($resultsDir)) {
             mkdir($resultsDir, 0755, true);
         }
@@ -1220,26 +1540,35 @@ $complexResult = test_complex_transfer();
 $tokenCreationResult = test_token_creation();
 $walletCreationResult = test_wallet_creation();
 $shadowWalletClaimResult = test_shadow_wallet_claim();
+$bufferFamilyResult = test_buffer_family();
 $mlkemResult = test_mlkem768();
 $negativeResult = test_negative_cases();
 $crossSdkResult = test_cross_sdk_validation();
 
 // Generate summary
-$totalTests = 9;
-$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($tokenCreationResult ? 1 : 0) + ($walletCreationResult ? 1 : 0) + ($shadowWalletClaimResult ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0);
+// A skipped test is neither a pass nor a failure. Counting it as either is what let
+// bufferFamily read as passing to the exit-code gate and failing to the summary.
+$bufferSkipped = ($results['tests']['bufferFamily']['skipped'] ?? false) === true;
+
+$totalTests = 10;
+$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($tokenCreationResult ? 1 : 0) + ($walletCreationResult ? 1 : 0) + ($shadowWalletClaimResult ? 1 : 0) + (($bufferFamilyResult && !$bufferSkipped) ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0);
+$skippedTests = $bufferSkipped ? 1 : 0;
+$failedCount = $totalTests - $passedTests - $skippedTests;
 $failedTests = [];
 
 if (!$metaResult) $failedTests[] = 'metaCreation: Validation failed';
 if (!$simpleResult) $failedTests[] = 'simpleTransfer: Validation failed';
 if (!$complexResult) $failedTests[] = 'complexTransfer: Validation failed';
+if (!$bufferFamilyResult && !$bufferSkipped) {
+    $failedTests[] = 'bufferFamily: ' . ($results['tests']['bufferFamily']['validationError'] ?? 'Validation failed');
+}
 if (!$mlkemResult) $failedTests[] = 'mlkem768: Validation failed';
 
 // Save results
 // Configurable shared results directory
-$sharedResultsDir = $_ENV['KNISHIO_SHARED_RESULTS'] ?? '../shared-test-results';
-$resultsDir = realpath(__DIR__ . '/' . $sharedResultsDir);
+$resultsDir = realpath(resolveSharedResultsBase());
 if (!$resultsDir) {
-    $resultsDir = __DIR__ . '/' . $sharedResultsDir;
+    $resultsDir = resolveSharedResultsBase();
     if (!is_dir($resultsDir)) {
         mkdir($resultsDir, 0755, true);
     }
@@ -1260,8 +1589,14 @@ log_message('');
 log_message("SDK: PHP v$version");
 log_message("Timestamp: " . $results['timestamp']);
 
-$color = $passedTests === $totalTests ? COLOR_GREEN : COLOR_RED;
+$color = $failedCount === 0 ? COLOR_GREEN : COLOR_RED;
 log_message("\nTests Passed: $passedTests/$totalTests", $color);
+if ($skippedTests > 0) {
+    log_message("Tests Skipped: $skippedTests/$totalTests", COLOR_YELLOW);
+    if ($bufferSkipped) {
+        log_message('  - bufferFamily: ' . ($results['tests']['bufferFamily']['validationError'] ?? 'skipped'));
+    }
+}
 
 if (!empty($failedTests)) {
     log_message("\nFailed Tests:", COLOR_RED);
@@ -1276,5 +1611,5 @@ log_message("\nCross-SDK Compatible: $compatStatus", $compatColor);
 
 log_message('═══════════════════════════════════════════', COLOR_BLUE);
 
-// Exit with appropriate code
-exit($passedTests === $totalTests ? 0 : 1);
+// Exit with appropriate code. A skip does not fail the run; a failure always does.
+exit($failedCount === 0 ? 0 : 1);

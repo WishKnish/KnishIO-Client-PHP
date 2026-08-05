@@ -361,6 +361,23 @@ class CheckMolecule {
       return;
     }
 
+    // B-isotope atoms must reference a wallet bundle (metaType 'walletBundle' + metaId).
+    // Mirrors isotopeB() in JS/Python/Rust/Kotlin. The conservation loop below already
+    // sums V+B together correctly, but it never validated a B atom's meta shape on its
+    // own — a B atom with a bogus/missing metaType passed straight through unchecked.
+    foreach ( $this->molecule->getIsotopes( 'B' ) as $bAtom ) {
+      if ( $bAtom->metaType !== 'walletBundle' ) {
+        throw new MetaMissingException( 'Check::isotopeVB() - B-isotope atoms must have metaType "walletBundle"!' );
+      }
+      // Deliberately not empty(): PHP's empty() is true for the string "0", so a metaId
+      // of "0" would be rejected here while JS's `!atom.metaId` accepts it. Matching JS
+      // exactly matters — a molecule valid in one SDK and invalid in another is the class
+      // of divergence this whole check exists to prevent.
+      if ( $bAtom->metaId === null || $bAtom->metaId === '' ) {
+        throw new MetaMissingException( 'Check::isotopeVB() - B-isotope atoms must have a metaId!' );
+      }
+    }
+
     // Grabbing the first atom
     /** @var Atom $firstAtom */
     $firstAtom = $atoms[ 0 ];

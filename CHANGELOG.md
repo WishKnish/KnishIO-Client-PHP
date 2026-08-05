@@ -2,9 +2,136 @@
 
 All notable changes to the KnishIO Client PHP SDK are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Releases are published to Packagist (`wishknish/knishio-client-php`) via git tags.
+Conventions for tags, commits, and these entries: `docs/SDK-RELEASE-CONVENTIONS.md`
+in the KnishIOClientSDK monorepo.
+
+Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own tag
+and commit history rather than written at release time; where the history does
+not substantiate a detail, the entry says so instead of guessing.
+
+## [0.9.3] — 2026-08-05
+
+### Changed
+
+- Test suite modernization: `@dataProvider` annotations migrated to
+  `#[DataProvider]` attributes; no-op `curl_close()` and
+  `ReflectionMethod::setAccessible()` calls removed.
+
+### Added
+
+- Classical NaCl cross-platform parity vectors asserted in the test suite.
+
+### Changed — cross-SDK gauntlet reporting integrity
+
+- The self-test now publishes cross-validation **coverage**, not just a verdict:
+  `crossValidation.{ran,targetsExpected,targetsValidated}` and `runId` sit alongside
+  `crossSdkCompatible` in the results file. The boolean alone could not distinguish
+  "validated every peer, all passed" from "validated nothing and so found no failures".
+- `crossSdkCompatible` now defaults to **false** and must be earned. It was `true`, so every early return out of cross-validation published a pass.
+- Cross-validation **fails** instead of reporting "compatible" when the shared results
+  directory is missing or holds no peer results. Absence of evidence is not evidence of
+  compatibility.
+- Round 1 no longer asserts a cross-SDK verdict it cannot have; it records that no
+  cross-validation ran.
+- A coverage floor is required before a pass: every expected peer must have been validated,
+  in addition to no individual check having failed.
+- Each peer is now checked for all 7 required molecule types. The validation loop iterates
+  the molecule keys that are **present**, so an omitted molecule was indistinguishable from
+  a validated one.
+- Peer results are matched with `*-results.json`. `str_ends_with($f, '.json')` also
+  matched the canonical vector **masters** living in that directory and fed them into the
+  peer loop as though they were SDK results.
+
+Contract for these fields: `sdks/canonical-test-keys.json` in the KnishIOClientSDK
+monorepo. Audit: `docs/audits/REPORTING-INTEGRITY-2026-08-05.md`.
+
+## [0.9.2] — 2026-07-12
+
+Coordinated dependency-security release across all 8 SDKs. Release record:
+`docs/sdk-release-0.9.2-execution-2026-07-12.md` (monorepo).
+
+### Security
+
+- The SHA3 sponge is now **vendored** at `src/Libraries/Crypto/SHA3/`, removing
+  the unpinned `desktopd/SHA3` dev-master VCS dependency. Installation is plain
+  Packagist resolution with no post-install hook, and the vendored sponge
+  reproduces the canonical cross-SDK vector.
+- 9 dependency advisories cleared, including floor raises for `guzzle`, `psr7`,
+  and `webonyx/graphql-php`.
+
+### Added
+
+- `composer audit` gate in CI.
+
+### Changed
+
+- PHPUnit upgraded to 11.
+
+### Notes
+
+- `0.9.1` was staged in `composer.json` on 2026-06-30 (a clear error when a node
+  advertises a non-ML-KEM recipient key) but was never tagged and never published
+  to Packagist. That fix ships in `0.9.2`.
+
+## [0.9.0] — 2026-06-29
+
+Coordinated `0.9.0` across all 8 SDKs, marking the post-quantum ML-KEM transport
+milestone. Runbook: `docs/sdk-release-audit-2026-06-29.md` (monorepo).
+
+### Added
+
+- **ML-KEM768 CipherHash encrypted transport** (PQ Phase E), migrating the
+  transport off classical NaCl.
+- Multi-recipient stackable (NFT) transfer builder, plus claim and read fixes.
+- `hasBundle()` (JS parity).
+- `mlkem768` keygen + decrypt vector and a "decrypt their message" ML-KEM768
+  cross-validation; `buffer_withdraw_conservation` regression lock;
+  `tokenCreation`, `walletCreation`, and `shadowWalletClaim` cross-SDK parity
+  vectors in the self-test.
+- The repo's first CI workflow, with a PHPStan static-analysis gate and the
+  self-test parity gate.
+
+### Fixed
+
+- The wire payload now emits validator-compatible `MoleculeInput` / `AtomInput`.
+- `burnToken` rebuilt as the JS-canonical 3-atom zero-sum molecule.
+- PHP 8.4+ implicit-nullable deprecations resolved; PHPStan tightened to 8.5.
+- Two drifted test properties corrected, and the live-server tests gated so they
+  no longer fail an offline run.
+
+### Removed
+
+- Dead `QueryUserActivity` query, dead `QueryLinkIdentifierMutation` and its
+  co-orphaned `ResponseIdentifier`, and the dead `Standard*` framework.
+
+### Changed
+
+- The canonical ML-KEM768 envelope is designated in the docblocks, distinguishing
+  it from the classical NaCl path.
+
+### Notes
+
+- Local version `0.8.2` was staged on 2026-06-22 (the multi-recipient stackable
+  transfer builder) but was never tagged or published; it reaches consumers here.
+
+## [0.8.1] — 2026-06-15
+
+### Fixed
+
+- The ContinuID I-atom metadata is now populated, completing 6-SDK
+  molecular-hash parity.
+
+### Added
+
+- `buffer_deposit_conservation` vector assertion (the PHP SDK is a reference
+  anchor for it) and a synced fixture.
+
+### Changed
+
+- README notes that network reads are fresh by construction (no response cache).
 
 ## [0.8.0] - 2026-06-06
 
@@ -40,3 +167,9 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 ## Earlier releases
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
+
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/0.9.2...HEAD
+[0.9.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.2
+[0.9.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.0
+[0.8.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.8.1
+[0.8.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.8.0
