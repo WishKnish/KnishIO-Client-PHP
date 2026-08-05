@@ -13,7 +13,7 @@ jobs:
     name: phpstan + self-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup PHP 8.2 (the library's declared floor)
         uses: shivammathur/setup-php@v2
@@ -39,7 +39,7 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Setup Node 20 (for the @noble/post-quantum ML-KEM bridge)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
 
@@ -58,7 +58,7 @@ jobs:
     steps:
       # fetch-depth: 0 — the gate diffs against the base commit, which a shallow
       # checkout would not have.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
