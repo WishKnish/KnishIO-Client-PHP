@@ -1,0 +1,119 @@
+# PHP SDK publish — tag-driven GitHub Release + a version gate Packagist cannot provide.
+#
+# READ THIS BEFORE TRUSTING THIS WORKFLOW AS A GATE.
+#
+# Unlike every other SDK, this workflow CANNOT prevent a bad publish. Packagist derives the
+# published version from the git TAG (not composer.json), learns about new tags via a webhook,
+# and — per its own documentation — "without webhooks, packages are crawled once a week for
+# updates". So Packagist will discover any pushed tag whether or not this workflow runs, whether
+# or not it passes, and whether or not a webhook exists. There is no chokepoint to hold.
+#
+# Prevention therefore lives BEFORE the tag, in scripts/release-sdk.sh in the KnishIOClientSDK
+# monorepo, which runs the same .github/scripts/check-version.sh and refuses to create a tag
+# that disagrees with composer.json. This workflow is the second opinion: it runs the identical
+# gate on the tag itself, so a tag created outside that path still produces a loud, immediate
+# failure — you just cannot un-publish what Packagist has already taken.
+#
+# That asymmetry is why PHP is the highest-risk repo in the fleet for version drift: 42 tags,
+# a public and permanent registry, and no server-side gate.
+#
+# No OIDC/trusted publishing here — Packagist does not support it, and this workflow uploads
+# nothing to a registry, so auth is just GITHUB_TOKEN with `contents: write` for the Release.
+# Deliberately no top-level `environment:` key: a deployment environment set to "protected
+# branches only" REJECTS tag-triggered deploys (this bit Python and JS on 2026-07-12), and
+# there is no registry-side trusted-publisher config here that would need one.
+name: Publish
+
+on:
+  push:
+    tags:
+      - '[0-9]*'
+  # Dry run. Without this, the only way to exercise this workflow is to push a tag — which
+  # publishes to Packagist irreversibly. A dispatch runs the gate and the full test path and
+  # stops before the Release, because the release job is guarded on
+  # `github.event_name == 'push'`.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version to dry-run the gate against, e.g. 0.9.3. Releases NOTHING.'
+        required: true
+        type: string
+
+permissions:
+  contents: write   # create the GitHub Release; no registry auth needed
+
+jobs:
+  version-gate:
+    name: verify tag matches declared SDK version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+
+      # Shared definition with php.yml and with local runs — see
+      # .github/scripts/check-version.sh. Fail here, before anything is built.
+      - name: Verify tag == composer.json version
+        # DISPATCH_TAG arrives via env, never interpolated into the shell text
+        # (workflow-injection hygiene).
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "push" ]; then
+            EXPECTED="${GITHUB_REF#refs/tags/}"
+          else
+            EXPECTED="$DISPATCH_TAG"
+          fi
+          bash .github/scripts/check-version.sh "$EXPECTED"
+
+  gate:
+    name: phpstan + self-test
+    needs: version-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+
+      - name: Setup PHP 8.2 (the library's declared floor)
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240  # v2
+        with:
+          php-version: '8.2'
+          extensions: sodium, json, mbstring
+          tools: composer:v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: composer install
+        run: composer install --no-interaction --prefer-dist
+
+      - name: composer audit
+        run: composer audit
+
+      - name: phpstan (static-analysis gate)
+        run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+
+      - name: Setup Node 20 (for the @noble/post-quantum ML-KEM bridge)
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
+        with:
+          node-version: '20'
+
+      - name: Install @noble/post-quantum (ML-KEM bridge dep)
+        run: npm install
+
+      # The parity gate: the 6 frozen molecular-hash vectors + ML-KEM768. Mirrors php.yml.
+      - name: Self-test (6 frozen molecular hashes + ML-KEM768)
+        run: php self-test.php
+
+  release:
+    name: create GitHub Release
+    needs: [version-gate, gate]
+    if: github.event_name == 'push'   # dispatch = dry run; never creates a Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+
+      # GitHub auto-attaches the source zip/tarball, which is the whole artifact for a
+      # Composer library — there is nothing to build or upload.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228  # v3
+        with:
+          generate_release_notes: true

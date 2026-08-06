@@ -9,14 +9,26 @@ name: PHP
 on: [push, pull_request]
 
 jobs:
+  # Catch version drift at commit time, not at release time. This matters more here than in
+  # any other repo: Packagist publishes from the git tag and cannot be gated server-side, so
+  # by the time a mismatched tag exists the bad version is already on its way out. Catching
+  # composer.json drift on every push is the earliest signal available.
+  version:
+    name: version consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
+      - name: Declared versions agree
+        run: bash .github/scripts/check-version.sh
+
   gate:
     name: phpstan + self-test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
 
       - name: Setup PHP 8.2 (the library's declared floor)
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240  # v2
         with:
           php-version: '8.2'
           extensions: sodium, json, mbstring
@@ -39,7 +51,7 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
 
       - name: Setup Node 20 (for the @noble/post-quantum ML-KEM bridge)
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444  # v5
         with:
           node-version: '20'
 
@@ -58,7 +70,7 @@ jobs:
     steps:
       # fetch-depth: 0 — the gate diffs against the base commit, which a shallow
       # checkout would not have.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5
         with:
           fetch-depth: 0
 
