@@ -1,0 +1,87 @@
+# PHP SDK scheduled dependency audit — advisories against a tree nobody pushed to.
+#
+# Why a SCHEDULE and not just the php.yml audit step: an advisory is published against code
+# that has NOT changed. That is the 2026-07 → 2026-08 lesson — a repo sits green for weeks
+# while a package it already ships acquires an advisory, because nothing re-examines a tree
+# with no commits. php.yml answers "did this change break anything"; this file answers "did
+# the world change underneath us". Only the second question has a clock.
+#
+# WHY THIS RESOLVES INSTEAD OF JUST AUDITING THE LOCK:
+# composer.lock is GITIGNORED in this repo (.gitignore:4), so a fresh checkout contains no
+# lock at all and a bare `composer audit --locked` would fail with nothing to read. So this
+# job resolves one first — and does it the same script-free way the JS/TS gates resolve npm:
+#
+#   composer update --no-install --no-scripts --no-plugins
+#
+# That writes composer.lock from composer.json WITHOUT downloading or installing anything and
+# WITHOUT executing any package's scripts or plugins. It is the Composer analogue of
+# `npm install --package-lock-only --ignore-scripts`: nothing third-party runs in this job.
+# `composer audit --locked` then reads that lock. Deliberately NOT `composer install` (which
+# php.yml uses) — installing is unnecessary to audit, and it would execute package code.
+#
+# Resolving fresh also means this scans what a NEW consumer of the library would get today,
+# which for a Packagist library with no committed lock is the honest question to ask.
+#
+# NOTE: scheduled workflows only fire from the DEFAULT BRANCH. This file has no effect until
+# it is merged there — a branch-only copy runs never, silently.
+name: Scheduled audit
+
+on:
+  schedule:
+    # Mondays 06:17 UTC. Deliberately off the hour: GitHub sheds scheduled runs when the
+    # top-of-hour queue saturates, and a weekly job that quietly does not run is worse than
+    # no job at all, because it reads as green.
+    - cron: '17 6 * * 1'
+  # Manual trigger, plus a deliberate-failure switch. A gate nobody has watched FAIL is an
+  # unproven gate: set selftest_fail to make a run exit 1 on purpose and confirm the failure
+  # is actually visible wherever these notifications land.
+  workflow_dispatch:
+    inputs:
+      selftest_fail:
+        description: 'Fail this run on purpose, to prove the alert path works. Audits nothing.'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: composer audit (resolved tree)
+    runs-on: ubuntu-latest
+    steps:
+      # `if: inputs.selftest_fail` reads the DECLARED BOOLEAN directly. Do not "fix" this to
+      # `== 'true'`: GitHub coerces mismatched types to number for loose equality, the string
+      # 'true' casts to NaN, and NaN equals nothing — so that form is always false and the
+      # probe would silently never fire. The input is used only inside this expression and is
+      # never interpolated into shell text.
+      - name: Selftest failure probe
+        if: inputs.selftest_fail
+        run: |
+          echo "::error::Selftest failure probe requested — failing this run deliberately."
+          exit 1
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Mirrors php.yml's setup step exactly (same action SHA, same 8.2 floor, same extensions).
+      - name: Setup PHP 8.2 (the library's declared floor)
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240  # v2
+        with:
+          php-version: '8.2'
+          extensions: sodium, json, mbstring
+          tools: composer:v2
+        env:
+          # setup-php hits the GitHub API to fetch tools; the token avoids its own anon rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Resolve only — no download, no install, no package scripts, no plugins. See header.
+      - name: Resolve dependencies to a lockfile (script-free, no install)
+        run: composer update --no-install --no-scripts --no-plugins --no-interaction
+
+      # The deep scan: audits the lock written above, dev requirements included (composer
+      # audit covers require-dev unless --no-dev is passed, and it is deliberately not).
+      - name: composer audit (locked tree, dev included)
+        run: composer audit --locked --no-interaction
