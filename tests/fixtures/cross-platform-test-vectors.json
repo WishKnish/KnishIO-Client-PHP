@@ -32,7 +32,7 @@
         },
         {
           "name": "unicode_message_32_bytes",
-          "input": "🌟🔐💎",
+          "input": "\ud83c\udf1f\ud83d\udd10\ud83d\udc8e",
           "outputLength": 32,
           "expected": "bd23ef06f2363c86f41efef32c50cdc2e83ca64c5fdb5ac9fc6b23f0b10e1cf4"
         },
@@ -805,7 +805,7 @@
       ]
     },
     "molecular_hash": {
-      "description": "Molecular hash calculation test vectors. IMPORTANT: Value strings in atoms must be used VERBATIM — the molecular hash depends on exact string representation. The canonical format omits trailing '.0' for whole numbers (e.g., '-1000' not '-1000.0'). Some SDKs serialize with decimal points which produces a different hash.",
+      "description": "Molecular hash calculation test vectors. IMPORTANT: Value strings in atoms must be used VERBATIM \u2014 the molecular hash depends on exact string representation. The canonical format omits trailing '.0' for whole numbers (e.g., '-1000' not '-1000.0'). Some SDKs serialize with decimal points which produces a different hash.",
       "tests": [
         {
           "name": "single_atom_molecule",
@@ -891,9 +891,18 @@
     "nacl": {
       "description": "Classical NaCl crypto_box (X25519 scalarmult_base + XSalsa20-Poly1305 secretbox) parity vectors, captured from the reference tweetnacl and reproduced byte-for-byte by the BouncyCastle NaClBox (Kotlin) and every SDK's classical encryption path. Values are Base64 unless the key name ends in Hex. crypto_box + scalarMultBase are deterministic; the sealed-box sample uses a fixed ephemeral key so its blob is frozen for a decrypt oracle (live seal() uses a random ephemeral).",
       "scalarMultBase": [
-        { "secretKeyHex": "0101010101010101010101010101010101010101010101010101010101010101", "expectedPublicKey": "pOCSkrZRwni5dyxWn1+puxPZBrRqtoyd+dwrRAn4ogk=" },
-        { "secretKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "expectedPublicKey": "j0DFrbaPJWJK5bIU6nZ6bslNgp09e14a0bpvPiE4KF8=" },
-        { "secretKeyHex": "abababababababababababababababababababababababababababababababab", "expectedPublicKey": "43EthRoOXXm4McXjSrIrQaGYFx3iCbi4+sojoRxiSFk=" }
+        {
+          "secretKeyHex": "0101010101010101010101010101010101010101010101010101010101010101",
+          "expectedPublicKey": "pOCSkrZRwni5dyxWn1+puxPZBrRqtoyd+dwrRAn4ogk="
+        },
+        {
+          "secretKeyHex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+          "expectedPublicKey": "j0DFrbaPJWJK5bIU6nZ6bslNgp09e14a0bpvPiE4KF8="
+        },
+        {
+          "secretKeyHex": "abababababababababababababababababababababababababababababababab",
+          "expectedPublicKey": "43EthRoOXXm4McXjSrIrQaGYFx3iCbi4+sojoRxiSFk="
+        }
       ],
       "cryptoBox": {
         "senderSecretKeyHex": "1111111111111111111111111111111111111111111111111111111111111111",
@@ -915,11 +924,11 @@
       "tests": {
         "unicode_handling": {
           "inputs": [
-            "🌟🔐💎",
-            "测试",
-            "テスト",
-            "тест",
-            "🚀✨🌈🎯🔥"
+            "\ud83c\udf1f\ud83d\udd10\ud83d\udc8e",
+            "\u6d4b\u8bd5",
+            "\u30c6\u30b9\u30c8",
+            "\u0442\u0435\u0441\u0442",
+            "\ud83d\ude80\u2728\ud83c\udf08\ud83c\udfaf\ud83d\udd25"
           ],
           "expectedHashes": [
             "bd23ef06f2363c86f41efef32c50cdc2e83ca64c5fdb5ac9fc6b23f0b10e1cf4",
@@ -957,6 +966,49 @@
           ]
         }
       }
+    },
+    "secret_storage_envelope": {
+      "description": "AES-GCM secret-storage envelope: the at-rest format shared by the TS, JS, Kotlin, and Rust SecretStorageProviders. The crypto core (PBKDF2-HMAC-SHA256 x100000, 16-byte salt, 12-byte IV, AES-256-GCM with the tag appended to the ciphertext, standard padded base64, no AAD) was always identical across SDKs; the JSON FRAMING was not. Rust 0.9.5 emitted snake_case metadata keys and rejected this payload with 'missing field bundle_hash' before any crypto ran, while a Rust-written envelope deserialized in TS with every typed metadata field undefined. Metadata keys are camelCase - that is the contract. A consumer test must DECRYPT this frozen payload, not merely round-trip its own output: a round-trip passes in every SDK regardless of casing, which is why the divergence shipped. requiredMetadataKeys is a SUPERSET check, not set equality: `label` is optional and SDKs legitimately differ on it (TS/JS omit the key when unset; Kotlin and Rust emit it as null), so asserting exact equality passes in Kotlin/Rust and fails in TS/JS for the same correct behaviour. forbiddenMetadataKeys are the 0.9.5 snake_case forms and must never be emitted.",
+      "tests": [
+        {
+          "name": "typescript_0_9_7_envelope_decrypts_everywhere",
+          "producedBy": "@wishknish/knishio-client-ts@0.9.7 WebCryptoSecretStorageProvider",
+          "storageKey": "knishio:secret:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+          "bundleHash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+          "passphrase": "cross-sdk-pass",
+          "expectedPlaintext": "MASTER-SECRET-CROSS-SDK-PROBE",
+          "payload": {
+            "version": 1,
+            "ciphertext": "dQjZ4cR+ZBefuF4xSib8Qv/H2oZ5Qv8mRCRmQuLaCDYoBaRMqPQRullxZsID",
+            "iv": "3Q8ArAH0ZEgYFpoE",
+            "salt": "4LWNzAFGrY4SzcPulKMVcg==",
+            "algorithm": "AES-GCM",
+            "iterations": 100000,
+            "metadata": {
+              "bundleHash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+              "label": "probe",
+              "createdAt": 1788558526546,
+              "hardwareBacked": false,
+              "providerType": "webcrypto-aes-gcm"
+            }
+          },
+          "requiredMetadataKeys": [
+            "bundleHash",
+            "createdAt",
+            "hardwareBacked",
+            "providerType"
+          ],
+          "optionalMetadataKeys": [
+            "label"
+          ],
+          "forbiddenMetadataKeys": [
+            "bundle_hash",
+            "created_at",
+            "hardware_backed",
+            "provider_type"
+          ]
+        }
+      ]
     }
   },
   "implementation_notes": {
