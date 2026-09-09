@@ -17,7 +17,10 @@ jobs:
     name: version consistency
     runs-on: ubuntu-latest
     steps:
+      # persist-credentials: false (2026-08) — nothing here pushes; a kept token is readable from .git/config.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Declared versions agree
         run: bash .github/scripts/check-version.sh
 
@@ -26,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PHP 8.2 (the library's declared floor)
         uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240  # v2
@@ -73,6 +78,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       # If composer.json's version changed relative to the base commit, CHANGELOG.md
       # must carry a matching `## [<version>]` heading. No version change → no-op.
