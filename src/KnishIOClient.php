@@ -1440,7 +1440,7 @@ class KnishIOClient {
      */
     $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
 
-    // PQ-transport (cycle 165): convey the AUTH source wallet's ML-KEM768 public key as a SIGNED
+    // PQ-transport (cycle 165): convey the AUTH source wallet's ML-KEM public key as a SIGNED
     // `walletPubkey` meta on the U-atom (fillMolecule → initAuthorization → sign), so the validator
     // can encrypt CipherHash responses back to THIS wallet (the one that decrypts them). Signed →
     // a MITM can't swap the response-encryption target. Conveyed unconditionally (parity with JS/

@@ -3,8 +3,11 @@
 namespace WishKnish\KnishIO\Client\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
+use WishKnish\KnishIO\Client\Atom;
+use WishKnish\KnishIO\Client\AuthToken;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
+use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -178,5 +181,178 @@ class CrossPlatformVectorsTest extends TestCase {
     );
     $pt = sodium_crypto_box_seal_open( base64_decode( $sb[ 'sealed' ] ), $keypair );
     $this->assertEquals( $sb[ 'expectedPlaintext' ], $pt, 'sealed-box open mismatch' );
+  }
+
+  // =========================================================================================
+  // Backwards compatibility: an ML-KEM-1024 default build must READ pre-bump ML-KEM-768
+  // records. The 64-byte ML-KEM seed is parameter-set-independent, so a wallet derives its
+  // other identity on demand — inbound permissive, outbound strict.
+  //
+  // vectors.mlkem768.decrypt is a genuine pre-bump artifact: generated before the ML-KEM-1024
+  // migration, bytes unchanged, still reproduced byte-identically by every SDK.
+  // =========================================================================================
+
+  // (a) A wallet built at the DEFAULT parameter set decrypts the frozen 768 envelope directly:
+  // no second wallet, no explicit step-back, no caller-side knowledge of the sender's set.
+  public function testDefault1024WalletDecryptsLegacy768Envelope (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ] );
+    $this->assertSame( 1024, $wallet->mlKemParameterSet, 'the SDK default must be ML-KEM-1024' );
+
+    $plaintext = $wallet->decryptMessageML( [
+      'cipherText' => $v[ 'cipherText' ],
+      'encryptedMessage' => $v[ 'encryptedMessage' ],
+    ] );
+    $this->assertEquals( $v[ 'expectedPlaintext' ], $plaintext, 'a default (1024) wallet must decrypt its own 768 records' );
+  }
+
+  // (b) Dual-identity decryption must NOT change what the wallet ADVERTISES: that value goes
+  // into signed molecule meta and into auth, so moving it would change hashed bytes.
+  public function testDefault1024WalletStillAdvertises1568BytePubkey (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ] );
+    $this->assertSame( 1568, strlen( base64_decode( $wallet->pubkey, true ) ), 'advertised key must stay single-set ML-KEM-1024' );
+  }
+
+  // (d) A ciphertext matching NEITHER parameter set still fails on the existing observable.
+  public function testCiphertextMatchingNeitherParameterSetReturnsNull (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ] );
+    $this->assertNull( $wallet->decryptMessageML( [
+      'cipherText' => base64_encode( str_repeat( "\0", 64 ) ),
+      'encryptedMessage' => $v[ 'encryptedMessage' ],
+    ] ), 'permissive inbound must not make malformed ciphertexts succeed' );
+  }
+
+  // (e) The map-addressed `CipherHash` path finds an envelope a pre-bump peer addressed to
+  // hashShare(our_768_pubkey). Without this the length dispatch above is unreachable on the
+  // transport path, because the lookup returns before any decryption is attempted.
+  public function testDefault1024WalletFinds768AddressedCipherHashEnvelope (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ] );
+    $wallet768 = new Wallet( $v[ 'secret' ], $v[ 'token' ], $v[ 'position' ], mlKemParameterSet: 768 );
+
+    $map = [
+      $wallet768->hashShare( $wallet768->pubkey ) => [
+        'cipherText' => $v[ 'cipherText' ],
+        'encryptedMessage' => $v[ 'encryptedMessage' ],
+      ],
+    ];
+    $this->assertArrayNotHasKey( $wallet->hashShare( $wallet->pubkey ), $map, 'the envelope must be addressed to the OTHER identity' );
+
+    $this->assertEquals( $v[ 'expectedPlaintext' ], $wallet->decryptMyMessageML( $map ), 'the 768 hash share must be tried too' );
+  }
+
+  // Session restore: a snapshot must carry its parameter set, and a snapshot that predates the
+  // field must resolve to ML-KEM-768 rather than to the current constructor default.
+  public function testAuthTokenSnapshotRoundTripPreserves768 (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet = new Wallet( $v[ 'secret' ], 'AUTH', $v[ 'position' ], null, 'BASE64', 768 );
+    $authToken = AuthToken::create( [
+      'token' => 'jwt.pre-bump.session',
+      'expiresAt' => '99999999999',
+      'pubkey' => $wallet->pubkey,
+    ], $wallet, true );
+
+    $snapshot = $authToken->getSnapshot();
+    $this->assertSame( 768, $snapshot[ 'wallet' ][ 'mlKemParameterSet' ], 'the snapshot must persist the parameter set' );
+
+    $restored = AuthToken::restore( $snapshot, $v[ 'secret' ] )->getWallet();
+    $this->assertEquals( $wallet->pubkey, $restored->pubkey, 'round-tripping a stepped-back session must preserve 768' );
+  }
+
+  public function testLegacySnapshotWithoutParameterSetRestoresAs768 (): void {
+    $v = $this->vectors[ 'mlkem768' ][ 'decrypt' ];
+    $wallet768 = new Wallet( $v[ 'secret' ], 'AUTH', $v[ 'position' ], null, 'BASE64', 768 );
+
+    // The 0.9.x snapshot shape: no parameter-set field at all. `pubkey` is the validator key
+    // the session recorded, which decodes to 1184 bytes and so declares the session's set.
+    $legacySnapshot = [
+      'token' => 'jwt.pre-bump.session',
+      'expiresAt' => '99999999999',
+      'pubkey' => $wallet768->pubkey,
+      'encrypt' => true,
+      'wallet' => [
+        'position' => $v[ 'position' ],
+        'characters' => 'BASE64',
+      ],
+    ];
+
+    $restored = AuthToken::restore( $legacySnapshot, $v[ 'secret' ] )->getWallet();
+    $this->assertEquals( $wallet768->pubkey, $restored->pubkey, 'a pre-bump snapshot must restore as ML-KEM-768' );
+    $this->assertSame( 1184, strlen( base64_decode( $restored->pubkey, true ) ), 'restored key must be 1184 bytes, not the 1568 the default would give' );
+  }
+
+  // =========================================================================================
+  // The frozen pre-bump ML-KEM-768 auth molecule: a signed U+I molecule whose U-atom
+  // `walletPubkey` meta is a 1184-byte ML-KEM-768 key — the shape a 0.9.x client produced.
+  // A build whose default is ML-KEM-1024 must still validate it.
+  // =========================================================================================
+
+  // Guards the fixture itself: if it is ever regenerated at 1024 this fails loudly, and the
+  // hash assertions below would otherwise silently stop testing backwards compatibility.
+  public function testLegacy768AuthMoleculeCarriesA768WalletPubkey (): void {
+    $legacy = $this->vectors[ 'legacyMlkem768AuthMolecule' ];
+    $pubkeys = [];
+    foreach ( $legacy[ 'molecule' ][ 'atoms' ] as $atom ) {
+      foreach ( $atom[ 'meta' ] ?? [] as $meta ) {
+        if ( $meta[ 'key' ] === 'walletPubkey' ) {
+          $pubkeys[] = $meta[ 'value' ];
+        }
+      }
+    }
+
+    $this->assertCount( 1, $pubkeys, 'the frozen molecule must carry exactly one walletPubkey meta' );
+    $this->assertSame(
+      $legacy[ 'expectedWalletPubkeyBytes' ],
+      strlen( base64_decode( $pubkeys[ 0 ], true ) ),
+      'the frozen molecule must be a genuine ML-KEM-768 record'
+    );
+  }
+
+  public function testLegacy768AuthMoleculeHashVerifies (): void {
+    $legacy = $this->vectors[ 'legacyMlkem768AuthMolecule' ];
+    $atoms = array_map( [ self::class, 'atomFromVector' ], $legacy[ 'atoms' ] );
+    $this->assertEquals(
+      $legacy[ 'expectedMolecularHash' ],
+      Atom::hashAtoms( $atoms ),
+      'molecular hash of the frozen 768 molecule mismatched'
+    );
+  }
+
+  // Full validation: hash + WOTS+ OTS, via the deserializer that preserves every field
+  // verbatim (a generic atom constructor would regenerate createdAt and break the hash).
+  // `check()` returns void and THROWS on failure, so reaching the end is the assertion.
+  public function testLegacy768AuthMoleculeFullyValidates (): void {
+    $legacy = $this->vectors[ 'legacyMlkem768AuthMolecule' ];
+    $molecule = Molecule::fromJSON(
+      json_encode( $legacy[ 'molecule' ], JSON_THROW_ON_ERROR ),
+      includeValidationContext: true,
+      validateStructure: true
+    );
+    $this->assertEquals( $legacy[ 'expectedMolecularHash' ], $molecule->molecularHash );
+
+    $molecule->check( $molecule->getSourceWallet() );
+    $this->addToAssertionCount( 1 );
+  }
+
+  /**
+   * Rebuilds a hashable atom from the fixture's `atoms` entry, field for field.
+   */
+  private static function atomFromVector ( array $atom ): Atom {
+    return new Atom(
+      position: $atom[ 'position' ] ?? null,
+      walletAddress: $atom[ 'walletAddress' ] ?? null,
+      isotope: $atom[ 'isotope' ],
+      token: $atom[ 'token' ] ?? null,
+      value: $atom[ 'value' ] ?? null,
+      batchId: $atom[ 'batchId' ] ?? null,
+      metaType: $atom[ 'metaType' ] ?? null,
+      metaId: $atom[ 'metaId' ] ?? null,
+      meta: $atom[ 'meta' ] ?? [],
+      otsFragment: $atom[ 'otsFragment' ] ?? null,
+      index: $atom[ 'index' ] ?? null,
+      createdAt: $atom[ 'createdAt' ] ?? null,
+    );
   }
 }

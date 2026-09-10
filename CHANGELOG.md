@@ -12,6 +12,72 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [1.0.0] — 2026-09-10
+
+### Added
+
+- A wallet now decrypts records addressed to its own ML-KEM-768 identity even when it is
+  configured at ML-KEM-1024, by deriving that identity on demand from the same wallet key.
+  The 64-byte ML-KEM seed is parameter-set-independent, so `Wallet::decryptMessageML()` and
+  `Wallet::decryptBinaryML()` now dispatch on the decoded ciphertext's length and decapsulate
+  with the matching identity; the derived private key lives only for that call and is never
+  cached on the wallet. `Wallet::decryptMyMessageML()` correspondingly tries both identities'
+  hash shares when looking up the `CipherHash` map, so an envelope a pre-bump peer addressed to
+  `hashShare(our_768_pubkey)` is found. Reading pre-bump ML-KEM-768 records therefore needs no
+  configuration change.
+- `Wallet::mlKemParameterSetFromPubkey()` recovers a parameter set from a serialized public
+  key's raw length (1568 bytes → ML-KEM-1024, 1184 → ML-KEM-768; FIPS 203 makes them disjoint).
+
+### Changed
+
+- **Breaking:** ML-KEM-1024 is the default post-quantum parameter set. `Wallet::__construct()`
+  and `Wallet::create()` take an `$mlKemParameterSet` argument (`1024` default, `768`
+  step-back), and `KnishIOClient` threads it through; an unsupported value throws
+  `CryptoException`.
+- Encapsulation is strict and stays strict: encrypting to a recipient key whose length does not
+  match this wallet's configured parameter set throws `CryptoException` rather than silently
+  downgrading. The advertised public key remains single-set — the configured set's key, in
+  `Wallet::$pubkey`, in the signed U-atom `walletPubkey` meta, and at auth. Inbound is
+  permissive, outbound is strict, deliberately: reading a 768 record you own downgrades
+  nothing, but encapsulating at 768 would.
+
+### Removed
+
+- `Libraries\OpenSSLMLKEM` — dead, uncalled code, deleted rather than ported to two parameter
+  sets.
+- The `*ML768` method family. `encryptMessageML768`/`decryptMessageML768`,
+  `encryptMessageML768Multi`/`decryptMessageML768Multi`, `encryptStringML768`/
+  `decryptMyMessageML768` and `decryptBinaryML768` are now `encryptMessageML`/
+  `decryptMessageML`, `encryptMessageMLMulti`/`decryptMessageMLMulti`, `encryptStringML`/
+  `decryptMyMessageML` and `decryptBinaryML`. No aliases are retained: the methods are
+  parameter-set-agnostic, so a `768` in their names would have been wrong from 1.0.0 onward.
+
+### Fixed
+
+- The auth-token session snapshot now records the wallet's ML-KEM parameter set
+  (`wallet.mlKemParameterSet`) and `AuthToken::restore()` honours it, resolving in three tiers:
+  an explicit snapshot field, else the stored validator key's decoded length, else ML-KEM-768.
+  A session persisted by an 0.9.x build restores as ML-KEM-768 instead of silently becoming
+  ML-KEM-1024 with a public key the validator never recorded for that token — which also made
+  outbound encryption throw, because the stored validator key is 1184 bytes.
+- The strict encapsulation length guard now applies at **every** encapsulation entry point.
+  `Wallet::encryptBinaryML()` called `PostQuantumCrypto::encapsulate()` directly with no length
+  check, so a wrong-length recipient key reached the Noble bridge and surfaced as a wrapped
+  bridge error instead of the actionable parameter-set message. Both entry points now share one
+  guard, and its message is unchanged.
+- Doc comments and `{@see}` links that named methods removed in the rename
+  (`encryptMessageML768()`, `decryptMessageML768()`, `encryptMessageML768Multi()`,
+  `encryptStringML768`, `decryptMyMessageML768`) now point at the surviving names.
+
+### Notes
+
+- `0.9.4`–`0.9.9` were never published. The ML-KEM-1024 cutover is a breaking API change and
+  takes the 1.0.0 line, which also states that this SDK's client surface is stable.
+- Nothing on the wire changed and no hashed bytes changed. The parameter set is recoverable
+  from FIPS 203's disjoint key/ciphertext lengths, so no migration is required — proven by a
+  frozen pre-bump ML-KEM-768 auth molecule (`vectors.legacyMlkem768AuthMolecule`) that this
+  release validates from a default ML-KEM-1024 build.
+
 ## [0.9.3] — 2026-08-05
 
 ### Changed
@@ -168,7 +234,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.0.0
 [0.9.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.2
 [0.9.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.0
 [0.8.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.8.1

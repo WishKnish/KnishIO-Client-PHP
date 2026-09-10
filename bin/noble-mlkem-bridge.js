@@ -5,7 +5,7 @@
  *
  * This Node.js script provides a bridge between PHP and the JavaScript
  * @noble/post-quantum library, ensuring 100% compatibility with the
- * JavaScript SDK's ML-KEM-768 implementation.
+ * JavaScript SDK's ML-KEM implementation.
  *
  * Usage:
  *   node noble-mlkem-bridge.js keygen <seedHex>
@@ -55,7 +55,7 @@ function base64ToBytes(base64) {
 }
 
 /**
- * Generate ML-KEM-768 key pair from seed (deterministic)
+ * Generate an ML-KEM key pair from seed (deterministic) at the requested parameter set
  */
 function keygen(seedHex, paramSet = '1024') {
   if (seedHex.length !== 128) {

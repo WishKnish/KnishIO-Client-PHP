@@ -30,6 +30,28 @@ class AuthToken {
   }
 
   /**
+   * ML-KEM parameter set a restored session must use, resolved in three tiers: an explicit
+   * snapshot field, then the stored validator key's length, then ML-KEM-768.
+   *
+   * The final tier is deliberately NOT the constructor default. A snapshot carrying neither an
+   * explicit field nor a recognisable key can only have come from a pre-bump build, and every
+   * pre-bump build was ML-KEM-768 only — falling back to the current default would make the
+   * restored wallet advertise a public key the validator never recorded for that token, and
+   * would break outbound encryption to the stored 1184-byte validator key.
+   *
+   * @param array $snapshot
+   *
+   * @return int
+   */
+  public static function resolveMlKemParameterSet ( array $snapshot ): int {
+    $explicit = array_get( $snapshot, 'wallet.mlKemParameterSet' );
+    if ( $explicit ) {
+      return (int) $explicit;
+    }
+    return Wallet::mlKemParameterSetFromPubkey( array_get( $snapshot, 'pubkey' ) ) ?? 768;
+  }
+
+  /**
    * @param array $snapshot
    * @param string $secret
    *
@@ -37,7 +59,7 @@ class AuthToken {
    * @throws SodiumException
    */
   public static function restore ( array $snapshot, string $secret ): self {
-    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ) );
+    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ), static::resolveMlKemParameterSet( $snapshot ) );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
       'expiresAt' => array_get( $snapshot, 'expiresAt' ),
@@ -93,6 +115,7 @@ class AuthToken {
       'wallet' => [
         'position' => $this->wallet->position,
         'characters' => $this->wallet->characters,
+        'mlKemParameterSet' => $this->wallet->mlKemParameterSet,
       ],
     ];
   }

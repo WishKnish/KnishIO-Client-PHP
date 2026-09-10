@@ -156,8 +156,8 @@ class Cipher {
               return $handler( $request, $options );
             }
 
-            // PQ-transport (cycle 165): the live CipherHash transport is post-quantum ML-KEM768
-            // (was classical NaCl `encryptMessage`). encryptStringML768() produces the canonical
+            // PQ-transport (cycle 165): the live CipherHash transport is post-quantum ML-KEM
+            // (was classical NaCl `encryptMessage`). encryptStringML() produces the canonical
             // envelope the Rust validator's CipherHash handler decrypts:
             // { "<hashShare(pubkey)>": { cipherText, encryptedMessage } }.
             $encryptedMessage = $this->wallet()
@@ -209,7 +209,7 @@ class Cipher {
 
             if ( $encrypted ) {
 
-              // PQ-transport (cycle 165): ML-KEM768 response envelope (was classical NaCl
+              // PQ-transport (cycle 165): ML-KEM response envelope (was classical NaCl
               // `decryptMessage`) — keyed by hashShare(this wallet's pubkey), each value the
               // object { cipherText, encryptedMessage }.
               $decryption = $this->wallet()

@@ -8,7 +8,7 @@ use Exception;
  * Class NobleMLKEMBridge
  *
  * Bridges PHP to JavaScript @noble/post-quantum library via Node.js subprocess
- * Ensures 100% compatibility with JavaScript SDK's ML-KEM-768 implementation
+ * Ensures 100% compatibility with the JavaScript SDK's ML-KEM implementation
  *
  * This is a temporary solution that guarantees cryptographic compatibility
  * until a pure-PHP ML-KEM implementation becomes available.
@@ -45,7 +45,7 @@ class NobleMLKEMBridge
 
         if (self::$nodeCommand === null) {
             throw new Exception(
-                'Node.js not found. Please install Node.js to use ML-KEM-768 cryptography. ' .
+                'Node.js not found. Please install Node.js to use ML-KEM cryptography. ' .
                 'Visit https://nodejs.org/ for installation instructions.'
             );
         }
@@ -138,7 +138,7 @@ class NobleMLKEMBridge
     }
 
     /**
-     * Generate ML-KEM-768 key pair from seed (deterministic)
+     * Generate an ML-KEM key pair from seed (deterministic) at the requested parameter set
      *
      * Uses JavaScript @noble/post-quantum library to ensure exact compatibility
      * with JavaScript SDK implementation.

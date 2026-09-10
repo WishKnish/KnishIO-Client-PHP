@@ -118,12 +118,12 @@ class Wallet {
   private ?string $privkey = null;
 
   /**
-   * @var string|null ML-KEM768 public key (Base64)
+   * @var string|null ML-KEM public key (Base64)
    */
   private ?string $mlkemPublicKey = null;
 
   /**
-   * @var string|null ML-KEM768 private key (Base64)
+   * @var string|null ML-KEM private key (Base64)
    */
   private ?string $mlkemPrivateKey = null;
   public int $mlKemParameterSet = 1024;
@@ -209,7 +209,7 @@ class Wallet {
       // Private key initialization for classical crypto
       $this->privkey = $this->soda->generatePrivateKey( $this->key );
       
-      // Initialize ML-KEM768 keys for quantum resistance
+      // Initialize ML-KEM keys for quantum resistance
       $this->initializeMLKEM();
 
       // Set characters
@@ -238,9 +238,71 @@ class Wallet {
   }
 
   /**
-   * Initialize ML-KEM768 keys for quantum resistance
+   * Derive an ML-KEM keypair for an arbitrary parameter set from this wallet's key seed.
+   *
+   * The 64-byte `d‖z` seed is parameter-set-independent — only the final keygen call differs —
+   * so a wallet can derive BOTH its ML-KEM-768 and its ML-KEM-1024 identity from material it
+   * already holds, without mutating itself. The returned private key is the caller's to use
+   * and drop; it is deliberately NOT cached on the wallet.
+   *
+   * @param int $parameterSet 1024 or 768
+   *
+   * @return array{pubkey: string, privkey: string, params: array}
+   * @throws Exception
+   */
+  private function deriveMlKemKeypair( int $parameterSet ): array {
+    if ( !array_key_exists( $parameterSet, PostQuantumCrypto::MLKEM_PARAMS ) ) {
+      throw new CryptoException( "KnishIO: unsupported ML-KEM parameter set {$parameterSet}; expected 1024 or 768." );
+    }
+    if ( $this->key === null ) {
+      throw new CryptoException( 'To derive ML-KEM keys, the wallet must be initialized with a secret argument.' );
+    }
+
+    // Generate a 64-byte (512-bit) seed from the Knish.IO private key
+    // Use deterministic approach matching JavaScript: generateSecret(key, 128) → 128 hex chars = 64 bytes
+    $seedHex = Crypto::generateSecret( $this->key, 128 );  // 128 hex chars = 64 bytes
+
+    // Generate a real ML-KEM key pair (deterministic from the seed) at the requested set
+    $keyPair = PostQuantumCrypto::generateMLKEMKeyPairFromSeed( $seedHex, $parameterSet );
+
+    return [
+      'pubkey' => $keyPair[ 'publicKey' ],
+      'privkey' => $keyPair[ 'privateKey' ],
+      'params' => PostQuantumCrypto::MLKEM_PARAMS[ $parameterSet ],
+    ];
+  }
+
+  /**
+   * ML-KEM parameter set implied by a serialized public key's raw byte length. FIPS 203's key
+   * lengths are disjoint (1568 bytes → ML-KEM-1024, 1184 bytes → ML-KEM-768), so a stored peer
+   * key recovers the parameter set of the session it belongs to without a wire-format change.
+   * Used by {@see AuthToken::restore()} to resolve a snapshot that predates the explicit field.
+   *
+   * @param string|null $pubkey Base64-serialized ML-KEM public key
+   *
+   * @return int|null 1024, 768, or null when the length matches neither
+   */
+  public static function mlKemParameterSetFromPubkey( ?string $pubkey ): ?int {
+    if ( !$pubkey ) {
+      return null;
+    }
+    $raw = base64_decode( $pubkey, true );
+    if ( $raw === false ) {
+      return null;
+    }
+    $byteLength = strlen( $raw );
+    foreach ( PostQuantumCrypto::MLKEM_PARAMS as $set => $params ) {
+      if ( $params[ 'pkBytes' ] === $byteLength ) {
+        return (int) $set;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Initialize this wallet's ML-KEM keys, at its configured parameter set, for quantum resistance
    * Matches JavaScript implementation exactly
-   * 
+   *
    * @return void
    * @throws Exception
    */
@@ -248,19 +310,14 @@ class Wallet {
     if (!$this->key) {
       return;
     }
-    
-    // Generate a 64-byte (512-bit) seed from the Knish.IO private key  
-    // Use deterministic approach matching JavaScript: generateSecret(key, 128) → 128 hex chars = 64 bytes
-    $seedHex = Crypto::generateSecret($this->key, 128);  // 128 hex chars = 64 bytes
-    
-    // Generate real ML-KEM768 key pair using OpenSSL (deterministic from seed)
-    $keyPair = PostQuantumCrypto::generateMLKEMKeyPairFromSeed($seedHex, $this->mlKemParameterSet);
-    
+
+    $keyPair = $this->deriveMlKemKeypair( $this->mlKemParameterSet );
+
     // Store the ML-KEM keys
-    $this->mlkemPublicKey = $keyPair['publicKey'];
-    $this->mlkemPrivateKey = $keyPair['privateKey'];
-    
-    // Set pubkey to the ML-KEM768 public key for quantum resistance
+    $this->mlkemPublicKey = $keyPair[ 'pubkey' ];
+    $this->mlkemPrivateKey = $keyPair[ 'privkey' ];
+
+    // Set pubkey to the ML-KEM public key for quantum resistance
     $this->pubkey = $this->mlkemPublicKey;
   }
 
@@ -428,7 +485,7 @@ class Wallet {
   /**
    * Encrypts for one or more recipients using CLASSICAL NaCl crypto_box_seal (via Soda) —
    * NOT post-quantum. The live CipherHash transport (Libraries\Cipher) uses this path pending
-   * PQ migration. For the canonical post-quantum ML-KEM768 envelope see {@see encryptMessageML768()}.
+   * PQ migration. For the canonical post-quantum ML-KEM envelope see {@see encryptMessageML()}.
    *
    * @param mixed $message
    * @param mixed ...$pubkeys
@@ -456,8 +513,8 @@ class Wallet {
    * Uses the current wallet's private key to decrypt the given message.
    *
    * CLASSICAL NaCl crypto_box_seal (via Soda) — NOT post-quantum; the counterpart to
-   * {@see encryptMessage()}. For the canonical post-quantum ML-KEM768 envelope see
-   * {@see decryptMessageML768()}.
+   * {@see encryptMessage()}. For the canonical post-quantum ML-KEM envelope see
+   * {@see decryptMessageML()}.
    *
    * @param array|string $message
    *
@@ -572,24 +629,22 @@ class Wallet {
   }
 
   // =============================================================================
-  // ML-KEM768 POST-QUANTUM ENCRYPTION (JavaScript SDK Compatibility)
+  // ML-KEM POST-QUANTUM ENCRYPTION (JavaScript SDK Compatibility)
   // =============================================================================
 
   /**
-   * Encrypt a message using ML-KEM768 post-quantum encryption
-   * Compatible with JavaScript SDK encryptMessage() method
+   * The strict outbound length guard, shared by every ML-KEM encapsulation entry point.
    *
-   * CANONICAL cross-SDK ML-KEM768 envelope: returns `{ cipherText, encryptedMessage }`
-   * (b64(KEM ciphertext) + b64(IV‖AES-256-GCM ct‖tag)) — the post-quantum envelope every
-   * KnishIO SDK interoperates on (asserted by the cross-platform vector layer + strong
-   * cross-validation). For the classical (non-PQ) NaCl path see {@see encryptMessage()}.
+   * Outbound is where downgrade risk lives: a stale or hostile peer advertising a
+   * wrong-length key must not be able to pull this client to another parameter set for data
+   * it is SENDING. (Inbound decapsulation is deliberately permissive — see
+   * {@see decryptMessageML()}.)
    *
-   * @param mixed $message Message to encrypt
-   * @param string $recipientPubkey Recipient's ML-KEM768 public key (base64)
-   * @return array{cipherText: string, encryptedMessage: string}
-   * @throws JsonException|Exception
+   * @param string $recipientPubkey Recipient's ML-KEM public key (base64)
+   *
+   * @return void
    */
-  public function encryptMessageML(mixed $message, string $recipientPubkey): array {
+  private function assertRecipientPubkeyLength( string $recipientPubkey ): void {
     $recipientPubkeyLen = strlen(base64_decode($recipientPubkey, true) ?: '');
     $expectedPkBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['pkBytes'];
     if ($recipientPubkeyLen !== $expectedPkBytes) {
@@ -599,13 +654,31 @@ class Wallet {
         'upgrade the peer, or step this client back to the other parameter set.'
       );
     }
+  }
+
+  /**
+   * Encrypt a message using ML-KEM post-quantum encryption
+   * Compatible with JavaScript SDK encryptMessage() method
+   *
+   * CANONICAL cross-SDK ML-KEM envelope: returns `{ cipherText, encryptedMessage }`
+   * (b64(KEM ciphertext) + b64(IV‖AES-256-GCM ct‖tag)) — the post-quantum envelope every
+   * KnishIO SDK interoperates on (asserted by the cross-platform vector layer + strong
+   * cross-validation). For the classical (non-PQ) NaCl path see {@see encryptMessage()}.
+   *
+   * @param mixed $message Message to encrypt
+   * @param string $recipientPubkey Recipient's ML-KEM public key (base64)
+   * @return array{cipherText: string, encryptedMessage: string}
+   * @throws JsonException|Exception
+   */
+  public function encryptMessageML(mixed $message, string $recipientPubkey): array {
+    $this->assertRecipientPubkeyLength($recipientPubkey);
 
     try {
       // Serialize message to JSON string (matches JavaScript)
       $messageString = json_encode($message, JSON_THROW_ON_ERROR);
       $messageBytes = $messageString;
 
-      // Perform ML-KEM768 encapsulation using real PostQuantumCrypto (Noble bridge)
+      // Perform ML-KEM encapsulation using real PostQuantumCrypto (Noble bridge)
       $encapsulateResult = PostQuantumCrypto::encapsulate($recipientPubkey);
       $sharedSecretBase64 = $encapsulateResult['sharedSecret'];
       $cipherTextBase64 = $encapsulateResult['ciphertext'];
@@ -623,17 +696,25 @@ class Wallet {
         'encryptedMessage' => base64_encode($encryptedMessage)
       ];
     } catch (Exception $e) {
-      throw new CryptoException('ML-KEM768 encryption failed: ' . $e->getMessage());
+      throw new CryptoException('ML-KEM encryption failed: ' . $e->getMessage());
     }
   }
 
   /**
-   * Decrypt a message using ML-KEM768 post-quantum decryption  
+   * Decrypt a message using ML-KEM post-quantum decryption
    * Compatible with JavaScript SDK decryptMessage() method
    *
-   * CANONICAL cross-SDK ML-KEM768 envelope: consumes `{ cipherText, encryptedMessage }` — the
+   * CANONICAL cross-SDK ML-KEM envelope: consumes `{ cipherText, encryptedMessage }` — the
    * post-quantum envelope every KnishIO SDK interoperates on. For the classical (non-PQ) NaCl
    * path see {@see decryptMessage()}.
+   *
+   * Inbound is PERMISSIVE: a ciphertext at either parameter set decrypts, provided it is
+   * addressed to one of THIS wallet's own ML-KEM identities. The 64-byte seed is
+   * parameter-set-independent, so the other identity is derived on demand and its private key
+   * is released with this call's scope — never cached on the wallet. Outbound encapsulation
+   * stays STRICT ({@see encryptMessageML()}): reading a 768 record we own downgrades nothing,
+   * because that message's confidentiality was fixed at 768 by its sender, but encapsulating
+   * at 768 would.
    *
    * @param array{cipherText: string, encryptedMessage: string} $encryptedData
    * @return mixed Decrypted message
@@ -642,21 +723,35 @@ class Wallet {
   public function decryptMessageML(array $encryptedData): mixed {
     try {
       $cipherTextBytes = base64_decode($encryptedData['cipherText'], true);
-      $expectedCtBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['ctBytes'];
-      if ($cipherTextBytes === false || strlen($cipherTextBytes) !== $expectedCtBytes) {
+      if ($cipherTextBytes === false) {
         return null;
       }
-      // Decode encryptedMessage (IV + encrypted content)
-      $encryptedMessage = base64_decode($encryptedData['encryptedMessage']);
-      // Use this wallet's ML-KEM768 private key for decapsulation
+
+      // Use this wallet's ML-KEM private key for decapsulation
       if (!$this->mlkemPrivateKey) {
-        throw new Exception('ML-KEM768 private key not available');
+        throw new Exception('ML-KEM private key not available');
+      }
+      $decapsPrivkey = $this->mlkemPrivateKey;
+
+      $configuredCtBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['ctBytes'];
+      if (strlen($cipherTextBytes) !== $configuredCtBytes) {
+        $otherSet = $this->mlKemParameterSet === 1024 ? 768 : 1024;
+        if (strlen($cipherTextBytes) !== PostQuantumCrypto::MLKEM_PARAMS[$otherSet]['ctBytes']) {
+          return null;
+        }
+        // A ciphertext at the OTHER parameter set, addressed to this wallet's other identity:
+        // derive that identity on demand and let its private key die with this call.
+        $decapsPrivkey = $this->deriveMlKemKeypair($otherSet)['privkey'];
       }
 
-      // Perform ML-KEM768 decapsulation using real PostQuantumCrypto (Noble bridge)
+      // Decode encryptedMessage (IV + encrypted content)
+      $encryptedMessage = base64_decode($encryptedData['encryptedMessage']);
+
+      // Perform ML-KEM decapsulation using real PostQuantumCrypto (Noble bridge)
       // cipherText is already base64 encoded in the encrypted data
-      $sharedSecretBase64 = PostQuantumCrypto::decapsulate($encryptedData['cipherText'], $this->mlkemPrivateKey);
+      $sharedSecretBase64 = PostQuantumCrypto::decapsulate($encryptedData['cipherText'], $decapsPrivkey);
       $sharedSecret = base64_decode($sharedSecretBase64);
+      unset($decapsPrivkey);
 
       // Extract IV and encrypted content (matches JavaScript)
       if (strlen($encryptedMessage) < 12) {
@@ -673,7 +768,7 @@ class Wallet {
       return json_decode($decryptedBytes, true, 512, JSON_THROW_ON_ERROR);
 
     } catch (Exception $e) {
-      error_log('Wallet::decryptMessageML768() - Decryption failed: ' . $e->getMessage());
+      error_log('Wallet::decryptMessageML() - Decryption failed: ' . $e->getMessage());
       return null;
     }
   }
@@ -745,7 +840,7 @@ class Wallet {
   }
 
   /**
-   * Encrypt message for multiple recipients using ML-KEM768
+   * Encrypt message for multiple recipients using ML-KEM
    * Returns array with recipient pubkey hash as key
    *
    * @param mixed $message Message to encrypt
@@ -771,7 +866,7 @@ class Wallet {
    * Decrypt message from multi-recipient encrypted data
    * Automatically finds this wallet's encrypted message by pubkey hash
    *
-   * @param array $multiEncryptedData Multi-recipient encrypted data from encryptMessageML768Multi()
+   * @param array $multiEncryptedData Multi-recipient encrypted data from encryptMessageMLMulti()
    * @return mixed Decrypted message
    * @throws Exception
    */
@@ -793,14 +888,14 @@ class Wallet {
   }
 
   /**
-   * Canonical cross-SDK `hashShare` — the map key under which an ML-KEM768 envelope is stored for
+   * Canonical cross-SDK `hashShare` — the map key under which an ML-KEM envelope is stored for
    * a recipient pubkey. Byte-matches the Rust validator's `hash_share` and the JS/Kotlin
    * `hashShare`: standard (RFC-4648) base64 of the first 8 bytes of SHAKE256(pubkey-as-UTF-8).
    *
    * Deliberately NOT {@see Soda::shortHash()}, which encodes via BaseX (a big-integer base
    * conversion, not RFC-4648) and therefore does NOT interoperate with the validator/other SDKs.
    *
-   * @param string $pubkey Recipient ML-KEM768 public key (base64 string)
+   * @param string $pubkey Recipient ML-KEM public key (base64 string)
    * @return string
    * @throws Exception
    */
@@ -809,12 +904,12 @@ class Wallet {
   }
 
   /**
-   * Encrypt a message into the canonical single-recipient ML-KEM768 `CipherHash` envelope:
+   * Encrypt a message into the canonical single-recipient ML-KEM `CipherHash` envelope:
    * `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`. This is the wire shape the
-   * validator's `CipherHash` handler decrypts (and that JS/Kotlin `encryptStringML768` produce).
+   * validator's `CipherHash` handler decrypts (and that JS/Kotlin `encryptStringML` produce).
    *
    * @param mixed $message
-   * @param string $pubkey Recipient ML-KEM768 public key (base64)
+   * @param string $pubkey Recipient ML-KEM public key (base64)
    * @return array
    * @throws JsonException|Exception
    */
@@ -823,9 +918,14 @@ class Wallet {
   }
 
   /**
-   * Decrypt the canonical ML-KEM768 `CipherHash` envelope addressed to THIS wallet: looks up the
+   * Decrypt the canonical ML-KEM `CipherHash` envelope addressed to THIS wallet: looks up the
    * entry keyed by `hashShare($this->pubkey)` and decrypts it with this wallet's ML-KEM private
-   * key. Mirrors the JS/Kotlin `decryptMyMessageML768`.
+   * key. Mirrors the JS/Kotlin `decryptMyMessageML`.
+   *
+   * Inbound permissive (see {@see decryptMessageML()}): a pre-bump sender addressed the
+   * envelope to the hash share of our OTHER parameter set's public key, so that identity's
+   * share is derived on demand and tried second. Without this the length dispatch in
+   * {@see decryptMessageML()} is unreachable on the transport path.
    *
    * @param array $map `{ "<hashShare(pubkey)>": { cipherText, encryptedMessage } }`
    * @return mixed Decrypted message
@@ -837,26 +937,32 @@ class Wallet {
     }
     $key = $this->hashShare( $this->pubkey );
     if ( !array_key_exists( $key, $map ) ) {
+      $otherSet = $this->mlKemParameterSet === 1024 ? 768 : 1024;
+      $key = $this->hashShare( $this->deriveMlKemKeypair( $otherSet )[ 'pubkey' ] );
+    }
+    if ( !array_key_exists( $key, $map ) ) {
       throw new CryptoException( 'No ML-KEM envelope found for this wallet.' );
     }
     return $this->decryptMessageML( $map[ $key ] );
   }
 
   /**
-   * Encrypt binary data using ML-KEM768
+   * Encrypt binary data using ML-KEM
    * Does not JSON encode - encrypts raw bytes directly
    *
    * @param string $binaryData Binary data to encrypt
-   * @param string $recipientPubkey Recipient's ML-KEM768 public key
+   * @param string $recipientPubkey Recipient's ML-KEM public key
    * @return array Encrypted data structure
    * @throws Exception
    */
   public function encryptBinaryML(string $binaryData, string $recipientPubkey): array {
+    $this->assertRecipientPubkeyLength($recipientPubkey);
+
     try {
       // For binary data, use raw bytes without JSON encoding
       $messageBytes = $binaryData;
 
-      // Perform ML-KEM768 encapsulation
+      // Perform ML-KEM encapsulation
       $encapsulateResult = PostQuantumCrypto::encapsulate($recipientPubkey);
       $sharedSecretBase64 = $encapsulateResult['sharedSecret'];
       $cipherTextBase64 = $encapsulateResult['ciphertext'];
@@ -875,31 +981,45 @@ class Wallet {
         'isBinary' => true  // Flag to indicate binary data
       ];
     } catch (Exception $e) {
-      throw new CryptoException('ML-KEM768 binary encryption failed: ' . $e->getMessage());
+      throw new CryptoException('ML-KEM binary encryption failed: ' . $e->getMessage());
     }
   }
 
   /**
-   * Decrypt binary data using ML-KEM768
+   * Decrypt binary data using ML-KEM
    * Returns raw bytes without JSON decoding
+   *
+   * Inbound permissive on the same terms as {@see decryptMessageML()}: a ciphertext at either
+   * parameter set decrypts, provided it is addressed to one of this wallet's own identities.
    *
    * @param array $encryptedData Encrypted data structure
    * @return string Decrypted binary data
    * @throws Exception
    */
-  public function decryptBinaryML768(array $encryptedData): string {
+  public function decryptBinaryML(array $encryptedData): string {
     try {
       // Decode encryptedMessage (IV + encrypted content)
       $encryptedMessage = base64_decode($encryptedData['encryptedMessage']);
 
-      // Use this wallet's ML-KEM768 private key for decapsulation
+      // Use this wallet's ML-KEM private key for decapsulation
       if (!$this->mlkemPrivateKey) {
-        throw new Exception('ML-KEM768 private key not available');
+        throw new Exception('ML-KEM private key not available');
+      }
+      $decapsPrivkey = $this->mlkemPrivateKey;
+
+      $cipherTextBytes = base64_decode($encryptedData['cipherText'], true);
+      $configuredCtBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['ctBytes'];
+      if ($cipherTextBytes !== false && strlen($cipherTextBytes) !== $configuredCtBytes) {
+        $otherSet = $this->mlKemParameterSet === 1024 ? 768 : 1024;
+        if (strlen($cipherTextBytes) === PostQuantumCrypto::MLKEM_PARAMS[$otherSet]['ctBytes']) {
+          $decapsPrivkey = $this->deriveMlKemKeypair($otherSet)['privkey'];
+        }
       }
 
-      // Perform ML-KEM768 decapsulation
-      $sharedSecretBase64 = PostQuantumCrypto::decapsulate($encryptedData['cipherText'], $this->mlkemPrivateKey);
+      // Perform ML-KEM decapsulation
+      $sharedSecretBase64 = PostQuantumCrypto::decapsulate($encryptedData['cipherText'], $decapsPrivkey);
       $sharedSecret = base64_decode($sharedSecretBase64);
+      unset($decapsPrivkey);
 
       // Extract IV and encrypted content
       if (strlen($encryptedMessage) < 12) {
@@ -913,8 +1033,8 @@ class Wallet {
       return $this->decryptWithAESGCM($encryptedContent, $sharedSecret, $iv);
 
     } catch (Exception $e) {
-      error_log('Wallet::decryptBinaryML768() - Decryption failed: ' . $e->getMessage());
-      throw new CryptoException('ML-KEM768 binary decryption failed: ' . $e->getMessage());
+      error_log('Wallet::decryptBinaryML() - Decryption failed: ' . $e->getMessage());
+      throw new CryptoException('ML-KEM binary decryption failed: ' . $e->getMessage());
     }
   }
 

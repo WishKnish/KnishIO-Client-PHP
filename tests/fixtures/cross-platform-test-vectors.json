@@ -907,6 +907,147 @@
             "expectedPlaintext": "Hello ML-KEM1024 cross-platform test message!"
         }
     },
+    "legacyMlkem768AuthMolecule": {
+      "description": "A signed U+I auth molecule whose U-atom walletPubkey meta is an ML-KEM-768 public key (1184 raw bytes / 1580 base64 chars) \u2014 the shape a pre-bump 0.9.x client produced. ML-KEM-768 keygen from a given 64-byte seed is byte-unchanged across the 1024 migration (proven by the untouched vectors.mlkem768.keygen block, which all eight SDKs still reproduce byte-identically), and molecular hashing treats walletPubkey as an opaque meta string, so this molecule is bit-identical to one a pre-bump client would have produced from the same pinned inputs. Every SDK must validate it from a build whose default parameter set is ML-KEM-1024.",
+      "expectedMolecularHash": "00b0bfabb63129efa722ec946cc0a601801gf26a6f4165dc36541a82dc384836",
+      "expectedWalletPubkeyBytes": 1184,
+      "atoms": [
+        {
+          "position": "1111111111111111111111111111111111111111111111111111111111111111",
+          "walletAddress": "f19dc0db1f0054b79a2f2d8dbaa3462be031d791ec6019221096d6ee911f8edc",
+          "isotope": "U",
+          "token": "AUTH",
+          "value": null,
+          "batchId": null,
+          "metaType": null,
+          "metaId": null,
+          "meta": [
+            {
+              "key": "encrypt",
+              "value": "false"
+            },
+            {
+              "key": "walletPubkey",
+              "value": "gRrIf6K5x7lCbQwIUSEey/teE9YgW8RRsGmkJsXDU5kT2QuKDCxemqrJwPOa+qyG8MjFVIx2uxpKq9MF+WrL7uOL53mVsfVpvJQ8y4Y1LwVs48qm4XcwQWIooIBM2mTNWwCb4MBBDBjDbkOQF0adTyKjBGEZInOJpTCPJ3UZ4jWmKbsdE/sr2UkHGFkhytOHFXXE7UZ63bxzGVYfD2IO6EI9bGKn8GyXm4oyJnAFCGlqEqCJvuOJc5TCRFs3bxpbdEMgnhKg7MRlsQrEVouqX2E47mJ5qWIkxYrLcNZ1oPa9cmkwuTCcMnMkxsqu9YfM3tGOelUQycJuqUSRoAOKonMNXVBKbscV7bzI4wQKpYx18DNeW8kyqBFhE0Oe3Ji6ELigCrtJ4BQnM1CLuppq9Hg1bSWyy0kDmrNTQbvFN0VL4wBDnHNIxNm4HuXIB8Q7yINWbuw7vPRQExqMzNmHaTW5bXKp05xGxBBvBiM7NMRC7HQrlqJq0mJJnlJEJQRhwQlZkwJC2im/nwNZw5yd9ogki9UrGmMFqdcr3RGCkrRL+KckpnEb2La0NlzD1zFUSnFJH9nK48wCEvwoyDga84kcqaCE+nsSJCgxSjohDfEbomQqVyOZbjlsxzweEZAWmpUboSqhu5OcWzSubFkPUDUft3ZO3xRfDyZBlfE/z9AuIUIoAFZTkmcIBLU6YOawnlMeJaC/Ggq6MyiT9YIFDfi6hSIcGSRSdsajOcU30WvDoBFb6koxOVDJcXkbVYDDSlnP2CbKcFKB9GNUMRDM4vpTBsMBSEijV3akFpyZr9xuqTGo/yjL56qJBiaFAtEerlCkdpR1/LsWjvONW8LG0wIW1upe6oJePFwuUjSjmLBHsjM1WESpb7tzxvF21IWPQywNrGJ01DoYW8gKcwE93Qm8uPMv/bY6SiCjPPsciNNbAMUgRlmhRUoK3wuuhDZZRdhpnbVhoiQf/eQ9ltudHqtq+KKoSEU9+HB6Q6jIZjY6xFcnKXoVrOqYUnqaSoxmZCWoCwtGNKK7s3ang/e9xhVj1id2nJA1YNAXASMK5sUl6AlaL2Kt5PUWf2m9Fouyq1LEEGBybCZCtGpsPKGL4qduQ0wz5ZJuAvSIMXpQGKlIzttN3YpORiCC/rPMU1ZF/wjKMHMD+SjLPrWHHLGn/AlZL4HErccmU6Ae1Bo6JKBqeHc+nNlu/Ml2TWfBMvtfwptSARy0QsQk6RBtjZW6zvc8cAejxurI1zs3ncVr8WAe0/d0lwEsVTuri1O4Maun9vTKUHEwL5UcTROYdzV5IIaGx/dJs6wlO2Fuz9pO5YtMukC4xGAFbiIknkpHv+qjbWufhyyZ1igeHFJMGIXHH1U7J5cUxmeVB1FfsKEPD/cusBMs9WGepmVF+CLAKPAoBfq8D6WSPYmx78dBN1Wnpls9IvZ0z6y0VxonQVAcNMdn0jR0FKtoSvoS70gF6cALoTFL13IQmORdIutL2xibABxGcHdC6hdHdmq7odG7NdlZbsEYdEOdqFg/SkN1qFZqqCvtIsgFmwsH5hnTqPAXXz8Mk5ykRw142HwnU0ZjmOc="
+            }
+          ],
+          "index": 0,
+          "createdAt": "1700000000000"
+        },
+        {
+          "position": "2222222222222222222222222222222222222222222222222222222222222222",
+          "walletAddress": "54c2d5e6337c129050852f2e9db83da1558553bb4cd042fb7dbfe6d9cd1ab4ea",
+          "isotope": "I",
+          "token": "USER",
+          "value": null,
+          "batchId": null,
+          "metaType": "walletBundle",
+          "metaId": "2b77ff69a6d2f8108250389377faa6cbd42caaefa2f966e1b68a4b3fc022c83e",
+          "meta": [
+            {
+              "key": "previousPosition",
+              "value": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            {
+              "key": "pubkey",
+              "value": "ZyMDRtxDLiZhU3ytx+xm1wqrxxx1xEc3VTOGFrhk03g2wvIC0uhDwHWR6/ZMQWtQlvGmE+WSUjaxSloJcwnG3iu2FpRdJfG5QPBQaKRyb1Ov1TgjcAIJhHtReJUHQ1SdPxFDrXsiq2Bv+UMMuNsymjkZalIsW6IhhhalxKpJA6eBeXUTXDqq7aw+2VZPVXkdt0Ol4vBoHAAI5kWjeWeMgiURcNFTDKNEt7QPw0mQnGtK8XuGXmMhpvMAZFE4FDBvFcp/E6NyJEAV19ECy8g3IgebpRSMhfNENYBBsFYnveTNayUKoAq3E7BnYOa4kotUjECE2nk6EmWWLmdsLRNMf4VREAGZdVk6bTCZSkaQvXkWiEfFpQsGedCyg6NdEYKQ/1VNHayzIpqMoNFX2YUYl9WI7hYscaYF83E0U8wyhFhXtEBSDvCjC/ogmacCmHgyCtrFNcgIm4UVmFkWc1ZTzos6fmnNG6YOFsdYvTw8XRSJBikFkXuipYEeiyIz9+qDbEPMjJGHlEOkSfikecUbrTUX9osQGxxLkVKyI8JZR6YZUvwnT/U2zHxRsKZkQ8GzHlVEpUMVVcGqOoIOE4u30GlHJGCBvMOm7uwIFQRiMoTO5lU1oiKp0Gww0nQmoSo8srkSnWqqUOYOEiAuGAioYkddsnYpDoIRrAQurfOqi8RW3nCAe6tqf/cCyoW9fEZkIcUQgOqTWWw2OVCpeWABKFXKrqG7DBewn1ckGkeVczZ9YOrC6rZC5Tp+ifA32AeO1xKqoVFfTQZCgfCnjCm4NdNJmyNiJdonM/VMDxW1cwic8+qsfoLMc1oyMmSouMNF5gKgj0uq2QhUUkQAwqsn0zp384llpUaRAXAfvAJ3RMdzLwShWVQhKRKwWRQ/tkTJvBodJUoCoLNxuFy9gRUhKMJQiVi5FYsUrLsR07Vszmx1dyQKqJHDlkSwt1a8cYUiGYw//OA8+DEjurYMWpydmLEiSAKSaxqSreCjgSNS7so1vwx4xQdkXkKVWBG6nufHp8tjEoV1E/Axd6qNBBcK1xO06hwH/am6DvGzzWdygfaeUuiH3CIuTKUbbCksQLOxGtJYckNHk1ilGPAmTKCBagxkmcudU2rBhkY+VitM/2MZcynOXmCMj8x7g9Mdv9EI0Fi9avlm0HdTD9BmH3acGCdUbtJ9YJEmybDC7uc8LWq8cQIWt1QnOJRomzmULls5xriduNSIrwUpzwNWI5gaR4I6bPcMVihQLNB3rGmll+dhTySILldLpeeuh5XLVvyWe6qpHYgB+wBn6kQVeXGC+RuSBEQffEEJnato5kgbGTSKpfGfY/mEcaTIF5OnZ9iwSgiK3PSepziJEtZBsSaVONKtrBONSRW0RAqHkuCYuSuIV8wUyKccDbggiRdJVMk9CBi+cNeoeAZ86VO+wSWSS+toInQEmopAlehXmzaHvRItxBxfdTe6LgKTlJaUB+S8QjoSyyB2v9peS8XG/wdkzOG/BsSumtjPwRxheKCb6yzFnqIN6YC94EIgzCREHTzFKuTQOLybkVIZRUGIr5WGGMEOoWgKhLcoFFhuFAPTLjA="
+            },
+            {
+              "key": "characters",
+              "value": "BASE64"
+            }
+          ],
+          "index": 1,
+          "createdAt": "1700000000000"
+        }
+      ],
+      "molecule": {
+        "status": null,
+        "molecularHash": "00b0bfabb63129efa722ec946cc0a601801gf26a6f4165dc36541a82dc384836",
+        "createdAt": "1700000000000",
+        "cellSlug": "legacy768",
+        "bundle": "2b77ff69a6d2f8108250389377faa6cbd42caaefa2f966e1b68a4b3fc022c83e",
+        "atoms": [
+          {
+            "position": "1111111111111111111111111111111111111111111111111111111111111111",
+            "walletAddress": "f19dc0db1f0054b79a2f2d8dbaa3462be031d791ec6019221096d6ee911f8edc",
+            "isotope": "U",
+            "token": "AUTH",
+            "value": null,
+            "batchId": null,
+            "metaType": null,
+            "metaId": null,
+            "meta": [
+              {
+                "key": "encrypt",
+                "value": "false"
+              },
+              {
+                "key": "walletPubkey",
+                "value": "gRrIf6K5x7lCbQwIUSEey/teE9YgW8RRsGmkJsXDU5kT2QuKDCxemqrJwPOa+qyG8MjFVIx2uxpKq9MF+WrL7uOL53mVsfVpvJQ8y4Y1LwVs48qm4XcwQWIooIBM2mTNWwCb4MBBDBjDbkOQF0adTyKjBGEZInOJpTCPJ3UZ4jWmKbsdE/sr2UkHGFkhytOHFXXE7UZ63bxzGVYfD2IO6EI9bGKn8GyXm4oyJnAFCGlqEqCJvuOJc5TCRFs3bxpbdEMgnhKg7MRlsQrEVouqX2E47mJ5qWIkxYrLcNZ1oPa9cmkwuTCcMnMkxsqu9YfM3tGOelUQycJuqUSRoAOKonMNXVBKbscV7bzI4wQKpYx18DNeW8kyqBFhE0Oe3Ji6ELigCrtJ4BQnM1CLuppq9Hg1bSWyy0kDmrNTQbvFN0VL4wBDnHNIxNm4HuXIB8Q7yINWbuw7vPRQExqMzNmHaTW5bXKp05xGxBBvBiM7NMRC7HQrlqJq0mJJnlJEJQRhwQlZkwJC2im/nwNZw5yd9ogki9UrGmMFqdcr3RGCkrRL+KckpnEb2La0NlzD1zFUSnFJH9nK48wCEvwoyDga84kcqaCE+nsSJCgxSjohDfEbomQqVyOZbjlsxzweEZAWmpUboSqhu5OcWzSubFkPUDUft3ZO3xRfDyZBlfE/z9AuIUIoAFZTkmcIBLU6YOawnlMeJaC/Ggq6MyiT9YIFDfi6hSIcGSRSdsajOcU30WvDoBFb6koxOVDJcXkbVYDDSlnP2CbKcFKB9GNUMRDM4vpTBsMBSEijV3akFpyZr9xuqTGo/yjL56qJBiaFAtEerlCkdpR1/LsWjvONW8LG0wIW1upe6oJePFwuUjSjmLBHsjM1WESpb7tzxvF21IWPQywNrGJ01DoYW8gKcwE93Qm8uPMv/bY6SiCjPPsciNNbAMUgRlmhRUoK3wuuhDZZRdhpnbVhoiQf/eQ9ltudHqtq+KKoSEU9+HB6Q6jIZjY6xFcnKXoVrOqYUnqaSoxmZCWoCwtGNKK7s3ang/e9xhVj1id2nJA1YNAXASMK5sUl6AlaL2Kt5PUWf2m9Fouyq1LEEGBybCZCtGpsPKGL4qduQ0wz5ZJuAvSIMXpQGKlIzttN3YpORiCC/rPMU1ZF/wjKMHMD+SjLPrWHHLGn/AlZL4HErccmU6Ae1Bo6JKBqeHc+nNlu/Ml2TWfBMvtfwptSARy0QsQk6RBtjZW6zvc8cAejxurI1zs3ncVr8WAe0/d0lwEsVTuri1O4Maun9vTKUHEwL5UcTROYdzV5IIaGx/dJs6wlO2Fuz9pO5YtMukC4xGAFbiIknkpHv+qjbWufhyyZ1igeHFJMGIXHH1U7J5cUxmeVB1FfsKEPD/cusBMs9WGepmVF+CLAKPAoBfq8D6WSPYmx78dBN1Wnpls9IvZ0z6y0VxonQVAcNMdn0jR0FKtoSvoS70gF6cALoTFL13IQmORdIutL2xibABxGcHdC6hdHdmq7odG7NdlZbsEYdEOdqFg/SkN1qFZqqCvtIsgFmwsH5hnTqPAXXz8Mk5ykRw142HwnU0ZjmOc="
+              }
+            ],
+            "index": 0,
+            "createdAt": "1700000000000",
+            "otsFragment": "EFu75rtP/lQv9jgUMBOgoVwCM0rkp/t//LUHiZ0NOta6/BpNae9t6ITx6nCWMpurtpYR/qvogNUwnyt2DOBoD2YQ1VZV8WgzIIQk6nOP5AhIvTrDC2Rx2vy7YrjSMZLy04CG0Xlb6HBRS2blE6owQMQfEYdPbvgpll6spsCKiokWcFqtC0+DksLakYsMcF/51v0bbjuPYWdA9wxjwy/3YTvAzc4dayAZ+mU3/lUSXyjaNullYPXF+GVLrYUsPfeGd4+fuBG0N/xoAV+vsn88zRZf/xaIXvzaMt0v8UKOKkEgAjLcsj50kPKPAZiFH5mokq0fFkP2MHtU0/hBajvLrU0RYLg/HRYY1XTN/wzurNFogAZ62j+ImRi6WGg3tYr757R0QP+NBJT29X2DgXozWViHnEtAVc5+7XhYgfwgeGEcIJvfKGt9KLcvqAybOqN+Zgn4wlMIHeDVdNIGXcK/I0Z1J0kkmMJRISsRiqiFd4dqB8Gt/F2wHF5kixLeWgDt/+bZW+yelDOMVdubMVDJWJpl7bSB0ybbW49ODK9fqU+/MlxzzTYgeg1e48FXL8kV9sdYB73d+JdLp8DG1kRUXIvpm0K9YpE4vWdE8sIv/4u4/DYucuHWNsMu1hDDdyd5H7dM+l3UQbVAPR90njhefrlzbB3dSQowdEFlzWY+pEMC"
+          },
+          {
+            "position": "2222222222222222222222222222222222222222222222222222222222222222",
+            "walletAddress": "54c2d5e6337c129050852f2e9db83da1558553bb4cd042fb7dbfe6d9cd1ab4ea",
+            "isotope": "I",
+            "token": "USER",
+            "value": null,
+            "batchId": null,
+            "metaType": "walletBundle",
+            "metaId": "2b77ff69a6d2f8108250389377faa6cbd42caaefa2f966e1b68a4b3fc022c83e",
+            "meta": [
+              {
+                "key": "previousPosition",
+                "value": "1111111111111111111111111111111111111111111111111111111111111111"
+              },
+              {
+                "key": "pubkey",
+                "value": "ZyMDRtxDLiZhU3ytx+xm1wqrxxx1xEc3VTOGFrhk03g2wvIC0uhDwHWR6/ZMQWtQlvGmE+WSUjaxSloJcwnG3iu2FpRdJfG5QPBQaKRyb1Ov1TgjcAIJhHtReJUHQ1SdPxFDrXsiq2Bv+UMMuNsymjkZalIsW6IhhhalxKpJA6eBeXUTXDqq7aw+2VZPVXkdt0Ol4vBoHAAI5kWjeWeMgiURcNFTDKNEt7QPw0mQnGtK8XuGXmMhpvMAZFE4FDBvFcp/E6NyJEAV19ECy8g3IgebpRSMhfNENYBBsFYnveTNayUKoAq3E7BnYOa4kotUjECE2nk6EmWWLmdsLRNMf4VREAGZdVk6bTCZSkaQvXkWiEfFpQsGedCyg6NdEYKQ/1VNHayzIpqMoNFX2YUYl9WI7hYscaYF83E0U8wyhFhXtEBSDvCjC/ogmacCmHgyCtrFNcgIm4UVmFkWc1ZTzos6fmnNG6YOFsdYvTw8XRSJBikFkXuipYEeiyIz9+qDbEPMjJGHlEOkSfikecUbrTUX9osQGxxLkVKyI8JZR6YZUvwnT/U2zHxRsKZkQ8GzHlVEpUMVVcGqOoIOE4u30GlHJGCBvMOm7uwIFQRiMoTO5lU1oiKp0Gww0nQmoSo8srkSnWqqUOYOEiAuGAioYkddsnYpDoIRrAQurfOqi8RW3nCAe6tqf/cCyoW9fEZkIcUQgOqTWWw2OVCpeWABKFXKrqG7DBewn1ckGkeVczZ9YOrC6rZC5Tp+ifA32AeO1xKqoVFfTQZCgfCnjCm4NdNJmyNiJdonM/VMDxW1cwic8+qsfoLMc1oyMmSouMNF5gKgj0uq2QhUUkQAwqsn0zp384llpUaRAXAfvAJ3RMdzLwShWVQhKRKwWRQ/tkTJvBodJUoCoLNxuFy9gRUhKMJQiVi5FYsUrLsR07Vszmx1dyQKqJHDlkSwt1a8cYUiGYw//OA8+DEjurYMWpydmLEiSAKSaxqSreCjgSNS7so1vwx4xQdkXkKVWBG6nufHp8tjEoV1E/Axd6qNBBcK1xO06hwH/am6DvGzzWdygfaeUuiH3CIuTKUbbCksQLOxGtJYckNHk1ilGPAmTKCBagxkmcudU2rBhkY+VitM/2MZcynOXmCMj8x7g9Mdv9EI0Fi9avlm0HdTD9BmH3acGCdUbtJ9YJEmybDC7uc8LWq8cQIWt1QnOJRomzmULls5xriduNSIrwUpzwNWI5gaR4I6bPcMVihQLNB3rGmll+dhTySILldLpeeuh5XLVvyWe6qpHYgB+wBn6kQVeXGC+RuSBEQffEEJnato5kgbGTSKpfGfY/mEcaTIF5OnZ9iwSgiK3PSepziJEtZBsSaVONKtrBONSRW0RAqHkuCYuSuIV8wUyKccDbggiRdJVMk9CBi+cNeoeAZ86VO+wSWSS+toInQEmopAlehXmzaHvRItxBxfdTe6LgKTlJaUB+S8QjoSyyB2v9peS8XG/wdkzOG/BsSumtjPwRxheKCb6yzFnqIN6YC94EIgzCREHTzFKuTQOLybkVIZRUGIr5WGGMEOoWgKhLcoFFhuFAPTLjA="
+              },
+              {
+                "key": "characters",
+                "value": "BASE64"
+              }
+            ],
+            "index": 1,
+            "createdAt": "1700000000000",
+            "otsFragment": "kUVmIOb84bWT0yL+VM3GSj7QZlHLFd3R2NAc9J4uAfI3Xr7HzrHJbcqXErnHBuro3qbwQJiP+ZsWN8dvg2+cLuUFf/piJws5wFBWJ6FjxqEfaYAUpw2jdNLEDxpn3WfM+X1YjPSwHsjGKaFXij+KGD9JUzkBtWyeVEjAZFRNMHifv5fo2hCh9ZXAqn7vTf0dcJ1az4qrl91c9j6F6d72XvSZG21U6MiYpvMhdHSd6mDSCh8EFBBKo8q71RLMpjcwk8+0/BeRS8zl9kxYFPjpC1MqGV7wEv1SyfZ3oCZAuV0ACHmto73WWY0IN6Zo6m8YiADxjXpA/ySaeLr1k8ahDfPBlJA6VpCf0c2zjgjh0P1iNOqa4ON7njRS+VOqXcassUIK9LXf8JJwqTfkd2FX43mGJhj+YxamGnvfYgJJBPeMN9fsG67PAdw5BZbhp4xktgGrThbRJVUKk+1j8zQAaKoRyJyUjUpnQQRZeULgPlyp63UzySDGUvDHb0Y6cCllXRUSYonjQAAqE5NRYpofTcGCVZE8g+Hl5SQSEFu+B8DBJdWusQZXLLc2NMJI9C9E65nH3U9f/JLgHVETvnFMGnJlAWSomGW1NTLE+VN0ZyEymvQtL65aXqAtWBn4miprU8Ahglx+JcK9Azerh2lpInYdxcIGZLwYR7bqdRmleA=="
+          }
+        ],
+        "cellSlugOrigin": "legacy768",
+        "sourceWallet": {
+          "address": "f19dc0db1f0054b79a2f2d8dbaa3462be031d791ec6019221096d6ee911f8edc",
+          "position": "1111111111111111111111111111111111111111111111111111111111111111",
+          "token": "AUTH",
+          "balance": "0",
+          "bundle": "2b77ff69a6d2f8108250389377faa6cbd42caaefa2f966e1b68a4b3fc022c83e",
+          "batchId": null,
+          "characters": "BASE64",
+          "pubkey": "gRrIf6K5x7lCbQwIUSEey/teE9YgW8RRsGmkJsXDU5kT2QuKDCxemqrJwPOa+qyG8MjFVIx2uxpKq9MF+WrL7uOL53mVsfVpvJQ8y4Y1LwVs48qm4XcwQWIooIBM2mTNWwCb4MBBDBjDbkOQF0adTyKjBGEZInOJpTCPJ3UZ4jWmKbsdE/sr2UkHGFkhytOHFXXE7UZ63bxzGVYfD2IO6EI9bGKn8GyXm4oyJnAFCGlqEqCJvuOJc5TCRFs3bxpbdEMgnhKg7MRlsQrEVouqX2E47mJ5qWIkxYrLcNZ1oPa9cmkwuTCcMnMkxsqu9YfM3tGOelUQycJuqUSRoAOKonMNXVBKbscV7bzI4wQKpYx18DNeW8kyqBFhE0Oe3Ji6ELigCrtJ4BQnM1CLuppq9Hg1bSWyy0kDmrNTQbvFN0VL4wBDnHNIxNm4HuXIB8Q7yINWbuw7vPRQExqMzNmHaTW5bXKp05xGxBBvBiM7NMRC7HQrlqJq0mJJnlJEJQRhwQlZkwJC2im/nwNZw5yd9ogki9UrGmMFqdcr3RGCkrRL+KckpnEb2La0NlzD1zFUSnFJH9nK48wCEvwoyDga84kcqaCE+nsSJCgxSjohDfEbomQqVyOZbjlsxzweEZAWmpUboSqhu5OcWzSubFkPUDUft3ZO3xRfDyZBlfE/z9AuIUIoAFZTkmcIBLU6YOawnlMeJaC/Ggq6MyiT9YIFDfi6hSIcGSRSdsajOcU30WvDoBFb6koxOVDJcXkbVYDDSlnP2CbKcFKB9GNUMRDM4vpTBsMBSEijV3akFpyZr9xuqTGo/yjL56qJBiaFAtEerlCkdpR1/LsWjvONW8LG0wIW1upe6oJePFwuUjSjmLBHsjM1WESpb7tzxvF21IWPQywNrGJ01DoYW8gKcwE93Qm8uPMv/bY6SiCjPPsciNNbAMUgRlmhRUoK3wuuhDZZRdhpnbVhoiQf/eQ9ltudHqtq+KKoSEU9+HB6Q6jIZjY6xFcnKXoVrOqYUnqaSoxmZCWoCwtGNKK7s3ang/e9xhVj1id2nJA1YNAXASMK5sUl6AlaL2Kt5PUWf2m9Fouyq1LEEGBybCZCtGpsPKGL4qduQ0wz5ZJuAvSIMXpQGKlIzttN3YpORiCC/rPMU1ZF/wjKMHMD+SjLPrWHHLGn/AlZL4HErccmU6Ae1Bo6JKBqeHc+nNlu/Ml2TWfBMvtfwptSARy0QsQk6RBtjZW6zvc8cAejxurI1zs3ncVr8WAe0/d0lwEsVTuri1O4Maun9vTKUHEwL5UcTROYdzV5IIaGx/dJs6wlO2Fuz9pO5YtMukC4xGAFbiIknkpHv+qjbWufhyyZ1igeHFJMGIXHH1U7J5cUxmeVB1FfsKEPD/cusBMs9WGepmVF+CLAKPAoBfq8D6WSPYmx78dBN1Wnpls9IvZ0z6y0VxonQVAcNMdn0jR0FKtoSvoS70gF6cALoTFL13IQmORdIutL2xibABxGcHdC6hdHdmq7odG7NdlZbsEYdEOdqFg/SkN1qFZqqCvtIsgFmwsH5hnTqPAXXz8Mk5ykRw142HwnU0ZjmOc=",
+          "tokenUnits": [],
+          "tradeRates": {},
+          "molecules": {}
+        },
+        "remainderWallet": {
+          "address": "54c2d5e6337c129050852f2e9db83da1558553bb4cd042fb7dbfe6d9cd1ab4ea",
+          "position": "2222222222222222222222222222222222222222222222222222222222222222",
+          "token": "USER",
+          "balance": "0",
+          "bundle": "2b77ff69a6d2f8108250389377faa6cbd42caaefa2f966e1b68a4b3fc022c83e",
+          "batchId": null,
+          "characters": "BASE64",
+          "pubkey": "ZyMDRtxDLiZhU3ytx+xm1wqrxxx1xEc3VTOGFrhk03g2wvIC0uhDwHWR6/ZMQWtQlvGmE+WSUjaxSloJcwnG3iu2FpRdJfG5QPBQaKRyb1Ov1TgjcAIJhHtReJUHQ1SdPxFDrXsiq2Bv+UMMuNsymjkZalIsW6IhhhalxKpJA6eBeXUTXDqq7aw+2VZPVXkdt0Ol4vBoHAAI5kWjeWeMgiURcNFTDKNEt7QPw0mQnGtK8XuGXmMhpvMAZFE4FDBvFcp/E6NyJEAV19ECy8g3IgebpRSMhfNENYBBsFYnveTNayUKoAq3E7BnYOa4kotUjECE2nk6EmWWLmdsLRNMf4VREAGZdVk6bTCZSkaQvXkWiEfFpQsGedCyg6NdEYKQ/1VNHayzIpqMoNFX2YUYl9WI7hYscaYF83E0U8wyhFhXtEBSDvCjC/ogmacCmHgyCtrFNcgIm4UVmFkWc1ZTzos6fmnNG6YOFsdYvTw8XRSJBikFkXuipYEeiyIz9+qDbEPMjJGHlEOkSfikecUbrTUX9osQGxxLkVKyI8JZR6YZUvwnT/U2zHxRsKZkQ8GzHlVEpUMVVcGqOoIOE4u30GlHJGCBvMOm7uwIFQRiMoTO5lU1oiKp0Gww0nQmoSo8srkSnWqqUOYOEiAuGAioYkddsnYpDoIRrAQurfOqi8RW3nCAe6tqf/cCyoW9fEZkIcUQgOqTWWw2OVCpeWABKFXKrqG7DBewn1ckGkeVczZ9YOrC6rZC5Tp+ifA32AeO1xKqoVFfTQZCgfCnjCm4NdNJmyNiJdonM/VMDxW1cwic8+qsfoLMc1oyMmSouMNF5gKgj0uq2QhUUkQAwqsn0zp384llpUaRAXAfvAJ3RMdzLwShWVQhKRKwWRQ/tkTJvBodJUoCoLNxuFy9gRUhKMJQiVi5FYsUrLsR07Vszmx1dyQKqJHDlkSwt1a8cYUiGYw//OA8+DEjurYMWpydmLEiSAKSaxqSreCjgSNS7so1vwx4xQdkXkKVWBG6nufHp8tjEoV1E/Axd6qNBBcK1xO06hwH/am6DvGzzWdygfaeUuiH3CIuTKUbbCksQLOxGtJYckNHk1ilGPAmTKCBagxkmcudU2rBhkY+VitM/2MZcynOXmCMj8x7g9Mdv9EI0Fi9avlm0HdTD9BmH3acGCdUbtJ9YJEmybDC7uc8LWq8cQIWt1QnOJRomzmULls5xriduNSIrwUpzwNWI5gaR4I6bPcMVihQLNB3rGmll+dhTySILldLpeeuh5XLVvyWe6qpHYgB+wBn6kQVeXGC+RuSBEQffEEJnato5kgbGTSKpfGfY/mEcaTIF5OnZ9iwSgiK3PSepziJEtZBsSaVONKtrBONSRW0RAqHkuCYuSuIV8wUyKccDbggiRdJVMk9CBi+cNeoeAZ86VO+wSWSS+toInQEmopAlehXmzaHvRItxBxfdTe6LgKTlJaUB+S8QjoSyyB2v9peS8XG/wdkzOG/BsSumtjPwRxheKCb6yzFnqIN6YC94EIgzCREHTzFKuTQOLybkVIZRUGIr5WGGMEOoWgKhLcoFFhuFAPTLjA=",
+          "tokenUnits": [],
+          "tradeRates": {},
+          "molecules": {}
+        }
+      }
+    },
     "nacl": {
       "description": "Classical NaCl crypto_box (X25519 scalarmult_base + XSalsa20-Poly1305 secretbox) parity vectors, captured from the reference tweetnacl and reproduced byte-for-byte by the BouncyCastle NaClBox (Kotlin) and every SDK's classical encryption path. Values are Base64 unless the key name ends in Hex. crypto_box + scalarMultBase are deterministic; the sealed-box sample uses a fixed ephemeral key so its blob is frozen for a decrypt oracle (live seal() uses a random ephemeral).",
       "scalarMultBase": [

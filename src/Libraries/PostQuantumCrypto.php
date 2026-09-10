@@ -7,11 +7,11 @@ use Exception;
 /**
  * Class PostQuantumCrypto
  *
- * Provides real ML-KEM-768 key generation using JavaScript @noble/post-quantum
+ * Provides real ML-KEM key generation (ML-KEM-1024 by default, ML-KEM-768 step-back)
  * via Node.js bridge, ensuring 100% compatibility with JavaScript SDK.
  *
  * This replaces the previous fake implementation that used SHA3-512 hash
- * concatenation with actual FIPS-203 ML-KEM-768 cryptography.
+ * concatenation with actual FIPS-203 ML-KEM cryptography.
  *
  * @package WishKnish\KnishIO\Client\Libraries
  */
@@ -50,7 +50,7 @@ class PostQuantumCrypto
         ]
     ];
     /**
-     * Generate ML-KEM-768 key pair from seed matching JavaScript Noble crypto format
+     * Generate an ML-KEM key pair from seed matching JavaScript Noble crypto format
      *
      * Uses @noble/post-quantum via Node.js bridge to ensure exact compatibility
      * with JavaScript SDK implementation. This is deterministic - same seed

@@ -206,7 +206,7 @@ class Molecule extends MoleculeStructure {
       $continuIdMeta[ 'previousPosition' ] = $this->sourceWallet->position;
     }
 
-    // pubkey: ML-KEM768 public key (base64) for encrypted communication.
+    // pubkey: ML-KEM public key (base64) for encrypted communication.
     if ( $this->remainderWallet->pubkey ) {
       $continuIdMeta[ 'pubkey' ] = $this->remainderWallet->pubkey;
     }
