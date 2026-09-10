@@ -118,9 +118,45 @@ jobs:
         with:
           persist-credentials: false
 
+      # Release body = this tag's CHANGELOG.md section, NOT generate_release_notes.
+      # generate_release_notes builds "What's Changed" from merged PULL REQUESTS in the tag
+      # range. Releases here land as direct pushes to master, so the only PRs in 0.9.3..1.0.0
+      # were two dependabot action bumps (#81, #82) — and the 1.0.0 release page advertised
+      # those CI bumps while saying nothing about the work the release actually shipped. The
+      # curated CHANGELOG entry is the source of truth; extract it and use it verbatim.
+      #
+      # This runs BEFORE the Release is created on purpose: the empty-section guard below is
+      # only useful if it aborts ahead of it. Packagist has already taken the tag by this
+      # point, so the release page is the one remaining thing worth guarding. Extraction
+      # needs nothing but the checkout.
+      - name: Extract this tag's CHANGELOG section
+        run: |
+          set -euo pipefail
+          # Derived from the tag itself, tolerating a leading `v`, so this needs no cross-job
+          # output plumbing — `version-gate` declares no `outputs:`.
+          TAG_VERSION="${GITHUB_REF#refs/tags/}"
+          TAG_VERSION="${TAG_VERSION#v}"
+          awk -v ver="## [$TAG_VERSION]" '
+            index($0, ver) == 1 { inside = 1; print; next }
+            inside && /^## / { exit }
+            inside { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "::error file=CHANGELOG.md::No '## [$TAG_VERSION]' section found — refusing to publish with empty release notes."
+            exit 1
+          fi
+          echo "Release notes for $TAG_VERSION:"
+          cat /tmp/release-notes.md
+
       # GitHub auto-attaches the source zip/tarball, which is the whole artifact for a
       # Composer library — there is nothing to build or upload.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3
         with:
-          generate_release_notes: true
+          # `generate_release_notes` stays OFF, deliberately — do not restore it. The action
+          # appends the WHOLE generated block (`<body>\n\n<notes>`), which would put the
+          # "bump …(dependabot)" bullets back on the page; demoting reported-bad content is
+          # not removing it. The only real loss is the "Full Changelog" compare link, and
+          # synthesizing that needs the previous tag — i.e. fetch-depth: 0 on a publish job —
+          # which is not worth a full-history clone for a cosmetic link.
+          body_path: /tmp/release-notes.md
