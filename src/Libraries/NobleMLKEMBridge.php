@@ -147,13 +147,13 @@ class NobleMLKEMBridge
      * @return array ['publicKey' => base64, 'secretKey' => base64]
      * @throws Exception
      */
-    public static function generateMLKEMKeyPairFromSeed(string $seedHex): array
+    public static function generateMLKEMKeyPairFromSeed(string $seedHex, int $paramSet = 1024): array
     {
         if (strlen($seedHex) !== 128) {
-            throw new Exception('Seed must be exactly 128 hex characters for ML-KEM-768');
+            throw new Exception('Seed must be exactly 128 hex characters');
         }
 
-        $result = self::executeCommand(['keygen', $seedHex]);
+        $result = self::executeCommand(['keygen', $seedHex, (string)$paramSet]);
 
         if (!isset($result['publicKey']) || !isset($result['secretKey'])) {
             throw new Exception('Invalid response from Noble ML-KEM bridge: missing keys');

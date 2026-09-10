@@ -161,7 +161,7 @@ class Cipher {
             // envelope the Rust validator's CipherHash handler decrypts:
             // { "<hashShare(pubkey)>": { cipherText, encryptedMessage } }.
             $encryptedMessage = $this->wallet()
-              ->encryptStringML768( $original, $this->getPubkey() );
+              ->encryptStringML( $original, $this->getPubkey() );
 
             // Full request context
             $content = [
@@ -213,7 +213,7 @@ class Cipher {
               // `decryptMessage`) — keyed by hashShare(this wallet's pubkey), each value the
               // object { cipherText, encryptedMessage }.
               $decryption = $this->wallet()
-                ->decryptMyMessageML768( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
+                ->decryptMyMessageML( json_decode( $encrypted, true, 512, JSON_THROW_ON_ERROR ) );
 
               if ( $decryption === null ) {
                 throw new InvalidResponseException( 'Error decoding response.' );

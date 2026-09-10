@@ -15,7 +15,7 @@
  * @package WishKnish\KnishIO\Client
  */
 
-import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
+import { ml_kem768, ml_kem1024 } from '@noble/post-quantum/ml-kem.js';
 
 /**
  * Convert hex string to Uint8Array
@@ -57,13 +57,14 @@ function base64ToBytes(base64) {
 /**
  * Generate ML-KEM-768 key pair from seed (deterministic)
  */
-function keygen(seedHex) {
+function keygen(seedHex, paramSet = '1024') {
   if (seedHex.length !== 128) {
     throw new Error('Seed must be exactly 128 hex characters (64 bytes)');
   }
 
   const seed = hexToBytes(seedHex);
-  const { publicKey, secretKey } = ml_kem768.keygen(seed);
+  const engine = String(paramSet) === '768' ? ml_kem768 : ml_kem1024;
+  const { publicKey, secretKey } = engine.keygen(seed);
 
   return {
     publicKey: bytesToBase64(publicKey),
@@ -76,7 +77,15 @@ function keygen(seedHex) {
  */
 function encaps(publicKeyBase64) {
   const publicKey = base64ToBytes(publicKeyBase64);
-  const { cipherText, sharedSecret } = ml_kem768.encapsulate(publicKey);
+  let engine;
+  if (publicKey.length === 1568) {
+    engine = ml_kem1024;
+  } else if (publicKey.length === 1184) {
+    engine = ml_kem768;
+  } else {
+    throw new Error(`Unexpected public key length: ${publicKey.length}`);
+  }
+  const { cipherText, sharedSecret } = engine.encapsulate(publicKey);
 
   return {
     ciphertext: bytesToBase64(cipherText),
@@ -90,8 +99,16 @@ function encaps(publicKeyBase64) {
 function decaps(ciphertextBase64, secretKeyBase64) {
   const cipherText = base64ToBytes(ciphertextBase64);
   const secretKey = base64ToBytes(secretKeyBase64);
+  let engine;
+  if (cipherText.length === 1568 && secretKey.length === 3168) {
+    engine = ml_kem1024;
+  } else if (cipherText.length === 1088 && secretKey.length === 2400) {
+    engine = ml_kem768;
+  } else {
+    throw new Error(`Unexpected ciphertext (${cipherText.length}) or secretKey (${secretKey.length}) length`);
+  }
 
-  const sharedSecret = ml_kem768.decapsulate(cipherText, secretKey);
+  const sharedSecret = engine.decapsulate(cipherText, secretKey);
 
   return {
     sharedSecret: bytesToBase64(sharedSecret)
@@ -120,10 +137,10 @@ function main() {
 
     switch (command) {
       case 'keygen':
-        if (args.length !== 2) {
-          throw new Error('keygen requires seedHex argument');
+        if (args.length < 2 || args.length > 3) {
+          throw new Error('keygen requires seedHex and optional paramSet argument');
         }
-        result = keygen(args[1]);
+        result = keygen(args[1], args[2] || '1024');
         break;
 
       case 'encaps':

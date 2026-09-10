@@ -64,6 +64,10 @@ class CipherHashLiveTest extends TestCase {
     // second auth would rotate the USER remainder via ContinuID → a different address/position/
     // pubkey: correct protocol behaviour, NOT a transport bug, so it must not be the variable.)
     $client = new KnishIOClient( $url );
+    $param = getenv( 'CIPHERHASH_MLKEM_PARAMETER_SET' );
+    if ( $param ) {
+      $client->setMlKemParameterSet( (int)$param );
+    }
     $client->setCellSlug( 'public' );   // the active dev cell (TESTCELL is inactive there)
     $client->requestAuthToken( $secret, 'public', true );
 

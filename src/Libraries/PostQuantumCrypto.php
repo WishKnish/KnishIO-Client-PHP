@@ -17,13 +17,38 @@ use Exception;
  */
 class PostQuantumCrypto
 {
-    // ML-KEM-768 key sizes (FIPS 203 standard)
-    const MLKEM_PUBLIC_KEY_SIZE = 1184; // bytes
-    const MLKEM_PRIVATE_KEY_SIZE = 2400; // bytes
-    const MLKEM_SEED_SIZE = 64; // bytes
-    const MLKEM_CIPHERTEXT_SIZE = 1088; // bytes
-    const MLKEM_SHARED_SECRET_SIZE = 32; // bytes
+    // ML-KEM key sizes (FIPS 203 standard)
+    const MLKEM_1024_PUBLIC_KEY_SIZE = 1568;
+    const MLKEM_1024_PRIVATE_KEY_SIZE = 3168;
+    const MLKEM_1024_CIPHERTEXT_SIZE = 1568;
+    const MLKEM_1024_SHARED_SECRET_SIZE = 32;
 
+    const MLKEM_768_PUBLIC_KEY_SIZE = 1184;
+    const MLKEM_768_PRIVATE_KEY_SIZE = 2400;
+    const MLKEM_768_CIPHERTEXT_SIZE = 1088;
+    const MLKEM_768_SHARED_SECRET_SIZE = 32;
+
+    // Legacy aliases
+    const MLKEM_PUBLIC_KEY_SIZE = 1184;
+    const MLKEM_PRIVATE_KEY_SIZE = 2400;
+    const MLKEM_SEED_SIZE = 64;
+    const MLKEM_CIPHERTEXT_SIZE = 1088;
+    const MLKEM_SHARED_SECRET_SIZE = 32;
+
+    const MLKEM_PARAMS = [
+        1024 => [
+            'pkBytes' => 1568,
+            'skBytes' => 3168,
+            'ctBytes' => 1568,
+            'sharedSecretBytes' => 32
+        ],
+        768 => [
+            'pkBytes' => 1184,
+            'skBytes' => 2400,
+            'ctBytes' => 1088,
+            'sharedSecretBytes' => 32
+        ]
+    ];
     /**
      * Generate ML-KEM-768 key pair from seed matching JavaScript Noble crypto format
      *
@@ -35,14 +60,14 @@ class PostQuantumCrypto
      * @return array ['publicKey' => base64, 'privateKey' => base64]
      * @throws Exception
      */
-    public static function generateMLKEMKeyPairFromSeed(string $seedHex): array
+    public static function generateMLKEMKeyPairFromSeed(string $seedHex, int $paramSet = 1024): array
     {
         if (strlen($seedHex) !== 128) {
-            throw new Exception('Seed must be exactly 128 hex characters for ML-KEM-768');
+            throw new Exception('Seed must be exactly 128 hex characters');
         }
 
         // Use Noble crypto via Node.js bridge for guaranteed JavaScript compatibility
-        $result = NobleMLKEMBridge::generateMLKEMKeyPairFromSeed($seedHex);
+        $result = NobleMLKEMBridge::generateMLKEMKeyPairFromSeed($seedHex, $paramSet);
 
         return [
             'publicKey' => $result['publicKey'],

@@ -134,6 +134,11 @@ class KnishIOClient {
    * @var string|null
    */
   private ?string $cellSlug = null;
+  /**
+   * @var int
+   */
+  public int $mlKemParameterSet = 1024;
+
 
   /**
    * @var int
@@ -163,8 +168,8 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3 ) {
-    $this->initialize( $uri, $client, $serverSdkVersion );
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024 ) {
+    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet );
   }
 
   /**
@@ -174,7 +179,7 @@ class KnishIOClient {
    *
    * @return void
    */
-  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3 ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024 ): void {
     $this->reset();
 
     // Init uris
@@ -182,6 +187,7 @@ class KnishIOClient {
 
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
+    $this->setMlKemParameterSet( $mlKemParameterSet );
   }
 
   /**
@@ -199,6 +205,17 @@ class KnishIOClient {
     $this->client()->setEncryption( $encrypt );
 
     return true;
+  }
+  public function getMlKemParameterSet (): int {
+    return $this->mlKemParameterSet ?? 1024;
+  }
+
+  public function setMlKemParameterSet ( int $parameterSet ): self {
+    if ( !in_array( $parameterSet, [ 1024, 768 ], true ) ) {
+      throw new CryptoException( "KnishIO: unsupported ML-KEM parameter set {$parameterSet}; expected 1024 or 768." );
+    }
+    $this->mlKemParameterSet = $parameterSet;
+    return $this;
   }
 
   /**
@@ -347,9 +364,9 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters );
+    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet() );
 
-    return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug );
+    return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
   }
 
   /**
@@ -549,7 +566,7 @@ class KnishIOClient {
    * @throws GuzzleException|Exception
    */
   public function createWallet ( string $tokenSlug ): Response {
-    $newWallet = new Wallet( $this->getSecret(), $tokenSlug );
+    $newWallet = new Wallet( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     /**
      * @var MutationCreateWallet $query
@@ -683,7 +700,7 @@ class KnishIOClient {
     }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->getSecret(), $tokenSlug, null, $batchId );
+    $recipientWallet = new Wallet( $this->getSecret(), $tokenSlug, null, $batchId, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Create a query
     /** @var MutationCreateToken $query */
@@ -1014,7 +1031,7 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Create a recipient wallet
-    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug );
+    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Compute the batch ID for the recipient (typically used by stackable tokens)
     if ( $batchId !== null ) {
@@ -1077,7 +1094,7 @@ class KnishIOClient {
     // A shadow recipient wallet per destination + a distinct batch id
     $recipientWallets = [];
     foreach ( $recipients as $recipient ) {
-      $recipientWallet = Wallet::create( $recipient[ 'bundleHash' ], $tokenSlug );
+      $recipientWallet = Wallet::create( $recipient[ 'bundleHash' ], $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
       if ( !empty( $recipient[ 'batchId' ] ) ) {
         $recipientWallet->batchId = $recipient[ 'batchId' ];
       }
@@ -1309,7 +1326,7 @@ class KnishIOClient {
     }
 
     // Generate new recipient wallet & set the batch ID
-    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug );
+    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
     $recipientWallet->initBatchId( $fromWallet );
 
     // Remainder wallet
@@ -1347,7 +1364,7 @@ class KnishIOClient {
     $sourceWallet = $this->queryContinuId( $this->getBundle(), 'USER' )
       ->payload();
     if ( !$sourceWallet ) {
-      $sourceWallet = new Wallet( $this->getSecret() );
+      $sourceWallet = new Wallet( $this->getSecret(), mlKemParameterSet: $this->getMlKemParameterSet() );
     }
 
     // Return final source wallet
@@ -1384,7 +1401,7 @@ class KnishIOClient {
 
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
-    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH' );
+    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() );
 
     $response = $query->execute( [
       'cellSlug' => $cellSlug,
@@ -1411,7 +1428,7 @@ class KnishIOClient {
   public function requestProfileAuthToken ( string $secret, bool $encrypt ): Response {
     $this->setSecret( $secret );
 
-    $wallet = new Wallet( $secret, 'AUTH' );
+    $wallet = new Wallet( $secret, 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Create an auth molecule
     $molecule = $this->createMolecule( $secret, $wallet );

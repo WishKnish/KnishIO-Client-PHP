@@ -71,6 +71,8 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * @property array $atoms
  */
 class Molecule extends MoleculeStructure {
+  public int $mlKemParameterSet = 1024;
+
 
   /**
    * @param string $secret
@@ -85,13 +87,15 @@ class Molecule extends MoleculeStructure {
     private ?Wallet $sourceWallet = null,
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null,
-    private ?string $version = null
+    private ?string $version = null,
+    ?int $mlKemParameterSet = null
   ) {
     parent::__construct( $cellSlug );
+    $this->mlKemParameterSet = $mlKemParameterSet ?? ($sourceWallet ? $sourceWallet->mlKemParameterSet : 1024);
 
     // Generates remainder wallet if source wallet is provided
     if ( $remainderWallet || $sourceWallet ) {
-      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters );
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters, $this->mlKemParameterSet );
     }
 
     $this->clear();
@@ -165,7 +169,7 @@ class Molecule extends MoleculeStructure {
     $atom->version = ($this->version !== null) ? (string) $this->version : null;
     // Add source wallet if not already set when adding first atom
     if ( !$this->sourceWallet && ( count( $this->atoms ) === 0 ) ) {
-      $this->sourceWallet = new Wallet( $this->secret(), $atom->token, $atom->position, $atom->batchId );
+      $this->sourceWallet = new Wallet( $this->secret(), $atom->token, $atom->position, $atom->batchId, mlKemParameterSet: $this->mlKemParameterSet );
     }
 
     // Add atom
@@ -189,7 +193,7 @@ class Molecule extends MoleculeStructure {
     // Creating a remainder wallet if needed (guard FIRST so pubkey/position below
     // come from the post-guard remainder, matching JS Molecule.addContinuIdAtom).
     if( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
-      $this->remainderWallet = new Wallet( $this->secret() );
+      $this->remainderWallet = new Wallet( $this->secret(), mlKemParameterSet: $this->mlKemParameterSet );
     }
 
     // ContinuID metadata for chain-integrity validation (mirrors JS Molecule.addContinuIdAtom
@@ -432,7 +436,8 @@ class Molecule extends MoleculeStructure {
     // permanently destroying the tokens. Mirrors JS burnToken.
     $burnWallet = Wallet::create(
       '0000000000000000000000000000000000000000000000000000000000000000',
-      $this->sourceWallet->token
+      $this->sourceWallet->token,
+      mlKemParameterSet: $this->mlKemParameterSet
     );
 
     // V-atom 1: debit the ENTIRE source balance (UTXO model). Must be -balance (not -amount):
@@ -575,7 +580,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Create a buffer wallet
-    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId );
+    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId, mlKemParameterSet: $this->mlKemParameterSet );
     $bufferWallet->tradeRates = $tradeRates;
 
     // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
@@ -1168,7 +1173,8 @@ class Molecule extends MoleculeStructure {
           $sourceWallet = new Wallet(
             secret: '',  // Empty string for security (PHP requires non-null)
             token: $swData['token'] ?? 'TEST',
-            position: $swData['position'] ?? null
+            position: $swData['position'] ?? null,
+            mlKemParameterSet: $molecule->mlKemParameterSet
           );
           
           // Set additional properties for validation context
@@ -1186,7 +1192,8 @@ class Molecule extends MoleculeStructure {
           $remainderWallet = new Wallet(
             secret: '',  // Empty string for security (PHP requires non-null)
             token: $rwData['token'] ?? 'TEST',
-            position: $rwData['position'] ?? null
+            position: $rwData['position'] ?? null,
+            mlKemParameterSet: $molecule->mlKemParameterSet
           );
           
           // Set additional properties for validation context

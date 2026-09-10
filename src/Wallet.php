@@ -126,6 +126,8 @@ class Wallet {
    * @var string|null ML-KEM768 private key (Base64)
    */
   private ?string $mlkemPrivateKey = null;
+  public int $mlKemParameterSet = 1024;
+
 
   /**
    * @var string|null
@@ -181,8 +183,14 @@ class Wallet {
     public ?string $token = 'USER',
     public ?string $position = null,
     public ?string $batchId = null,
-    public ?string $characters = null
+    public ?string $characters = null,
+    ?int $mlKemParameterSet = 1024
   ) {
+    $mlKemParameterSet = $mlKemParameterSet ?? 1024;
+    if ( !in_array( $mlKemParameterSet, [ 1024, 768 ], true ) ) {
+      throw new CryptoException( "KnishIO: unsupported ML-KEM parameter set {$mlKemParameterSet}; expected 1024 or 768." );
+    }
+    $this->mlKemParameterSet = $mlKemParameterSet;
     if ( $secret ) {
 
       // Set bundle from the secret
@@ -218,13 +226,13 @@ class Wallet {
    * @return Wallet
    * @throws SodiumException
    */
-  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null ): Wallet {
+  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null, int $mlKemParameterSet = 1024 ): Wallet {
     $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
     $position = $secret ? static::generatePosition() : null;
 
     // Wallet initialization
-    $wallet = new Wallet( $secret, $token, $position, $batchId, $characters );
+    $wallet = new Wallet( $secret, $token, $position, $batchId, $characters, $mlKemParameterSet );
     $wallet->bundle = $bundle;
     return $wallet;
   }
@@ -246,7 +254,7 @@ class Wallet {
     $seedHex = Crypto::generateSecret($this->key, 128);  // 128 hex chars = 64 bytes
     
     // Generate real ML-KEM768 key pair using OpenSSL (deterministic from seed)
-    $keyPair = PostQuantumCrypto::generateMLKEMKeyPairFromSeed($seedHex);
+    $keyPair = PostQuantumCrypto::generateMLKEMKeyPairFromSeed($seedHex, $this->mlKemParameterSet);
     
     // Store the ML-KEM keys
     $this->mlkemPublicKey = $keyPair['publicKey'];
@@ -581,17 +589,14 @@ class Wallet {
    * @return array{cipherText: string, encryptedMessage: string}
    * @throws JsonException|Exception
    */
-  public function encryptMessageML768(mixed $message, string $recipientPubkey): array {
-    // ML-KEM-768 public keys are exactly 1184 bytes. A wrong-length key here almost always means the
-    // node did not advertise an ML-KEM public key in its auth `key` field (e.g. a validator predating
-    // the PQ-transport build). Fail with an actionable message rather than a cryptic bridge error.
-    // Guard BEFORE the try so this CryptoException isn't re-wrapped by the catch below.
+  public function encryptMessageML(mixed $message, string $recipientPubkey): array {
     $recipientPubkeyLen = strlen(base64_decode($recipientPubkey, true) ?: '');
-    if ($recipientPubkeyLen !== PostQuantumCrypto::MLKEM_PUBLIC_KEY_SIZE) {
+    $expectedPkBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['pkBytes'];
+    if ($recipientPubkeyLen !== $expectedPkBytes) {
       throw new CryptoException(
         "KnishIO: cannot ML-KEM-encrypt — recipient public key is {$recipientPubkeyLen} bytes, " .
-        'expected ' . PostQuantumCrypto::MLKEM_PUBLIC_KEY_SIZE . ' (ML-KEM-768). The node likely did not ' .
-        'advertise an ML-KEM public key (upgrade the validator to a PQ-transport build), or authenticate with encrypt=false.'
+        "expected {$expectedPkBytes} (ML-KEM-{$this->mlKemParameterSet}). The peer is not running ML-KEM-{$this->mlKemParameterSet}; " .
+        'upgrade the peer, or step this client back to the other parameter set.'
       );
     }
 
@@ -634,11 +639,15 @@ class Wallet {
    * @return mixed Decrypted message
    * @throws JsonException|Exception
    */
-  public function decryptMessageML768(array $encryptedData): mixed {
+  public function decryptMessageML(array $encryptedData): mixed {
     try {
+      $cipherTextBytes = base64_decode($encryptedData['cipherText'], true);
+      $expectedCtBytes = PostQuantumCrypto::MLKEM_PARAMS[$this->mlKemParameterSet]['ctBytes'];
+      if ($cipherTextBytes === false || strlen($cipherTextBytes) !== $expectedCtBytes) {
+        return null;
+      }
       // Decode encryptedMessage (IV + encrypted content)
       $encryptedMessage = base64_decode($encryptedData['encryptedMessage']);
-
       // Use this wallet's ML-KEM768 private key for decapsulation
       if (!$this->mlkemPrivateKey) {
         throw new Exception('ML-KEM768 private key not available');
@@ -744,7 +753,7 @@ class Wallet {
    * @return array Encrypted messages keyed by pubkey hash
    * @throws Exception
    */
-  public function encryptMessageML768Multi(mixed $message, string ...$pubkeys): array {
+  public function encryptMessageMLMulti(mixed $message, string ...$pubkeys): array {
     if (!$this->soda) {
       throw new CryptoException('To use encryption, the wallet must be initialized with a secret argument.');
     }
@@ -752,7 +761,7 @@ class Wallet {
     $encrypt = [];
     foreach ($pubkeys as $pubkey) {
       $hash = $this->soda->shortHash($pubkey);
-      $encrypt[$hash] = $this->encryptMessageML768($message, $pubkey);
+      $encrypt[$hash] = $this->encryptMessageML($message, $pubkey);
     }
 
     return $encrypt;
@@ -766,7 +775,7 @@ class Wallet {
    * @return mixed Decrypted message
    * @throws Exception
    */
-  public function decryptMessageML768Multi(array $multiEncryptedData): mixed {
+  public function decryptMessageMLMulti(array $multiEncryptedData): mixed {
     if (!$this->soda) {
       throw new CryptoException('To use encryption, the wallet must be initialized with a secret argument.');
     }
@@ -780,7 +789,7 @@ class Wallet {
     }
 
     // Decrypt our message
-    return $this->decryptMessageML768($multiEncryptedData[$ourHash]);
+    return $this->decryptMessageML($multiEncryptedData[$ourHash]);
   }
 
   /**
@@ -809,8 +818,8 @@ class Wallet {
    * @return array
    * @throws JsonException|Exception
    */
-  public function encryptStringML768 ( mixed $message, string $pubkey ): array {
-    return [ $this->hashShare( $pubkey ) => $this->encryptMessageML768( $message, $pubkey ) ];
+  public function encryptStringML ( mixed $message, string $pubkey ): array {
+    return [ $this->hashShare( $pubkey ) => $this->encryptMessageML( $message, $pubkey ) ];
   }
 
   /**
@@ -822,15 +831,15 @@ class Wallet {
    * @return mixed Decrypted message
    * @throws JsonException|Exception
    */
-  public function decryptMyMessageML768 ( array $map ): mixed {
+  public function decryptMyMessageML ( array $map ): mixed {
     if ( $this->pubkey === null ) {
-      throw new CryptoException( 'ML-KEM768 public key not available on this wallet.' );
+      throw new CryptoException( 'ML-KEM public key not available on this wallet.' );
     }
     $key = $this->hashShare( $this->pubkey );
     if ( !array_key_exists( $key, $map ) ) {
-      throw new CryptoException( 'No ML-KEM768 envelope found for this wallet.' );
+      throw new CryptoException( 'No ML-KEM envelope found for this wallet.' );
     }
-    return $this->decryptMessageML768( $map[ $key ] );
+    return $this->decryptMessageML( $map[ $key ] );
   }
 
   /**
@@ -842,7 +851,7 @@ class Wallet {
    * @return array Encrypted data structure
    * @throws Exception
    */
-  public function encryptBinaryML768(string $binaryData, string $recipientPubkey): array {
+  public function encryptBinaryML(string $binaryData, string $recipientPubkey): array {
     try {
       // For binary data, use raw bytes without JSON encoding
       $messageBytes = $binaryData;
