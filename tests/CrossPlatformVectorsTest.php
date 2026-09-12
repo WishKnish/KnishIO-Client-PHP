@@ -9,6 +9,8 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
+use WishKnish\KnishIO\Client\Storage\EncryptedSecretPayload;
+use WishKnish\KnishIO\Client\Storage\SecretEnvelope;
 
 /**
  * Cross-platform canonical test vectors — verifies PHP SDK against
@@ -334,6 +336,15 @@ class CrossPlatformVectorsTest extends TestCase {
 
     $molecule->check( $molecule->getSourceWallet() );
     $this->addToAssertionCount( 1 );
+  }
+
+  public function testSecretStorageEnvelopeDecryptsEverywhere (): void {
+    $envelopeVectors = $this->vectors[ 'secret_storage_envelope' ];
+    foreach ( $envelopeVectors[ 'tests' ] as $test ) {
+      $payload = EncryptedSecretPayload::fromArray( $test[ 'payload' ] );
+      $plaintext = SecretEnvelope::open( $payload, $test[ 'passphrase' ] );
+      $this->assertSame( $test[ 'expectedPlaintext' ], $plaintext, "Envelope vector {$test['name']} mismatch" );
+    }
   }
 
   /**

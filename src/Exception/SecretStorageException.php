@@ -47,115 +47,57 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-if ( !function_exists( 'array_unpacking' ) ) {
+namespace WishKnish\KnishIO\Client\Exception;
+
+use Throwable;
+
+/**
+ * Class SecretStorageException
+ * @package WishKnish\KnishIO\Client\Exception
+ */
+class SecretStorageException extends BaseException {
 
   /**
-   * @param array $arr
-   * @param string|integer ...$args
+   * SecretStorageException constructor.
    *
-   * @return array
+   * @param string $message
+   * @param int $code
+   * @param Throwable|null $previous
    */
-  function array_unpacking ( array $arr, ...$args ): array {
-
-    foreach ( $args as $value ) {
-
-      if ( !is_string( $value ) && !is_int( $value ) ) {
-
-        throw new InvalidArgumentException( 'All arguments except the first must be either an integer or a string.' );
-
-      }
-
-    }
-
-    $new = array_intersect_key( $arr, array_flip( $args ) );
-
-    return array_map( static function ( $item ) use ( $new ) {
-
-      return $new[ $item ] ?? null;
-
-    }, $args );
-
+  public function __construct ( string $message = 'Secret storage operation failed', int $code = 0, ?Throwable $previous = null ) {
+    parent::__construct( $message, $code, $previous );
   }
 
-}
-
-if ( !function_exists( 'array_has' ) ) {
   /**
-   * Check if an item or items exist in an array using "dot" notation.
-   *
-   * @param ArrayAccess|array|null $array
-   * @param array|string $keys
-   *
-   * @return bool
+   * @param string $bundleHash
+   * @return static
    */
-  function array_has ( ArrayAccess|array|null $array, array|string $keys ): bool {
-    if ( !is_array( $array ) ) {
-      return false;
-    }
-    $keys = (array) $keys;
-    foreach ( $keys as $key ) {
-      $_keys = explode( '.', $key );
-      $_array = $array;
-      foreach ( $_keys as $_key ) {
-        if ( !array_key_exists( $_key, $_array ) ) {
-          return false;
-        }
-        $_array = $_array[ $_key ];
-      }
-    }
-    return true;
+  public static function notFound ( string $bundleHash ): static {
+    return new static( "Secret not found for bundle: {$bundleHash}" );
   }
-}
-
-if ( !function_exists( 'array_get' ) ) {
 
   /**
-   * Get an item from an array using "dot" notation.
-   *
-   * @param ArrayAccess|array|null $array
-   * @param string $keys
-   * @param mixed|null $default
-   *
-   * @return mixed
+   * @param string $reason
+   * @return static
    */
-  function array_get ( ArrayAccess|array|null $array, string $keys, mixed $default = null ): mixed {
-    foreach ( explode( '.', $keys ) as $key ) {
-      if ( !array_has( $array, $key ) ) {
-        return $default;
-      }
-      $array = $array[ $key ];
-    }
-    return $array;
+  public static function decryptionFailed ( string $reason = 'Decryption failed' ): static {
+    return new static( "Failed to decrypt master secret: {$reason}" );
   }
-}
-
-if ( !function_exists( 'array_every' ) ) {
 
   /**
-   * @param array $array
-   * @param callable $callable
-   *
-   * @return bool
+   * @param string $provider
+   * @param string $reason
+   * @return static
    */
-  function array_every ( array $array, callable $callable ): bool {
-    foreach ( $array as $value ) {
-      if ( !$callable( $value ) ) {
-        return false;
-      }
-    }
-    return true;
+  public static function unavailable ( string $provider, string $reason = 'Provider unavailable' ): static {
+    return new static( "Secret storage provider [{$provider}] unavailable: {$reason}" );
   }
-}
-
-if ( !function_exists( 'zeroize' ) ) {
 
   /**
-   * Overwrite string contents with zeroes using sodium_memzero and reset reference
-   *
-   * @param string|null $string
-   * @return void
+   * @param string $reason
+   * @return static
    */
-  function zeroize ( ?string &$string ): void {
-    \WishKnish\KnishIO\Client\Libraries\SecureMemory::zeroize( $string );
+  public static function validationError ( string $reason ): static {
+    return new static( "Secret storage validation error: {$reason}" );
   }
 }

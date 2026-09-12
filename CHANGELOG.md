@@ -12,6 +12,25 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [Unreleased]
+
+### Added
+
+- Hardware-compatible envelope encryption secret storage layer (`WishKnish\KnishIO\Client\Storage`), implementing the cross-SDK PBKDF2-HMAC-SHA256 × 100,000 → AES-256-GCM envelope specification.
+- `WishKnish\KnishIO\Client\Storage\SecretStorageException` with `notFound`, `decryptionFailed`, and `unavailable` factories.
+- `StorageBackend` interface with `MemoryStorageBackend` and `FileStorageBackend` (atomic tempfile + rename, 0600 permissions) implementations.
+- `SecretStorageMetadata` and `EncryptedSecretPayload` supporting camelCase JSON serialization and omitting unset `label`.
+- `SecretStorageProvider` contract and `AesGcmSecretStorageProvider` envelope provider with standard padded Base64 and appended 16-byte GCM authentication tag.
+- `MemorySecretStorageProvider` for headless/in-memory environments and tests.
+- `SecureMemory` class and `zeroize` helper using `sodium_memzero` for secure buffer zeroization and timing-safe comparisons.
+- `KnishIOClient` integration: `secretStorage` constructor option, `setSecretStorage()`, `getSecretStorage()`, `retrieveSecret()`, auto-syncing `setSecret()`, and just-in-time secret unwrap in `createMolecule()`.
+- Recovery envelope support across secret storage providers (`SecretStorageProvider::RECOVERY_KEY_PREFIX = 'knishio:recovery:'`):
+  - `StorageOptions` extended with `$recoveryPassphrase` and `$allowUnrecoverable`.
+  - Secondary recovery envelope generation in `AesGcmSecretStorageProvider` and `MemorySecretStorageProvider` when `recoveryPassphrase` is supplied to `storeSecret`.
+  - `recoverSecret()` method to restore and re-enroll secrets from their recovery envelopes.
+  - Dual-key cleanup in `deleteSecret()` removing both primary and recovery storage records.
+  - Exclusion of recovery records from `listSecrets()`.
+
 ## [1.0.0] — 2026-09-10
 
 ### Added

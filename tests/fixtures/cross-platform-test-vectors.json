@@ -1162,6 +1162,7 @@
             "label"
           ],
           "optionalKeyConvention": "omit-when-absent",
+          "recoveryRecordKeyPrefix": "knishio:recovery:",
           "forbiddenMetadataKeys": [
             "bundle_hash",
             "created_at",

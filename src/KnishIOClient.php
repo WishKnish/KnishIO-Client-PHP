@@ -65,6 +65,9 @@ use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
+use WishKnish\KnishIO\Client\Storage\MemorySecretStorageProvider;
+use WishKnish\KnishIO\Client\Storage\SecretStorageProvider;
+use WishKnish\KnishIO\Client\Storage\StorageOptions;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Mutation\MutationActiveSession;
 use WishKnish\KnishIO\Client\Mutation\MutationClaimShadowWallet;
@@ -126,6 +129,11 @@ class KnishIOClient {
   private ?Wallet $remainderWallet;
 
   /**
+   * @var SecretStorageProvider|null
+   */
+  private ?SecretStorageProvider $secretStorage = null;
+
+  /**
    * @var Query
    */
   private Query $lastMoleculeQuery;
@@ -168,8 +176,8 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024 ) {
-    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet );
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null ) {
+    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage );
   }
 
   /**
@@ -179,7 +187,7 @@ class KnishIOClient {
    *
    * @return void
    */
-  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024 ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null ): void {
     $this->reset();
 
     // Init uris
@@ -188,6 +196,7 @@ class KnishIOClient {
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
     $this->setMlKemParameterSet( $mlKemParameterSet );
+    $this->secretStorage = $secretStorage;
   }
 
   /**
@@ -239,6 +248,7 @@ class KnishIOClient {
   public function reset (): void {
     $this->secret = null;
     $this->bundle = null;
+    $this->secretStorage = null;
     $this->remainderWallet = null;
   }
 
@@ -275,7 +285,7 @@ class KnishIOClient {
    * Has a secret?
    */
   public function hasSecret (): bool {
-    return (bool) $this->secret;
+    return (bool) $this->secret || ( $this->secretStorage !== null && (bool) $this->bundle );
   }
 
   /**
@@ -286,6 +296,50 @@ class KnishIOClient {
   public function setSecret ( string $secret ): void {
     $this->secret = $secret;
     $this->bundle = Crypto::generateBundleHash( $secret );
+
+    if ( $this->secretStorage === null ) {
+      $memStorage = new MemorySecretStorageProvider();
+      $memStorage->storeSecret( $this->bundle, $secret );
+      $this->secretStorage = $memStorage;
+    } else {
+      $this->secretStorage->storeSecret( $this->bundle, $secret );
+    }
+  }
+
+  /**
+   * @param SecretStorageProvider $storage
+   * @param string|null $bundleHash
+   * @return self
+   */
+  public function setSecretStorage ( SecretStorageProvider $storage, ?string $bundleHash = null ): self {
+    $this->secretStorage = $storage;
+    if ( $bundleHash !== null ) {
+      $this->bundle = $bundleHash;
+    }
+    return $this;
+  }
+
+  /**
+   * @return SecretStorageProvider|null
+   */
+  public function getSecretStorage (): ?SecretStorageProvider {
+    return $this->secretStorage;
+  }
+
+  /**
+   * Retrieve secret from cleartext memory or storage provider
+   *
+   * @param StorageOptions|null $options
+   * @return string|null
+   */
+  public function retrieveSecret ( ?StorageOptions $options = null ): ?string {
+    if ( $this->secret !== null ) {
+      return $this->secret;
+    }
+    if ( $this->secretStorage !== null && $this->bundle ) {
+      return $this->secretStorage->retrieveSecret( $this->bundle, $options ?? new StorageOptions() );
+    }
+    return null;
   }
 
   /**
@@ -338,8 +392,15 @@ class KnishIOClient {
    */
   public function createMolecule ( ?string $secret = null, ?Wallet $sourceWallet = null, ?Wallet $remainderWallet = null ): Molecule {
 
-    $secret = $secret ?: $this->getSecret();
+    if ( !$secret ) {
+      if ( $this->secret ) {
+        $secret = $this->secret;
+      } elseif ( $this->secretStorage !== null && $this->bundle ) {
+        $secret = $this->secretStorage->retrieveSecret( $this->bundle );
+      }
+    }
 
+    $secret = $secret ?: $this->getSecret();
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
     if (
       $sourceWallet === null &&
@@ -366,9 +427,13 @@ class KnishIOClient {
     // Remainder wallet
     $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet() );
 
-    return new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
-  }
+    $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
+    if ( $this->bundle ) {
+      $molecule->bundle = $this->bundle;
+    }
 
+    return $molecule;
+  }
   /**
    * @param string $class
    *

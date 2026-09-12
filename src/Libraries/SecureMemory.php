@@ -47,107 +47,16 @@ Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
 License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
  */
 
-if ( !function_exists( 'array_unpacking' ) ) {
+namespace WishKnish\KnishIO\Client\Libraries;
 
-  /**
-   * @param array $arr
-   * @param string|integer ...$args
-   *
-   * @return array
-   */
-  function array_unpacking ( array $arr, ...$args ): array {
-
-    foreach ( $args as $value ) {
-
-      if ( !is_string( $value ) && !is_int( $value ) ) {
-
-        throw new InvalidArgumentException( 'All arguments except the first must be either an integer or a string.' );
-
-      }
-
-    }
-
-    $new = array_intersect_key( $arr, array_flip( $args ) );
-
-    return array_map( static function ( $item ) use ( $new ) {
-
-      return $new[ $item ] ?? null;
-
-    }, $args );
-
-  }
-
-}
-
-if ( !function_exists( 'array_has' ) ) {
-  /**
-   * Check if an item or items exist in an array using "dot" notation.
-   *
-   * @param ArrayAccess|array|null $array
-   * @param array|string $keys
-   *
-   * @return bool
-   */
-  function array_has ( ArrayAccess|array|null $array, array|string $keys ): bool {
-    if ( !is_array( $array ) ) {
-      return false;
-    }
-    $keys = (array) $keys;
-    foreach ( $keys as $key ) {
-      $_keys = explode( '.', $key );
-      $_array = $array;
-      foreach ( $_keys as $_key ) {
-        if ( !array_key_exists( $_key, $_array ) ) {
-          return false;
-        }
-        $_array = $_array[ $_key ];
-      }
-    }
-    return true;
-  }
-}
-
-if ( !function_exists( 'array_get' ) ) {
-
-  /**
-   * Get an item from an array using "dot" notation.
-   *
-   * @param ArrayAccess|array|null $array
-   * @param string $keys
-   * @param mixed|null $default
-   *
-   * @return mixed
-   */
-  function array_get ( ArrayAccess|array|null $array, string $keys, mixed $default = null ): mixed {
-    foreach ( explode( '.', $keys ) as $key ) {
-      if ( !array_has( $array, $key ) ) {
-        return $default;
-      }
-      $array = $array[ $key ];
-    }
-    return $array;
-  }
-}
-
-if ( !function_exists( 'array_every' ) ) {
-
-  /**
-   * @param array $array
-   * @param callable $callable
-   *
-   * @return bool
-   */
-  function array_every ( array $array, callable $callable ): bool {
-    foreach ( $array as $value ) {
-      if ( !$callable( $value ) ) {
-        return false;
-      }
-    }
-    return true;
-  }
-}
-
-if ( !function_exists( 'zeroize' ) ) {
+/**
+ * Class SecureMemory
+ *
+ * Memory hygiene and zeroization utilities for sensitive cryptographic material.
+ *
+ * @package WishKnish\KnishIO\Client\Libraries
+ */
+class SecureMemory {
 
   /**
    * Overwrite string contents with zeroes using sodium_memzero and reset reference
@@ -155,7 +64,37 @@ if ( !function_exists( 'zeroize' ) ) {
    * @param string|null $string
    * @return void
    */
-  function zeroize ( ?string &$string ): void {
-    \WishKnish\KnishIO\Client\Libraries\SecureMemory::zeroize( $string );
+  public static function zeroize ( ?string &$string ): void {
+    if ( $string !== null && function_exists( 'sodium_memzero' ) ) {
+      sodium_memzero( $string );
+    }
+    $string = null;
+  }
+
+  /**
+   * Execute a callback with a sensitive string and guarantee zeroization upon completion
+   *
+   * @template T
+   * @param string $secret
+   * @param callable(string): T $callback
+   * @return T
+   */
+  public static function withSecureString ( string $secret, callable $callback ): mixed {
+    try {
+      return $callback( $secret );
+    } finally {
+      self::zeroize( $secret );
+    }
+  }
+
+  /**
+   * Constant-time string comparison to prevent timing attacks
+   *
+   * @param string $a
+   * @param string $b
+   * @return bool
+   */
+  public static function constantTimeEquals ( string $a, string $b ): bool {
+    return hash_equals( $a, $b );
   }
 }
