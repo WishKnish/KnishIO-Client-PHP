@@ -1128,7 +1128,7 @@
       }
     },
     "secret_storage_envelope": {
-      "description": "AES-GCM secret-storage envelope: the at-rest format shared by the TS, JS, Kotlin, and Rust SecretStorageProviders. The crypto core (PBKDF2-HMAC-SHA256 x100000, 16-byte salt, 12-byte IV, AES-256-GCM with the tag appended to the ciphertext, standard padded base64, no AAD) was always identical across SDKs; the JSON FRAMING was not. Rust 0.9.5 emitted snake_case metadata keys and rejected this payload with 'missing field bundle_hash' before any crypto ran, while a Rust-written envelope deserialized in TS with every typed metadata field undefined. Metadata keys are camelCase - that is the contract. A consumer test must DECRYPT this frozen payload, not merely round-trip its own output: a round-trip passes in every SDK regardless of casing, which is why the divergence shipped. requiredMetadataKeys is a SUPERSET check, not set equality: `label` is optional and SDKs legitimately differ on it (TS/JS omit the key when unset; Kotlin and Rust emit it as null), so asserting exact equality passes in Kotlin/Rust and fails in TS/JS for the same correct behaviour. forbiddenMetadataKeys are the 0.9.5 snake_case forms and must never be emitted.",
+      "description": "AES-GCM secret-storage envelope: the at-rest format shared by the TS, JS, Kotlin, and Rust SecretStorageProviders. The crypto core (PBKDF2-HMAC-SHA256 x100000, 16-byte salt, 12-byte IV, AES-256-GCM with the tag appended to the ciphertext, standard padded base64, no AAD) was always identical across SDKs; the JSON FRAMING was not. Rust 0.9.5 emitted snake_case metadata keys and rejected this payload with 'missing field bundle_hash' before any crypto ran, while a Rust-written envelope deserialized in TS with every typed metadata field undefined. Metadata keys are camelCase - that is the contract. A consumer test must DECRYPT this frozen payload, not merely round-trip its own output: a round-trip passes in every SDK regardless of casing, which is why the divergence shipped. requiredMetadataKeys is a superset check; forbiddenMetadataKeys are the 0.9.5 snake_case forms and must never be emitted. Optional metadata keys are OMITTED when unset — never emitted as null (frozen 2026-09-11): Kotlin uses explicitNulls=false, Rust skip_serializing_if, TS/JS drop undefined. A consumer checking 'label' in metadata therefore reads the same answer regardless of the writing SDK.",
       "tests": [
         {
           "name": "typescript_0_9_7_envelope_decrypts_everywhere",
@@ -1161,6 +1161,7 @@
           "optionalMetadataKeys": [
             "label"
           ],
+          "optionalKeyConvention": "omit-when-absent",
           "forbiddenMetadataKeys": [
             "bundle_hash",
             "created_at",
