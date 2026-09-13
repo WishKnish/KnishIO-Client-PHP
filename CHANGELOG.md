@@ -12,7 +12,7 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
-## [Unreleased]
+## [1.1.0] — 2026-09-12
 
 ### Added
 
@@ -253,7 +253,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.1.0
 [1.0.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.0.0
 [0.9.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.2
 [0.9.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.0
