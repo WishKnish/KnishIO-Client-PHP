@@ -72,6 +72,42 @@ class SecretStorageTest extends TestCase {
     $this->assertTrue( $callbackInvoked );
   }
 
+  public function testCanonicalRecoveryVectorReEnrollsPrimary (): void {
+    $v = $this->vectors[ 'secret_storage_envelope' ][ 'tests' ][ 1 ];
+    $expectedPlaintext = $v[ 'expectedPlaintext' ];
+    $recoveryPassphrase = $v[ 'recoveryPassphrase' ];
+    $bundleHash = $v[ 'bundleHash' ];
+    $storageKey = $v[ 'storageKey' ];
+    $primaryPassphrase = 'xsdk-reenrolled-primary-pass';
+    $secretKey = AesGcmSecretStorageProvider::KEY_PREFIX . $bundleHash;
+
+    $backend = new MemoryStorageBackend();
+    $backend->setItem( $storageKey, json_encode( $v[ 'payload' ] ) );
+    $this->assertNull( $backend->getItem( $secretKey ) );
+
+    $provider = new AesGcmSecretStorageProvider( $backend );
+    $provider->recoverSecret( $bundleHash, $recoveryPassphrase, new StorageOptions( passphrase: $primaryPassphrase ) );
+
+    $retrieved = $provider->retrieveSecret( $bundleHash, new StorageOptions( passphrase: $primaryPassphrase ) );
+    $this->assertSame( $expectedPlaintext, $retrieved );
+
+    $storedSecretRaw = $backend->getItem( $secretKey );
+    $storedRecoveryRaw = $backend->getItem( $storageKey );
+    $this->assertNotNull( $storedSecretRaw );
+    $this->assertNotNull( $storedRecoveryRaw );
+
+    $storedSecret = json_decode( $storedSecretRaw, true );
+    $metadata = $storedSecret[ 'metadata' ];
+    $this->assertFalse( $metadata[ 'hardwareBacked' ] );
+
+    foreach ( $v[ 'requiredMetadataKeys' ] as $key ) {
+      $this->assertArrayHasKey( $key, $metadata );
+    }
+    foreach ( $v[ 'forbiddenMetadataKeys' ] as $key ) {
+      $this->assertArrayNotHasKey( $key, $metadata );
+    }
+  }
+
   /**
    * Assert emitted metadata has bundleHash, createdAt, hardwareBacked, providerType,
    * and DOES NOT have bundle_hash or label when unset.

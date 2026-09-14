@@ -342,7 +342,11 @@ class CrossPlatformVectorsTest extends TestCase {
     $envelopeVectors = $this->vectors[ 'secret_storage_envelope' ];
     foreach ( $envelopeVectors[ 'tests' ] as $test ) {
       $payload = EncryptedSecretPayload::fromArray( $test[ 'payload' ] );
-      $plaintext = SecretEnvelope::open( $payload, $test[ 'passphrase' ] );
+      if ( isset( $test[ 'recoveryPassphrase' ] ) ) {
+        $plaintext = SecretEnvelope::open( $payload, $test[ 'recoveryPassphrase' ] );
+      } else {
+        $plaintext = SecretEnvelope::open( $payload, $test[ 'passphrase' ] );
+      }
       $this->assertSame( $test[ 'expectedPlaintext' ], $plaintext, "Envelope vector {$test['name']} mismatch" );
     }
   }

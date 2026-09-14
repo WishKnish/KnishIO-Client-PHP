@@ -1128,7 +1128,7 @@
       }
     },
     "secret_storage_envelope": {
-      "description": "AES-GCM secret-storage envelope: the at-rest format shared by the TS, JS, Kotlin, and Rust SecretStorageProviders. The crypto core (PBKDF2-HMAC-SHA256 x100000, 16-byte salt, 12-byte IV, AES-256-GCM with the tag appended to the ciphertext, standard padded base64, no AAD) was always identical across SDKs; the JSON FRAMING was not. Rust 0.9.5 emitted snake_case metadata keys and rejected this payload with 'missing field bundle_hash' before any crypto ran, while a Rust-written envelope deserialized in TS with every typed metadata field undefined. Metadata keys are camelCase - that is the contract. A consumer test must DECRYPT this frozen payload, not merely round-trip its own output: a round-trip passes in every SDK regardless of casing, which is why the divergence shipped. requiredMetadataKeys is a superset check; forbiddenMetadataKeys are the 0.9.5 snake_case forms and must never be emitted. Optional metadata keys are OMITTED when unset — never emitted as null (frozen 2026-09-11): Kotlin uses explicitNulls=false, Rust skip_serializing_if, TS/JS drop undefined. A consumer checking 'label' in metadata therefore reads the same answer regardless of the writing SDK.",
+      "description": "AES-GCM secret-storage envelope: the at-rest format shared by all eight SecretStorageProviders (C, C++, JS, TS, Kotlin, PHP, Python, Rust). The crypto core (PBKDF2-HMAC-SHA256 x100000, 16-byte salt, 12-byte IV, AES-256-GCM with the tag appended to the ciphertext, standard padded base64, no AAD) was always identical across SDKs; the JSON FRAMING was not. Rust 0.9.5 emitted snake_case metadata keys and rejected this payload with 'missing field bundle_hash' before any crypto ran, while a Rust-written envelope deserialized in TS with every typed metadata field undefined. Metadata keys are camelCase - that is the contract. A consumer test must DECRYPT this frozen payload, not merely round-trip its own output: a round-trip passes in every SDK regardless of casing, which is why the divergence shipped. requiredMetadataKeys is a superset check; forbiddenMetadataKeys are the 0.9.5 snake_case forms and must never be emitted. Optional metadata keys are OMITTED when unset — never emitted as null (frozen 2026-09-11): Kotlin uses explicitNulls=false, Rust skip_serializing_if, TS/JS drop undefined. A consumer checking 'label' in metadata therefore reads the same answer regardless of the writing SDK. tests[1] is a frozen RECOVERY record (storageKey prefix knishio:recovery:, sealed under recoveryPassphrase, hardwareBacked always false): a consumer must seed ONLY that record, call recoverSecret(bundleHash, recoveryPassphrase, {passphrase}) and prove the re-enrolled primary at knishio:secret:<bundleHash> decrypts under {passphrase}. providerType is informational — TS/JS write webcrypto-aes-gcm, the other six write aes-gcm — and no SDK may reject a record on it.",
       "tests": [
         {
           "name": "typescript_0_9_7_envelope_decrypts_everywhere",
@@ -1150,6 +1150,46 @@
               "createdAt": 1788558526546,
               "hardwareBacked": false,
               "providerType": "webcrypto-aes-gcm"
+            }
+          },
+          "requiredMetadataKeys": [
+            "bundleHash",
+            "createdAt",
+            "hardwareBacked",
+            "providerType"
+          ],
+          "optionalMetadataKeys": [
+            "label"
+          ],
+          "optionalKeyConvention": "omit-when-absent",
+          "recoveryRecordKeyPrefix": "knishio:recovery:",
+          "forbiddenMetadataKeys": [
+            "bundle_hash",
+            "created_at",
+            "hardware_backed",
+            "provider_type"
+          ]
+        },
+        {
+          "name": "javascript_1_1_0_recovery_record_reenrolls_everywhere",
+          "producedBy": "@wishknish/knishio-client-js@1.1.0 bin/secret-storage-cli.mjs seal-recovery",
+          "storageKey": "knishio:recovery:deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+          "bundleHash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+          "recoveryPassphrase": "recovery-passphrase-restore-42",
+          "expectedPlaintext": "RECOVERY-SECRET-PROBE-MATRIX-BACKUP",
+          "payload": {
+            "version": 1,
+            "ciphertext": "L5aLK9OsXSQKxUDZYuKp6XRdqgMvmuXo6aphBnzDW7B/DLD0ydx0SByRFJaGyedWvakM",
+            "iv": "e1qXQy3KppMCPCfv",
+            "salt": "wcTJpsmFGXaMRyyQOcg/Qw==",
+            "algorithm": "AES-GCM",
+            "iterations": 100000,
+            "metadata": {
+              "bundleHash": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+              "createdAt": 1700000000000,
+              "hardwareBacked": false,
+              "providerType": "webcrypto-aes-gcm",
+              "label": "backup-recovery"
             }
           },
           "requiredMetadataKeys": [
