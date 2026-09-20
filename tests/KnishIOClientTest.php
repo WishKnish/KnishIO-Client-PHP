@@ -61,6 +61,8 @@ use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateMeta;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateRule;
 use WishKnish\KnishIO\Client\Mutation\MutationLinkIdentifier;
+use WishKnish\KnishIO\Client\Response\ResponseBalance;
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
 /**
  * Test suite for KnishIOClient
@@ -317,5 +319,24 @@ class KnishIOClientTest extends TestCase {
     
     $remainderWallet = $this->client->getRemainderWallet();
     $this->assertNull($remainderWallet); // Should be null initially
+  }
+
+  /**
+   * A GraphQL error response carries `data: null` alongside `errors`. Resolving the
+   * dotted data key must report the server's error, not crash inside the helper.
+   * (Observed live on testnet.knish.io: the validator's encrypted-transport refusal
+   * surfaced as a TypeError from array_key_exists() instead of the error message.)
+   */
+  public function testErrorResponseWithNullDataSurfacesServerError(): void {
+    $json = json_encode([
+      'data' => null,
+      'errors' => [ [ 'message' => 'This session must send requests through the CipherHash encrypted transport' ] ],
+    ]);
+
+    $response = new ResponseBalance(null, $json);
+
+    $this->expectException(InvalidResponseException::class);
+    $this->expectExceptionMessageMatches('/CipherHash encrypted transport/');
+    $response->payload();
   }
 }

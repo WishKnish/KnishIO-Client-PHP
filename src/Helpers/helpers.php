@@ -97,7 +97,10 @@ if ( !function_exists( 'array_has' ) ) {
       $_keys = explode( '.', $key );
       $_array = $array;
       foreach ( $_keys as $_key ) {
-        if ( !array_key_exists( $_key, $_array ) ) {
+        // A dotted path can descend into a null/scalar segment — a GraphQL error
+        // response carries `data: null`, so `data.Balance` hits null here. Treat
+        // that as "absent" instead of raising a TypeError from array_key_exists().
+        if ( !is_array( $_array ) || !array_key_exists( $_key, $_array ) ) {
           return false;
         }
         $_array = $_array[ $_key ];

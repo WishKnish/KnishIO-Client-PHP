@@ -11,6 +11,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 
 /**
  * Live ML-KEM768 `CipherHash` encrypted-transport round-trip against a running validator
@@ -58,21 +59,27 @@ class CipherHashLiveTest extends TestCase {
 
     $secret = Crypto::generateSecret();
 
-    // ONE authenticated session (encrypt=true → conveys the AUTH wallet's ML-KEM pubkey as a
-    // signed walletPubkey U-atom meta, so the validator can encrypt responses back to it). We vary
-    // ONLY the transport on this SAME session — the queried balance wallet stays fixed. (A fresh
+    // ONE session, transport toggled on it — the queried balance wallet stays fixed. (A fresh
     // second auth would rotate the USER remainder via ContinuID → a different address/position/
     // pubkey: correct protocol behaviour, NOT a transport bug, so it must not be the variable.)
+    //
+    // The session authenticates PLAINTEXT on purpose. The AUTH wallet's ML-KEM pubkey is conveyed
+    // as a signed walletPubkey U-atom meta regardless of $encrypt (KnishIOClient.php:1508-1517),
+    // and the validator's CipherHash handler needs only that key — so a plaintext-authenticated
+    // session still speaks the encrypted transport. Authenticating with encrypt=true instead would
+    // make the plaintext baseline leg below a silent downgrade, which the validator rejects when
+    // ENFORCE_ENCRYPTED_TRANSPORT is at its secure default.
     $client = new KnishIOClient( $url );
     $param = getenv( 'CIPHERHASH_MLKEM_PARAMETER_SET' );
     if ( $param ) {
       $client->setMlKemParameterSet( (int)$param );
     }
     $client->setCellSlug( 'public' );   // the active dev cell (TESTCELL is inactive there)
-    $client->requestAuthToken( $secret, 'public', true );
+    $client->requestAuthToken( $secret, 'public', false );
 
     // Encrypted round-trip: the validator ML-KEM-decrypts the request, executes it, and encrypts
     // the response back to the client's ML-KEM pubkey; the client decrypts it.
+    $client->switchEncryption( true );
     $encResp = $client->queryBalance( 'USER' );
 
     // Plaintext baseline of the SAME wallet on the SAME authed session — only the transport differs.
@@ -93,5 +100,35 @@ class CipherHashLiveTest extends TestCase {
     $this->assertSame( $plain->pubkey, $enc->pubkey );
     $this->assertSame( $plain->token, $enc->token );
     $this->assertSame( $plain->bundle, $enc->bundle );
+  }
+
+  /**
+   * Live coverage of the enforcement path: extract_encrypt_flag → auth_tokens.encrypted →
+   * requires_encrypted_transport. Also proves this SDK's signed `encrypt` meta literal is the one
+   * the validator honours: a session that authenticated with encrypt=true must not be able to
+   * fall back to plaintext.
+   */
+  public function testEncryptedSessionIsRefusedWhenItDropsToPlaintext (): void {
+    $url = $this->serverUrl();
+    $this->requireValidator( $url );
+
+    $secret = Crypto::generateSecret();
+    $client = new KnishIOClient( $url );
+    $param = getenv( 'CIPHERHASH_MLKEM_PARAMETER_SET' );
+    if ( $param ) {
+      $client->setMlKemParameterSet( (int)$param );
+    }
+    $client->setCellSlug( 'public' );
+    $client->requestAuthToken( $secret, 'public', true );
+
+    // The encrypted transport still works for this session.
+    $this->assertNotNull( $client->queryBalance( 'USER' )->payload() );
+
+    // Dropping to plaintext on the same session is the silent downgrade the validator refuses;
+    // Response::data() raises InvalidResponseException carrying the encoded GraphQL errors.
+    $client->switchEncryption( false );
+    $this->expectException( InvalidResponseException::class );
+    $this->expectExceptionMessageMatches( '/CipherHash encrypted transport/' );
+    $client->queryBalance( 'USER' )->payload();
   }
 }
