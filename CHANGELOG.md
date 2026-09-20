@@ -12,6 +12,24 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [1.2.0] — 2026-09-20
+
+### Fixed
+
+- `array_has()` (`src/Helpers/helpers.php`) no longer raises
+  `TypeError: array_key_exists(): Argument #2 ($array) must be of type array, null given` when a
+  dotted key descends into a null segment. A GraphQL error response is
+  `{"data": null, "errors": [...]}`, so **every** server error reached the caller as that
+  TypeError instead of `InvalidResponseException` carrying the errors. Found by the first live
+  run of the encrypted-transport refusal case against `testnet.knish.io`; pinned offline by
+  `KnishIOClientTest::testErrorResponseWithNullDataSurfacesServerError`.
+
+### Notes
+
+- Both live CipherHash cases (`tests/CipherHashLiveTest.php`) passed against `testnet.knish.io`
+  on 2026-09-20 at ML-KEM-1024 and ML-KEM-768, including the validator refusing a plaintext query
+  from an `encrypt: true` session.
+
 ## [1.1.0] — 2026-09-12
 
 ### Added
@@ -253,7 +271,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.0
 [1.1.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.1.0
 [1.0.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.0.0
 [0.9.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/0.9.2
