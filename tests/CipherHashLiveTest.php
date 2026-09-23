@@ -23,31 +23,21 @@ use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
  * pubkey, which the client decrypts. The transport must be TRANSPARENT, so we assert the encrypted
  * result's DATA equals a plaintext baseline (not merely that both report success()).
  *
- * Gated: skips cleanly when no validator is reachable. Run live against the dev validator:
- *   CIPHERHASH_TEST_URL=http://localhost:8081/graphql vendor/bin/phpunit --filter CipherHashLiveTest
+ * Gated on CIPHERHASH_TEST_URL alone: the tests skip only when it is unset. When it is set, an
+ * unreachable validator fails the test rather than skipping it. Run live:
+ *   CIPHERHASH_TEST_URL=https://testnet.knish.io/graphql vendor/bin/phpunit --filter CipherHashLiveTest
  */
 class CipherHashLiveTest extends TestCase {
 
-  private function serverUrl (): string {
-    return getenv( 'CIPHERHASH_TEST_URL' ) ?: 'http://localhost:8081/graphql';
-  }
-
   /**
-   * Skip when no KnishIO validator answers at the endpoint (mirrors KnishIOClientTest's gate).
+   * The validator endpoint under test; skips when CIPHERHASH_TEST_URL is unset.
    */
-  private function requireValidator ( string $url ): void {
-    $ch = curl_init( $url );
-    curl_setopt_array( $ch, [
-      CURLOPT_NOBODY         => true,
-      CURLOPT_CONNECTTIMEOUT => 2,
-      CURLOPT_TIMEOUT        => 3,
-      CURLOPT_RETURNTRANSFER => true,
-    ] );
-    curl_exec( $ch );
-    $errno = curl_errno( $ch );
-    if ( $errno !== 0 ) {
-      $this->markTestSkipped( "No validator reachable at {$url} (curl errno {$errno}) — skipping live CipherHash test" );
+  private function serverUrl (): string {
+    $url = getenv( 'CIPHERHASH_TEST_URL' );
+    if ( !$url ) {
+      $this->markTestSkipped( 'set CIPHERHASH_TEST_URL to run the live CipherHash test' );
     }
+    return $url;
   }
 
   /**
@@ -55,7 +45,6 @@ class CipherHashLiveTest extends TestCase {
    */
   public function testEncryptedCipherHashRoundTripMatchesPlaintext (): void {
     $url = $this->serverUrl();
-    $this->requireValidator( $url );
 
     $secret = Crypto::generateSecret();
 
@@ -110,7 +99,6 @@ class CipherHashLiveTest extends TestCase {
    */
   public function testEncryptedSessionIsRefusedWhenItDropsToPlaintext (): void {
     $url = $this->serverUrl();
-    $this->requireValidator( $url );
 
     $secret = Crypto::generateSecret();
     $client = new KnishIOClient( $url );

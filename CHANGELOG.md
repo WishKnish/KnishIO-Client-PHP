@@ -12,6 +12,16 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [Unreleased]
+
+### Fixed
+
+- `CheckMolecule::verify()` (`src/Libraries/CheckMolecule.php`) now calls `continuId()` directly
+  after `ots()`, as the JS reference's `CheckMolecule.verify` does: a molecule whose first atom
+  spends the `USER` token must carry a ContinuID `I` atom, or `verify()` throws
+  `MoleculeAtomsMissingException('Missing atom ContinuID')`. `continuId()` existed but was never
+  called, so such a molecule verified. Pinned by `tests/CheckMoleculeContinuIdTest.php`.
+
 ## [1.2.0] — 2026-09-20
 
 ### Fixed

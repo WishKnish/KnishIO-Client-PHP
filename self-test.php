@@ -25,6 +25,10 @@ use WishKnish\KnishIO\Client\Wallet;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Meta;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMismatchException;
+use WishKnish\KnishIO\Client\Exception\MoleculeHashMissingException;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 
 // ANSI Color codes for console output
 const COLOR_RESET = "\033[0m";
@@ -1162,131 +1166,145 @@ function test_mlkem768() {
 }
 
 /**
+ * Run one negative case. $setup builds the invalid input and must succeed: a setup failure
+ * fails the case, because the verifier never saw the input. $attempt is the operation that
+ * must reject it; the case passes only when it throws exactly $expected (or a subclass).
+ * No exception, or any other exception, fails the case with expected vs got.
+ */
+function run_negative_case(string $name, callable $setup, callable $attempt, string $expected): bool {
+    try {
+        $input = $setup();
+    } catch (Throwable $e) {
+        log_test($name, false, 'setup failed: ' . get_class($e) . ': ' . $e->getMessage());
+        return false;
+    }
+
+    $shortExpected = substr(strrchr('\\' . $expected, '\\'), 1);
+    try {
+        $attempt($input);
+    } catch (Throwable $e) {
+        if ($e instanceof $expected) {
+            log_test($name, true);
+            return true;
+        }
+        log_test($name, false, "expected {$shortExpected}, got " . get_class($e) . ': ' . $e->getMessage());
+        return false;
+    }
+    log_test($name, false, "expected {$shortExpected}, got no exception (the invalid input was accepted)");
+    return false;
+}
+
+/**
  * Test 6: Negative Test Cases - Anti-Cheating Validation
- * Tests that validation properly fails for invalid molecules
+ * Each case must be rejected with the specific exception its check throws.
  */
 function test_negative_cases() {
     log_message('\n6. Negative Test Cases (Anti-Cheating)', COLOR_BLUE);
     global $config, $results;
-    
+
     $testConfig = $config['tests']['crypto'];
-    $allNegativeTestsPassed = true;
-    
-    try {
-        $secret = Crypto::generateSecret($testConfig['seed'], 2048);
-        $bundle = Crypto::generateBundleHash($secret);
-        
-        $sourceWallet = new Wallet(
-            $secret,
-            'TEST',
-            '0123456789abcdeffedcba9876543210fedcba9876543210fedcba9876543210'
-        );
-        $sourceWallet->balance = 1000;
-        
-        // Test 1: Missing Molecular Hash (should fail)
-        try {
-            $recipientWallet = new Wallet(
-                Crypto::generateSecret('TESTSEED2', 2048),
-                'TEST',
-                'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'
-            );
-            
-            $invalidMolecule = new Molecule($secret, $sourceWallet);
-            
-            // Initialize valid transfer but don't sign (no molecular hash)
-            $invalidMolecule->initValue($recipientWallet, 100);
-            
-            // Clear molecular hash manually to simulate unsigned molecule
-            $invalidMolecule->molecularHash = null;
-            
-            // This should fail because there's no molecular hash
-            $checkMolecule = new CheckMolecule($invalidMolecule);
-            try {
-                $checkMolecule->verify($sourceWallet);
-                log_test('Missing molecular hash validation (should FAIL)', false, 'Invalid molecule passed validation');
-                $allNegativeTestsPassed = false;
-            } catch (Exception $e) {
-                // Exception is expected for missing molecular hash
-                log_test('Missing molecular hash validation (should FAIL)', true);
-            }
-        } catch (Exception $e) {
-            // Exception is expected for missing molecular hash construction
-            log_test('Missing molecular hash validation (should FAIL)', true);
-        }
-        
-        // Test 2: Invalid Molecular Hash (should fail)
-        try {
-            $recipientWallet = new Wallet(
-                Crypto::generateSecret('TESTSEED2', 2048),
-                'TEST',
-                'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'
-            );
-            
-            $invalidMolecule = new Molecule($secret, $sourceWallet);
-            
-            // Initialize and sign normally
-            $invalidMolecule->initValue($recipientWallet, 100);
-            $invalidMolecule->sign(false);
-            
-            // Then corrupt the molecular hash
-            $invalidMolecule->molecularHash = 'invalid_hash_that_should_fail_validation_check_12345678';
-            
-            $checkMolecule = new CheckMolecule($invalidMolecule);
-            try {
-                $checkMolecule->verify($sourceWallet);
-                log_test('Invalid molecular hash validation (should FAIL)', false, 'Corrupted molecule passed validation');
-                $allNegativeTestsPassed = false;
-            } catch (Exception $e) {
-                // Exception is expected for invalid molecular hash
-                log_test('Invalid molecular hash validation (should FAIL)', true);
-            }
-        } catch (Exception $e) {
-            // Exception is expected for invalid molecular hash
-            log_test('Invalid molecular hash validation (should FAIL)', true);
-        }
-        
-        // Test 3: Wallet Balance Validation (should fail with insufficient balance)
-        try {
-            $sourceWallet->balance = 50; // Set insufficient balance
-            
-            $recipientWallet = new Wallet(
-                Crypto::generateSecret('TESTSEED3', 2048),
-                'TEST',
-                'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
-            );
-            
-            $invalidMolecule = new Molecule($secret, $sourceWallet);
-            
-            // Try to transfer more than available balance (should fail)
-            try {
-                $invalidMolecule->initValue($recipientWallet, 1000); // More than balance of 50
-                log_test('Insufficient balance validation (should FAIL)', false, 'Transfer with insufficient balance was allowed');
-                $allNegativeTestsPassed = false;
-            } catch (Exception $e) {
-                // Exception is expected for insufficient balance
-                log_test('Insufficient balance validation (should FAIL)', true);
-            }
-        } catch (Exception $e) {
-            // Exception is expected
-            log_test('Insufficient balance validation (should FAIL)', true);
-        }
-        
-        $results['tests']['negativeCases'] = [
-            'passed' => $allNegativeTestsPassed,
-            'description' => 'Anti-cheating validation tests',
-            'testCount' => 3
-        ];
-        
-        return $allNegativeTestsPassed;
-        
-    } catch (Exception $e) {
-        log_message("  ❌ ERROR: " . $e->getMessage(), COLOR_RED);
-        $results['tests']['negativeCases'] = [
-            'passed' => false,
-            'error' => $e->getMessage()
-        ];
-        return false;
-    }
+    $secret = Crypto::generateSecret($testConfig['seed'], 2048);
+    $sourcePosition = '0123456789abcdeffedcba9876543210fedcba9876543210fedcba9876543210';
+    $newSourceWallet = function (int $balance) use ($secret, $sourcePosition) {
+        $wallet = new Wallet($secret, 'TEST', $sourcePosition);
+        $wallet->balance = $balance;
+        return $wallet;
+    };
+    $newRecipientWallet = fn(string $seed, string $position) => new Wallet(Crypto::generateSecret($seed, 2048), 'TEST', $position);
+
+    $cases = [];
+
+    // Case 1: an unsigned molecule (no molecular hash) must be rejected with
+    // MoleculeHashMissingException, whether the CheckMolecule constructor or verify() throws it.
+    $cases['missingMolecularHash'] = run_negative_case(
+        'Missing molecular hash validation (should FAIL)',
+        function () use ($secret, $newSourceWallet, $newRecipientWallet) {
+            $sourceWallet = $newSourceWallet(1000);
+            $molecule = new Molecule($secret, $sourceWallet);
+            $molecule->initValue($newRecipientWallet('TESTSEED2', 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'), 100);
+            $molecule->molecularHash = null;
+            return [$molecule, $sourceWallet];
+        },
+        function (array $in) {
+            [$molecule, $sourceWallet] = $in;
+            (new CheckMolecule($molecule))->verify($sourceWallet);
+        },
+        MoleculeHashMissingException::class
+    );
+
+    // Case 2: a signed molecule whose molecular hash was replaced must be rejected with
+    // MoleculeHashMismatchException.
+    $cases['invalidMolecularHash'] = run_negative_case(
+        'Invalid molecular hash validation (should FAIL)',
+        function () use ($secret, $newSourceWallet, $newRecipientWallet) {
+            $sourceWallet = $newSourceWallet(1000);
+            $molecule = new Molecule($secret, $sourceWallet);
+            $molecule->initValue($newRecipientWallet('TESTSEED2', 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210'), 100);
+            $molecule->sign(false);
+            $molecule->molecularHash = 'invalid_hash_that_should_fail_validation_check_12345678';
+            return [$molecule, $sourceWallet];
+        },
+        function (array $in) {
+            [$molecule, $sourceWallet] = $in;
+            (new CheckMolecule($molecule))->verify($sourceWallet);
+        },
+        MoleculeHashMismatchException::class
+    );
+
+    // Case 3: the client-side balance guard. initValue() must refuse to build a transfer larger
+    // than the source balance, with TransferBalanceException. (The verifier is not involved.)
+    $cases['insufficientBalanceGuard'] = run_negative_case(
+        'Insufficient balance guard (initValue) (should FAIL)',
+        function () use ($secret, $newSourceWallet, $newRecipientWallet) {
+            $sourceWallet = $newSourceWallet(50);
+            return [
+                new Molecule($secret, $sourceWallet),
+                $newRecipientWallet('TESTSEED3', 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'),
+            ];
+        },
+        function (array $in) {
+            [$molecule, $recipientWallet] = $in;
+            $molecule->initValue($recipientWallet, 1000);
+        },
+        TransferBalanceException::class
+    );
+
+    // Case 4: a signed V molecule that does not conserve value (-1000 / +500 / +100) must be
+    // rejected by the verifier with TransferUnbalancedException (the case the other SDKs run).
+    // It uses three V atoms: CheckMolecule::isotopeVB's 2-atom branch has no conservation
+    // check, so a 2-atom -1000/+500 molecule is accepted. That gap is reported, not fixed
+    // here: Molecule::replenishToken builds an unbalanced 2-atom V molecule that the branch
+    // exists to let through.
+    $cases['unbalancedTransfer'] = run_negative_case(
+        'Unbalanced transfer validation (should FAIL)',
+        function () use ($secret, $newSourceWallet, $newRecipientWallet) {
+            $sourceWallet = $newSourceWallet(1000);
+            $recipientWallet = $newRecipientWallet('TESTSEED2', 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210');
+            $molecule = new Molecule($secret, $sourceWallet);
+            $molecule->addAtom(Atom::create('V', $sourceWallet, '-1000'));
+            $molecule->addAtom(Atom::create('V', $recipientWallet, '500', 'walletBundle', $recipientWallet->bundle));
+            $remainderWallet = $newRecipientWallet('TESTSEED4', '0fedcba9876543210fedcba9876543210fedcba9876543210fedcba98765432');
+            $molecule->addAtom(Atom::create('V', $remainderWallet, '100', 'walletBundle', $remainderWallet->bundle));
+            setFixedTimestamps($molecule);
+            $molecule->sign(false);
+            return [$molecule, $sourceWallet];
+        },
+        function (array $in) {
+            [$molecule, $sourceWallet] = $in;
+            (new CheckMolecule($molecule))->verify($sourceWallet);
+        },
+        TransferUnbalancedException::class
+    );
+
+    $allNegativeTestsPassed = !in_array(false, $cases, true);
+    $results['tests']['negativeCases'] = [
+        'passed' => $allNegativeTestsPassed,
+        'description' => 'Anti-cheating validation tests: each invalid input must be rejected with its specific exception',
+        'testCount' => count($cases),
+        'cases' => $cases,
+    ];
+
+    return $allNegativeTestsPassed;
 }
 
 /**
@@ -1307,57 +1325,68 @@ function test_cross_sdk_validation() {
         return true;
     }
 
-    // Configurable shared results directory for cross-platform testing
-    $resultsDir = realpath(resolveSharedResultsBase());
-    $results['crossValidation']['ran'] = true;
-
-    // A missing shared directory in Round 2 is a HARD FAILURE, not a skip. This returned
-    // true — "compatible" — having found nothing to check. Absence of evidence must never
-    // be reported as evidence of compatibility.
-    if (!$resultsDir || !is_dir($resultsDir)) {
-        log_message('  ❌ Shared results directory not found — cross-validation CANNOT run', COLOR_RED);
-        $results['crossSdkCompatible'] = false;
-        return false;
-    }
-
-    // Scope to *-results.json. `str_ends_with($f, '.json')` also matched the canonical
-    // vector MASTERS that live in this directory (canonical-patent-vectors.json,
-    // cross-platform-test-vectors.json) and fed them into the peer loop as SDK results.
-    // They carry no 'molecules' key, so they inflated the apparent peer count while
-    // contributing to neither pass nor fail.
-    $resultFiles = array_filter(
-        scandir($resultsDir),
-        function($f) {
-            return str_ends_with($f, '-results.json') && !str_contains($f, 'php');
-        }
-    );
-
-    // Zero peers in Round 2 means Round 2 did not happen.
-    if (empty($resultFiles)) {
-        log_message('  ❌ No peer SDK results found — nothing to cross-validate', COLOR_RED);
-        $results['crossSdkCompatible'] = false;
-        return false;
-    }
-
     // Canonical set mirrors requiredMoleculeKeys in sdks/canonical-test-keys.json.
     $requiredMoleculeTypes = [
         'metadata', 'simpleTransfer', 'complexTransfer', 'tokenCreation',
         'walletCreation', 'shadowWalletClaim', 'mlkem768',
     ];
+    // the eight SDKs' results files (edge-kit/aggregate.mjs EXPECTED_LANES)
+    $canonicalResultSdks = ['javascript', 'typescript', 'python', 'php', 'kotlin', 'rust', 'c', 'cpp'];
+    // Every peer but ourselves is expected; any other *-results.json file is ignored.
+    $expectedPeers = array_values(array_diff($canonicalResultSdks, ['php']));
 
-    $results['crossValidation']['targetsExpected'] = count($resultFiles);
+    $crossValidationOnly = (getenv('KNISHIO_CROSS_VALIDATION_ONLY') ?: $_ENV['KNISHIO_CROSS_VALIDATION_ONLY'] ?? '') === 'true';
+
+    // Configurable shared results directory for cross-platform testing
+    $sharedBase = resolveSharedResultsBase();
+    $resultsDir = realpath($sharedBase);
+    $presentPeers = ($resultsDir && is_dir($resultsDir))
+        ? array_values(array_filter($expectedPeers, fn($p) => is_file("{$resultsDir}/{$p}-results.json")))
+        : [];
+
+    // Nothing to validate against. The verdict is "not compatible" (nothing was shown to be),
+    // never "compatible". Cross-validation-only mode exists to validate peers, so there it is a
+    // hard failure; a standalone run (e.g. CI with no peers) reports the skip and carries on.
+    if (empty($presentPeers)) {
+        $results['crossValidation'] = ['ran' => false, 'targetsExpected' => count($expectedPeers), 'targetsValidated' => 0];
+        $results['crossSdkCompatible'] = false;
+        if ($crossValidationOnly) {
+            if (!$resultsDir || !is_dir($resultsDir)) {
+                log_message('  ❌ Shared results directory not found — cross-validation CANNOT run', COLOR_RED);
+            } else {
+                log_message('  ❌ No peer SDK results found — nothing to cross-validate', COLOR_RED);
+            }
+        } else {
+            log_message("  ⏭️  Cross-validation skipped: no peer results in {$sharedBase}", COLOR_YELLOW);
+        }
+        return false;
+    }
+
+    $results['crossValidation']['ran'] = true;
+    $results['crossValidation']['targetsExpected'] = count($expectedPeers);
     $peersValidated = 0;
     $allValid = true;
 
-    foreach ($resultFiles as $file) {
-        $sdkName = str_replace('-results.json', '', $file);
+    foreach ($expectedPeers as $sdkName) {
+        $file = "{$sdkName}-results.json";
+        if (!in_array($sdkName, $presentPeers, true)) {
+            log_message("  ❌ {$file} missing", COLOR_RED);
+            $allValid = false;
+            continue;
+        }
         $otherResults = json_decode(file_get_contents($resultsDir . '/' . $file), true);
+
+        // A peer counts as validated only when every required molecule type verified and its
+        // ML-KEM768 ciphertext decrypted to its plaintext. Any failure, exception or absent
+        // type leaves it uncounted.
+        $peerOk = true;
+        $verifiedTypes = [];
 
         // A peer must publish every molecule type before we can claim to have validated
         // it. The loop below iterates the keys that are PRESENT, so an omitted molecule is
         // indistinguishable from a validated one — which is how Kotlin's Round-2 drop of
         // tokenCreation/walletCreation/shadowWalletClaim passed every peer on 2026-07-27.
-        $published = $otherResults['molecules'] ?? [];
+        $published = is_array($otherResults['molecules'] ?? null) ? $otherResults['molecules'] : [];
         $absent = array_values(array_filter(
             $requiredMoleculeTypes,
             function ($t) use ($published) { return empty($published[$t]); }
@@ -1366,26 +1395,15 @@ function test_cross_sdk_validation() {
             log_message("    ❌ {$sdkName} published no molecule for: " . implode(', ', $absent), COLOR_RED);
             log_test("{$sdkName} publishes all required molecules", false);
             $allValid = false;
+            $peerOk = false;
         }
-
-        $peersValidated++;
 
         // Validate molecules from other SDK
         foreach ($published as $moleculeType => $moleculeData) {
             if ($moleculeType === 'mlkem768') {
                 // Special handling for ML-KEM768 cross-SDK compatibility
-                $mlkemData = json_decode($moleculeData, true);
-
                 // Create our own encryption wallet using the same configuration
                 $testConfig = $config['tests']['mlkem768'];
-                $secret = Crypto::generateSecret($testConfig['seed'], 2048);
-                $bundle = Crypto::generateBundleHash($secret);
-                $ourWallet = new Wallet(
-                    $secret,
-                    $testConfig['token'],
-                    $testConfig['position'],
-                    mlKemParameterSet: 768
-                );
 
                 // STRONG cross-SDK check (cycle 138): decrypt THEIR encryptedData with our
                 // TESTSEED wallet (all 8 SDKs share the keypair) and assert the plaintext —
@@ -1393,6 +1411,14 @@ function test_cross_sdk_validation() {
                 $mlkemValid = false;
 
                 try {
+                    $mlkemData = json_decode($moleculeData, true, 512, JSON_THROW_ON_ERROR);
+                    $secret = Crypto::generateSecret($testConfig['seed'], 2048);
+                    $ourWallet = new Wallet(
+                        $secret,
+                        $testConfig['token'],
+                        $testConfig['position'],
+                        mlKemParameterSet: 768
+                    );
                     $decrypted = $ourWallet->decryptMessageML($mlkemData['encryptedData']);
                     $mlkemValid = ($decrypted === ($mlkemData['originalPlaintext'] ?? null));
 
@@ -1401,15 +1427,18 @@ function test_cross_sdk_validation() {
                     } else {
                         log_message("    Decrypted $sdkName plaintext mismatch", COLOR_RED);
                     }
-                } catch (Exception $e) {
+                } catch (Throwable $e) {
                     log_message("    Failed to decrypt $sdkName: " . $e->getMessage(), COLOR_RED);
                     $mlkemValid = false;
                 }
 
                 log_test("$sdkName mlkem768 decryption compatibility", $mlkemValid);
 
-                if (!$mlkemValid) {
+                if ($mlkemValid) {
+                    $verifiedTypes[] = $moleculeType;
+                } else {
                     $allValid = false;
+                    $peerOk = false;
                 }
             } else {
                 // Standard molecule validation for non-ML-KEM768 types
@@ -1429,29 +1458,37 @@ function test_cross_sdk_validation() {
                     try {
                         $molecule->check($sourceWallet);  // void method - throws on failure
                         $isValid = true;  // if we reach here, validation passed
-                    } catch (Exception $e) {
+                    } catch (Throwable $e) {
                         log_message("    Validation error: " . $e->getMessage(), COLOR_RED);
                         $isValid = false;
                     }
 
                     log_test("$sdkName $moleculeType molecule validation", $isValid);
 
-                    if (!$isValid) {
+                    if ($isValid) {
+                        $verifiedTypes[] = $moleculeType;
+                    } else {
                         $allValid = false;
+                        $peerOk = false;
                     }
 
-                } catch (Exception $error) {
+                } catch (Throwable $error) {
                     log_message("    Deserialization error: " . $error->getMessage(), COLOR_RED);
                     log_test("$sdkName $moleculeType molecule validation", false);
                     $allValid = false;
+                    $peerOk = false;
                 }
             }
         }
+
+        if ($peerOk && empty(array_diff($requiredMoleculeTypes, $verifiedTypes))) {
+            $peersValidated++;
+        }
     }
-    
+
     // COVERAGE FLOOR. `$allValid` starts true and only becomes false on a DETECTED
     // failure, so it records "nothing went wrong", not "everything was checked". Those
-    // differ whenever the loop examined fewer peers than it should have. Require both.
+    // differ whenever fewer peers were validated than expected. Require both.
     $results['crossValidation']['targetsValidated'] = $peersValidated;
     $expected = $results['crossValidation']['targetsExpected'];
 
@@ -1515,8 +1552,10 @@ if ((getenv('KNISHIO_CROSS_VALIDATION_ONLY') ?: $_ENV['KNISHIO_CROSS_VALIDATION_
     log_message('\n═══════════════════════════════════════════', COLOR_BLUE);
     log_message('            CROSS-VALIDATION SUMMARY', COLOR_BLUE);
     log_message('═══════════════════════════════════════════', COLOR_BLUE);
-    $compatStatus = $crossSdkResult ? '✅ YES' : '❌ NO';
-    $compatColor = $crossSdkResult ? COLOR_GREEN : COLOR_RED;
+    // Printed from the value written to php-results.json, so the console and the file agree.
+    $compatible = ($results['crossSdkCompatible'] ?? false) === true;
+    $compatStatus = $compatible ? '✅ YES' : '❌ NO';
+    $compatColor = $compatible ? COLOR_GREEN : COLOR_RED;
     log_message("Cross-SDK Compatible: $compatStatus", $compatColor);
     log_message('═══════════════════════════════════════════', COLOR_BLUE);
 
@@ -1547,8 +1586,13 @@ $crossSdkResult = test_cross_sdk_validation();
 // bufferFamily read as passing to the exit-code gate and failing to the summary.
 $bufferSkipped = ($results['tests']['bufferFamily']['skipped'] ?? false) === true;
 
-$totalTests = 10;
-$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($tokenCreationResult ? 1 : 0) + ($walletCreationResult ? 1 : 0) + ($shadowWalletClaimResult ? 1 : 0) + (($bufferFamilyResult && !$bufferSkipped) ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0);
+// Cross-validation counts as a test only when it ran against peer results. With no shared
+// directory or no peer results it printed its skip line and holds no verdict; Round 1
+// (KNISHIO_DISABLE_CROSS_VALIDATION) does not run it at all.
+$crossSdkRan = ($results['crossValidation']['ran'] ?? false) === true;
+
+$totalTests = $crossSdkRan ? 11 : 10;
+$passedTests = ($cryptoResult ? 1 : 0) + ($metaResult ? 1 : 0) + ($simpleResult ? 1 : 0) + ($complexResult ? 1 : 0) + ($tokenCreationResult ? 1 : 0) + ($walletCreationResult ? 1 : 0) + ($shadowWalletClaimResult ? 1 : 0) + (($bufferFamilyResult && !$bufferSkipped) ? 1 : 0) + ($mlkemResult ? 1 : 0) + ($negativeResult ? 1 : 0) + (($crossSdkRan && $crossSdkResult) ? 1 : 0);
 $skippedTests = $bufferSkipped ? 1 : 0;
 $failedCount = $totalTests - $passedTests - $skippedTests;
 $failedTests = [];
@@ -1560,6 +1604,14 @@ if (!$bufferFamilyResult && !$bufferSkipped) {
     $failedTests[] = 'bufferFamily: ' . ($results['tests']['bufferFamily']['validationError'] ?? 'Validation failed');
 }
 if (!$mlkemResult) $failedTests[] = 'mlkem768: Validation failed';
+if (!$negativeResult) {
+    $failedNegative = array_keys(array_filter($results['tests']['negativeCases']['cases'] ?? [], fn($ok) => !$ok));
+    $failedTests[] = 'negativeCases: ' . (empty($failedNegative) ? 'Validation failed' : implode(', ', $failedNegative) . ' not rejected as expected');
+}
+if ($crossSdkRan && !$crossSdkResult) {
+    $cv = $results['crossValidation'];
+    $failedTests[] = "crossSdkValidation: validated {$cv['targetsValidated']}/{$cv['targetsExpected']} peer SDKs without failure";
+}
 
 // Save results
 // Configurable shared results directory
@@ -1602,8 +1654,11 @@ if (!empty($failedTests)) {
     }
 }
 
-$compatColor = $crossSdkResult ? COLOR_GREEN : COLOR_RED;
-$compatStatus = $crossSdkResult ? '✅ YES' : '❌ NO';
+// Printed from the value written to php-results.json, so the console and the file agree. With
+// cross-validation disabled (Round 1) or skipped, nothing was shown compatible: "❌ NO".
+$compatible = ($results['crossSdkCompatible'] ?? false) === true;
+$compatColor = $compatible ? COLOR_GREEN : COLOR_RED;
+$compatStatus = $compatible ? '✅ YES' : '❌ NO';
 log_message("\nCross-SDK Compatible: $compatStatus", $compatColor);
 
 log_message('═══════════════════════════════════════════', COLOR_BLUE);

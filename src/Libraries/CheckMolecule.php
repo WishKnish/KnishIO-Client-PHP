@@ -114,6 +114,7 @@ class CheckMolecule {
   public function verify ( ?Wallet $fromWallet = null ): void {
     $this->molecularHash();
     $this->ots();
+    $this->continuId();
     $this->isotopeM();
     $this->isotopeR();
     $this->isotopeC();
