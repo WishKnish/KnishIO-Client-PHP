@@ -383,7 +383,7 @@ class CheckMolecule {
     /** @var Atom $firstAtom */
     $firstAtom = $atoms[ 0 ];
 
-    // if there are only two atoms, then this is the burning of tokens
+    // A 2-atom V molecule: same token, a non-negative credit, and the two values sum to zero.
     if ( count( $atoms ) === 2 ) {
 
       /** @var Atom $endAtom */
@@ -395,6 +395,11 @@ class CheckMolecule {
 
       if ( $endAtom->getValue() < 0 ) {
         throw new TransferMalformedException();
+      }
+
+      // Conservation (JS CheckMolecule.isotopeV): the two values must sum to zero.
+      if ( $firstAtom->getValue() + $endAtom->getValue() !== 0 ) {
+        throw new TransferUnbalancedException();
       }
 
       return;

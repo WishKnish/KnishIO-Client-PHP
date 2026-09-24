@@ -1271,10 +1271,7 @@ function test_negative_cases() {
 
     // Case 4: a signed V molecule that does not conserve value (-1000 / +500 / +100) must be
     // rejected by the verifier with TransferUnbalancedException (the case the other SDKs run).
-    // It uses three V atoms: CheckMolecule::isotopeVB's 2-atom branch has no conservation
-    // check, so a 2-atom -1000/+500 molecule is accepted. That gap is reported, not fixed
-    // here: Molecule::replenishToken builds an unbalanced 2-atom V molecule that the branch
-    // exists to let through.
+    // Three V atoms is the pure-V shape the validator requires (source, recipient(s), remainder).
     $cases['unbalancedTransfer'] = run_negative_case(
         'Unbalanced transfer validation (should FAIL)',
         function () use ($secret, $newSourceWallet, $newRecipientWallet) {

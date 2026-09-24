@@ -21,6 +21,12 @@ not substantiate a detail, the entry says so instead of guessing.
   spends the `USER` token must carry a ContinuID `I` atom, or `verify()` throws
   `MoleculeAtomsMissingException('Missing atom ContinuID')`. `continuId()` existed but was never
   called, so such a molecule verified. Pinned by `tests/CheckMoleculeContinuIdTest.php`.
+- `CheckMolecule::isotopeVB()` now rejects a 2-atom V molecule whose two values do not sum to zero
+  (`TransferUnbalancedException`), as the JS reference does (`CheckMolecule.js`); `-1000 / +500`
+  used to verify. `Molecule::replenishToken()` builds exactly such a molecule
+  (`V(+amount) + V(+balance+amount)`), so `KnishIOClient::replenishToken()` now fails client-side,
+  as the JS SDK's does. The validator already rejected it: a pure-V molecule needs at least 3 V
+  atoms summing to zero. Pinned by `tests/CheckMoleculeIsotopeVTest.php`.
 
 ## [1.2.0] — 2026-09-20
 
