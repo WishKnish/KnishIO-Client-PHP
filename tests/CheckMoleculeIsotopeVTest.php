@@ -1,8 +1,14 @@
 <?php
+/*
+        Powered by Knish.IO: Connecting a Decentralized World
+
+Please visit https://github.com/WishKnish/KnishIO-Client-PHP for information.
+
+License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
+ */
 
 namespace WishKnish\KnishIO\Client\Tests;
 
-use PHPUnit\Framework\TestCase;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;

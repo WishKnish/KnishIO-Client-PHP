@@ -134,9 +134,9 @@ class KnishIOClient {
   private ?SecretStorageProvider $secretStorage = null;
 
   /**
-   * @var Query
+   * @var Query|null
    */
-  private Query $lastMoleculeQuery;
+  private ?Query $lastMoleculeQuery = null;
 
   /**
    * @var string|null
@@ -1527,6 +1527,7 @@ class KnishIOClient {
     if ( $response->success() ) {
       $authToken = AuthToken::create( $response->payload(), $wallet, $encrypt );
       $this->setAuthToken( $authToken );
+      $this->lastMoleculeQuery = null;
     }
 
     return $response;

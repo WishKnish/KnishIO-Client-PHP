@@ -27,6 +27,14 @@ not substantiate a detail, the entry says so instead of guessing.
   (`V(+amount) + V(+balance+amount)`), so `KnishIOClient::replenishToken()` now fails client-side,
   as the JS SDK's does. The validator already rejected it: a pure-V molecule needs at least 3 V
   atoms summing to zero. Pinned by `tests/CheckMoleculeIsotopeVTest.php`.
+- After a profile authorization (`requestProfileAuthToken`, which `requestAuthToken` calls when it
+  has a secret), the next molecule is signed from the ContinuID position the validator reports
+  (`queryContinuId`) instead of from the auth molecule's cached USER remainder wallet. From
+  validator 0.5.0 an unproven re-authorization (every login of an identity after its first) no
+  longer creates a wallet at its I-atom position or moves the ContinuID pointer there, so the first
+  molecule after such a login was rejected with `Wallet not found: bundle=…, position=…`. Querying
+  the pointer is correct against earlier validators too. Pinned by
+  `tests/AuthContinuIdSourceWalletTest.php`.
 
 ## [1.2.0] — 2026-09-20
 
