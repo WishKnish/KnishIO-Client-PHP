@@ -19,6 +19,19 @@ composer require wishknish/knishio-client-php
 - PHP 8.2 or higher
 - Required extensions: `ext-json`, `ext-sodium`, `ext-mbstring`
 - Composer for dependency management
+- Node.js 20.19 or higher on the `PATH` (ML-KEM runs in Node, through the package's
+  `bin/noble-mlkem-bridge.js`)
+
+The ML-KEM bridge loads `@noble/post-quantum` from the package's own `node_modules`, which
+Composer does not install. Run this once after `composer require` (and after each update of the
+package), from your project root:
+
+```bash
+(cd vendor/wishknish/knishio-client-php && npm ci --omit=dev)
+```
+
+Without it, every ML-KEM operation fails, including the wallet an authorization signs with:
+`new Wallet($secret, 'AUTH')` throws `@noble/post-quantum not installed`.
 
 After installation, include the autoloader in your project:
 

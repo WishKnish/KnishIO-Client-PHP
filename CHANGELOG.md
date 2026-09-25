@@ -12,7 +12,7 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
-## [Unreleased]
+## [1.2.1] — 2026-09-25
 
 ### Fixed
 
@@ -35,6 +35,17 @@ not substantiate a detail, the entry says so instead of guessing.
   molecule after such a login was rejected with `Wallet not found: bundle=…, position=…`. Querying
   the pointer is correct against earlier validators too. Pinned by
   `tests/AuthContinuIdSourceWalletTest.php`.
+
+### Notes
+
+- Needed against validator 0.5.0 and later, which testnet.knish.io has run since 2026-09-24:
+  earlier releases are rejected with `Wallet not found` on the first molecule after the second
+  and later logins of an identity.
+- Composer does not install the ML-KEM bridge's Node modules. Run
+  `(cd vendor/wishknish/knishio-client-php && npm ci --omit=dev)` once after installing or
+  updating the package; without it every ML-KEM operation, including building the wallet an
+  authorization signs with, throws `@noble/post-quantum not installed`. The same was true of
+  1.2.0. The README now documents the step and the Node.js 20.19 floor it needs.
 
 ## [1.2.0] — 2026-09-20
 
@@ -295,7 +306,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.1
 [1.2.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.0
 [1.1.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.1.0
 [1.0.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.0.0
