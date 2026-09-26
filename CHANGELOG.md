@@ -12,19 +12,7 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
-## [Unreleased]
-
-### Security
-
-- `CheckMolecule::ots()` (`src/Libraries/CheckMolecule.php`) now compares the address recovered
-  from the OTS signature only against the first atom's `walletAddress`. It used to replace that
-  address with the one named in the first atom's `signingWallet` meta, so a molecule claiming one
-  wallet's address but signed by another wallet's key verified as valid and was attributed to the
-  claimed wallet. Offline verifiers that rely on `check()`, such as knishproof, reported such a
-  forgery as valid. `Molecule::sign()` no longer reads the meta either: it always signs with the
-  key for the first atom's token and position. Pinned by `tests/SigningWalletForgeryTest.php`,
-  which loads a forged molecule built by the JS SDK 1.2.1
-  (`tests/fixtures/signing-wallet-forgery.json`) and expects `MoleculeSignatureMismatchException`.
+## [1.3.0] — 2026-09-26
 
 ### Changed
 
@@ -55,6 +43,18 @@ not substantiate a detail, the entry says so instead of guessing.
   `payload()` returns `null` for it. It also used to leave `payload` uninitialised after the
   failed decode, so `payload()` threw an `Error` on a rejected response. Pinned by
   `tests/ResponseMoleculeTest.php`.
+
+### Security
+
+- `CheckMolecule::ots()` (`src/Libraries/CheckMolecule.php`) now compares the address recovered
+  from the OTS signature only against the first atom's `walletAddress`. It used to replace that
+  address with the one named in the first atom's `signingWallet` meta, so a molecule claiming one
+  wallet's address but signed by another wallet's key verified as valid and was attributed to the
+  claimed wallet. Offline verifiers that rely on `check()`, such as knishproof, reported such a
+  forgery as valid. `Molecule::sign()` no longer reads the meta either: it always signs with the
+  key for the first atom's token and position. Pinned by `tests/SigningWalletForgeryTest.php`,
+  which loads a forged molecule built by the JS SDK 1.2.1
+  (`tests/fixtures/signing-wallet-forgery.json`) and expects `MoleculeSignatureMismatchException`.
 
 ## [1.2.1] — 2026-09-25
 
@@ -350,7 +350,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.2.1...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.3.0...HEAD
+[1.3.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.0
 [1.2.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.1
 [1.2.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.0
 [1.1.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.1.0
