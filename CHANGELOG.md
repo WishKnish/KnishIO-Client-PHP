@@ -50,6 +50,11 @@ not substantiate a detail, the entry says so instead of guessing.
   is `USER` as well as `AUTH`, and `AuthToken::getSnapshot()` records the bound wallet's token as
   `wallet.token`, which `AuthToken::restore()` uses (a snapshot without it restores an AUTH
   wallet, as before). Pinned by `tests/AuthContinuIdSourceWalletTest.php`.
+- `ResponseMolecule::init()` (`src/Response/ResponseMolecule.php`) no longer passes a rejected
+  molecule's `payload: null` to `json_decode()`, which PHP 8.1 and later report as deprecated;
+  `payload()` returns `null` for it. It also used to leave `payload` uninitialised after the
+  failed decode, so `payload()` threw an `Error` on a rejected response. Pinned by
+  `tests/ResponseMoleculeTest.php`.
 
 ## [1.2.1] — 2026-09-25
 

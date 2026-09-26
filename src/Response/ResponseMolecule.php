@@ -76,6 +76,12 @@ class ResponseMolecule extends Response {
     // Get a json payload
     $payload_json = array_get( $this->data(), 'payload' );
 
+    // A rejected molecule carries no payload
+    if ( !is_string( $payload_json ) ) {
+      $this->payload = null;
+      return;
+    }
+
     // Decode payload
     try {
       $this->payload = json_decode( $payload_json, true, 512, JSON_THROW_ON_ERROR );
