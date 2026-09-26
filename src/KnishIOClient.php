@@ -1483,6 +1483,12 @@ class KnishIOClient {
   }
 
   /**
+   * Returning identity: the auth is signed from the ContinuID pointer by the USER wallet registered
+   * there, which validator 0.5.0+ records as proven (keeps permissioned/private cell access). The
+   * first login, or a pointer that doesn't match this secret, signs from a fresh AUTH wallet at a
+   * random position (unproven). A rejected pointer-signed auth falls back to that path ONCE, so a
+   * login sends at most two authorization molecules (testnet allows 3 auths/min/IP).
+   *
    * @param string $secret
    * @param bool $encrypt
    *
@@ -1492,7 +1498,60 @@ class KnishIOClient {
   public function requestProfileAuthToken ( string $secret, bool $encrypt ): Response {
     $this->setSecret( $secret );
 
-    $wallet = new Wallet( $secret, 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() );
+    $pointerWallet = $this->continuIdAuthWallet( $secret );
+    if ( $pointerWallet !== null ) {
+      $response = $this->proposeProfileAuthorization( $secret, $pointerWallet, $encrypt );
+      if ( $response->success() ) {
+        error_log( 'KnishIOClient::requestProfileAuthToken() - auth token signed from the ContinuID pointer (USER wallet, position ' . $pointerWallet->position . ').' );
+        return $response;
+      }
+      error_log( 'KnishIOClient::requestProfileAuthToken() - WARNING: pointer-signed authorization rejected (' . $response->reason() . '); falling back once to a fresh AUTH wallet.' );
+    }
+
+    $response = $this->proposeProfileAuthorization( $secret, new Wallet( $secret, 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() ), $encrypt );
+    if ( $response->success() ) {
+      error_log( 'KnishIOClient::requestProfileAuthToken() - auth token signed from a fresh AUTH wallet (' . ( $pointerWallet !== null ? 'fallback' : 'no ContinuID pointer' ) . ').' );
+    }
+
+    return $response;
+  }
+
+  /**
+   * The USER wallet at this identity's ContinuID pointer, derived from the secret, or null when there
+   * is no USER pointer or the derived address differs from the one the validator reports.
+   *
+   * @param string $secret
+   *
+   * @return Wallet|null
+   * @throws GuzzleException|JsonException|Exception
+   */
+  private function continuIdAuthWallet ( string $secret ): ?Wallet {
+    // token:"USER" — without it the validator falls back to the newest wallet of ANY token when the
+    // bundle has no ContinuID meta. The query is public: it needs no auth token.
+    $pointer = $this->queryContinuId( $this->getBundle(), 'USER' )->payload();
+    if ( !$pointer instanceof Wallet || $pointer->token !== 'USER' || !$pointer->position ) {
+      return null;
+    }
+
+    $wallet = new Wallet( $secret, 'USER', $pointer->position, mlKemParameterSet: $this->getMlKemParameterSet() );
+    if ( $pointer->address && $pointer->address !== $wallet->address ) {
+      return null;
+    }
+
+    return $wallet;
+  }
+
+  /**
+   * Sign & propose a profile authorization from $wallet; binds the auth token to $wallet on success.
+   *
+   * @param string $secret
+   * @param Wallet $wallet
+   * @param bool $encrypt
+   *
+   * @return ResponseRequestAuthorization
+   * @throws GuzzleException|JsonException|Exception
+   */
+  private function proposeProfileAuthorization ( string $secret, Wallet $wallet, bool $encrypt ): ResponseRequestAuthorization {
 
     // Create an auth molecule
     $molecule = $this->createMolecule( $secret, $wallet );
@@ -1504,7 +1563,7 @@ class KnishIOClient {
      */
     $query = $this->createMoleculeMutation( MutationRequestAuthorization::class, $molecule );
 
-    // PQ-transport (cycle 165): convey the AUTH source wallet's ML-KEM public key as a SIGNED
+    // PQ-transport (cycle 165): convey the source wallet's ML-KEM public key as a SIGNED
     // `walletPubkey` meta on the U-atom (fillMolecule → initAuthorization → sign), so the validator
     // can encrypt CipherHash responses back to THIS wallet (the one that decrypts them). Signed →
     // a MITM can't swap the response-encryption target. Conveyed unconditionally (parity with JS/

@@ -59,7 +59,8 @@ class AuthToken {
    * @throws SodiumException
    */
   public static function restore ( array $snapshot, string $secret ): self {
-    $wallet = new Wallet ( $secret, 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ), static::resolveMlKemParameterSet( $snapshot ) );
+    // A snapshot predating `wallet.token` was always bound to an AUTH wallet.
+    $wallet = new Wallet ( $secret, array_get( $snapshot, 'wallet.token' ) ?? 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ), static::resolveMlKemParameterSet( $snapshot ) );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
       'expiresAt' => array_get( $snapshot, 'expiresAt' ),
@@ -113,6 +114,7 @@ class AuthToken {
       'pubkey' => $this->pubkey,
       'encrypt' => $this->encrypt,
       'wallet' => [
+        'token' => $this->wallet->token,
         'position' => $this->wallet->position,
         'characters' => $this->wallet->characters,
         'mlKemParameterSet' => $this->wallet->mlKemParameterSet,

@@ -314,7 +314,8 @@ class CheckMolecule {
     /** @var Atom $atom */
     foreach ( $this->molecule->getIsotopes( 'U' ) as $atom ) {
 
-      if ( $atom->token !== 'AUTH' ) {
+      // AUTH: fresh-wallet authorization; USER: re-authorization signed from the ContinuID pointer.
+      if ( !in_array( $atom->token, [ 'AUTH', 'USER' ], true ) ) {
         throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
 

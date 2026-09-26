@@ -37,6 +37,20 @@ not substantiate a detail, the entry says so instead of guessing.
   meta was always rejected by validator 0.5.0 and later, so such a withdrawal could never succeed.
   Withdrawals without it build and sign the same molecule as before.
 
+### Fixed
+
+- A returning user's login (`requestProfileAuthToken`, which `requestAuthToken` calls when it has a
+  secret) is now signed from the ContinuID pointer (`queryContinuId($bundle, 'USER')`) with the
+  USER wallet registered there, so validator 0.5.0 and later issue a proven token and the user keeps
+  read and subscription access to permissioned and private cells. It used to sign every login from
+  a fresh AUTH wallet at a random position, which 0.5.0 records as unproven and treats as a guest
+  for those cells. The first login of an identity is unchanged. A rejected pointer-signed login
+  falls back once to the previous unproven AUTH-wallet login, so one login sends at most two
+  authorization molecules. To allow this, `CheckMolecule::isotopeU()` accepts a `U` atom whose token
+  is `USER` as well as `AUTH`, and `AuthToken::getSnapshot()` records the bound wallet's token as
+  `wallet.token`, which `AuthToken::restore()` uses (a snapshot without it restores an AUTH
+  wallet, as before). Pinned by `tests/AuthContinuIdSourceWalletTest.php`.
+
 ## [1.2.1] — 2026-09-25
 
 ### Fixed
