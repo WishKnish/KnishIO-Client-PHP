@@ -12,6 +12,31 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [Unreleased]
+
+### Security
+
+- `CheckMolecule::ots()` (`src/Libraries/CheckMolecule.php`) now compares the address recovered
+  from the OTS signature only against the first atom's `walletAddress`. It used to replace that
+  address with the one named in the first atom's `signingWallet` meta, so a molecule claiming one
+  wallet's address but signed by another wallet's key verified as valid and was attributed to the
+  claimed wallet. Offline verifiers that rely on `check()`, such as knishproof, reported such a
+  forgery as valid. `Molecule::sign()` no longer reads the meta either: it always signs with the
+  key for the first atom's token and position. Pinned by `tests/SigningWalletForgeryTest.php`,
+  which loads a forged molecule built by the JS SDK 1.2.1
+  (`tests/fixtures/signing-wallet-forgery.json`) and expects `MoleculeSignatureMismatchException`.
+
+### Changed
+
+- **Breaking:** `KnishIOClient::withdrawBufferToken()` no longer takes a `$signingWallet`
+  argument, and `MutationWithdrawBufferToken::fillMolecule()` and `Molecule::initWithdrawBuffer()`
+  take only the recipients. `AtomMeta::setSigningWallet()` and `AtomMeta::getSigningWallet()` are
+  removed. Code that calls those methods, or passes `signingWallet:` as a named argument, now
+  fails with `Error`. PHP ignores an extra positional argument, so code passing the signing wallet
+  positionally still runs but no longer adds the meta; remove the argument. The `signingWallet`
+  meta was always rejected by validator 0.5.0 and later, so such a withdrawal could never succeed.
+  Withdrawals without it build and sign the same molecule as before.
+
 ## [1.2.1] — 2026-09-25
 
 ### Fixed

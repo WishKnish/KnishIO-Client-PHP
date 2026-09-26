@@ -953,7 +953,7 @@ function test_buffer_family() {
             $source->balance = $tv['sourceBalance'];
 
             $molecule = new Molecule($secret, $source, $source);
-            $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ], $source);
+            $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ]);
             setFixedTimestamps($molecule);
             $molecule->sign(false);
 
@@ -1005,7 +1005,7 @@ function test_buffer_family() {
                 $molecule->initDepositBuffer($tv['amount'], []);
             } elseif ($buildFrom === 'withdraw') {
                 $molecule = new Molecule($secret, $source, $source);
-                $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ], $source);
+                $molecule->initWithdrawBuffer([ $source->bundle => $tv['amount'] ]);
             } else {
                 throw new Exception("unknown buildFrom '$buildFrom' in buffer_conservation_negative");
             }

@@ -221,55 +221,6 @@ class AtomMeta {
   }
 
   /**
-   * @param Wallet $signingWallet
-   *
-   * @return $this
-   * @throws JsonException
-   */
-  public function setSigningWallet ( Wallet $signingWallet ): self {
-    $this->merge( [
-      'signingWallet' => json_encode( [
-        'tokenSlug' => $signingWallet->token,
-        'bundleHash' => $signingWallet->bundle,
-        'address' => $signingWallet->address,
-        'position' => $signingWallet->position,
-        'pubkey' => $signingWallet->pubkey,
-        'characters' => $signingWallet->characters,
-      ], JSON_THROW_ON_ERROR ),
-    ] );
-    return $this;
-  }
-
-  /**
-   * (used only on the server side)
-   * @return Wallet|null
-   * @throws SodiumException
-   */
-  public function getSigningWallet(): ?Wallet {
-
-    // Signing wallet key does not found in metas: the value is not set
-    if ( !array_has( $this->meta, 'signingWallet' ) ) {
-      return null;
-    }
-
-    // Get wallet's data from the meta key
-    $walletData = json_decode( array_get( $this->meta, 'signingWallet' ), true );
-
-    // Create a wallet with all existing data
-    $wallet = new Wallet(
-      null,
-      array_get( $walletData, 'tokenSlug' ),
-      array_get( $walletData, 'position' ),
-      null,
-      array_get( $walletData, 'characters' )
-    );
-    $wallet->bundle = array_get( $walletData, 'bundleHash' );
-    $wallet->address = array_get( $walletData, 'address' );
-    $wallet->pubkey = array_get( $walletData, 'pubkey' );
-    return $wallet;
-  }
-
-  /**
    * @return string|null
    */
   public function getCharacters(): ?string {

@@ -615,13 +615,12 @@ class Molecule extends MoleculeStructure {
    * Initialize withdraw buffer (BVB molecule OR BV..VB combination)
    *
    * @param array $recipients
-   * @param Wallet|null $signingWallet
    *
    * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function initWithdrawBuffer ( array $recipients, ?Wallet $signingWallet = null ): Molecule {
+  public function initWithdrawBuffer ( array $recipients ): Molecule {
 
     // Get the final sum of the recipients amount
     $amount = array_sum( $recipients );
@@ -631,12 +630,6 @@ class Molecule extends MoleculeStructure {
       throw new TransferBalanceException();
     }
 
-    // Set a metas signing wallet data for molecule reconciliation ability
-    $firstAtomMeta = new AtomMeta();
-    if ( $signingWallet ) {
-      $firstAtomMeta->setSigningWallet( $signingWallet );
-    }
-
     // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
     $this->addAtom( Atom::create(
       'B',
@@ -644,7 +637,6 @@ class Molecule extends MoleculeStructure {
       -$this->sourceWallet->balance,
       'walletBundle',
       $this->sourceWallet->bundle,
-      $firstAtomMeta
     ) );
 
     // Initializing a new Atom to add tokens to recipient
@@ -975,12 +967,6 @@ class Molecule extends MoleculeStructure {
 
     // Set signing position from the first atom
     $signingPosition = $firstAtom->position;
-
-    // Try to get other specified signing wallet from the metas & override position
-    $signingWallet = $firstAtom->getAtomMeta()->getSigningWallet();
-    if ( $signingWallet ) {
-      $signingPosition = $signingWallet->position;
-    }
 
     // Signing position is required
     if ( !$signingPosition ) {
