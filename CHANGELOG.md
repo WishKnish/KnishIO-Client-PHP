@@ -12,6 +12,46 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [1.3.1] — 2026-09-28
+
+### Fixed
+
+- `KnishIOClient::replenishToken()` builds the replenish molecule validator 0.6.0 accepts: a `C`
+  atom signed by the USER wallet (meta `action` = `add`, then the credited wallet's `address`,
+  `position`, `pubkey`, its `batchId` when it has one, and the new `tokenUnits` for stackable
+  tokens) plus the ContinuID atom. The credited wallet is the identity's wallet for the token
+  (`queryBalance`), or a new one. It used to build `V(+amount) + V(+balance+amount)`, which
+  `CheckMolecule` rejects, so no replenish was ever sent. `Molecule::replenishToken()` now takes the
+  credited wallet first. A stackable or non-fungible token without units is refused with
+  `StackableUnitAmountException`.
+- `KnishIOClient::fuseToken()` builds the stackable fusion molecule of validator 0.6.0:
+  `V(-B)` with the fused units, a burn `V(+(M-1))` to the all-zeros bundle with all fused units
+  but the last, `F(+1)` carrying the new unit (its `fusedTokenUnits` meta lists every fused unit),
+  and the remainder `V(+(B-M))` with the kept units. It used to send an unconserved
+  `V(-n) F(+1) V(B-n)`. Fusing fewer than two units, or a new unit id the source already holds,
+  is refused with `TransferBalanceException`. When the source has a batch ID the burn and the
+  recipient each get a fresh one. `$newTokenUnit` may also be a plain id. `Molecule::fuseToken()`
+  takes the recipient wallet, the new unit and the fused ids.
+- `CheckMolecule::isotopeF()` (new) checks F atoms as the JS SDK does: metaType `walletBundle`, a
+  metaId, a non-negative value, and V+F values that sum to zero. `isotopeVB()` leaves V-only
+  conservation to it when F atoms are present.
+- `KnishIOClient::withdrawBufferToken()` credits the buffer remainder to a fresh position of the
+  buffer wallet. It used to credit it at the signing position, whose one-time key the withdrawal
+  consumes; validator 0.6.1 rejects that with "Value may not be credited to a consumed signing
+  position".
+- `KnishIOClient::claimShadowWallet()` without a batch ID claims the first shadow wallet
+  `queryWallets()` lists for the token, as the JS SDK does, and throws `WalletShadowException`
+  when there is none. It used to send no batch ID, which the validator rejects with "Shadow wallet
+  claim requires batch_id".
+- `QueryToken` declares `$slugs` as `[String!]`. The validator's GraphQL parser rejects the
+  previous `[ String! ]`, so every token query failed, including `requestTokens()`.
+- `tokenUnits` metas are encoded as the JS SDK encodes them: an empty unit metas object is `{}`
+  rather than `[]`, and slashes and non-ASCII characters are not escaped.
+
+Pinned by `tests/PatentVectorValidationTest.php` (vectors `token_replenish`,
+`stackable_fusion_conservation`, `buffer_withdraw_fresh_remainder`),
+`tests/ClaimShadowWalletTest.php` and `tests/PreSubmitCheckTest.php`.
+
 ## [1.3.0] — 2026-09-26
 
 ### Changed
@@ -350,7 +390,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.3.1...HEAD
+[1.3.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.1
 [1.3.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.0
 [1.2.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.1
 [1.2.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.0
