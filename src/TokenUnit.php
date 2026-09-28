@@ -161,14 +161,33 @@ class TokenUnit {
   }
 
   /**
+   * The unit's [id, name, metas] triple. Empty metas are an object, so the triple encodes as
+   * `["id","name",{}]`, the form JS `JSON.stringify` produces (PHP would otherwise emit `[]`).
+   *
    * @return array
    */
   public function toData (): array {
     return [
       $this->id,
       $this->name,
-      $this->metas,
+      $this->metas ?: new \stdClass(),
     ];
+  }
+
+  /**
+   * Compact JSON of a unit list as JS `JSON.stringify` writes it (no escaped slashes or unicode):
+   * the value of a `tokenUnits` atom meta.
+   *
+   * @param TokenUnit[] $tokenUnits
+   *
+   * @return string
+   * @throws JsonException
+   */
+  public static function encodeList ( array $tokenUnits ): string {
+    return json_encode(
+      array_map( static fn( TokenUnit $tokenUnit ) => $tokenUnit->toData(), array_values( $tokenUnits ) ),
+      JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+    );
   }
 
   /**

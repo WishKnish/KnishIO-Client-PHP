@@ -4,11 +4,14 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use WishKnish\KnishIO\Client\Atom;
+use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\TokenUnit;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -142,6 +145,221 @@ class PatentVectorValidationTest extends TestCase {
       $this->assertEquals( $test[ 'expectedSourceValue' ], $bValues[ 0 ], 'source B for ' . $test[ 'name' ] );
       $this->assertEquals( $test[ 'expectedRecipientValue' ], $vValue, 'recipient V for ' . $test[ 'name' ] );
       $this->assertEquals( $test[ 'expectedRemainderValue' ], $bValues[ 1 ], 'remainder B for ' . $test[ 'name' ] );
+    }
+  }
+
+  /**
+   * @param Atom $atom
+   *
+   * @return array<string, ?string> the atom's metas in emission order
+   */
+  private static function metas ( Atom $atom ): array {
+    $metas = [];
+    foreach ( $atom->meta as $meta ) {
+      $metas[ $meta[ 'key' ] ] = $meta[ 'value' ];
+    }
+    return $metas;
+  }
+
+  /**
+   * @param Atom $atom
+   *
+   * @return string[] ids of the atom's tokenUnits meta ([] when the meta is absent)
+   */
+  private static function unitIds ( Atom $atom ): array {
+    $json = self::metas( $atom )[ 'tokenUnits' ] ?? null;
+    return $json === null ? [] : array_map( static fn( array $unit ) => $unit[ 0 ], json_decode( $json, true, 512, JSON_THROW_ON_ERROR ) );
+  }
+
+  /**
+   * @param string[] $ids
+   *
+   * @return TokenUnit[]
+   */
+  private static function units ( array $ids ): array {
+    return array_map( static fn( string $id ) => new TokenUnit( $id, $id ), $ids );
+  }
+
+  /**
+   * Contract 9.1: replenish is a C atom (action=add, crediting the identity's token wallet) plus
+   * the ContinuID atom, signed by the USER wallet, and it passes the SDK's own check.
+   */
+  public function testTokenReplenish (): void {
+    $secret = Crypto::generateSecret( 'php-token-replenish-vector' );
+    foreach ( $this->vectors[ 'token_replenish' ][ 'tests' ] as $test ) {
+      $credited = Wallet::create( $secret, $test[ 'token' ] );
+      $molecule = new Molecule( $secret, new Wallet( $secret ), null, 'replenishtest' );
+      $molecule->replenishToken( $credited, (int) $test[ 'amount' ], $test[ 'units' ] );
+      $molecule->sign();
+      $molecule->check();
+
+      $name = $test[ 'name' ];
+      $this->assertSame( $test[ 'expectedIsotopes' ], array_map( static fn( Atom $atom ) => $atom->isotope, $molecule->atoms ), "isotopes for $name" );
+      $cAtom = $molecule->atoms[ 0 ];
+      $this->assertSame( 'USER', $cAtom->token, "C atom is signed by the USER wallet for $name" );
+      $this->assertSame( $test[ 'expectedCValue' ], $cAtom->value, "C value for $name" );
+      $this->assertSame( $test[ 'expectedMetaType' ], $cAtom->metaType, "metaType for $name" );
+      $this->assertSame( $test[ 'expectedMetaId' ], $cAtom->metaId, "metaId for $name" );
+
+      $metas = self::metas( $cAtom );
+      $expectedKeys = [ 'action', 'address', 'position', 'pubkey' ];
+      if ( $test[ 'expectedTokenUnitIds' ] !== null ) {
+        $expectedKeys[] = 'tokenUnits';
+      }
+      $this->assertSame( $expectedKeys, array_keys( $metas ), "meta keys and order for $name" );
+      $this->assertSame( $test[ 'expectedAction' ], $metas[ 'action' ], "action for $name" );
+      $this->assertSame( [ $credited->address, $credited->position, $credited->pubkey ], [ $metas[ 'address' ], $metas[ 'position' ], $metas[ 'pubkey' ] ], "credited wallet for $name" );
+      if ( $test[ 'expectedTokenUnitIds' ] === null ) {
+        continue;
+      }
+      $this->assertSame( $test[ 'expectedTokenUnitIds' ], self::unitIds( $cAtom ), "unit ids for $name" );
+      // The units' JSON is JS JSON.stringify's: compact, an empty metas object is {}.
+      $this->assertSame( json_encode( $test[ 'units' ] === [] ? [] : array_map( static fn( array $unit ) => [ $unit[ 0 ], $unit[ 1 ], new \stdClass() ], $test[ 'units' ] ) ), $metas[ 'tokenUnits' ], "unit JSON for $name" );
+    }
+  }
+
+  /**
+   * A credited wallet with a batch ID carries it on the C atom and as the `batchId` meta, after
+   * pubkey and before tokenUnits.
+   */
+  public function testTokenReplenishCarriesTheCreditedWalletBatchId (): void {
+    $secret = Crypto::generateSecret( 'php-token-replenish-batch' );
+    $credited = Wallet::create( $secret, 'REPLSTK', 'batch-1' );
+    $molecule = new Molecule( $secret, new Wallet( $secret ), null, 'replenishtest' );
+    $molecule->replenishToken( $credited, 0, [ [ 'R1', 'R1', [] ] ] );
+    $molecule->sign();
+    $molecule->check();
+
+    $cAtom = $molecule->atoms[ 0 ];
+    $this->assertSame( 'batch-1', $cAtom->batchId );
+    $this->assertSame( [ 'action', 'address', 'position', 'pubkey', 'batchId', 'tokenUnits' ], array_keys( self::metas( $cAtom ) ) );
+    $this->assertSame( 'batch-1', self::metas( $cAtom )[ 'batchId' ] );
+  }
+
+  /**
+   * Contract 9.2: V(-B, fused units) + V(burn, +(M-1)) + F(+1, [N]) + V(remainder, +(B-M)), no
+   * ContinuID atom, V+F sum 0, and the SDK's own check passes; a single fused unit is refused.
+   * Each vector also runs with a batch-bearing source: the burn and the recipient get fresh batch
+   * IDs and the remainder keeps the source's.
+   */
+  public function testStackableFusionConservation (): void {
+    $secret = Crypto::generateSecret( 'php-stackable-fusion-vector' );
+    foreach ( $this->vectors[ 'stackable_fusion_conservation' ][ 'tests' ] as $test ) {
+      foreach ( [ null, 'source-batch' ] as $sourceBatchId ) {
+        $name = $test[ 'name' ] . ( $sourceBatchId ? ' (batch)' : '' );
+        $source = Wallet::create( $secret, 'FUSTOK', $sourceBatchId );
+        $source->tokenUnits = self::units( $test[ 'sourceUnits' ] );
+        $source->balance = count( $test[ 'sourceUnits' ] );
+        $recipient = Wallet::create( $secret, 'FUSTOK' );
+        $molecule = new Molecule( $secret, $source, $source->createRemainder( $secret ), 'fusiontest' );
+
+        if ( $test[ 'mustReject' ] ?? false ) {
+          try {
+            $molecule->fuseToken( $recipient, new TokenUnit( $test[ 'newUnitId' ], $test[ 'newUnitId' ] ), $test[ 'fuse' ] );
+            $this->fail( "fusion must be refused for $name" );
+          }
+          catch ( TransferBalanceException $e ) {
+            $this->assertStringContainsString( $test[ 'expectedErrorContains' ], $e->getMessage(), $name );
+          }
+          continue;
+        }
+
+        $molecule->fuseToken( $recipient, new TokenUnit( $test[ 'newUnitId' ], $test[ 'newUnitId' ] ), $test[ 'fuse' ] );
+        $molecule->sign();
+        $molecule->check( $source );
+
+        [ $sourceAtom, $burnAtom, $fusionAtom, $remainderAtom ] = $molecule->atoms;
+        $this->assertSame( $test[ 'expectedIsotopes' ], array_map( static fn( Atom $atom ) => $atom->isotope, $molecule->atoms ), "isotopes for $name" );
+        $this->assertSame(
+          [ $test[ 'expectedSourceValue' ], $test[ 'expectedBurnValue' ], $test[ 'expectedFusionValue' ], $test[ 'expectedRemainderValue' ] ],
+          [ $sourceAtom->value, $burnAtom->value, $fusionAtom->value, $remainderAtom->value ],
+          "values for $name"
+        );
+        $this->assertSame( $test[ 'expectedSum' ], (string) array_sum( array_map( static fn( Atom $atom ) => (int) $atom->value, $molecule->atoms ) ), "sum V+F for $name" );
+
+        $this->assertSame( $source->address, $sourceAtom->walletAddress, "source atom signs from S for $name" );
+        $this->assertNull( $sourceAtom->metaType, "source atom metaType for $name" );
+        $this->assertSame( [ 'walletBundle', Molecule::ZERO_BUNDLE ], [ $burnAtom->metaType, $burnAtom->metaId ], "burn target for $name" );
+        $this->assertSame( [ 'walletBundle', $recipient->bundle ], [ $fusionAtom->metaType, $fusionAtom->metaId ], "fusion recipient for $name" );
+        $this->assertSame( [ 'walletBundle', $source->bundle ], [ $remainderAtom->metaType, $remainderAtom->metaId ], "remainder target for $name" );
+
+        $this->assertSame( $test[ 'expectedSourceUnitIds' ], self::unitIds( $sourceAtom ), "source unit ids for $name" );
+        $this->assertSame( $test[ 'expectedBurnUnitIds' ], self::unitIds( $burnAtom ), "burn unit ids for $name" );
+        $this->assertSame( $test[ 'expectedRemainderUnitIds' ], self::unitIds( $remainderAtom ), "remainder unit ids for $name" );
+
+        $newUnits = json_decode( self::metas( $fusionAtom )[ 'tokenUnits' ], true, 512, JSON_THROW_ON_ERROR );
+        $this->assertCount( 1, $newUnits, "one new unit for $name" );
+        $this->assertSame( [ $test[ 'newUnitId' ], $test[ 'newUnitId' ] ], [ $newUnits[ 0 ][ 0 ], $newUnits[ 0 ][ 1 ] ], "new unit for $name" );
+        $this->assertSame( $test[ 'expectedFusedTokenUnitIds' ], array_map( static fn( array $unit ) => $unit[ 0 ], $newUnits[ 0 ][ 2 ][ 'fusedTokenUnits' ] ), "fusedTokenUnits ids for $name" );
+        $fusedJson = implode( ',', array_map( static fn( string $id ) => '["' . $id . '","' . $id . '",{}]', $test[ 'fuse' ] ) );
+        $this->assertSame( '[["' . $test[ 'newUnitId' ] . '","' . $test[ 'newUnitId' ] . '",{"fusedTokenUnits":[' . $fusedJson . ']}]]', self::metas( $fusionAtom )[ 'tokenUnits' ], "new unit JSON for $name" );
+
+        if ( $sourceBatchId === null ) {
+          $this->assertSame( [ null, null, null, null ], array_map( static fn( Atom $atom ) => $atom->batchId, $molecule->atoms ), "no batch ids for $name" );
+          continue;
+        }
+        $this->assertSame( $sourceBatchId, $sourceAtom->batchId, "source batch id for $name" );
+        $this->assertSame( $sourceBatchId, $remainderAtom->batchId, "remainder keeps the source batch id for $name" );
+        foreach ( [ 'burn' => $burnAtom, 'fusion' => $fusionAtom ] as $role => $atom ) {
+          $this->assertNotNull( $atom->batchId, "$role batch id for $name" );
+          $this->assertNotSame( $sourceBatchId, $atom->batchId, "$role batch id is fresh for $name" );
+        }
+      }
+    }
+  }
+
+  /**
+   * Contract 9.6 through KnishIOClient::withdrawBufferToken(): the source B atom is the buffer
+   * wallet from Balance(type: buffer), and the remainder B goes to a FRESH position, never back
+   * to the signing position.
+   */
+  public function testBufferWithdrawFreshRemainder (): void {
+    $secret = Crypto::generateSecret( 'php-buffer-withdraw-fresh-remainder' );
+    $bundle = Crypto::generateBundleHash( $secret );
+    foreach ( $this->vectors[ 'buffer_withdraw_fresh_remainder' ][ 'tests' ] as $test ) {
+      $position = bin2hex( random_bytes( 32 ) );
+      $http = new RecordingHttpClient( 'http://offline.invalid/graphql', [
+        json_encode( [ 'data' => [ 'Balance' => [
+          'type' => 'buffer',
+          'address' => ( new Wallet( $secret, 'BUFTOK', $position ) )->address,
+          'bundleHash' => $bundle,
+          'tokenSlug' => 'BUFTOK',
+          'batchId' => null,
+          'position' => $position,
+          'amount' => (string) $test[ 'sourceBalance' ],
+          'characters' => 'BASE64',
+          'pubkey' => null,
+          'createdAt' => '2026-09-28T00:00:00Z',
+          'tokenUnits' => [],
+          'tradeRates' => [],
+        ] ] ], JSON_THROW_ON_ERROR ),
+        json_encode( [ 'data' => [ 'ProposeMolecule' => [
+          'molecularHash' => str_repeat( 'a', 64 ), 'height' => 0, 'depth' => 0, 'status' => 'accepted',
+          'reason' => null, 'payload' => null, 'createdAt' => '2026-09-28T00:00:00Z',
+        ] ] ], JSON_THROW_ON_ERROR ),
+      ] );
+      $client = new KnishIOClient( 'http://offline.invalid/graphql', $http );
+      $client->setSecret( $secret );
+      $client->withdrawBufferToken( 'BUFTOK', $test[ 'amount' ] );
+
+      $name = $test[ 'name' ];
+      $this->assertCount( 2, $http->requests, "requests for $name" );
+      $balanceQuery = json_decode( (string) $http->requests[ 0 ]->getBody(), true, 512, JSON_THROW_ON_ERROR );
+      $this->assertSame( 'buffer', $balanceQuery[ 'variables' ][ 'type' ], "source comes from Balance(type: buffer) for $name" );
+      $atoms = json_decode( (string) $http->requests[ 1 ]->getBody(), true, 512, JSON_THROW_ON_ERROR )[ 'variables' ][ 'molecule' ][ 'atoms' ];
+
+      $this->assertSame( $test[ 'expectedIsotopes' ], array_column( $atoms, 'isotope' ), "isotopes for $name" );
+      $this->assertSame(
+        [ $test[ 'expectedSourceValue' ], $test[ 'expectedRecipientValue' ], $test[ 'expectedRemainderValue' ] ],
+        array_column( $atoms, 'value' ),
+        "values for $name"
+      );
+      $this->assertSame( $test[ 'expectedSum' ], (string) array_sum( array_map( 'intval', array_column( $atoms, 'value' ) ) ), "sum B+V for $name" );
+      $this->assertSame( $position, $atoms[ 0 ][ 'position' ], "source B atom is the buffer wallet for $name" );
+      $this->assertSame( [ '', '' ], [ $atoms[ 1 ][ 'position' ], $atoms[ 1 ][ 'walletAddress' ] ], "recipient V is addressless for $name" );
+      $this->assertSame( [ 'walletBundle', $bundle ], [ $atoms[ 2 ][ 'metaType' ], $atoms[ 2 ][ 'metaId' ] ], "remainder target for $name" );
+      $this->assertSame( $test[ 'expectedRemainderPositionDistinctFromSource' ], $atoms[ 2 ][ 'position' ] !== $atoms[ 0 ][ 'position' ], "remainder position is fresh for $name" );
+      $this->assertNotSame( $atoms[ 0 ][ 'walletAddress' ], $atoms[ 2 ][ 'walletAddress' ], "remainder address is fresh for $name" );
     }
   }
 

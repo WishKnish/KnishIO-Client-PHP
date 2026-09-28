@@ -1017,6 +1017,19 @@ class KnishIOClient {
    * @throws SodiumException
    */
   public function claimShadowWallet ( string $tokenSlug, ?string $batchId = null, $molecule = null ): Response {
+
+    // No batch ID given: claim the first shadow wallet held for the token
+    if ( $batchId === null ) {
+      $shadowWallets = array_values( array_filter(
+        $this->queryWallets( null, $tokenSlug ) ?? [],
+        static fn( Wallet $wallet ) => $wallet->isShadow()
+      ) );
+      if ( !$shadowWallets ) {
+        throw new WalletShadowException( 'KnishIOClient::claimShadowWallet() - No shadow wallets found for token ' . $tokenSlug );
+      }
+      $batchId = $shadowWallets[ 0 ]->batchId;
+    }
+
     /**
      * Create a query
      * @var MutationClaimShadowWallet $query
@@ -1245,8 +1258,9 @@ class KnishIOClient {
     /** @var Wallet|null $fromWallet */
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount, 'buffer' );
 
-    // Remainder wallet
-    $remainderWallet = $fromWallet;
+    // Remainder: a fresh position of the same buffer wallet. Never the source itself: value
+    // credited at the signing position sits behind a consumed one-time key.
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
@@ -1311,10 +1325,15 @@ class KnishIOClient {
   }
 
   /**
+   * Mint more of an existing token (contract 9.1): a C atom with meta action=add, signed by the
+   * identity's USER wallet, crediting the identity's existing wallet for the token (a new one when
+   * it has none). The validator accepts it only from the token's creator, for supply `infinite`
+   * or `replenishable`.
+   *
    * @param string $tokenSlug
-   * @param int $amount
-   * @param array $tokenUnits
-   * @param Wallet|null $sourceWallet
+   * @param int $amount fungible amount; 0 (or the unit count) when units are given
+   * @param array $tokenUnits new units as [id, name, metas] triples (stackable/non-fungible)
+   * @param Wallet|null $sourceWallet the wallet to credit (default: queryBalance for the token)
    *
    * @return Response
    * @throws GuzzleException
@@ -1323,20 +1342,22 @@ class KnishIOClient {
    */
   public function replenishToken ( string $tokenSlug, int $amount, array $tokenUnits = [], ?Wallet $sourceWallet = null ): Response {
 
-    // Get a from wallet
-    /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-      ->payload();
-    if ( $fromWallet === null ) {
-      throw new TransferWalletException( 'Source wallet is missing or invalid.' );
+    // Stackable and non-fungible tokens are replenished with units, never with a bare amount
+    if ( !$tokenUnits ) {
+      $fungibility = array_get( $this->createQuery( QueryToken::class )
+        ->execute( [ 'slug' => $tokenSlug ] )
+        ->data(), '0.fungibility' );
+      if ( in_array( $fungibility, [ 'stackable', 'nonfungible' ], true ) ) {
+        throw new StackableUnitAmountException( 'Replenishing a ' . $fungibility . ' token requires token units.' );
+      }
     }
 
-    // Remainder wallet
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    // The credited wallet: the identity's existing wallet for the token, else a new one
+    $creditedWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )->payload()
+      ?? Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
-    // Burn tokens
-    $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-    $molecule->replenishToken( $amount, $tokenUnits );
+    $molecule = $this->createMolecule();
+    $molecule->replenishToken( $creditedWallet, $amount, $tokenUnits );
     $molecule->sign();
     $molecule->check();
 
@@ -1346,10 +1367,13 @@ class KnishIOClient {
   }
 
   /**
-   * @param string $bundleHash
+   * Fuse two or more units of a stackable token into one new unit delivered to `$bundleHash`
+   * (contract 9.2). The last fused unit is absorbed by the new one; the others are burned.
+   *
+   * @param string $bundleHash recipient bundle of the new unit
    * @param string $tokenSlug
-   * @param TokenUnit $newTokenUnit
-   * @param array $fusedTokenUnitIds
+   * @param TokenUnit|string $newTokenUnit the new unit, or its id (the name is then the id)
+   * @param array $fusedTokenUnitIds ids of the source units to fuse (at least two)
    * @param Wallet|null $sourceWallet
    *
    * @return Response
@@ -1357,7 +1381,7 @@ class KnishIOClient {
    * @throws JsonException
    * @throws SodiumException
    */
-  public function fuseToken ( string $bundleHash, string $tokenSlug, TokenUnit $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null ): Response {
+  public function fuseToken ( string $bundleHash, string $tokenSlug, TokenUnit|string $newTokenUnit, array $fusedTokenUnitIds, ?Wallet $sourceWallet = null ): Response {
 
     // Check bundle hash is secret has passed
     if ( !Crypto::isBundleHash( $bundleHash ) ) {
@@ -1374,40 +1398,24 @@ class KnishIOClient {
     if ( !$fromWallet->tokenUnits ) {
       throw new TransferWalletException( 'Source wallet does not have token units.' );
     }
-    if ( !$fusedTokenUnitIds ) {
-      throw new TransferWalletException( 'Fused token unit list is empty.' );
+
+    if ( is_string( $newTokenUnit ) ) {
+      $newTokenUnit = new TokenUnit( $newTokenUnit, $newTokenUnit );
     }
 
-    // Check fused token units
-    $sourceTokenUnitIds = [];
-    foreach ( $fromWallet->tokenUnits as $tokenUnit ) {
-      $sourceTokenUnitIds[] = $tokenUnit->id;
-    }
-    foreach ( $fusedTokenUnitIds as $fusedTokenUnitId ) {
-      if ( !in_array( $fusedTokenUnitId, $sourceTokenUnitIds, true ) ) {
-        throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
-      }
-    }
-
-    // Generate new recipient wallet & set the batch ID
-    $recipientWallet = Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
-    $recipientWallet->initBatchId( $fromWallet );
+    // Recipient: our own new wallet, or the recipient bundle's wallet
+    $recipientWallet = $bundleHash === $this->getBundle()
+      ? Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() )
+      : Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Remainder wallet
     $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
 
-    // Split token units (fused)
-    $fromWallet->splitUnits( $fusedTokenUnitIds, $remainderWallet );
-
-    // Set recipient new fused token unit
-    $newTokenUnit->metas[ 'fusedTokenUnits' ] = $fromWallet->getTokenUnitsData();
-    $recipientWallet->tokenUnits = [ $newTokenUnit ];
-
     // Create a molecule
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
-    $molecule->fuseToken( $fromWallet->tokenUnits, $recipientWallet );
+    $molecule->fuseToken( $recipientWallet, $newTokenUnit, $fusedTokenUnitIds );
     $molecule->sign();
-    $molecule->check();
+    $molecule->check( $fromWallet );
 
     // Create & execute a mutation
     $query = $this->createMoleculeMutation( MutationProposeMolecule::class, $molecule );

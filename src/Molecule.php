@@ -53,8 +53,10 @@ use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
+use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -71,6 +73,9 @@ use WishKnish\KnishIO\Client\Libraries\Strings;
  * @property array $atoms
  */
 class Molecule extends MoleculeStructure {
+  /** The all-zeros bundle: burned value and units go here and can never be spent. */
+  public const ZERO_BUNDLE = '0000000000000000000000000000000000000000000000000000000000000000';
+
   public int $mlKemParameterSet = 1024;
 
 
@@ -318,82 +323,148 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
-   * @param int $amount
-   * @param array $tokenUnits
+   * Replenish an existing token (contract 9.1): a C atom signed by the identity's USER wallet, as in
+   * initTokenCreation(), that mints `value` into the credited wallet, then the ContinuID atom.
+   * Metas, in order: action=add, the credited wallet's address/position/pubkey, its batchId (only
+   * when it has one) and the new units (stackable/non-fungible only).
+   *
+   * @param Wallet $creditedWallet the identity's existing wallet for the token, or a new one
+   * @param int $amount fungible amount; with units it must be 0 or equal to the unit count
+   * @param array $tokenUnits new units as [id, name, metas] triples (stackable/non-fungible)
    *
    * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function replenishToken ( int $amount, array $tokenUnits = [] ): Molecule {
+  public function replenishToken ( Wallet $creditedWallet, int $amount, array $tokenUnits = [] ): Molecule {
 
-    if ( $amount < 0 ) {
-      throw new TransferAmountException( 'Number of tokens being replenished must be a positive value.' );
+    $units = Wallet::getTokenUnits( $tokenUnits );
+
+    if ( $units ) {
+      if ( $amount !== 0 && $amount !== count( $units ) ) {
+        throw new StackableUnitAmountException();
+      }
+      $value = count( $units );
     }
-
-    // Special code for the token unit logic
-    if ( $tokenUnits ) {
-
-      // Prepare token units to formatted style
-      $tokenUnits = Wallet::getTokenUnits( $tokenUnits );
-
-      // Merge token units with source wallet & new items
-      $this->remainderWallet->tokenUnits = array_merge( $this->sourceWallet->tokenUnits, $tokenUnits );
-      $this->remainderWallet->balance = count( $this->remainderWallet->tokenUnits );
-
-      // Override first atom's token units to replenish values
-      $this->sourceWallet->tokenUnits = $tokenUnits;
-      $this->sourceWallet->balance = count( $this->sourceWallet->tokenUnits );
-    }
-
-    // Update wallet's balances
     else {
-      $this->remainderWallet->balance = $this->sourceWallet->balance + $amount;
-      $this->sourceWallet->balance = $amount;
+      if ( $amount <= 0 ) {
+        throw new TransferAmountException( 'Number of tokens being replenished must be a positive value.' );
+      }
+      $value = $amount;
     }
 
-    // Initializing a new Atom to remove tokens from source
+    $metas = [
+      'action' => 'add',
+      'address' => $creditedWallet->address,
+      'position' => $creditedWallet->position,
+    ];
+    if ( $creditedWallet->pubkey ) {
+      $metas[ 'pubkey' ] = $creditedWallet->pubkey;
+    }
+    if ( $creditedWallet->batchId ) {
+      $metas[ 'batchId' ] = $creditedWallet->batchId;
+    }
+    if ( $units ) {
+      $metas[ 'tokenUnits' ] = TokenUnit::encodeList( $units );
+    }
+
     $this->addAtom( Atom::create(
-      'V',
+      'C',
       $this->sourceWallet,
-      $this->sourceWallet->balance,
+      $value,
+      'token',
+      $creditedWallet->token,
+      new AtomMeta( $metas ),
+      $creditedWallet->batchId,
     ) );
-    $this->addAtom( Atom::create(
-      'V',
-      $this->remainderWallet,
-      $this->remainderWallet->balance,
-      'walletBundle',
-      $this->remainderWallet->bundle,
-    ) );
+
+    $this->addContinuIdAtom();
 
     return $this;
   }
 
   /**
-   * @param array $tokenUnits
-   * @param Wallet $recipientWallet
+   * Fuse M >= 2 units of the source wallet's stackable token into one new unit (contract 9.2).
+   * Atoms: V source -B (the fused units, source order), V burn +(M-1) (all fused units but the
+   * last, caller order), F recipient +1 (the new unit, whose `fusedTokenUnits` meta lists every
+   * fused unit in caller order), V remainder +(B-M) (the kept units). No ContinuID atom: the
+   * source token wallet signs at its own position, as in transfers and burns. When the source
+   * has a batch ID the burn and the recipient each get a fresh one and the remainder keeps the
+   * source's.
+   *
+   * @param Wallet $recipientWallet wallet that receives the new unit
+   * @param TokenUnit $newTokenUnit the new unit; `fusedTokenUnits` is added to its metas
+   * @param string[] $fusedTokenUnitIds ids of the source units to fuse, caller order
    *
    * @return $this
    * @throws JsonException
    * @throws SodiumException
    */
-  public function fuseToken ( array $tokenUnits, Wallet $recipientWallet ): Molecule {
+  public function fuseToken ( Wallet $recipientWallet, TokenUnit $newTokenUnit, array $fusedTokenUnitIds ): Molecule {
 
-    // Calculate amount
-    $amount = count( $tokenUnits );
+    $fusedTokenUnitIds = array_values( $fusedTokenUnitIds );
+    $fusedCount = count( $fusedTokenUnitIds );
+    if ( $fusedCount < 2 ) {
+      throw new TransferBalanceException( 'Token fusion requires at least two token units' );
+    }
 
-    if ( !$this->sourceWallet->hasEnoughBalance( $amount ) ) {
+    /** @var TokenUnit[] $sourceUnits id => unit */
+    $sourceUnits = [];
+    foreach ( $this->sourceWallet->tokenUnits as $tokenUnit ) {
+      $sourceUnits[ $tokenUnit->id ] = $tokenUnit;
+    }
+    foreach ( $fusedTokenUnitIds as $fusedTokenUnitId ) {
+      if ( !isset( $sourceUnits[ $fusedTokenUnitId ] ) ) {
+        throw new TransferWalletException( 'Fused token unit ID = "' . $fusedTokenUnitId . '" does not found in the source wallet.' );
+      }
+    }
+    if ( isset( $sourceUnits[ $newTokenUnit->id ] ) ) {
+      throw new TransferBalanceException( 'Token fusion unit id already exists in the source wallet' );
+    }
+
+    $balance = (int) $this->sourceWallet->balance;
+    if ( $balance < $fusedCount ) {
       throw new TransferBalanceException();
     }
 
-    // Initializing a new Atom to remove tokens from source
+    // SENT (fused, source order) and KEPT (the rest, source order)
+    $sent = [];
+    $kept = [];
+    foreach ( $this->sourceWallet->tokenUnits as $tokenUnit ) {
+      if ( in_array( $tokenUnit->id, $fusedTokenUnitIds, true ) ) {
+        $sent[] = $tokenUnit;
+      }
+      else {
+        $kept[] = $tokenUnit;
+      }
+    }
+    $fused = array_map( static fn( string $id ) => $sourceUnits[ $id ], $fusedTokenUnitIds );
+
+    $burnWallet = Wallet::create( self::ZERO_BUNDLE, $this->sourceWallet->token, mlKemParameterSet: $this->mlKemParameterSet );
+    $burnWallet->initBatchId( $this->sourceWallet );
+    $burnWallet->tokenUnits = array_slice( $fused, 0, $fusedCount - 1 );
+
+    $newTokenUnit->metas[ 'fusedTokenUnits' ] = array_map( static fn( TokenUnit $tokenUnit ) => $tokenUnit->toData(), $fused );
+    $recipientWallet->initBatchId( $this->sourceWallet );
+    $recipientWallet->tokenUnits = [ $newTokenUnit ];
+
+    $this->sourceWallet->tokenUnits = $sent;
+    $this->remainderWallet->tokenUnits = $kept;
+
     $this->addAtom( Atom::create(
       'V',
       $this->sourceWallet,
-      -$amount,
+      -$balance,
     ) );
 
-    // Add F isotope for fused tokens creation
+    $this->addAtom( Atom::create(
+      'V',
+      $burnWallet,
+      $fusedCount - 1,
+      'walletBundle',
+      $burnWallet->bundle,
+    ) );
+
     $this->addAtom( Atom::create(
       'F',
       $recipientWallet,
@@ -405,7 +476,7 @@ class Molecule extends MoleculeStructure {
     $this->addAtom( Atom::create(
       'V',
       $this->remainderWallet,
-      $this->sourceWallet->balance - $amount,
+      $balance - $fusedCount,
       'walletBundle',
       $this->remainderWallet->bundle,
     ) );
@@ -435,7 +506,7 @@ class Molecule extends MoleculeStructure {
     // amount to this unspendable bundle, satisfying V-isotope conservation (sum == 0) while
     // permanently destroying the tokens. Mirrors JS burnToken.
     $burnWallet = Wallet::create(
-      '0000000000000000000000000000000000000000000000000000000000000000',
+      self::ZERO_BUNDLE,
       $this->sourceWallet->token,
       mlKemParameterSet: $this->mlKemParameterSet
     );

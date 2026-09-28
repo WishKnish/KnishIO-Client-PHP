@@ -98,7 +98,7 @@ class AtomMeta {
     $walletMeta = [];
 
     if ( $wallet->tokenUnits ) {
-      $walletMeta[ 'tokenUnits' ] = json_encode( $wallet->getTokenUnitsData(), JSON_THROW_ON_ERROR );
+      $walletMeta[ 'tokenUnits' ] = TokenUnit::encodeList( $wallet->tokenUnits );
     }
     if ( $wallet->tradeRates ) {
       $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );

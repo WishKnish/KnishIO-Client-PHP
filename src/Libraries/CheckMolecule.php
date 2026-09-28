@@ -118,6 +118,7 @@ class CheckMolecule {
     $this->isotopeM();
     $this->isotopeR();
     $this->isotopeC();
+    $this->isotopeF();
     $this->isotopeVB( $fromWallet );
     $this->isotopeT();
     $this->isotopeI();
@@ -344,6 +345,47 @@ class CheckMolecule {
   }
 
   /**
+   * Check isotope F (fusion): each F atom references a wallet bundle and carries a non-negative
+   * value, and the V and F values together sum to zero. Mirrors JS CheckMolecule.isotopeF().
+   */
+  public function isotopeF (): void {
+
+    $fAtoms = $this->molecule->getIsotopes( 'F' );
+    if ( !$fAtoms ) {
+      return;
+    }
+
+    /** @var Atom $atom */
+    foreach ( $fAtoms as $atom ) {
+      if ( $atom->metaType !== 'walletBundle' ) {
+        throw new MetaMissingException( 'Check::isotopeF() - F-isotope atoms must have metaType "walletBundle"!' );
+      }
+      // Not empty(): "0" is a valid metaId, as JS `!atom.metaId` treats it (see isotopeVB()).
+      if ( $atom->metaId === null || $atom->metaId === '' ) {
+        throw new MetaMissingException( 'Check::isotopeF() - F-isotope atoms must have a metaId!' );
+      }
+      if ( !is_numeric( $atom->value ) ) {
+        throw new TransferMalformedException( 'Check::isotopeF() - F-isotope atom value is not a valid number!' );
+      }
+      if ( $atom->getValue() < 0 ) {
+        throw new TransferMalformedException( 'Check::isotopeF() - F-isotope atom value must not be negative!' );
+      }
+    }
+
+    $vAtoms = $this->molecule->getIsotopes( 'V' );
+    if ( $vAtoms ) {
+      $sum = 0;
+      /** @var Atom $atom */
+      foreach ( array_merge( $vAtoms, $fAtoms ) as $atom ) {
+        $sum += $atom->getValue();
+      }
+      if ( $sum !== 0 ) {
+        throw new TransferUnbalancedException( 'Check::isotopeF() - V+F atom values do not balance to zero!' );
+      }
+    }
+  }
+
+  /**
    * Verification of V, B isotope molecules checks to make sure that:
    * 1. we're sending and receiving the same token
    * 2. we're only subtracting on the first atom
@@ -446,8 +488,11 @@ class CheckMolecule {
       $sum += $value;
     }
 
+    // Fusion: the V atoms alone are short by the F atom's value; isotopeF() checks V+F conservation.
+    $hasFusion = count( $this->molecule->getIsotopes( 'F' ) ) > 0;
+
     // All atoms must sum to zero for a balanced transaction
-    if ( $sum !== 0 ) {
+    if ( !$hasFusion && $sum !== 0 ) {
       throw new TransferUnbalancedException();
     }
 
@@ -462,7 +507,7 @@ class CheckMolecule {
       }
 
       // Does the remainder match what should be there in the source wallet, if provided?
-      if ( $remainder !== $sum ) {
+      if ( !$hasFusion && $remainder !== $sum ) {
         throw new TransferRemainderException();
       }
 
