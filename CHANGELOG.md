@@ -12,6 +12,13 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [1.3.2] — 2026-09-29
+
+### Fixed
+
+- createToken sends tokenUnits as [id, name, metas] triples (a bare id becomes [id, id, {}]), the
+  form every other unit operation already uses; pinned by the create_token_units vector.
+
 ## [1.3.1] — 2026-09-28
 
 ### Fixed
@@ -390,7 +397,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.3.1...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.3.2...HEAD
+[1.3.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.2
 [1.3.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.1
 [1.3.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.0
 [1.2.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.2.1
