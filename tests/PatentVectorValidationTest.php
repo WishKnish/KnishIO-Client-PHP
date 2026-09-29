@@ -363,6 +363,65 @@ class PatentVectorValidationTest extends TestCase {
     }
   }
 
+  /**
+   * Runs the public KnishIOClient::createToken() for a stackable token with $units offline
+   * (ContinuId: none, so a fresh USER source; ProposeMolecule: accepted) and returns the C atom
+   * as sent, its metas by key, and the built molecule.
+   *
+   * @return array{0: array, 1: array<string, string>, 2: Molecule}
+   */
+  private static function createTokenOffline ( string $token, array $units ): array {
+    $http = new RecordingHttpClient( 'http://offline.invalid/graphql', [
+      json_encode( [ 'data' => [ 'ContinuId' => null ] ], JSON_THROW_ON_ERROR ),
+      json_encode( [ 'data' => [ 'ProposeMolecule' => [
+        'molecularHash' => str_repeat( 'a', 64 ), 'height' => 0, 'depth' => 0, 'status' => 'accepted',
+        'reason' => null, 'payload' => null, 'createdAt' => '2026-09-29T00:00:00Z',
+      ] ] ], JSON_THROW_ON_ERROR ),
+    ] );
+    $client = new KnishIOClient( 'http://offline.invalid/graphql', $http );
+    $client->setSecret( Crypto::generateSecret( 'php-create-token-units-vector' ) );
+    $response = $client->createToken( $token, 0, [ 'fungibility' => 'stackable' ], null, $units );
+
+    $proposal = json_decode( (string) end( $http->requests )->getBody(), true, 512, JSON_THROW_ON_ERROR );
+    $cAtoms = array_values( array_filter( $proposal[ 'variables' ][ 'molecule' ][ 'atoms' ], static fn( array $atom ) => $atom[ 'isotope' ] === 'C' ) );
+    $metas = [];
+    foreach ( $cAtoms[ 0 ][ 'meta' ] as $meta ) {
+      $metas[ $meta[ 'key' ] ] = $meta[ 'value' ];
+    }
+    return [ $cAtoms[ 0 ], $metas, $response->query()->molecule() ];
+  }
+
+  /**
+   * createToken with bare unit ids sends tokenUnits as compact [id, id, {}] triples (the
+   * create_token_units vector), byte-identical across the SDKs.
+   */
+  public function testCreateTokenUnits (): void {
+    foreach ( $this->vectors[ 'create_token_units' ][ 'tests' ] as $test ) {
+      $name = $test[ 'name' ];
+      [ $cAtom, $metas, $molecule ] = self::createTokenOffline( $test[ 'token' ], $test[ 'units' ] );
+
+      $this->assertSame( $test[ 'expectedTokenUnits' ], $metas[ 'tokenUnits' ] ?? null, "tokenUnits for $name" );
+      $this->assertSame( $test[ 'expectedTokenUnitIds' ], array_column( json_decode( $metas[ 'tokenUnits' ], true, 512, JSON_THROW_ON_ERROR ), 0 ), "unit ids for $name" );
+      $this->assertSame( $test[ 'expectedCValue' ], $cAtom[ 'value' ], "C value for $name" );
+      $this->assertSame( [ $test[ 'expectedMetaType' ], $test[ 'expectedMetaId' ] ], [ $cAtom[ 'metaType' ], $cAtom[ 'metaId' ] ], "C target for $name" );
+      $molecule->check();
+    }
+  }
+
+  /**
+   * createToken keeps a triple unit's own name and metas; absent metas are sent as {}.
+   */
+  public function testCreateTokenUnitsKeepsTripleNameAndMetas (): void {
+    [ $cAtom, $metas, $molecule ] = self::createTokenOffline( 'CRTTRI', [ [ 'X1', 'Name X', [ 'k' => 'v' ] ] ] );
+
+    $this->assertSame( '[["X1","Name X",{"k":"v"}]]', $metas[ 'tokenUnits' ] ?? null );
+    $this->assertSame( '1', $cAtom[ 'value' ] );
+    $molecule->check();
+
+    [ , $metas ] = self::createTokenOffline( 'CRTTRI', [ [ 'X2', 'Name 2' ] ] );
+    $this->assertSame( '[["X2","Name 2",{}]]', $metas[ 'tokenUnits' ] ?? null, 'absent metas are sent as {}' );
+  }
+
   // =========================================================================
   // 0b. Atom value format cross-SDK parity (Batch AQ) — integer string, no ".0"
   // =========================================================================

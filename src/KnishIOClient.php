@@ -722,7 +722,7 @@ class KnishIOClient {
    * @param int $amount
    * @param array $meta
    * @param string|null $batchId
-   * @param array $units
+   * @param array<string|array|TokenUnit> $units unit ids, [id, name, metas] triples or TokenUnits
    *
    * @return Response
    * @throws GuzzleException
@@ -751,11 +751,18 @@ class KnishIOClient {
 
       $amount = count( $units );
 
+      // Units are sent as [id, name, metas] triples: a bare id becomes [id, id, {}]
+      $tokenUnits = array_map( static fn( mixed $unit ): TokenUnit => match ( true ) {
+        $unit instanceof TokenUnit => $unit,
+        is_array( $unit ) => TokenUnit::create( $unit[ 0 ] ?? null, $unit[ 1 ] ?? $unit[ 0 ] ?? null, $unit[ 2 ] ?? [] ),
+        default => TokenUnit::create( $unit, $unit, [] ),
+      }, $units );
+
       // Set custom default metadata
       $meta = array_merge( $meta, [
         'splittable' => 1,
         'decimals' => 0,
-        'tokenUnits' => json_encode( $units )
+        'tokenUnits' => TokenUnit::encodeList( $tokenUnits )
       ] );
     }
 

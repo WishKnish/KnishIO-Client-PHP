@@ -253,6 +253,13 @@
         { "name": "partial_withdraw_fresh_remainder", "sourceBalance": 50, "amount": 20, "expectedIsotopes": ["B", "V", "B"], "expectedSourceValue": "-50", "expectedRecipientValue": "20", "expectedRemainderValue": "30", "expectedSum": "0", "expectedRemainderPositionDistinctFromSource": true },
         { "name": "full_withdraw_fresh_remainder", "sourceBalance": 50, "amount": 50, "expectedIsotopes": ["B", "V", "B"], "expectedSourceValue": "-50", "expectedRecipientValue": "50", "expectedRemainderValue": "0", "expectedSum": "0", "expectedRemainderPositionDistinctFromSource": true }
       ]
+    },
+    "create_token_units": {
+      "description": "createToken with units sends the C atom meta tokenUnits as compact [id, name, metas] triples. A bare id string is sent as [id, id, {}]; a triple or unit object keeps its own name and metas ({} when absent). Value = unit count; amount must be null or 0.",
+      "tests": [
+        { "name": "ids_to_triples", "token": "CRTSTK", "units": ["U1", "U2", "U3"], "expectedCValue": "3", "expectedMetaType": "token", "expectedMetaId": "CRTSTK", "expectedTokenUnits": "[[\"U1\",\"U1\",{}],[\"U2\",\"U2\",{}],[\"U3\",\"U3\",{}]]", "expectedTokenUnitIds": ["U1", "U2", "U3"] },
+        { "name": "single_id", "token": "CRTONE", "units": ["solo"], "expectedCValue": "1", "expectedMetaType": "token", "expectedMetaId": "CRTONE", "expectedTokenUnits": "[[\"solo\",\"solo\",{}]]", "expectedTokenUnitIds": ["solo"] }
+      ]
     }
   }
 }
