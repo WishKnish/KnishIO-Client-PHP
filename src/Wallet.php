@@ -128,6 +128,11 @@ class Wallet {
   private ?string $mlkemPrivateKey = null;
   public int $mlKemParameterSet = 1024;
 
+  /**
+   * @var int OTS key version (1 = 2048-hex key, 16 chains; 2 = 8192-hex key, 64 chains)
+   */
+  public readonly int $otsVersion;
+
 
   /**
    * @var string|null
@@ -184,13 +189,15 @@ class Wallet {
     public ?string $position = null,
     public ?string $batchId = null,
     public ?string $characters = null,
-    ?int $mlKemParameterSet = 1024
+    ?int $mlKemParameterSet = 1024,
+    int $otsVersion = 1
   ) {
     $mlKemParameterSet = $mlKemParameterSet ?? 1024;
     if ( !in_array( $mlKemParameterSet, [ 1024, 768 ], true ) ) {
       throw new CryptoException( "KnishIO: unsupported ML-KEM parameter set {$mlKemParameterSet}; expected 1024 or 768." );
     }
     $this->mlKemParameterSet = $mlKemParameterSet;
+    $this->otsVersion = static::checkedOtsVersion( $otsVersion );
     if ( $secret ) {
 
       // Set bundle from the secret
@@ -200,7 +207,7 @@ class Wallet {
       $this->position = $this->position ?? static::generatePosition();
 
       // Key & address initialization
-      $this->key = static::generateKey( $secret, $this->token, $this->position );
+      $this->key = static::generateKey( $secret, $this->token, $this->position, $this->otsVersion );
       $this->address = static::generateAddress( $this->key );
 
       // Soda object initialization
@@ -226,13 +233,13 @@ class Wallet {
    * @return Wallet
    * @throws SodiumException
    */
-  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null, int $mlKemParameterSet = 1024 ): Wallet {
+  public static function create ( string $secretOrBundle, string $token = 'USER', ?string $batchId = null, ?string $characters = null, int $mlKemParameterSet = 1024, int $otsVersion = 1 ): Wallet {
     $secret = Crypto::isBundleHash( $secretOrBundle ) ? null : $secretOrBundle;
     $bundle = $secret ? Crypto::generateBundleHash( $secret ) : $secretOrBundle;
     $position = $secret ? static::generatePosition() : null;
 
     // Wallet initialization
-    $wallet = new Wallet( $secret, $token, $position, $batchId, $characters, $mlKemParameterSet );
+    $wallet = new Wallet( $secret, $token, $position, $batchId, $characters, $mlKemParameterSet, $otsVersion );
     $wallet->bundle = $bundle;
     return $wallet;
   }
@@ -444,7 +451,7 @@ class Wallet {
    * @throws SodiumException
    */
   public function createRemainder( string $secret ): self {
-    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters );
+    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters, otsVersion: $this->otsVersion );
     $remainderWallet->initBatchId( $this, true );
     return $remainderWallet;
   }
@@ -583,13 +590,35 @@ class Wallet {
   }
 
   /**
+   * @param int $otsVersion
+   *
+   * @return int
+   */
+  public static function checkedOtsVersion ( int $otsVersion ): int {
+    if ( $otsVersion !== 1 && $otsVersion !== 2 ) {
+      throw new CryptoException( "KnishIO: unsupported OTS version {$otsVersion}; expected 1 or 2." );
+    }
+    return $otsVersion;
+  }
+
+  /**
+   * Derives the OTS private key: 2048 hex (v1) or 8192 hex (v2)
+   *
    * @param string $secret
    * @param string $token
    * @param string $position
+   * @param int $otsVersion
    *
    * @return string
    */
-  public static function generateKey ( string $secret, string $token, string $position ): string {
+  public static function generateKey ( string $secret, string $token, string $position, int $otsVersion = 1 ): string {
+    $version = static::checkedOtsVersion( $otsVersion );
+    if ( $secret === '' ) {
+      throw new CryptoException( 'Wallet::generateKey() - Secret is required!' );
+    }
+    if ( $position === '' ) {
+      throw new CryptoException( 'Wallet::generateKey() - Position is required!' );
+    }
 
     // Normalize non-hex secret via SHAKE256 (matching Rust/Kotlin behavior)
     $secretHex = ctype_xdigit( $secret ) ? $secret : bin2hex( Crypto\Shake256::hash( $secret, 128 ) );
@@ -604,6 +633,13 @@ class Wallet {
       // Hashing the indexed key to produce the intermediate key
       // Strip leading zeros to match JS BigInt.toString(16) / Rust format!("{:x}")
       $indexedKeyHex = ltrim( $indexedKey->toString( 16 ), '0' ) ?: '0';
+
+      if ( $version === 2 ) {
+        // v2 absorbs a domain-tagged, delimited input (lengths below are in bytes)
+        $intermediateHex = bin2hex( Crypto\Shake256::hash( 'KnishIO-OTS-v2|' . $indexedKeyHex . '|' . $token, 1024 ) );
+        return bin2hex( Crypto\Shake256::hash( $intermediateHex, 4096 ) );
+      }
+
       $intermediateKeySponge = Crypto\Shake256::init()
         ->absorb( $indexedKeyHex );
 

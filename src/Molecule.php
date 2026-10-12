@@ -53,6 +53,7 @@ use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\MetaMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException;
 use WishKnish\KnishIO\Client\Exception\StackableUnitAmountException;
 use WishKnish\KnishIO\Client\Exception\TransferAmountException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
@@ -100,7 +101,7 @@ class Molecule extends MoleculeStructure {
 
     // Generates remainder wallet if source wallet is provided
     if ( $remainderWallet || $sourceWallet ) {
-      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters, $this->mlKemParameterSet );
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters, $this->mlKemParameterSet, $sourceWallet->otsVersion );
     }
 
     $this->clear();
@@ -127,6 +128,15 @@ class Molecule extends MoleculeStructure {
    */
   public function sourceWallet (): ?Wallet {
     return $this->sourceWallet;
+  }
+
+  /**
+   * OTS version this molecule signs with: the source wallet's, or 1 without a source wallet
+   *
+   * @return int
+   */
+  public function signingOtsVersion (): int {
+    return $this->sourceWallet?->otsVersion ?? 1;
   }
 
   /**
@@ -198,7 +208,7 @@ class Molecule extends MoleculeStructure {
     // Creating a remainder wallet if needed (guard FIRST so pubkey/position below
     // come from the post-guard remainder, matching JS Molecule.addContinuIdAtom).
     if( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
-      $this->remainderWallet = new Wallet( $this->secret(), mlKemParameterSet: $this->mlKemParameterSet );
+      $this->remainderWallet = new Wallet( $this->secret(), mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->signingOtsVersion() );
     }
 
     // ContinuID metadata for chain-integrity validation (mirrors JS Molecule.addContinuIdAtom
@@ -651,7 +661,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Create a buffer wallet
-    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId, mlKemParameterSet: $this->mlKemParameterSet );
+    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId, mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->signingOtsVersion() );
     $bufferWallet->tradeRates = $tradeRates;
 
     // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)
@@ -1012,7 +1022,7 @@ class Molecule extends MoleculeStructure {
 
   /**
    * Creates a one-time signature for a molecule and breaks it up across multiple atoms within that
-   * molecule. Resulting 4096 byte (2048 character) string is the one-time signature, which is then compressed.
+   * molecule. The key is derived at signingOtsVersion(); the signature is then compressed.
    *
    * @param bool $anonymous
    * @param bool $compressed
@@ -1032,6 +1042,11 @@ class Molecule extends MoleculeStructure {
     $this->atoms = Atom::sortAtoms( $this->atoms );
     $this->molecularHash = Atom::hashAtoms( $this->atoms );
 
+    // Only a 64-symbol base-17 molecular hash can be signed
+    if ( !Crypto::isSignableHash( $this->molecularHash ) ) {
+      throw new MoleculeSignatureMalformedException();
+    }
+
     // Determine first atom
     /** @var Atom $firstAtom */
     $firstAtom = reset( $this->atoms );
@@ -1045,7 +1060,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Generate the private signing key for this molecule
-    $key = Wallet::generateKey( $this->secret, $firstAtom->token, $signingPosition );
+    $key = Wallet::generateKey( $this->secret, $firstAtom->token, $signingPosition, $this->signingOtsVersion() );
 
     // Building a one-time-signature
     $signatureFragments = $this->signatureFragments( $key );

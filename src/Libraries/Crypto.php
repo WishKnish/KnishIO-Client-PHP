@@ -72,6 +72,17 @@ class Crypto {
   }
 
   /**
+   * True when the hash is exactly 64 base-17 symbols (0-9, a-g)
+   *
+   * @param string|null $hash
+   *
+   * @return bool
+   */
+  public static function isSignableHash ( ?string $hash ): bool {
+    return $hash !== null && preg_match( '/^[0-9a-g]{64}\z/', $hash ) === 1;
+  }
+
+  /**
    * @param string|null $molecularHash
    * @param int|null $index
    *

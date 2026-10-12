@@ -537,6 +537,11 @@ class CheckMolecule {
    */
   public function ots (): void {
 
+    // Only a 64-symbol base-17 molecular hash can carry a signature
+    if ( !Crypto::isSignableHash( $this->molecule->molecularHash ?? null ) ) {
+      throw new MoleculeSignatureMalformedException();
+    }
+
     // Determine first atom
     /** @var Atom $firstAtom */
     $firstAtom = reset( $this->molecule->atoms );
@@ -546,17 +551,19 @@ class CheckMolecule {
 
     /** @var Atom $atom */
     foreach ( $this->molecule->atoms as $atom ) {
-      $ots .= $atom->otsFragment;
+      $ots .= $atom->otsFragment ?? '';
     }
 
-    // Wrong size? Maybe it's compressed
-    if ( mb_strlen( $ots ) !== 2048 ) {
-
-      // Attempt decompression
-      $ots = Strings::base64ToHex( $ots );
-
-      // Still wrong? That's a failure
-      if ( mb_strlen( $ots ) !== 2048 ) {
+    // 2048 hex (v1) or 8192 hex (v2) as-is; anything else must be strict base64
+    $length = strlen( $ots );
+    if ( $length !== 2048 && $length !== 8192 ) {
+      $raw = base64_decode( $ots, true );
+      if ( $raw === false ) {
+        throw new MoleculeSignatureMalformedException();
+      }
+      $ots = bin2hex( $raw );
+      $length = strlen( $ots );
+      if ( $length !== 2048 && $length !== 8192 ) {
         throw new MoleculeSignatureMalformedException();
       }
     }

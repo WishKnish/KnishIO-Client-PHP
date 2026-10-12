@@ -12,6 +12,27 @@ Entries above `0.8.0` were backfilled on 2026-07-27 from the repository's own ta
 and commit history rather than written at release time; where the history does
 not substantiate a detail, the entry says so instead of guessing.
 
+## [Unreleased]
+
+### Added
+
+- Opt-in OTS v2 keys: `Wallet::generateKey( $secret, $token, $position, $otsVersion = 1 )`, a trailing
+  `$otsVersion` argument on the `Wallet` constructor and `Wallet::create()`, and a read-only
+  `Wallet::$otsVersion` (1 = 2048-hex key, 16 chains; 2 = 8192-hex key, 64 chains). Any other version
+  throws `CryptoException`.
+- `Molecule::signingOtsVersion()`: the source wallet's OTS version, or 1 without a source wallet.
+- `Crypto::isSignableHash()`: true for exactly 64 base-17 symbols (`0-9`, `a-g`).
+
+### Changed
+
+- `CheckMolecule::ots()` verifies v1 and v2 signatures (2048/8192 hex, or strict base64 of either).
+- A molecular hash that is not exactly 64 base-17 symbols is refused with
+  `MoleculeSignatureMalformedException`, both by `CheckMolecule::ots()` and by `Molecule::sign()`.
+- `Molecule::sign()` derives its key at `signingOtsVersion()`; the remainder, ContinuID and deposit-buffer
+  wallets a molecule creates, `Wallet::createRemainder()`, and `KnishIOClient::createMolecule()`'s default
+  remainder keep the source wallet's OTS version.
+- `Wallet::generateKey()` throws `CryptoException` for an empty secret or position.
+
 ## [1.3.2] — 2026-09-29
 
 ### Fixed

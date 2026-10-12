@@ -425,7 +425,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet() );
+    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet(), $sourceWallet->otsVersion );
 
     $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
     if ( $this->bundle ) {
