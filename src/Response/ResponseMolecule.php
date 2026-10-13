@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Response;
 
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\MoleculeStructure;
 
 /**
@@ -110,9 +111,16 @@ class ResponseMolecule extends Response {
 
   /**
    * @return string
+   * @throws InvalidResponseException
    */
   public function getMolecularHash (): string {
-    return array_get( $this->data(), 'molecularHash' );
+    $molecularHash = array_get( $this->data(), 'molecularHash' );
+
+    if ( $molecularHash === null ) {
+      throw new InvalidResponseException( 'ResponseMolecule::getMolecularHash() - the response has no molecularHash.' );
+    }
+
+    return $molecularHash;
   }
 
   /**
@@ -128,14 +136,14 @@ class ResponseMolecule extends Response {
    * @return string
    */
   public function status (): string {
-    return array_get( $this->data(), 'status', 'rejected' );
+    return array_get( $this->data(), 'status' ) ?? 'rejected';
   }
 
   /**
    * @return string
    */
   public function reason (): string {
-    return array_get( $this->data(), 'reason', 'Invalid response from server' );
+    return array_get( $this->data(), 'reason' ) ?? 'Invalid response from server';
   }
 
   /**

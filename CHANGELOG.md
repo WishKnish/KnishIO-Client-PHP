@@ -56,6 +56,12 @@ not substantiate a detail, the entry says so instead of guessing.
   those balance wallets throw `WalletSignatureException` when neither version derives the address; the
   login pointer falls back to an AUTH wallet as before.
 
+### Fixed
+
+- `ResponseMolecule::status()` reports `rejected` and `reason()` the default message when the server
+  returns them as null; `getMolecularHash()` throws `InvalidResponseException` when the response has no
+  molecular hash.
+
 ## [1.3.2] — 2026-09-29
 
 ### Fixed

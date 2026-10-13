@@ -10,6 +10,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client\Tests;
 
 use JsonException;
+use WishKnish\KnishIO\Client\Exception\InvalidResponseException;
 use WishKnish\KnishIO\Client\Response\ResponseMolecule;
 
 /**
@@ -79,5 +80,61 @@ class ResponseMoleculeTest extends TestCase {
     $this->assertSame( [], $deprecations );
     $this->assertSame( [ 'token' => 'jwt', 'expiresAt' => 1 ], $response->payload() );
     $this->assertTrue( $response->success() );
+  }
+
+  /**
+   * @throws JsonException
+   */
+  public function testNullStatusFailsClosedAsRejected (): void {
+    [ $response ] = $this->initCapturingDeprecations( json_encode( [
+      'data' => [
+        'ProposeMolecule' => [
+          'molecularHash' => 'abc',
+          'status' => null,
+          'reason' => null,
+          'payload' => null,
+        ],
+      ],
+    ], JSON_THROW_ON_ERROR ) );
+
+    $this->assertSame( 'rejected', $response->status() );
+    $this->assertFalse( $response->success() );
+  }
+
+  /**
+   * @throws JsonException
+   */
+  public function testNullReasonFallsBackToDefault (): void {
+    [ $response ] = $this->initCapturingDeprecations( json_encode( [
+      'data' => [
+        'ProposeMolecule' => [
+          'molecularHash' => 'abc',
+          'status' => 'accepted',
+          'reason' => null,
+          'payload' => null,
+        ],
+      ],
+    ], JSON_THROW_ON_ERROR ) );
+
+    $this->assertSame( 'Invalid response from server', $response->reason() );
+  }
+
+  /**
+   * @throws JsonException
+   */
+  public function testNullMolecularHashThrowsInvalidResponse (): void {
+    [ $response ] = $this->initCapturingDeprecations( json_encode( [
+      'data' => [
+        'ProposeMolecule' => [
+          'molecularHash' => null,
+          'status' => 'rejected',
+          'reason' => 'Signer address mismatch',
+          'payload' => null,
+        ],
+      ],
+    ], JSON_THROW_ON_ERROR ) );
+
+    $this->expectException( InvalidResponseException::class );
+    $response->getMolecularHash();
   }
 }
