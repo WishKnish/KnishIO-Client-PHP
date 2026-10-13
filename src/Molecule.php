@@ -79,12 +79,18 @@ class Molecule extends MoleculeStructure {
 
   public int $mlKemParameterSet = 1024;
 
+  /** Lowest OTS version of the wallets this molecule creates for its signer; see successorOtsVersion() */
+  private int $minOtsVersion = 1;
+
 
   /**
    * @param string $secret
    * @param Wallet|null $sourceWallet
    * @param Wallet|null $remainderWallet
    * @param string|null $cellSlug
+   * @param string|null $version
+   * @param int|null $mlKemParameterSet
+   * @param int $minOtsVersion lowest OTS version (1 or 2) of the wallets this molecule creates for its signer
    *
    * @throws SodiumException
    */
@@ -94,14 +100,16 @@ class Molecule extends MoleculeStructure {
     private ?Wallet $remainderWallet = null,
     ?string $cellSlug = null,
     private ?string $version = null,
-    ?int $mlKemParameterSet = null
+    ?int $mlKemParameterSet = null,
+    int $minOtsVersion = 1
   ) {
     parent::__construct( $cellSlug );
     $this->mlKemParameterSet = $mlKemParameterSet ?? ($sourceWallet ? $sourceWallet->mlKemParameterSet : 1024);
+    $this->minOtsVersion = Wallet::checkedOtsVersion( $minOtsVersion );
 
     // Generates remainder wallet if source wallet is provided
     if ( $remainderWallet || $sourceWallet ) {
-      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters, $this->mlKemParameterSet, $sourceWallet->otsVersion );
+      $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, $sourceWallet->token, $sourceWallet->batchId, $sourceWallet->characters, $this->mlKemParameterSet, $this->successorOtsVersion() );
     }
 
     $this->clear();
@@ -137,6 +145,16 @@ class Molecule extends MoleculeStructure {
    */
   public function signingOtsVersion (): int {
     return $this->sourceWallet?->otsVersion ?? 1;
+  }
+
+  /**
+   * OTS version of the wallets this molecule creates for its signer (remainder, ContinuID, buffer):
+   * the higher of the signing version and minOtsVersion
+   *
+   * @return int
+   */
+  public function successorOtsVersion (): int {
+    return max( $this->signingOtsVersion(), $this->minOtsVersion );
   }
 
   /**
@@ -208,7 +226,7 @@ class Molecule extends MoleculeStructure {
     // Creating a remainder wallet if needed (guard FIRST so pubkey/position below
     // come from the post-guard remainder, matching JS Molecule.addContinuIdAtom).
     if( !$this->remainderWallet || $this->remainderWallet->token !== 'USER' ) {
-      $this->remainderWallet = new Wallet( $this->secret(), mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->signingOtsVersion() );
+      $this->remainderWallet = new Wallet( $this->secret(), mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->successorOtsVersion() );
     }
 
     // ContinuID metadata for chain-integrity validation (mirrors JS Molecule.addContinuIdAtom
@@ -661,7 +679,7 @@ class Molecule extends MoleculeStructure {
     }
 
     // Create a buffer wallet
-    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId, mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->signingOtsVersion() );
+    $bufferWallet = Wallet::create( $this->secret, $this->sourceWallet->token, $this->sourceWallet->batchId, mlKemParameterSet: $this->mlKemParameterSet, otsVersion: $this->successorOtsVersion() );
     $bufferWallet->tradeRates = $tradeRates;
 
     // Initializing a new Atom to remove tokens from source (full balance debit for UTXO conservation)

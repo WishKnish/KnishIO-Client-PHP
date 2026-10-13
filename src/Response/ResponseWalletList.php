@@ -82,7 +82,12 @@ class ResponseWalletList extends Response {
 
     // Regular wallet
     else {
-      $wallet = new Wallet( $secret, $data[ 'tokenSlug' ], $data[ 'position' ], $data[ 'batchId' ], $data[ 'characters' ] );
+      // With a secret, the wallet is keyed at the OTS version its ledger address was derived at;
+      // it stays keyless when neither version derives that address from the secret
+      $otsVersion = $secret
+        ? Wallet::detectOtsVersion( $secret, $data[ 'tokenSlug' ], $data[ 'position' ], $data[ 'address' ] ?? null )
+        : null;
+      $wallet = new Wallet( $otsVersion ? $secret : null, $data[ 'tokenSlug' ], $data[ 'position' ], $data[ 'batchId' ], $data[ 'characters' ], otsVersion: $otsVersion ?? 1 );
       $wallet->address = $data[ 'address' ];
       $wallet->bundle = $data[ 'bundleHash' ];
     }

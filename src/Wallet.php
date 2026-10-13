@@ -445,13 +445,17 @@ class Wallet {
   }
 
   /**
+   * Creates a remainder wallet from this one. Its OTS version is the higher of this wallet's and
+   * $minOtsVersion.
+   *
    * @param string $secret
+   * @param int $minOtsVersion lowest OTS version for the remainder (1 or 2)
    *
    * @return Wallet
    * @throws SodiumException
    */
-  public function createRemainder( string $secret ): self {
-    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters, otsVersion: $this->otsVersion );
+  public function createRemainder( string $secret, int $minOtsVersion = 1 ): self {
+    $remainderWallet = self::create( $secret, $this->token, $this->batchId, $this->characters, otsVersion: max( $this->otsVersion, static::checkedOtsVersion( $minOtsVersion ) ) );
     $remainderWallet->initBatchId( $this, true );
     return $remainderWallet;
   }

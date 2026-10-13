@@ -16,6 +16,7 @@ use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\Response\ResponseWalletList;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -307,5 +308,128 @@ class OtsV2VectorsTest extends TestCase {
 
     unset( $snapshot[ 'wallet' ][ 'otsVersion' ] );
     $this->assertSame( 1, AuthToken::restore( $snapshot, self::clientSecret() )->getWallet()->otsVersion );
+  }
+
+  /**
+   * Atoms of the molecule the client proposed in request $index
+   *
+   * @return array[]
+   */
+  private static function proposedAtoms ( RecordingHttpClient $http, int $index ): array {
+    $request = json_decode( (string) $http->requests[ $index ]->getBody(), true, 512, JSON_THROW_ON_ERROR );
+    return $request[ 'variables' ][ 'molecule' ][ 'atoms' ];
+  }
+
+  private static function continuIdAtom ( array $atoms ): array {
+    $found = array_values( array_filter( $atoms, static fn ( array $atom ) => $atom[ 'isotope' ] === 'I' ) );
+    return $found[ 0 ];
+  }
+
+  private static function walletData ( string $token, string $position, string $address, ?string $pubkey = null ): array {
+    return [
+      'type' => 'regular',
+      'address' => $address,
+      'bundleHash' => Crypto::generateBundleHash( self::clientSecret() ),
+      'tokenSlug' => $token,
+      'position' => $position,
+      'batchId' => null,
+      'characters' => 'BASE64',
+      'pubkey' => $pubkey,
+      'amount' => '100',
+      'createdAt' => '2026-10-12T00:00:00Z',
+      'tokenUnits' => [],
+      'tradeRates' => [],
+    ];
+  }
+
+  public function testV2ClientSigningInFromV1PointerRegistersV2Head (): void {
+    [ $client, $http ] = self::clientAt( 2, [ self::continuIdBody( self::addressAt( 1 ) ), self::proposeBody( true ) ] );
+    $this->assertTrue( $client->requestProfileAuthToken( self::clientSecret(), false )->success() );
+    $this->assertCount( 2, $http->requests );
+    $atoms = self::proposedAtoms( $http, 1 );
+    $this->assertSame( self::addressAt( 1 ), $atoms[ 0 ][ 'walletAddress' ] );
+    $head = self::continuIdAtom( $atoms );
+    $this->assertSame( self::addressAt( 2, 'USER', $head[ 'position' ] ), $head[ 'walletAddress' ] );
+    $this->assertSame( 1, $client->getAuthToken()->getWallet()->otsVersion );
+  }
+
+  public function testV2ClientSigningFromV1HeadRegistersV2Head (): void {
+    [ $client, $http ] = self::clientAt( 2, [ self::continuIdBody( self::addressAt( 1 ) ), self::proposeBody( false ) ] );
+    $client->createMeta( 'ots', 'migrate', [ 'k' => 'v' ] );
+    $atoms = self::proposedAtoms( $http, 1 );
+    $this->assertSame( self::addressAt( 1 ), $atoms[ 0 ][ 'walletAddress' ] );
+    $head = self::continuIdAtom( $atoms );
+    $this->assertSame( self::addressAt( 2, 'USER', $head[ 'position' ] ), $head[ 'walletAddress' ] );
+  }
+
+  public function testV1ClientSigningFromV2HeadKeepsV2Head (): void {
+    [ $client, $http ] = self::clientAt( 1, [ self::continuIdBody( self::addressAt( 2 ) ), self::proposeBody( false ) ] );
+    $client->createMeta( 'ots', 'keep', [ 'k' => 'v' ] );
+    $atoms = self::proposedAtoms( $http, 1 );
+    $this->assertSame( self::addressAt( 2 ), $atoms[ 0 ][ 'walletAddress' ] );
+    $head = self::continuIdAtom( $atoms );
+    $this->assertSame( self::addressAt( 2, 'USER', $head[ 'position' ] ), $head[ 'walletAddress' ] );
+  }
+
+  public function testCreateRemainderTakesTheHigherOfWalletAndMinimumOtsVersion (): void {
+    $secret = self::clientSecret();
+    $v1 = new Wallet( $secret, 'TKN', self::CLIENT_POSITION );
+    $v2 = new Wallet( $secret, 'TKN', self::CLIENT_POSITION, otsVersion: 2 );
+    $this->assertSame( 1, $v1->createRemainder( $secret )->otsVersion );
+    $this->assertSame( 2, $v1->createRemainder( $secret, 2 )->otsVersion );
+    $this->assertSame( 2, $v2->createRemainder( $secret, 1 )->otsVersion );
+    $this->expectException( CryptoException::class );
+    $this->expectExceptionMessage( 'KnishIO: unsupported OTS version 3; expected 1 or 2.' );
+    $v1->createRemainder( $secret, 3 );
+  }
+
+  public function testMoleculeCreatesSignerWalletsAtTheHigherOfSigningAndMinimumOtsVersion (): void {
+    $secret = self::clientSecret();
+    $sourceWallet = new Wallet( $secret, 'TKN', self::CLIENT_POSITION );
+    $sourceWallet->balance = 10;
+    $molecule = new Molecule( $secret, $sourceWallet, minOtsVersion: 2 );
+    $this->assertSame( 1, $molecule->signingOtsVersion() );
+    $this->assertSame( 2, $molecule->successorOtsVersion() );
+    $this->assertSame( 2, $molecule->remainderWallet()->otsVersion );
+
+    $molecule->initDepositBuffer( 4, [] );
+    $buffers = array_values( array_filter( $molecule->atoms, static fn ( Atom $atom ) => $atom->isotope === 'B' ) );
+    $this->assertSame( self::addressAt( 2, 'TKN', $buffers[ 0 ]->position ), $buffers[ 0 ]->walletAddress );
+
+    $molecule->addContinuIdAtom();
+    $this->assertSame( 'USER', $molecule->remainderWallet()->token );
+    $this->assertSame( 2, $molecule->remainderWallet()->otsVersion );
+    $this->assertSame( 1, ( new Molecule( $secret, $sourceWallet ) )->successorOtsVersion() );
+  }
+
+  public function testV2ClientTransferringFromV1TokenWalletCreatesV2Remainder (): void {
+    $tokenPosition = str_repeat( 'd', 64 );
+    $sourceAddress = self::addressAt( 1, 'TKN', $tokenPosition );
+    $balanceBody = json_encode( [ 'data' => [ 'Balance' => self::walletData( 'TKN', $tokenPosition, $sourceAddress ) ] ], JSON_THROW_ON_ERROR );
+    [ $client, $http ] = self::clientAt( 2, [ $balanceBody, self::proposeBody( false ) ] );
+    $client->transferToken( Crypto::generateBundleHash( str_repeat( 'e', 2048 ) ), 'TKN', 10 );
+    $atoms = self::proposedAtoms( $http, 1 );
+    $this->assertSame( $sourceAddress, $atoms[ 0 ][ 'walletAddress' ] );
+    $remainders = array_values( array_filter( $atoms, static fn ( array $atom, int $index ) => $index > 0 && $atom[ 'isotope' ] === 'V' && $atom[ 'token' ] === 'TKN' && $atom[ 'position' ], ARRAY_FILTER_USE_BOTH ) );
+    $this->assertCount( 1, $remainders );
+    $this->assertSame( self::addressAt( 2, 'TKN', $remainders[ 0 ][ 'position' ] ), $remainders[ 0 ][ 'walletAddress' ] );
+  }
+
+  public function testLedgerWalletRebuiltWithSecretIsKeyedAtTheVersionOfItsAddress (): void {
+    $secret = self::clientSecret();
+    $tokenPosition = str_repeat( 'd', 64 );
+    $expected = new Wallet( $secret, 'TKN', $tokenPosition, otsVersion: 2 );
+    $mlkemPublicKey = new \ReflectionProperty( Wallet::class, 'mlkemPublicKey' );
+
+    $rebuilt = ResponseWalletList::toClientWallet( self::walletData( 'TKN', $tokenPosition, self::addressAt( 2, 'TKN', $tokenPosition ) ), $secret );
+    $this->assertSame( 2, $rebuilt->otsVersion );
+    $this->assertSame( $expected->key, $rebuilt->key );
+    $this->assertSame( $expected->address, $rebuilt->address );
+    $this->assertSame( $mlkemPublicKey->getValue( $expected ), $mlkemPublicKey->getValue( $rebuilt ) );
+
+    $unrelated = bin2hex( random_bytes( 32 ) );
+    $keyless = ResponseWalletList::toClientWallet( self::walletData( 'TKN', $tokenPosition, $unrelated ), $secret );
+    $this->assertNull( $keyless->key );
+    $this->assertSame( $unrelated, $keyless->address );
   }
 }

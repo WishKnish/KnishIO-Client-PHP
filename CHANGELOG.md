@@ -21,6 +21,11 @@ not substantiate a detail, the entry says so instead of guessing.
   `Wallet::$otsVersion` (1 = 2048-hex key, 16 chains; 2 = 8192-hex key, 64 chains). Any other version
   throws `CryptoException`.
 - `Molecule::signingOtsVersion()`: the source wallet's OTS version, or 1 without a source wallet.
+- `Molecule::successorOtsVersion()` and a `$minOtsVersion` constructor argument (default 1): the remainder,
+  ContinuID and deposit-buffer wallets a molecule creates take the higher of its signing version and
+  `$minOtsVersion`.
+- `Wallet::createRemainder( $secret, $minOtsVersion = 1 )`: the remainder takes the higher of the wallet's
+  version and `$minOtsVersion`.
 - `Crypto::isSignableHash()`: true for exactly 64 base-17 symbols (`0-9`, `a-g`).
 - **Client-level OTS version.** A trailing `$otsVersion` argument (1 default, or 2) on the `KnishIOClient`
   constructor and `initialize()`, `getOtsVersion()` and `setOtsVersion()`. Keys the client creates from its
@@ -37,8 +42,13 @@ not substantiate a detail, the entry says so instead of guessing.
 - A molecular hash that is not exactly 64 base-17 symbols is refused with
   `MoleculeSignatureMalformedException`, both by `CheckMolecule::ots()` and by `Molecule::sign()`.
 - `Molecule::sign()` derives its key at `signingOtsVersion()`; the remainder, ContinuID and deposit-buffer
-  wallets a molecule creates, `Wallet::createRemainder()`, and `KnishIOClient::createMolecule()`'s default
-  remainder keep the source wallet's OTS version.
+  wallets a molecule creates use `successorOtsVersion()`. `KnishIOClient::createMolecule()` creates its
+  default remainder at the higher of the source wallet's and the client's OTS version.
+- A client set to OTS version 2 creates the ContinuID head, token remainders and deposit buffer of every
+  molecule it signs at version 2, so an identity created at version 1 moves to version 2 on its next
+  sign-in or molecule. A client at version 1 keeps a version 2 identity at version 2.
+- `ResponseWalletList::toClientWallet()` and `getWallets( $secret )` key each wallet at the OTS version its
+  address was derived at, and return it without a key when neither version derives that address.
 - `Wallet::generateKey()` throws `CryptoException` for an empty secret or position.
 - Wallets the ledger returns for this client (the ContinuID head in `getSourceWallet()` and the login
   pointer, `querySourceWallet()`, and the balance wallets `replenishToken()` and `fuseToken()` sign from)

@@ -473,10 +473,11 @@ class KnishIOClient {
       $sourceWallet = $this->getSourceWallet();
     }
 
-    // Remainder wallet
-    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet(), $sourceWallet->otsVersion );
+    // Remainder wallet: never below the client's OTS version, so a client set to v2 moves the
+    // identity's ContinuID head to v2
+    $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet(), max( $sourceWallet->otsVersion, $this->getOtsVersion() ) );
 
-    $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
+    $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet(), minOtsVersion: $this->getOtsVersion() );
     if ( $this->bundle ) {
       $molecule->bundle = $this->bundle;
     }
@@ -1176,7 +1177,7 @@ class KnishIOClient {
     }
 
     // Remainder wallet
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     $fromWallet->splitUnits( $units, $remainderWallet, $recipientWallet );
 
@@ -1239,7 +1240,7 @@ class KnishIOClient {
     }
 
     // Canonical remainder (carries the source's token/characters; reuses the source batch id)
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     // Stackable (NFT): partition the source's tokenUnits across source (SENT union), each recipient
     // (its subset), and remainder (KEPT) BEFORE the molecule is built. No-op for fungible.
@@ -1284,7 +1285,7 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
@@ -1316,7 +1317,7 @@ class KnishIOClient {
 
     // Remainder: a fresh position of the same buffer wallet. Never the source itself: value
     // credited at the signing position sits behind a consumed one-time key.
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     // Create a molecule with custom source wallet
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
@@ -1348,7 +1349,7 @@ class KnishIOClient {
     $fromWallet = $sourceWallet ?? $this->querySourceWallet( $tokenSlug, $amount );
 
     // Remainder wallet
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     // Calculate amount & set meta key
     if ( count( $units ) > 0 ) {
@@ -1476,7 +1477,7 @@ class KnishIOClient {
       : Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Remainder wallet
-    $remainderWallet = $fromWallet->createRemainder( $this->getSecret() );
+    $remainderWallet = $fromWallet->createRemainder( $this->getSecret(), $this->getOtsVersion() );
 
     // Create a molecule
     $molecule = $this->createMolecule( null, $fromWallet, $remainderWallet );
