@@ -131,7 +131,7 @@ class Wallet {
   /**
    * @var int OTS key version (1 = 2048-hex key, 16 chains; 2 = 8192-hex key, 64 chains)
    */
-  public readonly int $otsVersion;
+  public int $otsVersion;
 
 
   /**
@@ -599,6 +599,50 @@ class Wallet {
       throw new CryptoException( "KnishIO: unsupported OTS version {$otsVersion}; expected 1 or 2." );
     }
     return $otsVersion;
+  }
+
+  /**
+   * Sets the OTS version of a wallet that holds no key (e.g. a wallet rebuilt from ledger data).
+   * A keyed wallet keeps the version its key was derived at.
+   *
+   * @param int $otsVersion
+   *
+   * @return self
+   */
+  public function setOtsVersion ( int $otsVersion ): self {
+    $version = static::checkedOtsVersion( $otsVersion );
+    if ( $this->key && $version !== $this->otsVersion ) {
+      throw new CryptoException( 'KnishIO: cannot change the OTS version of a keyed wallet.' );
+    }
+    $this->otsVersion = $version;
+    return $this;
+  }
+
+  /**
+   * The OTS version whose key, derived from secret, token and position, has the given address.
+   * Tries `$preferred` first, then the other version.
+   *
+   * @param string|null $secret
+   * @param string $token
+   * @param string|null $position
+   * @param string|null $address
+   * @param int $preferred 1 (default) or 2
+   *
+   * @return int|null
+   * @throws Exception
+   */
+  public static function detectOtsVersion ( ?string $secret, string $token, ?string $position, ?string $address, int $preferred = 1 ): ?int {
+    if ( !$secret || !$position || !$address ) {
+      return null;
+    }
+    $first = static::checkedOtsVersion( $preferred );
+    $wanted = strtolower( $address );
+    foreach ( [ $first, $first === 1 ? 2 : 1 ] as $otsVersion ) {
+      if ( static::generateAddress( static::generateKey( $secret, $token, $position, $otsVersion ) ) === $wanted ) {
+        return $otsVersion;
+      }
+    }
+    return null;
   }
 
   /**

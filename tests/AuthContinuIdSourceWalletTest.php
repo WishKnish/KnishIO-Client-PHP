@@ -266,7 +266,7 @@ class AuthContinuIdSourceWalletTest extends TestCase {
     $http = new RecordingHttpClient( 'http://offline.invalid/graphql', [
       self::continuIdBody( null ),
       self::authBody( true ),
-      self::continuIdBody( $bundle, 'USER', str_repeat( 'b', 64 ) ),
+      self::continuIdBody( $bundle, 'USER', ( new Wallet( $secret, 'USER', self::CONTINUID_POSITION ) )->address ),
     ] );
     $client = new KnishIOClient( 'http://offline.invalid/graphql', $http );
 

@@ -17,11 +17,19 @@ not substantiate a detail, the entry says so instead of guessing.
 ### Added
 
 - Opt-in OTS v2 keys: `Wallet::generateKey( $secret, $token, $position, $otsVersion = 1 )`, a trailing
-  `$otsVersion` argument on the `Wallet` constructor and `Wallet::create()`, and a read-only
+  `$otsVersion` argument on the `Wallet` constructor and `Wallet::create()`, and
   `Wallet::$otsVersion` (1 = 2048-hex key, 16 chains; 2 = 8192-hex key, 64 chains). Any other version
   throws `CryptoException`.
 - `Molecule::signingOtsVersion()`: the source wallet's OTS version, or 1 without a source wallet.
 - `Crypto::isSignableHash()`: true for exactly 64 base-17 symbols (`0-9`, `a-g`).
+- **Client-level OTS version.** A trailing `$otsVersion` argument (1 default, or 2) on the `KnishIOClient`
+  constructor and `initialize()`, `getOtsVersion()` and `setOtsVersion()`. Keys the client creates from its
+  secret (the first source wallet, AUTH and guest wallets, `createWallet()`, token and claim wallets) use it.
+- `Wallet::detectOtsVersion( $secret, $token, $position, $address, $preferred = 1 )`: the OTS version whose
+  derived address equals `$address`, or `null`. `$wallet->setOtsVersion()` for a wallet that holds no key;
+  a keyed wallet throws `CryptoException` when asked to change version.
+- `AuthToken` snapshots carry `wallet.otsVersion`; a snapshot without it restores at 1.
+- `MutationClaimShadowWallet::fillMolecule()` takes a trailing `$otsVersion` (default 1).
 
 ### Changed
 
@@ -32,6 +40,11 @@ not substantiate a detail, the entry says so instead of guessing.
   wallets a molecule creates, `Wallet::createRemainder()`, and `KnishIOClient::createMolecule()`'s default
   remainder keep the source wallet's OTS version.
 - `Wallet::generateKey()` throws `CryptoException` for an empty secret or position.
+- Wallets the ledger returns for this client (the ContinuID head in `getSourceWallet()` and the login
+  pointer, `querySourceWallet()`, and the balance wallets `replenishToken()` and `fuseToken()` sign from)
+  are used at the OTS version their address was derived at. `getSourceWallet()`, `querySourceWallet()` and
+  those balance wallets throw `WalletSignatureException` when neither version derives the address; the
+  login pointer falls back to an AUTH wallet as before.
 
 ## [1.3.2] — 2026-09-29
 

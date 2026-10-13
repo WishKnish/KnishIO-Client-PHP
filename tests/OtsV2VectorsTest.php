@@ -6,9 +6,13 @@ use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\AtomMeta;
+use WishKnish\KnishIO\Client\AuthToken;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException;
 use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
+use WishKnish\KnishIO\Client\KnishIOClient;
+use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\MoleculeStructure;
@@ -151,5 +155,157 @@ class OtsV2VectorsTest extends TestCase {
     $molecule->atoms[ 0 ]->otsFragment = ( $fragment[ 0 ] === 'A' ? 'B' : 'A' ) . substr( $fragment, 1 );
     $this->expectException( MoleculeSignatureMismatchException::class );
     $molecule->check();
+  }
+
+  private const CLIENT_POSITION = 'b0b1b2b3b4b5b6b7b8b9babbbcbdbebfb0b1b2b3b4b5b6b7b8b9babbbcbdbebf';
+
+  private static function clientSecret (): string {
+    return Crypto::generateSecret( 'ots-v2-client-level', 2048 );
+  }
+
+  private static function ledgerWallet ( string $address ): Wallet {
+    $wallet = new Wallet( null, 'USER', self::CLIENT_POSITION );
+    $wallet->address = $address;
+    return $wallet;
+  }
+
+  private static function continuIdBody ( ?string $address ): string {
+    return json_encode( [ 'data' => [ 'ContinuId' => $address === null ? null : [
+      'type' => 'regular',
+      'address' => $address,
+      'bundleHash' => Crypto::generateBundleHash( self::clientSecret() ),
+      'tokenSlug' => 'USER',
+      'position' => self::CLIENT_POSITION,
+      'batchId' => null,
+      'characters' => 'BASE64',
+      'pubkey' => null,
+      'amount' => '0',
+      'createdAt' => '2026-10-12T00:00:00Z',
+    ] ] ], JSON_THROW_ON_ERROR );
+  }
+
+  private static function proposeBody ( bool $accepted ): string {
+    return json_encode( [ 'data' => [ 'ProposeMolecule' => [
+      'molecularHash' => str_repeat( 'a', 64 ),
+      'height' => 0,
+      'depth' => 0,
+      'status' => $accepted ? 'accepted' : 'rejected',
+      'reason' => $accepted ? null : 'offline',
+      'payload' => $accepted ? json_encode( [
+        'token' => 'offline-auth-token',
+        'expiresAt' => (string) ( time() + 3600 ),
+        'pubkey' => 'offline-validator-pubkey',
+        'encrypt' => false,
+      ], JSON_THROW_ON_ERROR ) : null,
+      'createdAt' => '2026-10-12T00:00:00Z',
+    ] ] ], JSON_THROW_ON_ERROR );
+  }
+
+  /**
+   * @param string[] $bodies
+   *
+   * @return array{0: KnishIOClient, 1: RecordingHttpClient}
+   */
+  private static function clientAt ( int $otsVersion, array $bodies ): array {
+    $http = new RecordingHttpClient( 'http://offline.invalid/graphql', $bodies );
+    $client = new KnishIOClient( 'http://offline.invalid/graphql', $http, otsVersion: $otsVersion );
+    $client->setSecret( self::clientSecret() );
+    return [ $client, $http ];
+  }
+
+  private static function addressAt ( int $otsVersion, string $token = 'USER', string $position = self::CLIENT_POSITION ): string {
+    return self::address( Wallet::generateKey( self::clientSecret(), $token, $position, $otsVersion ) );
+  }
+
+  public function testDetectOtsVersionEitherPreferredOrder (): void {
+    $secret = self::clientSecret();
+    foreach ( [ 1, 2 ] as $preferred ) {
+      $this->assertSame( 1, Wallet::detectOtsVersion( $secret, 'USER', self::CLIENT_POSITION, self::addressAt( 1 ), $preferred ) );
+      $this->assertSame( 2, Wallet::detectOtsVersion( $secret, 'USER', self::CLIENT_POSITION, self::addressAt( 2 ), $preferred ) );
+      $this->assertSame( 2, Wallet::detectOtsVersion( $secret, 'USER', self::CLIENT_POSITION, strtoupper( self::addressAt( 2 ) ), $preferred ) );
+      $this->assertNull( Wallet::detectOtsVersion( $secret, 'USER', self::CLIENT_POSITION, bin2hex( random_bytes( 32 ) ), $preferred ) );
+    }
+  }
+
+  public function testSetOtsVersionOnKeylessAndKeyedWallets (): void {
+    $this->assertSame( 2, self::ledgerWallet( self::addressAt( 2 ) )->setOtsVersion( 2 )->otsVersion );
+
+    $keyed = new Wallet( self::clientSecret(), 'USER', self::CLIENT_POSITION );
+    $this->assertSame( 1, $keyed->setOtsVersion( 1 )->otsVersion );
+    $this->expectException( CryptoException::class );
+    $this->expectExceptionMessage( 'KnishIO: cannot change the OTS version of a keyed wallet.' );
+    $keyed->setOtsVersion( 2 );
+  }
+
+  public function testClientOtsVersionIsValidated (): void {
+    [ $client ] = self::clientAt( 2, [] );
+    $this->assertSame( 2, $client->getOtsVersion() );
+    $this->assertSame( 1, $client->setOtsVersion( 1 )->getOtsVersion() );
+    $this->expectException( CryptoException::class );
+    $this->expectExceptionMessage( 'KnishIO: unsupported OTS version 3; expected 1 or 2.' );
+    $client->setOtsVersion( 3 );
+  }
+
+  public function testClientAtV2CreatesV2SourceWallet (): void {
+    [ $client ] = self::clientAt( 2, [ self::continuIdBody( null ) ] );
+    $sourceWallet = $client->getSourceWallet();
+    $this->assertSame( 2, $sourceWallet->otsVersion );
+    $this->assertSame( 8192, strlen( $sourceWallet->key ) );
+  }
+
+  public function testClientAtV2SignsAuthorizationFromV2AuthWallet (): void {
+    [ $client, $http ] = self::clientAt( 2, [ self::continuIdBody( null ), self::proposeBody( true ) ] );
+    $this->assertTrue( $client->requestProfileAuthToken( self::clientSecret(), false )->success() );
+    $authWallet = $client->getAuthToken()->getWallet();
+    $this->assertSame( 'AUTH', $authWallet->token );
+    $this->assertSame( 2, $authWallet->otsVersion );
+    $this->assertSame( 8192, strlen( $authWallet->key ) );
+    $this->assertCount( 2, $http->requests );
+  }
+
+  public function testClientAtV2CreatesV2Wallet (): void {
+    [ $client, $http ] = self::clientAt( 2, [ self::continuIdBody( null ), self::proposeBody( false ) ] );
+    $client->createWallet( 'OTSV2' );
+    $request = json_decode( (string) $http->requests[ 1 ]->getBody(), true, 512, JSON_THROW_ON_ERROR );
+    $atoms = array_values( array_filter( $request[ 'variables' ][ 'molecule' ][ 'atoms' ], static fn ( array $atom ) => $atom[ 'isotope' ] === 'C' ) );
+    $this->assertCount( 1, $atoms );
+    $metas = array_column( $atoms[ 0 ][ 'meta' ], 'value', 'key' );
+    $this->assertSame( self::addressAt( 2, 'OTSV2', $metas[ 'walletPosition' ] ), $metas[ 'walletAddress' ] );
+  }
+
+  public function testLedgerWalletIsBoundToTheVersionOfItsAddress (): void {
+    [ $client ] = self::clientAt( 1, [ self::continuIdBody( self::addressAt( 2 ) ) ] );
+    $sourceWallet = $client->getSourceWallet();
+    $this->assertSame( 2, $sourceWallet->otsVersion );
+    $this->assertSame( self::CLIENT_POSITION, $sourceWallet->position );
+  }
+
+  public function testLedgerWalletNotDerivedFromTheSecretThrows (): void {
+    $unrelated = bin2hex( random_bytes( 32 ) );
+    [ $client ] = self::clientAt( 1, [ self::continuIdBody( $unrelated ) ] );
+    $this->expectException( WalletSignatureException::class );
+    $this->expectExceptionMessage( "KnishIO: wallet {$unrelated} is not derived from this secret at position " . self::CLIENT_POSITION . ' under OTS version 1 or 2.' );
+    $client->getSourceWallet();
+  }
+
+  public function testLoginPointerIsUsedAtTheVersionOfItsAddress (): void {
+    [ $client ] = self::clientAt( 1, [ self::continuIdBody( self::addressAt( 2 ) ), self::proposeBody( true ) ] );
+    $this->assertTrue( $client->requestProfileAuthToken( self::clientSecret(), false )->success() );
+    $authWallet = $client->getAuthToken()->getWallet();
+    $this->assertSame( 'USER', $authWallet->token );
+    $this->assertSame( 2, $authWallet->otsVersion );
+    $this->assertSame( self::addressAt( 2 ), $authWallet->address );
+  }
+
+  public function testAuthTokenSnapshotKeepsOtsVersion (): void {
+    $wallet = new Wallet( self::clientSecret(), 'USER', self::CLIENT_POSITION, otsVersion: 2 );
+    $snapshot = AuthToken::create( [ 'token' => 't', 'expiresAt' => '0', 'pubkey' => 'p' ], $wallet, false )->getSnapshot();
+    $this->assertSame( 2, $snapshot[ 'wallet' ][ 'otsVersion' ] );
+    $restored = AuthToken::restore( $snapshot, self::clientSecret() )->getWallet();
+    $this->assertSame( 2, $restored->otsVersion );
+    $this->assertSame( $wallet->address, $restored->address );
+
+    unset( $snapshot[ 'wallet' ][ 'otsVersion' ] );
+    $this->assertSame( 1, AuthToken::restore( $snapshot, self::clientSecret() )->getWallet()->otsVersion );
   }
 }

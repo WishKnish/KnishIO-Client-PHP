@@ -63,8 +63,11 @@ class CipherHashLiveTest extends TestCase {
     if ( $param ) {
       $client->setMlKemParameterSet( (int)$param );
     }
+    $otsVersion = getenv( 'CIPHERHASH_OTS_VERSION' ) === '2' ? 2 : 1;
+    $client->setOtsVersion( $otsVersion );
     $client->setCellSlug( 'public' );   // the active dev cell (TESTCELL is inactive there)
     $client->requestAuthToken( $secret, 'public', false );
+    $this->assertSame( $otsVersion, $client->getAuthToken()->getWallet()->otsVersion );
 
     // Encrypted round-trip: the validator ML-KEM-decrypts the request, executes it, and encrypts
     // the response back to the client's ML-KEM pubkey; the client decrypts it.
@@ -106,8 +109,11 @@ class CipherHashLiveTest extends TestCase {
     if ( $param ) {
       $client->setMlKemParameterSet( (int)$param );
     }
+    $otsVersion = getenv( 'CIPHERHASH_OTS_VERSION' ) === '2' ? 2 : 1;
+    $client->setOtsVersion( $otsVersion );
     $client->setCellSlug( 'public' );
     $client->requestAuthToken( $secret, 'public', true );
+    $this->assertSame( $otsVersion, $client->getAuthToken()->getWallet()->otsVersion );
 
     // The encrypted transport still works for this session.
     $this->assertNotNull( $client->queryBalance( 'USER' )->payload() );

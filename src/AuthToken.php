@@ -52,6 +52,19 @@ class AuthToken {
   }
 
   /**
+   * OTS version a restored session's wallet must use: the snapshot's explicit field, or 1 for a
+   * snapshot written before the field existed (every such session was v1).
+   *
+   * @param array $snapshot
+   *
+   * @return int
+   */
+  public static function resolveOtsVersion ( array $snapshot ): int {
+    $explicit = array_get( $snapshot, 'wallet.otsVersion' );
+    return Wallet::checkedOtsVersion( $explicit ? (int) $explicit : 1 );
+  }
+
+  /**
    * @param array $snapshot
    * @param string $secret
    *
@@ -60,7 +73,7 @@ class AuthToken {
    */
   public static function restore ( array $snapshot, string $secret ): self {
     // A snapshot predating `wallet.token` was always bound to an AUTH wallet.
-    $wallet = new Wallet ( $secret, array_get( $snapshot, 'wallet.token' ) ?? 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ), static::resolveMlKemParameterSet( $snapshot ) );
+    $wallet = new Wallet ( $secret, array_get( $snapshot, 'wallet.token' ) ?? 'AUTH', array_get( $snapshot, 'wallet.position' ), null, array_get( $snapshot, 'wallet.characters' ), static::resolveMlKemParameterSet( $snapshot ), static::resolveOtsVersion( $snapshot ) );
     return static::create( [
       'token' => array_get( $snapshot, 'token' ),
       'expiresAt' => array_get( $snapshot, 'expiresAt' ),
@@ -118,6 +131,7 @@ class AuthToken {
         'position' => $this->wallet->position,
         'characters' => $this->wallet->characters,
         'mlKemParameterSet' => $this->wallet->mlKemParameterSet,
+        'otsVersion' => $this->wallet->otsVersion,
       ],
     ];
   }

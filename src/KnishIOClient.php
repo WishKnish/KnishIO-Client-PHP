@@ -63,6 +63,7 @@ use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\UnauthenticatedException;
 use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Exception\WalletShadowException;
+use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\HttpClient\HttpClient;
 use WishKnish\KnishIO\Client\HttpClient\HttpClientInterface;
 use WishKnish\KnishIO\Client\Storage\MemorySecretStorageProvider;
@@ -147,6 +148,11 @@ class KnishIOClient {
    */
   public int $mlKemParameterSet = 1024;
 
+  /**
+   * @var int OTS version of the keys this client creates from its secret: 1 (default) or 2
+   */
+  public int $otsVersion = 1;
+
 
   /**
    * @var int
@@ -176,8 +182,8 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null ) {
-    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage );
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 1 ) {
+    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage, $otsVersion );
   }
 
   /**
@@ -187,7 +193,7 @@ class KnishIOClient {
    *
    * @return void
    */
-  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 1 ): void {
     $this->reset();
 
     // Init uris
@@ -196,6 +202,7 @@ class KnishIOClient {
     $this->client = $client ?? new HttpClient( $this->getRandomUri() );
     $this->serverSdkVersion = $serverSdkVersion;
     $this->setMlKemParameterSet( $mlKemParameterSet );
+    $this->setOtsVersion( $otsVersion );
     $this->secretStorage = $secretStorage;
   }
 
@@ -225,6 +232,48 @@ class KnishIOClient {
     }
     $this->mlKemParameterSet = $parameterSet;
     return $this;
+  }
+
+  /**
+   * OTS version of the keys this client creates from its secret (1 default, or 2)
+   *
+   * @return int
+   */
+  public function getOtsVersion (): int {
+    return $this->otsVersion ?? 1;
+  }
+
+  /**
+   * Sets the OTS version of the keys this client creates from its secret. Wallets the ledger
+   * returns keep the version their address was derived at.
+   *
+   * @param int $otsVersion 1 or 2
+   *
+   * @return self
+   */
+  public function setOtsVersion ( int $otsVersion ): self {
+    $this->otsVersion = Wallet::checkedOtsVersion( $otsVersion );
+    return $this;
+  }
+
+  /**
+   * Sets the OTS version of one of this client's own wallets returned by the ledger, from the
+   * address it was derived at; the client's version when the wallet has no position or address.
+   *
+   * @param Wallet $wallet
+   *
+   * @return Wallet
+   * @throws Exception
+   */
+  private function bindOwnWalletOtsVersion ( Wallet $wallet ): Wallet {
+    if ( !$wallet->position || !$wallet->address ) {
+      return $wallet->setOtsVersion( $this->getOtsVersion() );
+    }
+    $otsVersion = Wallet::detectOtsVersion( $this->getSecret(), $wallet->token, $wallet->position, $wallet->address, $this->getOtsVersion() );
+    if ( $otsVersion === null ) {
+      throw new WalletSignatureException( "KnishIO: wallet {$wallet->address} is not derived from this secret at position {$wallet->position} under OTS version 1 or 2." );
+    }
+    return $wallet->setOtsVersion( $otsVersion );
   }
 
   /**
@@ -520,7 +569,7 @@ class KnishIOClient {
       throw new WalletShadowException( 'Source wallet can not be a shadow wallet.' );
     }
 
-    return $fromWallet;
+    return $this->bindOwnWalletOtsVersion( $fromWallet );
   }
 
   /**
@@ -631,7 +680,7 @@ class KnishIOClient {
    * @throws GuzzleException|Exception
    */
   public function createWallet ( string $tokenSlug ): Response {
-    $newWallet = new Wallet( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
+    $newWallet = new Wallet( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() );
 
     /**
      * @var MutationCreateWallet $query
@@ -772,7 +821,7 @@ class KnishIOClient {
     }
 
     // Recipient wallet
-    $recipientWallet = new Wallet( $this->getSecret(), $tokenSlug, null, $batchId, mlKemParameterSet: $this->getMlKemParameterSet() );
+    $recipientWallet = new Wallet( $this->getSecret(), $tokenSlug, null, $batchId, mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() );
 
     // Create a query
     /** @var MutationCreateToken $query */
@@ -1042,7 +1091,7 @@ class KnishIOClient {
      * @var MutationClaimShadowWallet $query
      */
     $query = $this->createMoleculeMutation( MutationClaimShadowWallet::class, $molecule );
-    $query->fillMolecule( $tokenSlug, $batchId );
+    $query->fillMolecule( $tokenSlug, $batchId, $this->getOtsVersion() );
 
     // Return a response
     return $query->execute();
@@ -1360,8 +1409,14 @@ class KnishIOClient {
     }
 
     // The credited wallet: the identity's existing wallet for the token, else a new one
-    $creditedWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )->payload()
-      ?? Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
+    $creditedWallet = $sourceWallet;
+    if ( $creditedWallet === null ) {
+      $creditedWallet = $this->queryBalance( $tokenSlug )->payload();
+      if ( $creditedWallet ) {
+        $this->bindOwnWalletOtsVersion( $creditedWallet );
+      }
+    }
+    $creditedWallet ??= Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() );
 
     $molecule = $this->createMolecule();
     $molecule->replenishToken( $creditedWallet, $amount, $tokenUnits );
@@ -1397,8 +1452,13 @@ class KnishIOClient {
 
     // Get a from wallet
     /** @var Wallet|null $fromWallet */
-    $fromWallet = $sourceWallet ?? $this->queryBalance( $tokenSlug )
-      ->payload();
+    $fromWallet = $sourceWallet;
+    if ( $fromWallet === null ) {
+      $fromWallet = $this->queryBalance( $tokenSlug )->payload();
+      if ( $fromWallet ) {
+        $this->bindOwnWalletOtsVersion( $fromWallet );
+      }
+    }
     if ( $fromWallet === null ) {
       throw new TransferWalletException( 'Source wallet is missing or invalid.' );
     }
@@ -1412,7 +1472,7 @@ class KnishIOClient {
 
     // Recipient: our own new wallet, or the recipient bundle's wallet
     $recipientWallet = $bundleHash === $this->getBundle()
-      ? Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() )
+      ? Wallet::create( $this->getSecret(), $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() )
       : Wallet::create( $bundleHash, $tokenSlug, mlKemParameterSet: $this->getMlKemParameterSet() );
 
     // Remainder wallet
@@ -1443,7 +1503,9 @@ class KnishIOClient {
     $sourceWallet = $this->queryContinuId( $this->getBundle(), 'USER' )
       ->payload();
     if ( !$sourceWallet ) {
-      $sourceWallet = new Wallet( $this->getSecret(), mlKemParameterSet: $this->getMlKemParameterSet() );
+      $sourceWallet = new Wallet( $this->getSecret(), mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() );
+    } else {
+      $this->bindOwnWalletOtsVersion( $sourceWallet );
     }
 
     // Return final source wallet
@@ -1480,7 +1542,7 @@ class KnishIOClient {
 
     $query = $this->createQuery( MutationRequestAuthorizationGuest::class );
 
-    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() );
+    $wallet = new Wallet( Libraries\Crypto::generateSecret(), 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() );
 
     $response = $query->execute( [
       'cellSlug' => $cellSlug,
@@ -1523,7 +1585,7 @@ class KnishIOClient {
       error_log( 'KnishIOClient::requestProfileAuthToken() - WARNING: pointer-signed authorization rejected (' . $response->reason() . '); falling back once to a fresh AUTH wallet.' );
     }
 
-    $response = $this->proposeProfileAuthorization( $secret, new Wallet( $secret, 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet() ), $encrypt );
+    $response = $this->proposeProfileAuthorization( $secret, new Wallet( $secret, 'AUTH', mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $this->getOtsVersion() ), $encrypt );
     if ( $response->success() ) {
       error_log( 'KnishIOClient::requestProfileAuthToken() - auth token signed from a fresh AUTH wallet (' . ( $pointerWallet !== null ? 'fallback' : 'no ContinuID pointer' ) . ').' );
     }
@@ -1548,12 +1610,15 @@ class KnishIOClient {
       return null;
     }
 
-    $wallet = new Wallet( $secret, 'USER', $pointer->position, mlKemParameterSet: $this->getMlKemParameterSet() );
-    if ( $pointer->address && $pointer->address !== $wallet->address ) {
+    // The pointer wallet's OTS version is the one its ledger address was derived at
+    $pointerOtsVersion = $pointer->address
+      ? Wallet::detectOtsVersion( $secret, 'USER', $pointer->position, $pointer->address, $this->getOtsVersion() )
+      : $this->getOtsVersion();
+    if ( $pointerOtsVersion === null ) {
       return null;
     }
 
-    return $wallet;
+    return new Wallet( $secret, 'USER', $pointer->position, mlKemParameterSet: $this->getMlKemParameterSet(), otsVersion: $pointerOtsVersion );
   }
 
   /**
