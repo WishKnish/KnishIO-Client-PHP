@@ -583,4 +583,211 @@ class CheckMolecule {
     }
   }
 
+  /**
+   * Atom versions a molecule served without its atom versions may have been hashed with, in retry order.
+   */
+  private const UNSERVED_ATOM_VERSIONS = [ '4', '3' ];
+
+  /**
+   * Normalizes a served createdAt to the millisecond string the molecule was hashed with: an integer
+   * becomes its decimal string, an RFC 3339 timestamp becomes epoch milliseconds (fraction truncated
+   * to 3 digits, offset applied), null or "" becomes null, anything else is returned unchanged.
+   *
+   * @param mixed $value
+   *
+   * @return string|null
+   */
+  public static function toSignedTimestamp ( mixed $value ): ?string {
+    if ( $value === null || $value === '' ) {
+      return null;
+    }
+    if ( is_int( $value ) ) {
+      return (string) $value;
+    }
+    if ( !is_string( $value ) ) {
+      return static::scalarString( $value );
+    }
+    if ( !preg_match( '/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/D', $value, $parts ) ) {
+      return $value;
+    }
+    try {
+      $micros = substr( str_pad( $parts[ 2 ], 6, '0' ), 0, 6 );
+      $date = new \DateTimeImmutable( $parts[ 1 ] . '.' . $micros . $parts[ 3 ] );
+    }
+    catch ( \Exception ) {
+      return $value;
+    }
+    // An out-of-range field (month 13, February 30) parses with a warning instead of failing
+    $errors = \DateTimeImmutable::getLastErrors();
+    if ( $errors !== false && ( $errors[ 'warning_count' ] > 0 || $errors[ 'error_count' ] > 0 ) ) {
+      return $value;
+    }
+    return (string) ( $date->getTimestamp() * 1000 + intdiv( (int) $date->format( 'u' ), 1000 ) );
+  }
+
+  /**
+   * Builds a molecule from GraphQL `Molecule` data as a validator serves it (bundleHash, tokenSlug,
+   * metasJson, RFC 3339 createdAt).
+   *
+   * @param array $data
+   *
+   * @return MoleculeStructure
+   * @throws JsonException
+   */
+  public static function fromServerData ( array $data ): MoleculeStructure {
+    $atoms = [];
+    foreach ( $data[ 'atoms' ] ?? [] as $served ) {
+      if ( !is_array( $served ) ) {
+        throw new MoleculeAtomsMissingException( 'Served atom is not an object' );
+      }
+      $text = static fn( string $key ) => ( isset( $served[ $key ] ) && $served[ $key ] !== '' ) ? static::scalarString( $served[ $key ] ) : null;
+      $index = $served[ 'index' ] ?? null;
+      $atoms[] = [
+        'position' => $text( 'position' ),
+        'walletAddress' => $text( 'walletAddress' ),
+        'isotope' => $text( 'isotope' ),
+        'token' => $text( 'tokenSlug' ) ?? $text( 'token' ),
+        'value' => isset( $served[ 'value' ] ) ? static::scalarString( $served[ 'value' ] ) : null,
+        'batchId' => $text( 'batchId' ),
+        'metaType' => $text( 'metaType' ),
+        'metaId' => $text( 'metaId' ),
+        'meta' => static::servedMeta( $served[ 'metasJson' ] ?? null ),
+        'index' => is_numeric( $index ) ? (int) $index : null,
+        'otsFragment' => $text( 'otsFragment' ),
+        'createdAt' => static::toSignedTimestamp( $served[ 'createdAt' ] ?? null ),
+        'version' => isset( $served[ 'version' ] ) ? static::scalarString( $served[ 'version' ] ) : null,
+      ];
+    }
+
+    return MoleculeStructure::toObject( [
+      'molecularHash' => $data[ 'molecularHash' ] ?? null,
+      'bundle' => $data[ 'bundleHash' ] ?? null,
+      'cellSlug' => $data[ 'cellSlug' ] ?? null,
+      'status' => $data[ 'status' ] ?? null,
+      'createdAt' => static::toSignedTimestamp( $data[ 'createdAt' ] ?? null ),
+      'atoms' => $atoms,
+    ] );
+  }
+
+  /**
+   * Verifies a molecule exactly as a validator's GraphQL API serves it. A molecule served without its
+   * atom versions whose hash does not match is rebuilt with atom version "4", then "3".
+   *
+   * @param mixed $data GraphQL `Molecule` data (decoded JSON object)
+   *
+   * @return array{molecularHash: string|null, verified: bool, error: string|null}
+   */
+  public static function verifyFromServerData ( mixed $data ): array {
+    if ( !is_array( $data ) || !isset( $data[ 'atoms' ] ) || !is_array( $data[ 'atoms' ] ) ) {
+      return [
+        'molecularHash' => is_array( $data ) && is_string( $data[ 'molecularHash' ] ?? null ) ? $data[ 'molecularHash' ] : null,
+        'verified' => false,
+        'error' => 'Molecule data must be an object with an atoms array',
+      ];
+    }
+
+    $molecularHash = is_string( $data[ 'molecularHash' ] ?? null ) ? $data[ 'molecularHash' ] : null;
+    $attempt = static function ( array $molecule ) use ( $molecularHash ): array {
+      try {
+        ( new self( self::fromServerData( $molecule ) ) )->verify();
+        return [ [ 'molecularHash' => $molecularHash, 'verified' => true, 'error' => null ], false ];
+      }
+      catch ( \Throwable $e ) {
+        return [
+          [ 'molecularHash' => $molecularHash, 'verified' => false, 'error' => $e->getMessage() ],
+          $e instanceof MoleculeHashMismatchException,
+        ];
+      }
+    };
+
+    [ $result, $hashMismatch ] = $attempt( $data );
+    $servedVersion = false;
+    foreach ( $data[ 'atoms' ] as $atom ) {
+      if ( is_array( $atom ) && isset( $atom[ 'version' ] ) ) {
+        $servedVersion = true;
+      }
+    }
+    if ( $result[ 'verified' ] || !$hashMismatch || $servedVersion ) {
+      return $result;
+    }
+
+    foreach ( self::UNSERVED_ATOM_VERSIONS as $version ) {
+      $retry = $data;
+      foreach ( $retry[ 'atoms' ] as $i => $atom ) {
+        $retry[ 'atoms' ][ $i ][ 'version' ] = $version;
+      }
+      [ $result ] = $attempt( $retry );
+      if ( $result[ 'verified' ] ) {
+        break;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Served metasJson as [{key, value}] pairs: a JSON list is used as is, a JSON object becomes its
+   * entries; anything unparseable gives no metas.
+   *
+   * @param mixed $metasJson
+   *
+   * @return array
+   */
+  private static function servedMeta ( mixed $metasJson ): array {
+    if ( !is_string( $metasJson ) ) {
+      return [];
+    }
+    try {
+      $parsed = json_decode( $metasJson, false, 512, JSON_THROW_ON_ERROR );
+    }
+    catch ( JsonException ) {
+      return [];
+    }
+
+    $entries = [];
+    if ( is_array( $parsed ) ) {
+      foreach ( $parsed as $entry ) {
+        if ( $entry instanceof \stdClass ) {
+          $entries[] = [ $entry->key ?? null, $entry->value ?? null ];
+        }
+      }
+    }
+    else if ( $parsed instanceof \stdClass ) {
+      foreach ( get_object_vars( $parsed ) as $key => $value ) {
+        $entries[] = [ $key, $value ];
+      }
+    }
+
+    return array_map( static fn( array $entry ) => [
+      'key' => $entry[ 0 ] === null ? null : static::scalarString( $entry[ 0 ] ),
+      'value' => $entry[ 1 ] === null ? null : static::scalarString( $entry[ 1 ] ),
+    ], $entries );
+  }
+
+  /**
+   * A served scalar as the string JavaScript's String() gives: numbers in shortest form, booleans as
+   * "true"/"false"; arrays and objects as compact JSON.
+   *
+   * @param mixed $value
+   *
+   * @return string
+   */
+  private static function scalarString ( mixed $value ): string {
+    if ( is_string( $value ) ) {
+      return $value;
+    }
+    if ( is_bool( $value ) ) {
+      return $value ? 'true' : 'false';
+    }
+    if ( is_int( $value ) ) {
+      return (string) $value;
+    }
+    if ( is_float( $value ) ) {
+      if ( is_finite( $value ) && floor( $value ) === $value && abs( $value ) < 1e21 ) {
+        return $value == 0 ? '0' : sprintf( '%.0f', $value );
+      }
+      return str_replace( '.0e', 'e', json_encode( $value, JSON_THROW_ON_ERROR ) );
+    }
+    return json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
+  }
+
 }

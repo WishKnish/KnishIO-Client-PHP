@@ -1232,7 +1232,8 @@ class Molecule extends MoleculeStructure {
               batchId: $atomData['batchId'] ?? null,
               metaType: $atomData['metaType'] ?? null,
               metaId: $atomData['metaId'] ?? null,
-              meta: $atomData['meta'] ?? []
+              meta: $atomData['meta'] ?? [],
+              version: isset($atomData['version']) ? (string) $atomData['version'] : null
             );
             
             // Set additional properties

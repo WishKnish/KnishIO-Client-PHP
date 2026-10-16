@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use JsonException;
+use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
@@ -263,6 +264,25 @@ class Atom implements \JsonSerializable {
   }
 
   /**
+   * The exact JSON string a molecule's Version4 hash absorbs: the atoms sorted by index, each one an
+   * array of single-key objects in key order, encoded the same way as the other SDKs (`/`, non-ASCII
+   * characters and U+2028/U+2029 unescaped).
+   *
+   * @param Atom[] $atoms
+   *
+   * @return string
+   * @throws JsonException|ReflectionException
+   */
+  public static function version4ViewJson ( array $atoms ): string {
+    $hashAtom = ( new Versions() )->{'4'};
+    $views = array_map( static fn( self $atom ) => $hashAtom::create( $atom )->view(), static::sortAtoms( $atoms ) );
+    return json_encode( $views, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_LINE_TERMINATORS | JSON_THROW_ON_ERROR );
+  }
+
+  /**
+   * Molecular hash of the atoms. When every atom carries a version (any string), the hash absorbs
+   * version4ViewJson(); otherwise it absorbs each atom's hashable values.
+   *
    * @param array $atoms
    * @param string $output
    *
@@ -272,7 +292,6 @@ class Atom implements \JsonSerializable {
   public static function hashAtoms ( array $atoms, string $output = 'base17' ): array|string|null {
     $atomList = static::sortAtoms( $atoms );
     $molecularSponge = Crypto\Shake256::init();
-    $versions = new Versions();
 
     if (empty($atomList)) {
       throw new MoleculeAtomsMissingException();
@@ -284,13 +303,10 @@ class Atom implements \JsonSerializable {
       }
     });
 
-    //We check that all atoms have an implemented version of reflection
-    $availability = array_unique(array_map(static fn(self $atom) => isset($atom->version, $versions->{$atom->version}), $atomList));
-
-    if ( !in_array( false, $availability, true ) ) {
+    // Every atom versioned: hash the Version4 view
+    if ( !in_array( null, array_map( static fn( self $atom ) => $atom->version, $atomList ), true ) ) {
       try {
-        $reflection = array_map(static fn (self $atom) => $versions->{$atom->version}::create($atom)->view(), $atomList);
-        $molecularSponge->absorb( json_encode( $reflection, JSON_THROW_ON_ERROR ) );
+        $molecularSponge->absorb( static::version4ViewJson( $atomList ) );
       }
       catch ( Exception $e ) {
         throw new CryptoException( $e->getMessage(), $e->getCode(), $e );

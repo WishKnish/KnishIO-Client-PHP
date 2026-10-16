@@ -51,13 +51,20 @@ abstract class HashAtom
       return $result;
     }
 
-    foreach ($object as $key => $value) {
-      if (is_array($value) || $value instanceof self) {
-
-        $result[] = array_is_list($object) ? static::structure($value) : [$key => static::structure($value)];
-        continue;
+    // Lists keep their order; object-like arrays become single-key objects in key order (JS HashAtom.structure)
+    if ( array_is_list( $object ) ) {
+      foreach ( $object as $value ) {
+        $result[] = ( is_array( $value ) || $value instanceof self ) ? static::structure( $value ) : $value;
       }
-      $result[] = array_is_list($object) ? static::structure($value) : [$key => $value];
+      return $result;
+    }
+
+    $keys = array_map( 'strval', array_keys( $object ) );
+    usort( $keys, 'strcmp' );
+
+    foreach ( $keys as $key ) {
+      $value = $object[ $key ];
+      $result[] = [ $key => ( is_array( $value ) || $value instanceof self ) ? static::structure( $value ) : $value ];
     }
 
     return $result;

@@ -14,6 +14,21 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Added
+
+- `CheckMolecule::verifyFromServerData( $data )` verifies a molecule exactly as a validator's GraphQL API
+  serves it: RFC 3339 timestamps, `metasJson`, atoms carrying any version, and molecules served without
+  their atom versions. It returns `molecularHash`, `verified` and `error`, and never throws. Also
+  `CheckMolecule::fromServerData( $data )` and `CheckMolecule::toSignedTimestamp( $value )`.
+- `Atom::version4ViewJson( $atoms )`: the exact JSON string a versioned molecule's hash absorbs.
+
+### Fixed
+
+- Versioned atom hashing encodes `/`, non-ASCII characters and U+2028/U+2029 the same way as the other SDKs.
+- An atom with any version (not only `"4"`) hashes on the versioned path, as in the other SDKs, when every
+  atom of the molecule carries one.
+- `Molecule::fromJSON()` keeps each atom's `version`.
+
 ## [1.4.0] — 2026-10-13
 
 ### Added
