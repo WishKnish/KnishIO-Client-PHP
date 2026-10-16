@@ -14,6 +14,8 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.5.0] — 2026-10-16
+
 ### Added
 
 - `CheckMolecule::verifyFromServerData( $data )` verifies a molecule exactly as a validator's GraphQL API
@@ -466,7 +468,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.4.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.5.0...HEAD
+[1.5.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.5.0
 [1.4.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.4.0
 [1.3.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.2
 [1.3.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.1
