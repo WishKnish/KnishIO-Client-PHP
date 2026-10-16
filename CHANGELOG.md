@@ -28,6 +28,8 @@ not substantiate a detail, the entry says so instead of guessing.
 - An atom with any version (not only `"4"`) hashes on the versioned path, as in the other SDKs, when every
   atom of the molecule carries one.
 - `Molecule::fromJSON()` keeps each atom's `version`.
+- `Molecule::fromJSON()` accepts molecule data without `createdAt` (it raised a `TypeError`); the molecule
+  keeps its own default timestamp, as atoms without `createdAt` already did.
 
 ## [1.4.0] — 2026-10-13
 

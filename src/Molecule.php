@@ -1213,7 +1213,10 @@ class Molecule extends MoleculeStructure {
       // Populate core properties
       $molecule->status = $data['status'] ?? null;
       $molecule->molecularHash = $data['molecularHash'] ?? null;
-      $molecule->createdAt = $data['createdAt'] ?? null;
+      // Without a createdAt the molecule keeps its own default, as each atom does
+      if (isset($data['createdAt']) && $data['createdAt'] !== '') {
+        $molecule->createdAt = (string) $data['createdAt'];
+      }
       $molecule->bundle = $data['bundle'] ?? null;
 
       // Reconstruct atoms array with proper Atom instances
