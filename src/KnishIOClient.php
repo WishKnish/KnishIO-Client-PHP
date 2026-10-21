@@ -149,9 +149,9 @@ class KnishIOClient {
   public int $mlKemParameterSet = 1024;
 
   /**
-   * @var int OTS version of the keys this client creates from its secret: 1 (default) or 2
+   * @var int OTS version of the keys this client creates from its secret: 2 (default) or 1
    */
-  public int $otsVersion = 1;
+  public int $otsVersion = 2;
 
 
   /**
@@ -182,7 +182,7 @@ class KnishIOClient {
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
    */
-  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 1 ) {
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2 ) {
     $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage, $otsVersion );
   }
 
@@ -193,7 +193,7 @@ class KnishIOClient {
    *
    * @return void
    */
-  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 1 ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2 ): void {
     $this->reset();
 
     // Init uris
@@ -235,12 +235,12 @@ class KnishIOClient {
   }
 
   /**
-   * OTS version of the keys this client creates from its secret (1 default, or 2)
+   * OTS version of the keys this client creates from its secret (2 default, or 1)
    *
    * @return int
    */
   public function getOtsVersion (): int {
-    return $this->otsVersion ?? 1;
+    return $this->otsVersion ?? 2;
   }
 
   /**

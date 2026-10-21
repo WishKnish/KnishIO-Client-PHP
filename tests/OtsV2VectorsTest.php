@@ -247,6 +247,12 @@ class OtsV2VectorsTest extends TestCase {
     $client->setOtsVersion( 3 );
   }
 
+  public function testClientOtsVersionDefaultsToTwo (): void {
+    $http = new RecordingHttpClient( 'http://offline.invalid/graphql', [] );
+    $client = new KnishIOClient( 'http://offline.invalid/graphql', $http );
+    $this->assertSame( 2, $client->getOtsVersion() );
+  }
+
   public function testClientAtV2CreatesV2SourceWallet (): void {
     [ $client ] = self::clientAt( 2, [ self::continuIdBody( null ) ] );
     $sourceWallet = $client->getSourceWallet();
