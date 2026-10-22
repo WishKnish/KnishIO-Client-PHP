@@ -14,12 +14,15 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-10-21
+
 ### Changed
 
-- `KnishIOClient` creates keys and signs at OTS version 2 by default (was 1). An identity a version-2 client
-  signs for moves to version 2 and stays there, so the client needs a validator that accepts version 2
-  (0.8.0 or later). Pass `$otsVersion = 1` to keep version 1. Standalone `Wallet` construction still
-  defaults to version 1.
+- `KnishIOClient` defaults to OTS version 2 and ML-KEM-1024. It creates keys and signs at OTS version 2 (was
+  1); ML-KEM-1024 stays the post-quantum transport parameter set, as it has been by default since 1.0.0
+  (ML-KEM-768 remains the opt-in step-back). An identity a version-2 client signs for moves to version 2 and
+  stays there, so the client needs a validator that accepts version 2 (0.8.0 or later). Pass
+  `$otsVersion = 1` to keep version 1. Standalone `Wallet` construction still defaults to version 1.
 
 ## [1.5.0] — 2026-10-16
 
@@ -475,7 +478,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.5.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.6.0...HEAD
+[1.6.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.0
 [1.5.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.5.0
 [1.4.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.4.0
 [1.3.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.3.2
