@@ -14,6 +14,12 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Added
+
+- CI generates a CycloneDX SBOM of the runtime Composer graph and the Node ML-KEM bridge
+  (`.github/scripts/sbom.sh`) and scans it with OSV on every push and weekly. Each GitHub Release attaches it
+  as `knishio-client-php-<version>.cdx.json`.
+
 ### Fixed
 
 - Encrypted transport treats an empty validator public key like a missing one: `Cipher::getPubkey()` throws

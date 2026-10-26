@@ -108,9 +108,55 @@ jobs:
       - name: Self-test (6 frozen molecular hashes + ML-KEM768)
         run: php self-test.php
 
+  # The CycloneDX SBOM attached to the GitHub Release. Same definition as php.yml's `sbom`
+  # job, minus the OSV gate. Runs on dispatch too, so a dry run proves generation.
+  sbom:
+    name: SBOM (CycloneDX)
+    needs: version-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP 8.2 (the library's declared floor)
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # v2
+        with:
+          php-version: '8.2'
+          extensions: sodium, json, mbstring
+          tools: composer:v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install the SBOM generator (cyclonedx-php-composer 6.2.0, global plugin)
+        run: |
+          composer global config --no-interaction allow-plugins.cyclonedx/cyclonedx-php-composer true
+          composer global require --no-interaction cyclonedx/cyclonedx-php-composer:6.2.0
+
+      - name: Resolve dependencies to a lockfile (script-free, no install)
+        run: composer update --no-install --no-scripts --no-plugins --no-interaction
+
+      - name: Setup Node 20 (npm sbom over the committed ML-KEM bridge lock)
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '20'
+
+      - name: Generate SBOM
+        run: bash .github/scripts/sbom.sh
+
+      - name: Export SBOM paths
+        run: cat sbom-out/paths.env >> "$GITHUB_ENV"
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: sbom
+          path: sbom-out/*.cdx.json
+          if-no-files-found: error
+
   release:
     name: create GitHub Release
-    needs: [version-gate, gate]
+    needs: [version-gate, gate, sbom]
     if: github.event_name == 'push'   # dispatch = dry run; never creates a Release
     runs-on: ubuntu-latest
     steps:
@@ -148,8 +194,13 @@ jobs:
           echo "Release notes for $TAG_VERSION:"
           cat /tmp/release-notes.md
 
-      # GitHub auto-attaches the source zip/tarball, which is the whole artifact for a
-      # Composer library — there is nothing to build or upload.
+      - name: Download SBOM
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: sbom
+          path: sbom-out
+
+      # The source archive is auto-attached; the SBOM is attached explicitly.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3
         with:
@@ -160,3 +211,4 @@ jobs:
           # synthesizing that needs the previous tag — i.e. fetch-depth: 0 on a publish job —
           # which is not worth a full-history clone for a cosmetic link.
           body_path: /tmp/release-notes.md
+          files: sbom-out/*.cdx.json
