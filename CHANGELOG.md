@@ -14,6 +14,12 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Fixed
+
+- Encrypted transport treats an empty validator public key like a missing one: `Cipher::getPubkey()` throws
+  `CodeException('Server public key missing.')` and the request is not sent. Before, an empty key reached
+  encryption and failed with a `CryptoException` about a 0-byte recipient key.
+
 ## [1.6.0] — 2026-10-21
 
 ### Changed

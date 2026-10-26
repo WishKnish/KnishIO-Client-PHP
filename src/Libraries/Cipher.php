@@ -116,7 +116,7 @@ class Cipher {
    * @return string
    */
   public function getPubkey (): string {
-    if ( $this->pubkey === null ) {
+    if ( $this->pubkey === null || $this->pubkey === '' ) {
       throw new CodeException( 'Server public key missing.' );
     }
 
