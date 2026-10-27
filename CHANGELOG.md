@@ -14,6 +14,8 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.6.1] — 2026-10-27
+
 ### Added
 
 - CI generates a CycloneDX SBOM of the runtime Composer graph and the Node ML-KEM bridge
@@ -490,7 +492,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.6.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.6.1...HEAD
+[1.6.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.1
 [1.6.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.0
 [1.5.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.5.0
 [1.4.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.4.0
