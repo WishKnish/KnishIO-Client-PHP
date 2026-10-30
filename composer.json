@@ -54,6 +54,9 @@
     "phpstan/phpstan" : "^2",
     "jetbrains/phpstorm-attributes" : "^1.0"
   },
+  "suggest" : {
+    "ext-ffi" : "Runs SHAKE256, WOTS+ and ML-KEM in-process through the bundled libkcore (kcore/<target>/); without it the SDK uses pure PHP and a persistent Node helper"
+  },
   "autoload" : {
     "psr-4" : {
       "WishKnish\\KnishIO\\Client\\" : "src/",

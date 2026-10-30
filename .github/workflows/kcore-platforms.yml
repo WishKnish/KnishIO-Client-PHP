@@ -1,0 +1,76 @@
+# The bundled libkcore of every target (kcore/<target>/), loaded through ext-ffi on that platform
+# and checked against the cross-platform vectors by scripts/kcore-check.php: the detected target and
+# library path, WOTS+ addresses, ML-KEM-1024/768 keygen KATs, round trips and SDK decrypt vectors,
+# and a WOTS+ chain walk. Called by php.yml and publish.yml.
+name: kcore platforms
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: ${{ matrix.target }} (${{ matrix.runner }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, target: linux-x64-gnu }
+          - { runner: ubuntu-24.04-arm, target: linux-arm64-gnu }
+          - { runner: macos-15, target: darwin-universal }
+          - { runner: macos-15-intel, target: darwin-universal }
+          - { runner: windows-2025, target: windows-x64 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP 8.2 (the library's declared floor)
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # v2
+        with:
+          php-version: '8.2'
+          extensions: sodium, json, mbstring, gmp, ffi
+          tools: composer:v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: composer install (runtime dependencies only)
+        run: composer install --no-dev --no-interaction --prefer-dist
+
+      - name: Bundled libkcore loads and matches the vectors
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: KNISHIO_KCORE=require php scripts/kcore-check.php --vectors tests/fixtures/cross-platform-test-vectors.json --expect-target "$TARGET"
+
+  # setup-php has no musl builds: Alpine's own PHP 8.3, in a container on a native runner. The image
+  # is pinned by its multi-arch index digest (alpine:3.22 on 2026-10-30).
+  musl:
+    name: ${{ matrix.target }} (alpine 3.22)
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: ubuntu-24.04, target: linux-x64-musl }
+          - { runner: ubuntu-24.04-arm, target: linux-arm64-musl }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Bundled libkcore loads and matches the vectors
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          docker run --rm -e TARGET -v "$PWD:/w" -w /w \
+            alpine:3.22@sha256:2e0b81d60597f449baa56dc25d355367869d2dca4cd57e866f1e2b52af3eb55f sh -euc '
+            apk add --no-cache php83 php83-ffi php83-gmp php83-sodium php83-mbstring php83-openssl \
+              php83-phar php83-iconv php83-ctype php83-curl php83-dom php83-tokenizer php83-xml \
+              php83-xmlwriter composer > /dev/null
+            composer install --no-dev --no-interaction --prefer-dist --no-plugins --no-scripts
+            KNISHIO_KCORE=require php scripts/kcore-check.php \
+              --vectors tests/fixtures/cross-platform-test-vectors.json --expect-target "$TARGET"'

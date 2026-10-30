@@ -14,6 +14,37 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Added
+
+- Native crypto through the bundled KnishIO Crypto Core 0.2.0 (`kcore/<target>/`: linux x64/arm64
+  glibc and musl, macOS universal, Windows x64), loaded through `ext-ffi` by the new
+  `Libraries\Kcore`. SHAKE256, the WOTS+ signature chains, wallet addresses (OTS v1 and v2) and
+  ML-KEM-1024/768 run in-process: an OTS v2 wallet derives in about 0.16 ms instead of about 47 ms,
+  and an ML-KEM encapsulation takes about 0.01 ms (macOS arm64). Results are identical with and
+  without it. `KNISHIO_KCORE=auto|off|require` selects the backend (`require` throws the new
+  `KcoreUnavailableException` when the library cannot be loaded); `KNISHIO_KCORE_LIB` overrides the
+  path. `ext-ffi` is suggested, not required, and php-fpm needs `ffi.enable=true`.
+- `PostQuantumCrypto::backend()` reports `kcore` or `noble-bridge-persistent`.
+
+### Changed
+
+- Without the library, ML-KEM runs in one persistent Node.js helper per PHP process
+  (`bin/noble-mlkem-bridge.js serve`, newline-delimited JSON over its stdin/stdout) instead of a new
+  `node` process per operation: about 0.6 ms per encapsulation instead of about 25 ms. A helper that
+  dies is replaced on the next call; one that does not answer within 30 s is killed and the call
+  throws. The bridge script's one-shot command line (`keygen`/`encaps`/`decaps` arguments) is gone.
+- `PostQuantumCrypto::getStatus()` returns `['backend', 'kcoreLibrary', 'nodeHelper']`, the last
+  being the former `NobleMLKEMBridge::getStatus()` array; `PostQuantumCrypto::isAvailable()` is true
+  when either backend is usable.
+
+### Security
+
+- ML-KEM secrets no longer appear on a process command line. Up to 1.6.1 every ML-KEM operation ran
+  `node bin/noble-mlkem-bridge.js <command> <arguments>`, so the keygen seed and, for `decaps`, the
+  ML-KEM secret key were readable by any local user through `ps` or `/proc/<pid>/cmdline` while
+  the call ran. They now travel only over the helper's stdin, and with the bundled libkcore they
+  never leave the PHP process.
+
 ## [1.6.1] — 2026-10-27
 
 ### Added

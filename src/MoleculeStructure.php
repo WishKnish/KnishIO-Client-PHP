@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client;
 use JsonException;
 use WishKnish\KnishIO\Client\Libraries\CheckMolecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Kcore;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
@@ -299,6 +300,19 @@ class MoleculeStructure implements \JsonSerializable {
 
     // Convert Hm to numeric notation via EnumerateMolecule(Hm)
     $normalizedHash = $this->normalizedHash();
+
+    // Chain i advances 8-Hm[i] times (encode) or 8+Hm[i] times (decode); kcore walks all chains at once
+    $chainCount = intdiv( strlen( $key ), 128 );
+    if ( $chainCount >= 1 && $chainCount <= count( $normalizedHash ) ) {
+      $counts = [];
+      for ( $i = 0; $i < $chainCount; $i++ ) {
+        $counts[] = 8 + $normalizedHash[ $i ] * ( $encode ? -1 : 1 );
+      }
+      $fragments = Kcore::chainsHex( $key, $counts );
+      if ( $fragments !== null ) {
+        return $fragments;
+      }
+    }
 
     // Building a one-time-signature
     $signatureFragments = '';

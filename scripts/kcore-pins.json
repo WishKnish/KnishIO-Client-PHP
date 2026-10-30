@@ -1,0 +1,42 @@
+{
+  "version": "0.2.0",
+  "url": "https://github.com/WishKnish/KnishIO-Crypto-Core/releases/download/{version}/knishio-crypto-core-{version}-{target}.tar.gz",
+  "targets": {
+    "linux-x64-gnu": {
+      "sha256": "137a7adb73df0a1fe84656cf02d8e6513a6dec0a548ed9adc7c220dac71e4b05",
+      "member": "lib/libkcore.so.0.2.0",
+      "name": "libkcore.so"
+    },
+    "linux-arm64-gnu": {
+      "sha256": "b93d46a9b37596379e41007c663787c3c07da2757e5249a209b766ff71d3a057",
+      "member": "lib/libkcore.so.0.2.0",
+      "name": "libkcore.so"
+    },
+    "linux-x64-musl": {
+      "sha256": "a6a7cf27e9055b55812cb7d770d775db1523ba146fd2747d449db442f0f580fb",
+      "member": "lib/libkcore.so.0.2.0",
+      "name": "libkcore.so"
+    },
+    "linux-arm64-musl": {
+      "sha256": "0fc3dae8472602e757f3495aca1241d6609bd046a6a71ef2d6f498f248f9f1b6",
+      "member": "lib/libkcore.so.0.2.0",
+      "name": "libkcore.so"
+    },
+    "darwin-universal": {
+      "sha256": "a482d979d48c1dfb8ce3d8528795e217a3e304f8c5eeed363097067d67746329",
+      "member": "lib/libkcore.0.2.0.dylib",
+      "name": "libkcore.dylib"
+    },
+    "windows-x64": {
+      "sha256": "409f819b50135b6bf1db8064e94be8402cdf29592f29bf8e4a2ab343963f9daf",
+      "member": "bin/kcore.dll",
+      "name": "kcore.dll"
+    }
+  },
+  "licenses": {
+    "LICENSE-mlkem-native": {
+      "url": "https://raw.githubusercontent.com/pq-code-package/mlkem-native/0ba906cb14b1c241476134d7403a811b382ca498/LICENSE",
+      "sha256": "6393331d41b9fed47a9e18d21b9b844ae8e76bcad8b6da45604c132ae13f3029"
+    }
+  }
+}

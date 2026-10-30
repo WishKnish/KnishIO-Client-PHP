@@ -17,21 +17,40 @@ composer require wishknish/knishio-client-php
 
 **Requirements:**
 - PHP 8.2 or higher
-- Required extensions: `ext-json`, `ext-sodium`, `ext-mbstring`
+- Required extensions: `ext-json`, `ext-sodium`, `ext-mbstring`, and `ext-gmp` or `ext-bcmath`
 - Composer for dependency management
-- Node.js 20.19 or higher on the `PATH` (ML-KEM runs in Node, through the package's
-  `bin/noble-mlkem-bridge.js`)
+- Recommended: `ext-ffi`, which runs the crypto natively (below)
 
-The ML-KEM bridge loads `@noble/post-quantum` from the package's own `node_modules`, which
-Composer does not install. Run this once after `composer require` (and after each update of the
-package), from your project root:
+### Native crypto: the bundled libkcore
+
+The package ships the KnishIO Crypto Core (`kcore/<target>/`, for linux x64/arm64 glibc and
+musl, macOS universal and Windows x64). With `ext-ffi` loaded, SHAKE256, the WOTS+ signature
+chains and ML-KEM run in-process through it: deriving an OTS v2 wallet or signing a molecule
+takes well under a millisecond instead of tens to hundreds. Nothing else is needed; results are
+identical either way.
+
+FFI must be allowed where the SDK runs. The default `ffi.enable=preload` allows it in the CLI but
+not under php-fpm; there, set `ffi.enable=true` in php.ini to use the library.
+
+`KNISHIO_KCORE` selects the backend: `auto` (default: use the library when it loads), `off`
+(never) or `require` (throw `KcoreUnavailableException` if it cannot be loaded, so a deployment
+cannot silently run the slow path). `KNISHIO_KCORE_LIB` points to a different copy of the library.
+`PostQuantumCrypto::backend()` reports `kcore` or `noble-bridge-persistent`.
+
+### Without ext-ffi: the Node ML-KEM helper
+
+Without the library, SHAKE256 and WOTS+ run in pure PHP, and ML-KEM runs in one long-lived
+Node.js helper per PHP process (`bin/noble-mlkem-bridge.js`, started on first use through
+`proc_open`). That path needs Node.js 20.19 or higher on the `PATH` and `@noble/post-quantum` in
+the package's own `node_modules`, which Composer does not install. Run this once after
+`composer require` (and after each update of the package), from your project root:
 
 ```bash
 (cd vendor/wishknish/knishio-client-php && npm ci --omit=dev)
 ```
 
-Without it, every ML-KEM operation fails, including the wallet an authorization signs with:
-`new Wallet($secret, 'AUTH')` throws `@noble/post-quantum not installed`.
+With neither the library nor the helper's dependencies, every ML-KEM operation fails, including the
+wallet an authorization signs with: `new Wallet($secret, 'AUTH')` throws `@noble/post-quantum not installed`.
 
 After installation, include the autoloader in your project:
 

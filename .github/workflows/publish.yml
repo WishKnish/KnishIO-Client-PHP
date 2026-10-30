@@ -70,7 +70,7 @@ jobs:
           bash .github/scripts/check-version.sh "$EXPECTED"
 
   gate:
-    name: phpstan + self-test
+    name: phpstan + phpunit + self-test
     needs: version-gate
     runs-on: ubuntu-latest
     steps:
@@ -82,7 +82,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # v2
         with:
           php-version: '8.2'
-          extensions: sodium, json, mbstring
+          extensions: sodium, json, mbstring, gmp, ffi
           tools: composer:v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -104,9 +104,26 @@ jobs:
       - name: Install @noble/post-quantum (ML-KEM bridge dep)
         run: npm install
 
-      # The parity gate: the 6 frozen molecular-hash vectors + ML-KEM768. Mirrors php.yml.
-      - name: Self-test (6 frozen molecular hashes + ML-KEM768)
-        run: php self-test.php
+      # Never tag a kcore/<target>/ library that is not the pinned KnishIO-Crypto-Core release file.
+      - name: Bundled libkcore matches its pins
+        run: bash scripts/fetch-kcore.sh --check
+
+      - name: phpunit (libkcore required, then switched off)
+        run: |
+          KNISHIO_KCORE=require vendor/bin/phpunit
+          KNISHIO_KCORE=off vendor/bin/phpunit
+
+      # The parity gate: the frozen molecular-hash vectors + ML-KEM, on both backends. Mirrors php.yml.
+      - name: Self-test (libkcore required, then switched off)
+        run: |
+          KNISHIO_KCORE=require php self-test.php
+          KNISHIO_KCORE=off php self-test.php
+
+  # Every bundled libkcore loaded and checked on its own platform. Mirrors php.yml.
+  kcore-platforms:
+    name: kcore platforms
+    needs: version-gate
+    uses: ./.github/workflows/kcore-platforms.yml
 
   # The CycloneDX SBOM attached to the GitHub Release. Same definition as php.yml's `sbom`
   # job, minus the OSV gate. Runs on dispatch too, so a dry run proves generation.
@@ -156,7 +173,7 @@ jobs:
 
   release:
     name: create GitHub Release
-    needs: [version-gate, gate, sbom]
+    needs: [version-gate, gate, kcore-platforms, sbom]
     if: github.event_name == 'push'   # dispatch = dry run; never creates a Release
     runs-on: ubuntu-latest
     steps:

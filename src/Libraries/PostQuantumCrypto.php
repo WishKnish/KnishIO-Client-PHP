@@ -7,11 +7,10 @@ use Exception;
 /**
  * Class PostQuantumCrypto
  *
- * Provides real ML-KEM key generation (ML-KEM-1024 by default, ML-KEM-768 step-back)
- * via Node.js bridge, ensuring 100% compatibility with JavaScript SDK.
- *
- * This replaces the previous fake implementation that used SHA3-512 hash
- * concatenation with actual FIPS-203 ML-KEM cryptography.
+ * FIPS 203 ML-KEM (ML-KEM-1024 by default, ML-KEM-768 step-back). Runs in-process through the
+ * bundled libkcore (Kcore) when ext-ffi can load it, otherwise through one persistent Node.js helper
+ * running @noble/post-quantum (NobleMLKEMBridge). Both produce the same keys from the same seed, and
+ * the same keys as the JavaScript SDK.
  *
  * @package WishKnish\KnishIO\Client\Libraries
  */
@@ -50,11 +49,18 @@ class PostQuantumCrypto
         ]
     ];
     /**
+     * The ML-KEM backend this process uses: "kcore" (in-process libkcore) or
+     * "noble-bridge-persistent" (one long-lived Node helper).
+     */
+    public static function backend(): string
+    {
+        return Kcore::available() ? 'kcore' : 'noble-bridge-persistent';
+    }
+
+    /**
      * Generate an ML-KEM key pair from seed matching JavaScript Noble crypto format
      *
-     * Uses @noble/post-quantum via Node.js bridge to ensure exact compatibility
-     * with JavaScript SDK implementation. This is deterministic - same seed
-     * produces same key pair every time.
+     * Deterministic: the same seed produces the same key pair every time, on either backend.
      *
      * @param string $seedHex 128 hex characters (64 bytes when converted)
      * @return array ['publicKey' => base64, 'privateKey' => base64]
@@ -66,7 +72,16 @@ class PostQuantumCrypto
             throw new Exception('Seed must be exactly 128 hex characters');
         }
 
-        // Use Noble crypto via Node.js bridge for guaranteed JavaScript compatibility
+        if (ctype_xdigit($seedHex)) {
+            $pair = Kcore::mlkemKeypair($paramSet, hex2bin($seedHex));
+            if ($pair !== null) {
+                return [
+                    'publicKey' => base64_encode($pair['publicKey']),
+                    'privateKey' => base64_encode($pair['secretKey'])
+                ];
+            }
+        }
+
         $result = NobleMLKEMBridge::generateMLKEMKeyPairFromSeed($seedHex, $paramSet);
 
         return [
@@ -87,6 +102,15 @@ class PostQuantumCrypto
      */
     public static function encapsulate(string $publicKeyBase64): array
     {
+        $publicKey = base64_decode($publicKeyBase64, true);
+        $result = $publicKey === false ? null : Kcore::mlkemEncaps($publicKey);
+        if ($result !== null) {
+            return [
+                'ciphertext' => base64_encode($result['ciphertext']),
+                'sharedSecret' => base64_encode($result['sharedSecret'])
+            ];
+        }
+
         return NobleMLKEMBridge::encapsulate($publicKeyBase64);
     }
 
@@ -103,6 +127,13 @@ class PostQuantumCrypto
      */
     public static function decapsulate(string $ciphertextBase64, string $secretKeyBase64): string
     {
+        $ciphertext = base64_decode($ciphertextBase64, true);
+        $secretKey = base64_decode($secretKeyBase64, true);
+        $shared = ($ciphertext === false || $secretKey === false) ? null : Kcore::mlkemDecaps($ciphertext, $secretKey);
+        if ($shared !== null) {
+            return base64_encode($shared);
+        }
+
         $result = NobleMLKEMBridge::decapsulate($ciphertextBase64, $secretKeyBase64);
         return $result['sharedSecret'];
     }
@@ -130,24 +161,28 @@ class PostQuantumCrypto
     }
 
     /**
-     * Check if ML-KEM support is available
-     *
-     * Checks if Node.js and @noble/post-quantum are available
+     * Check if ML-KEM support is available: libkcore loads, or Node.js and @noble/post-quantum
+     * are installed for the helper.
      *
      * @return bool
      */
     public static function isAvailable(): bool
     {
-        return NobleMLKEMBridge::isAvailable();
+        return Kcore::available() || NobleMLKEMBridge::isAvailable();
     }
 
     /**
      * Get implementation status and version information
      *
-     * @return array Status information including Node.js version and bridge details
+     * @return array Status information: the backend, the libkcore path when in use, and the Node
+     *               helper's status
      */
     public static function getStatus(): array
     {
-        return NobleMLKEMBridge::getStatus();
+        return [
+            'backend' => self::backend(),
+            'kcoreLibrary' => Kcore::libraryPath(),
+            'nodeHelper' => NobleMLKEMBridge::getStatus(),
+        ];
     }
 }

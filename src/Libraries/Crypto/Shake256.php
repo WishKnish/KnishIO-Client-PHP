@@ -52,6 +52,7 @@ namespace WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Crypto\SHA3\Sponge as SHA3;
 use Exception;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Libraries\Kcore;
 
 /*
 
@@ -93,6 +94,11 @@ class Shake256 {
    * @throws CryptoException
    */
   public static function hash ( $data, int $length ): string {
+
+    // Outside the try: a KcoreUnavailableException (KNISHIO_KCORE=require) must surface as itself.
+    if ( is_string( $data ) && $length >= 1 && $length <= 1048576 && ( $out = Kcore::shake256( $data, $length ) ) !== null ) {
+      return $out;
+    }
 
     try {
       return SHA3::init( SHA3::SHAKE256 )

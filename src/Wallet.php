@@ -56,6 +56,7 @@ use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Kcore;
 use WishKnish\KnishIO\Client\Libraries\PostQuantumCrypto;
 use WishKnish\KnishIO\Client\Libraries\Soda;
 use WishKnish\KnishIO\Client\Libraries\Strings;
@@ -569,6 +570,15 @@ class Wallet {
    * @return string
    */
   protected static function generateAddress ( string $key ): string {
+
+    $address = match ( strlen( $key ) ) {
+      2048 => Kcore::wotsAddress( $key ),
+      8192 => Kcore::wotsAddressV2( $key ),
+      default => null,
+    };
+    if ( $address !== null ) {
+      return $address;
+    }
 
     $digestSponge = Crypto\Shake256::init();
 

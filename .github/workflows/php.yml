@@ -1,9 +1,10 @@
 # PHP SDK CI — the PHP analog of the other SDKs' dev gates (clippy / ruff / detekt / clang-tidy).
-# Two gates, born-enforced (PHP's first CI):
+# Gates:
 #   1. phpstan level 0  — the real-bug static-analysis gate (undefined methods/functions/vars, wrong arg counts).
-#   2. php self-test.php — the 6 FROZEN molecular-hash vectors + ML-KEM768 (cross-SDK parity proof).
-# NOT phpunit: KnishIOClientTest hits a live validator over the network; the offline suites
-# (CrossPlatformVectorsTest / PatentVectorValidationTest) are a local-dev gate, run by hand.
+#   2. phpunit and php self-test.php, each twice: KNISHIO_KCORE=require (the bundled libkcore must
+#      load through ext-ffi and carry the run) and KNISHIO_KCORE=off (pure PHP + the persistent Node
+#      ML-KEM helper). The live-server tests skip themselves when no validator URL is configured.
+#   3. kcore-platforms — the bundled libkcore of every target, loaded and checked on its platform.
 name: PHP
 
 on: [push, pull_request]
@@ -25,7 +26,7 @@ jobs:
         run: bash .github/scripts/check-version.sh
 
   gate:
-    name: phpstan + self-test
+    name: phpstan + phpunit + self-test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -36,7 +37,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962  # v2
         with:
           php-version: '8.2'
-          extensions: sodium, json, mbstring
+          extensions: sodium, json, mbstring, gmp, ffi
           tools: composer:v2
         env:
           # setup-php hits the GitHub API to fetch tools; the token avoids its own anon rate limit.
@@ -63,11 +64,26 @@ jobs:
       - name: Install @noble/post-quantum (ML-KEM bridge dep)
         run: npm install
 
-      # The parity gate: 9/9 incl. the 6 frozen molecular-hash vectors + ML-KEM768.
+      # The bundled kcore/<target>/ libraries must be exactly the pinned KnishIO-Crypto-Core release files.
+      - name: Bundled libkcore matches its pins
+        run: bash scripts/fetch-kcore.sh --check
+
+      - name: phpunit (libkcore required, then switched off)
+        run: |
+          KNISHIO_KCORE=require vendor/bin/phpunit
+          KNISHIO_KCORE=off vendor/bin/phpunit
+
+      # The parity gate: the frozen molecular-hash vectors + ML-KEM, on both backends.
       # Exit code = ($passedTests === $totalTests ? 0 : 1); cross-SDK validation is a
       # no-op here (single-repo checkout has no sibling SDK dumps) and never fails the run.
-      - name: Self-test (6 frozen molecular hashes + ML-KEM768)
-        run: php self-test.php
+      - name: Self-test (libkcore required, then switched off)
+        run: |
+          KNISHIO_KCORE=require php self-test.php
+          KNISHIO_KCORE=off php self-test.php
+
+  kcore-platforms:
+    name: kcore platforms
+    uses: ./.github/workflows/kcore-platforms.yml
 
   # CycloneDX SBOM (Composer runtime tree + the npm ML-KEM bridge), scanned with OSV. One
   # definition (.github/scripts/sbom.sh) shared with audit.yml and publish.yml.

@@ -1,6 +1,7 @@
 # Keep the packagist/composer dist tarball lean: ship only the runtime SDK
-# (src/, bin/noble-mlkem-bridge.js, composer.json, package.json + lock, README,
-# LICENSE, CHANGELOG, self-test.php). Exclude dev/test/demo material.
+# (src/, kcore/ (the bundled libkcore), bin/noble-mlkem-bridge.js, composer.json,
+# package.json + lock, README, LICENSE, THIRD-PARTY-LICENSES.md, CHANGELOG,
+# self-test.php). Exclude dev/test/demo material and the maintainer scripts.
 /tests                 export-ignore
 /demo                  export-ignore
 /integration-test.php  export-ignore
@@ -10,4 +11,8 @@
 /.gitignore            export-ignore
 /.gitattributes        export-ignore
 /.github               export-ignore
+/scripts               export-ignore
 .phpunit.result.cache  export-ignore
+
+# The bundled libkcore builds: never diffed or normalized (scripts/fetch-kcore.sh writes and checks them).
+/kcore/*/*             binary
