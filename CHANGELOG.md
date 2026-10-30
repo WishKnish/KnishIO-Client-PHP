@@ -14,6 +14,8 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-10-30
+
 ### Added
 
 - Native crypto through the bundled KnishIO Crypto Core 0.2.0 (`kcore/<target>/`: linux x64/arm64
@@ -523,7 +525,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.6.1...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.7.0...HEAD
+[1.7.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.7.0
 [1.6.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.1
 [1.6.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.0
 [1.5.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.5.0
