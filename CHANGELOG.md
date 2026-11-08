@@ -14,6 +14,15 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Added
+
+- `tests/KcoreParityVectorsTest.php`: 16 full signed molecules (metadata, value transfer, token
+  creation, wallet creation; OTS v1 and v2; unique and colliding `createdAt`) from the shared
+  `kcore-parity-vectors.json`, vendored to `tests/fixtures/`. Each must verify (molecular hash and
+  OTS) and re-sign to the same molecular hash and `otsFragment`s byte for byte. CI's existing
+  `KNISHIO_KCORE=require` and `KNISHIO_KCORE=off` phpunit runs both run it, so the native and pure
+  backends are each held to the same bytes. A missing fixture fails the test.
+
 ## [1.7.0] — 2026-10-30
 
 ### Added
