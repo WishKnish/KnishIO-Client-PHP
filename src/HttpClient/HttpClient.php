@@ -102,7 +102,7 @@ class HttpClient extends Client implements HttpClientInterface {
       'encrypt' => $encrypt,
       RequestOptions::TIMEOUT => 60,         // 60 seconds for complete request (debug)
       RequestOptions::CONNECT_TIMEOUT => 30, // 30 seconds to establish connection (debug)
-      RequestOptions::VERIFY => false,
+      RequestOptions::VERIFY => true,
       RequestOptions::HTTP_ERRORS => false,
       RequestOptions::HEADERS => [
         'User-Agent' => 'KnishIO/0.1',
@@ -110,11 +110,12 @@ class HttpClient extends Client implements HttpClientInterface {
       ],
     ];
 
-    // Merge config
-    $config = array_replace_recursive( $this->config, $config );
+    // Merge config. The merged array is the one stored: send() and __call() re-apply it to every
+    // request, so a caller's option (e.g. verify => false) must be part of it.
+    $this->config = array_replace_recursive( $this->config, $config );
 
     // Guzzle constructor
-    parent::__construct( $config );
+    parent::__construct( $this->config );
   }
 
   /**
@@ -131,6 +132,15 @@ class HttpClient extends Client implements HttpClientInterface {
    */
   public function hasEncryption (): bool {
     return $this->config[ 'encrypt' ];
+  }
+
+  /**
+   * Whether requests verify the server's TLS certificate (Guzzle's `verify` option is not false).
+   *
+   * @return bool
+   */
+  public function verifiesTls (): bool {
+    return $this->config[ RequestOptions::VERIFY ] !== false;
   }
 
   /**

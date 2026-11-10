@@ -51,6 +51,7 @@ namespace WishKnish\KnishIO\Client;
 
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\RequestOptions;
 use JsonException;
 use SodiumException;
 use WishKnish\KnishIO\Client\Exception\CodeException;
@@ -181,25 +182,35 @@ class KnishIOClient {
    * @param string|array $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
+   * @param int $mlKemParameterSet
+   * @param SecretStorageProvider|null $secretStorage
+   * @param int $otsVersion
+   * @param bool $insecureTls Skip TLS certificate verification for the default HTTP client (for a
+   *   node with a self-signed certificate). Ignored when `$client` is given.
    */
-  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2 ) {
-    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage, $otsVersion );
+  public function __construct ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2, bool $insecureTls = false ) {
+    $this->initialize( $uri, $client, $serverSdkVersion, $mlKemParameterSet, $secretStorage, $otsVersion, $insecureTls );
   }
 
   /**
    * @param string|array $uri
    * @param HttpClientInterface|null $client
    * @param int $serverSdkVersion
+   * @param int $mlKemParameterSet
+   * @param SecretStorageProvider|null $secretStorage
+   * @param int $otsVersion
+   * @param bool $insecureTls Skip TLS certificate verification for the default HTTP client. Ignored
+   *   when `$client` is given.
    *
    * @return void
    */
-  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2 ): void {
+  public function initialize ( string|array $uri, ?HttpClientInterface $client = null, int $serverSdkVersion = 3, int $mlKemParameterSet = 1024, ?SecretStorageProvider $secretStorage = null, int $otsVersion = 2, bool $insecureTls = false ): void {
     $this->reset();
 
     // Init uris
     $this->uris = is_array( $uri ) ? $uri : [ $uri ];
 
-    $this->client = $client ?? new HttpClient( $this->getRandomUri() );
+    $this->client = $client ?? new HttpClient( $this->getRandomUri(), $insecureTls ? [ RequestOptions::VERIFY => false ] : [] );
     $this->serverSdkVersion = $serverSdkVersion;
     $this->setMlKemParameterSet( $mlKemParameterSet );
     $this->setOtsVersion( $otsVersion );

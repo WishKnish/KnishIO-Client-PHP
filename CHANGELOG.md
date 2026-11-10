@@ -23,6 +23,14 @@ not substantiate a detail, the entry says so instead of guessing.
   `KNISHIO_KCORE=require` and `KNISHIO_KCORE=off` phpunit runs both run it, so the native and pure
   backends are each held to the same bytes. A missing fixture fails the test.
 
+### Security
+
+- `HttpClient` verifies the server's TLS certificate by default (Guzzle `verify` was `false`). The stored
+  configuration is now the merged one, so a caller's `verify => false` reaches every request, and
+  `HttpClient::verifiesTls()` reports the setting. `KnishIOClient` takes a new last parameter,
+  `$insecureTls = false`, that skips verification for the HTTP client it creates. Upgrade note: a client
+  talking to a node with a self-signed certificate needs `new KnishIOClient( $uri, insecureTls: true )`.
+
 ## [1.7.0] — 2026-10-30
 
 ### Added
