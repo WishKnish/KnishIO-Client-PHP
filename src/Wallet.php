@@ -53,8 +53,8 @@ use BI\BigInteger;
 use Exception;
 use JsonException;
 use SodiumException;
-use WishKnish\KnishIO\Client\Exception\CodeException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
+use WishKnish\KnishIO\Client\Exception\KcoreUnavailableException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Kcore;
 use WishKnish\KnishIO\Client\Libraries\PostQuantumCrypto;
@@ -462,97 +462,62 @@ class Wallet {
   }
 
   /**
-   * @param string $message
-   * @param ...$pubkeys
+   * Encrypts bytes for one recipient: {@see encryptMessage()} of their base64 form.
    *
-   * @return array
-   * @throws JsonException
-   * @throws SodiumException
+   * @param string $message
+   * @param string $recipientPubkey recipient's ML-KEM public key (base64)
+   *
+   * @return array{cipherText: string, encryptedMessage: string}
+   * @throws JsonException|Exception
    */
-  public function encryptBinary ( string $message, ...$pubkeys ): array {
-    return $this->encryptMessage( base64_encode( $message ), ...$pubkeys );
+  public function encryptBinary ( string $message, string $recipientPubkey ): array {
+    return $this->encryptMessage( base64_encode( $message ), $recipientPubkey );
   }
 
   /**
-   * @param array|string $message
+   * @param array{cipherText: string, encryptedMessage: string} $message an envelope from {@see encryptBinary()}
    *
-   * @return mixed
-   * @throws JsonException
-   * @throws SodiumException
+   * @return string|null the bytes, or null when the envelope cannot be read
+   * @throws JsonException|Exception
    */
-  public function decryptBinary ( array|string $message ): mixed {
+  public function decryptBinary ( array $message ): ?string {
     $decrypt = $this->decryptMessage( $message );
 
-    if ( $decrypt !== null ) {
-      $decrypt = base64_decode( $decrypt, true );
-
-      if ( $decrypt === false ) {
-        $decrypt = null;
-      }
+    if ( !is_string( $decrypt ) ) {
+      return null;
     }
 
-    return $decrypt;
+    $decrypt = base64_decode( $decrypt, true );
+
+    return $decrypt === false ? null : $decrypt;
   }
 
   /**
-   * Encrypts for one or more recipients using CLASSICAL NaCl crypto_box_seal (via Soda) —
-   * NOT post-quantum. The live CipherHash transport (Libraries\Cipher) uses this path pending
-   * PQ migration. For the canonical post-quantum ML-KEM envelope see {@see encryptMessageML()}.
+   * Encrypts a message for one recipient with the post-quantum ML-KEM + AES-256-GCM envelope
+   * `{ cipherText, encryptedMessage }`, as JS Wallet.encryptMessage() does. `$recipientPubkey` is the
+   * recipient's ML-KEM public key (base64), e.g. its wallet's `pubkey`.
    *
    * @param mixed $message
-   * @param mixed ...$pubkeys
+   * @param string $recipientPubkey
    *
-   * @return array
-   * @throws JsonException
-   * @throws SodiumException
+   * @return array{cipherText: string, encryptedMessage: string}
+   * @throws JsonException|Exception
    */
-  public function encryptMessage ( mixed $message, ...$pubkeys ): array {
-
-    if ( !$this->soda ) {
-      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
-    }
-
-    $encrypt = [];
-    foreach ( $pubkeys as $pubkey ) {
-      // $pubkey = $pubkey instanceof self ? $pubkey->pubkey : $pubkey; // Can use a list of wallets
-      $encrypt[ $this->soda->shortHash( $pubkey ) ] = $this->soda->encrypt( $message, $pubkey );
-    }
-
-    return $encrypt;
+  public function encryptMessage ( mixed $message, string $recipientPubkey ): array {
+    return $this->encryptMessageML( $message, $recipientPubkey );
   }
 
   /**
-   * Uses the current wallet's private key to decrypt the given message.
+   * Decrypts an envelope from {@see encryptMessage()} with this wallet's ML-KEM key, as JS
+   * Wallet.decryptMessage() does: null when it cannot be read.
    *
-   * CLASSICAL NaCl crypto_box_seal (via Soda) — NOT post-quantum; the counterpart to
-   * {@see encryptMessage()}. For the canonical post-quantum ML-KEM envelope see
-   * {@see decryptMessageML()}.
-   *
-   * @param array|string $message
+   * @param array{cipherText: string, encryptedMessage: string} $encryptedData
    *
    * @return mixed
-   * @throws JsonException
-   * @throws SodiumException
+   * @throws JsonException|Exception
    */
-  public function decryptMessage ( array|string $message ): mixed {
-
-    if ( !$this->soda ) {
-      throw new CryptoException( 'To use encryption, the wallet must be initialized with a secret argument.' );
-    }
-
-    $encrypted = $message;
-    if ( is_array( $message ) ) {
-
-      $hash = $this->soda->shortHash( $this->pubkey );
-
-      if ( !array_key_exists( $hash, $message ) ) {
-        throw new CodeException( 'Wallet::decryptMessage - hash does not found for the wallet\'s pubkey.' );
-      }
-
-      $encrypted = $message[ $hash ];
-    }
-
-    return $this->soda->decrypt( $encrypted, $this->privkey, $this->pubkey );
+  public function decryptMessage ( array $encryptedData ): mixed {
+    return $this->decryptMessageML( $encryptedData );
   }
 
   /**
@@ -752,12 +717,12 @@ class Wallet {
 
   /**
    * Encrypt a message using ML-KEM post-quantum encryption
-   * Compatible with JavaScript SDK encryptMessage() method
+   * Compatible with JavaScript SDK encryptMessage() method ({@see encryptMessage()} is this method)
    *
    * CANONICAL cross-SDK ML-KEM envelope: returns `{ cipherText, encryptedMessage }`
    * (b64(KEM ciphertext) + b64(IV‖AES-256-GCM ct‖tag)) — the post-quantum envelope every
    * KnishIO SDK interoperates on (asserted by the cross-platform vector layer + strong
-   * cross-validation). For the classical (non-PQ) NaCl path see {@see encryptMessage()}.
+   * cross-validation).
    *
    * @param mixed $message Message to encrypt
    * @param string $recipientPubkey Recipient's ML-KEM public key (base64)
@@ -789,6 +754,9 @@ class Wallet {
         'cipherText' => $cipherTextBase64,  // Already base64 encoded
         'encryptedMessage' => base64_encode($encryptedMessage)
       ];
+    } catch (KcoreUnavailableException $e) {
+      // KNISHIO_KCORE=require with no loadable libkcore must fail loudly (JS rethrows KcoreUnavailable)
+      throw $e;
     } catch (Exception $e) {
       throw new CryptoException('ML-KEM encryption failed: ' . $e->getMessage());
     }
@@ -796,11 +764,10 @@ class Wallet {
 
   /**
    * Decrypt a message using ML-KEM post-quantum decryption
-   * Compatible with JavaScript SDK decryptMessage() method
+   * Compatible with JavaScript SDK decryptMessage() method ({@see decryptMessage()} is this method)
    *
    * CANONICAL cross-SDK ML-KEM envelope: consumes `{ cipherText, encryptedMessage }` — the
-   * post-quantum envelope every KnishIO SDK interoperates on. For the classical (non-PQ) NaCl
-   * path see {@see decryptMessage()}.
+   * post-quantum envelope every KnishIO SDK interoperates on.
    *
    * Inbound is PERMISSIVE: a ciphertext at either parameter set decrypts, provided it is
    * addressed to one of THIS wallet's own ML-KEM identities. The 64-byte seed is
@@ -861,6 +828,9 @@ class Wallet {
       // Convert back to JSON (matches JavaScript)
       return json_decode($decryptedBytes, true, 512, JSON_THROW_ON_ERROR);
 
+    } catch (KcoreUnavailableException $e) {
+      // KNISHIO_KCORE=require with no loadable libkcore must fail loudly, not read as a bad ciphertext
+      throw $e;
     } catch (Exception $e) {
       error_log('Wallet::decryptMessageML() - Decryption failed: ' . $e->getMessage());
       return null;
@@ -1074,6 +1044,8 @@ class Wallet {
         'encryptedMessage' => base64_encode($encryptedMessage),
         'isBinary' => true  // Flag to indicate binary data
       ];
+    } catch (KcoreUnavailableException $e) {
+      throw $e;
     } catch (Exception $e) {
       throw new CryptoException('ML-KEM binary encryption failed: ' . $e->getMessage());
     }
@@ -1126,6 +1098,8 @@ class Wallet {
       // Decrypt using AES-GCM and return raw bytes (no JSON decoding)
       return $this->decryptWithAESGCM($encryptedContent, $sharedSecret, $iv);
 
+    } catch (KcoreUnavailableException $e) {
+      throw $e;
     } catch (Exception $e) {
       error_log('Wallet::decryptBinaryML() - Decryption failed: ' . $e->getMessage());
       throw new CryptoException('ML-KEM binary decryption failed: ' . $e->getMessage());

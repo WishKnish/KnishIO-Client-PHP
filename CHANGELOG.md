@@ -55,6 +55,17 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ### Security
 
+- `Wallet::encryptMessage()`/`decryptMessage()` are the post-quantum ML-KEM + AES-256-GCM envelope
+  `{ cipherText, encryptedMessage }` of JS `Wallet.encryptMessage()`/`decryptMessage()` (they now call
+  `encryptMessageML()`/`decryptMessageML()`). They passed the wallet's ML-KEM `pubkey` to classical
+  NaCl `crypto_box_seal`, which always threw `SodiumException`. Upgrade note: `encryptMessage()` takes
+  one recipient key (it was variadic and returned a map keyed by `Soda::shortHash()`), and
+  `decryptMessage()` takes the envelope; `encryptBinary()`/`decryptBinary()` follow (use
+  `encryptMessageMLMulti()` for several recipients). `encryptMessageML()`, `decryptMessageML()`,
+  `encryptBinaryML()` and `decryptBinaryML()` rethrow `KcoreUnavailableException`, so
+  `KNISHIO_KCORE=require` without a loadable libkcore fails loudly instead of returning `null` or a
+  generic `CryptoException`.
+
 - `HttpClient` verifies the server's TLS certificate by default (Guzzle `verify` was `false`). The stored
   configuration is now the merged one, so a caller's `verify => false` reaches every request, and
   `HttpClient::verifiesTls()` reports the setting. `KnishIOClient` takes a new last parameter,
