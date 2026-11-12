@@ -151,13 +151,15 @@ class AuthToken {
   }
 
   /**
-   * @return string
+   * Milliseconds until the token expires (negative once expired), as JS AuthToken.getExpireInterval()
+   *
+   * @return int
    */
-  public function getExpireInterval (): string {
+  public function getExpireInterval (): int {
     if ( !$this->expiresAt ) {
       return -1;
     }
-    return ( $this->expiresAt * 1000 ) - ( microtime() / 1000 );
+    return ( (int) $this->expiresAt * 1000 ) - (int) round( microtime( true ) * 1000 );
   }
 
   /**

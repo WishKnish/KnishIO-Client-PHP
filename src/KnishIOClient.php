@@ -403,14 +403,19 @@ class KnishIOClient {
   }
 
   /**
+   * The session secret: the cleartext one, or the one the secret storage provider holds for the
+   * session bundle (not cached in cleartext).
+   *
    * @return string|null
    */
   public function getSecret (): ?string {
-    if ( !$this->secret ) {
+    $secret = $this->retrieveSecret();
+
+    if ( !$secret ) {
       throw new UnauthenticatedException( 'KnishIOClient::getSecret - Expected ' . static::class . '::authentication call before.' );
     }
 
-    return $this->secret;
+    return $secret;
   }
 
   /**
@@ -452,15 +457,9 @@ class KnishIOClient {
    */
   public function createMolecule ( ?string $secret = null, ?Wallet $sourceWallet = null, ?Wallet $remainderWallet = null ): Molecule {
 
-    if ( !$secret ) {
-      if ( $this->secret ) {
-        $secret = $this->secret;
-      } elseif ( $this->secretStorage !== null && $this->bundle ) {
-        $secret = $this->secretStorage->retrieveSecret( $this->bundle );
-      }
-    }
-
+    // The cleartext secret, or the one held by the secret storage provider
     $secret = $secret ?: $this->getSecret();
+
     // Is source wallet passed & has a last success query? Update a source wallet with a remainder one
     if (
       $sourceWallet === null &&
@@ -1696,6 +1695,11 @@ class KnishIOClient {
 
     // Set a cell slug
     $this->setCellSlug( $cellSlug );
+
+    // A session set up through setSecretStorage() logs in with the stored secret (JS requestAuthToken)
+    if ( $secret === null && $this->secretStorage !== null && $this->bundle ) {
+      $secret = $this->retrieveSecret();
+    }
 
     // Response for request guest/profile auth token
     $response = $secret ? $this->requestProfileAuthToken( $secret, $encrypt ) : $this->requestGuestAuthToken( $cellSlug, $encrypt );

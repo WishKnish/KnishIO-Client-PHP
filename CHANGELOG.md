@@ -52,6 +52,13 @@ not substantiate a detail, the entry says so instead of guessing.
   become `"true"`/`"false"` (were hashed as `"1"`/`""`). `tradeRates`, peer `cellSlugs`, requested
   `tokenUnits` and array meta values are JSON-encoded without escaped slashes or unicode. Signed
   bytes change for every policy, boolean meta and such JSON value; the JS reference never produced the old bytes.
+- `AuthToken::getExpireInterval()` returns the milliseconds until expiry as an `int`, as JS does. It
+  divided the string from `microtime()` by 1000 (a warning, and a value near `expiresAt * 1000`), so
+  `isExpired()` was `false` for an expired token.
+- A client set up with `setSecretStorage()` and no `setSecret()` works: `getSecret()` resolves the
+  secret through the storage provider (without caching it), so `getSourceWallet()`, `createMolecule()`
+  and the token and wallet operations no longer throw `UnauthenticatedException`, and
+  `requestAuthToken( null )` logs in with the stored secret instead of as a guest, as JS does.
 
 ### Security
 
