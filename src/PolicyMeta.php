@@ -91,27 +91,25 @@ class PolicyMeta {
   }
 
   /**
+   * Adds a default entry for every meta key the read/write policy does not cover, as JS
+   * PolicyMeta.fillDefault() does (its readPolicy/writePolicy filters always come out empty, so
+   * every meta key is a candidate; an existing truthy entry is kept).
+   *
    * @param array $metaKeys
    *
    * @return void
    */
   public function fillDefault( array $metaKeys = [] ): void {
-    $readPolicy = array_filter( $this->policy,
-      static function ( $item ) { return $item[ 'action' ] === 'read'; }
-    );
-    $writePolicy = array_filter( $this->policy,
-      static function ( $item ) { return $item[ 'action' ] === 'write'; }
-    );
-    foreach( [ 'read' => $readPolicy, 'write' => $writePolicy ] as $type => $value ) {
-      $policyKeys = array_column( $value, 'key' );
+    foreach( [ 'read', 'write' ] as $type ) {
 
-      if ( !array_has( $this->policy, $type ) ) {
+      if ( !array_key_exists( $type, $this->policy ) ) {
         $this->policy[ $type ] = [];
       }
 
-      foreach( array_diff( $metaKeys, $policyKeys ) as $key ) {
-        if ( !array_get( $this->policy[ $type ], $key ) ) {
-          $this->policy[ $type ][ $key ] = ( $type === 'write' && !in_array( $key, [ 'characters', 'pubkey' ] ) ) ? [ 'self' ] : [ 'all' ];
+      foreach( $metaKeys as $key ) {
+        $existing = $this->policy[ $type ][ $key ] ?? null;
+        if ( in_array( $existing, [ null, false, '', 0, 0.0 ], true ) ) {
+          $this->policy[ $type ][ $key ] = ( $type === 'write' && !in_array( $key, [ 'characters', 'pubkey' ], true ) ) ? [ 'self' ] : [ 'all' ];
         }
       }
     }
@@ -125,11 +123,43 @@ class PolicyMeta {
   }
 
   /**
+   * The policy as JS JSON.stringify() writes it: every level an object (`{}` when empty), integer
+   * keys first in ascending order as JS objects order them, no escaped slashes or unicode.
+   *
    * @return string
    * @throws JsonException
    */
   public function toJson(): string {
-    return json_encode( $this->get(), JSON_THROW_ON_ERROR );
+    return json_encode( static::jsObject( array_map( static fn( $value ) => is_array( $value ) ? static::jsObject( $value ) : $value, $this->get() ) ),
+      JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
+  }
+
+  /**
+   * A PHP array as the JS object with the same entries: array-index keys (0 … 2^32-2) first in
+   * ascending order, then the other keys in insertion order.
+   *
+   * @param array $entries
+   *
+   * @return \stdClass
+   */
+  private static function jsObject ( array $entries ): \stdClass {
+    $indexes = [];
+    $names = [];
+    foreach ( $entries as $key => $value ) {
+      if ( is_int( $key ) && $key >= 0 && $key < 4294967295 ) {
+        $indexes[ $key ] = $value;
+      }
+      else {
+        $names[ (string) $key ] = $value;
+      }
+    }
+    ksort( $indexes );
+
+    $object = new \stdClass();
+    foreach ( $indexes + $names as $key => $value ) {
+      $object->{(string) $key} = $value;
+    }
+    return $object;
   }
 
 }

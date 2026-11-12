@@ -73,17 +73,22 @@ class Meta {
         continue;
       }
 
-      // Handling non-string meta values
+      // Handling non-string meta values as JS String() does for the scalars
       if ( !is_string( $value ) ) {
 
+        // Booleans are "true" / "false"
+        if ( is_bool( $value ) ) {
+          $value = $value ? 'true' : 'false';
+        }
+
         // Is value numeric?
-        if ( is_numeric( $value ) ) {
+        else if ( is_numeric( $value ) ) {
           $value = (string) $value;
         }
 
         // Is value an object?
-        if ( is_object( $value ) || is_array( $value ) ) {
-          $value = json_encode( $value, JSON_THROW_ON_ERROR );
+        else if ( is_object( $value ) || is_array( $value ) ) {
+          $value = json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
         }
       }
 

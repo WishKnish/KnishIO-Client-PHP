@@ -62,6 +62,7 @@ use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Rule;
 use WishKnish\KnishIO\Client\Libraries\Strings;
+use WishKnish\KnishIO\Client\Versions\Versions;
 
 /**
  * Class Molecule
@@ -107,6 +108,9 @@ class Molecule extends MoleculeStructure {
     parent::__construct( $cellSlug );
     $this->mlKemParameterSet = $mlKemParameterSet ?? ($sourceWallet ? $sourceWallet->mlKemParameterSet : 1024);
     $this->minOtsVersion = Wallet::checkedOtsVersion( $minOtsVersion );
+
+    // Only a hash version the SDK knows is kept, as in JS Molecule (versions/index.js)
+    $this->version = ( $version !== null && isset( ( new Versions() )->{$version} ) ) ? $version : null;
 
     // Generates remainder wallet if source wallet is provided
     if ( $remainderWallet || $sourceWallet ) {
@@ -182,7 +186,6 @@ class Molecule extends MoleculeStructure {
       $this->createdAt = Strings::currentTimeMillis();
     }
     $this->atoms = [];
-    $this->version = null;
 
     return $this;
   }
@@ -814,7 +817,7 @@ class Molecule extends MoleculeStructure {
     $atomMeta = new AtomMeta( [
       'host' => $host,
       'name' => $name,
-      'cellSlugs' => json_encode( $cellSlugs ),
+      'cellSlugs' => json_encode( $cellSlugs, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR ),
       'peerId' => $peerId,
     ] );
 

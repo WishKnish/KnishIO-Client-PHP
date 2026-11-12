@@ -1058,7 +1058,7 @@ class KnishIOClient {
       $amount = count( $units );
 
       // Specify specific units to request
-      $meta[ 'tokenUnits' ] = json_encode( $units );
+      $meta[ 'tokenUnits' ] = json_encode( $units, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
     }
 
     // Create a query

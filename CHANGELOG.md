@@ -39,6 +39,19 @@ not substantiate a detail, the entry says so instead of guessing.
   and `KnishIOClient::createRule()` take that list as `$rule` and store it as JS serializes it;
   the old `conditions`/`callback`/`rule` meta keys are no longer accepted. This changes the signed
   bytes of R atoms built by `createRule()`.
+- `Molecule` kept no version: its constructor called `clear()`, which set `version` to `null`, so a
+  molecule created with `version: '4'` gave its atoms no version and hashed the legacy atom list
+  instead of the Version 4 view (wrong molecular hash and signature). `clear()` no longer resets the
+  version, and the constructor keeps only a version the SDK knows (`Versions`), as JS does. Signed
+  bytes change for molecules created with a version.
+- Hashed metas match JS byte for byte. Policy JSON (`PolicyMeta::toJson()`) writes empty
+  `read`/`write` maps as `{}` (was `[]`), orders integer keys first as JS objects do, and no longer
+  escapes `/` or non-ASCII characters; `AtomMeta::addPolicy()` passes the meta entry indices
+  (`"0"`, `"1"`, …) as JS `Object.keys()` of its normalized meta array does, instead of the key names;
+  `PolicyMeta::fillDefault()` no longer raises "Undefined array key" warnings. Boolean meta values
+  become `"true"`/`"false"` (were hashed as `"1"`/`""`). `tradeRates`, peer `cellSlugs`, requested
+  `tokenUnits` and array meta values are JSON-encoded without escaped slashes or unicode. Signed
+  bytes change for every policy, boolean meta and such JSON value; the JS reference never produced the old bytes.
 
 ### Security
 

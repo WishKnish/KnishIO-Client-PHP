@@ -101,7 +101,7 @@ class AtomMeta {
       $walletMeta[ 'tokenUnits' ] = TokenUnit::encodeList( $wallet->tokenUnits );
     }
     if ( $wallet->tradeRates ) {
-      $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_THROW_ON_ERROR );
+      $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
     }
 
     // Merge all wallet's metas (if any)
@@ -242,7 +242,9 @@ class AtomMeta {
    */
   public function addPolicy( array $policy ): self {
 
-    $policyMeta = new PolicyMeta( $policy, array_keys( $this->meta ) );
+    // JS AtomMeta.addPolicy() passes Object.keys() of its normalized meta ARRAY, i.e. the entry
+    // indices "0", "1", … rather than the meta key names. The policy is hashed, so match it.
+    $policyMeta = new PolicyMeta( $policy, array_map( 'strval', array_keys( array_values( $this->meta ) ) ) );
 
     $this->merge( [
       'policy' => $policyMeta->toJson(),
