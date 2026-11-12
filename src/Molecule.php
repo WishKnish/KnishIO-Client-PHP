@@ -60,6 +60,7 @@ use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WalletSignatureException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
+use WishKnish\KnishIO\Client\Libraries\Rule;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 
 /**
@@ -300,9 +301,12 @@ class Molecule extends MoleculeStructure {
   }
 
   /**
+   * Rule (R-isotope) atom in the JS form: the `rule` meta is the JSON list of rules
+   * `[{condition: [{key, value, comparison}], callback: [{action, ...}]}]` (JS Molecule.createRule()).
+   *
    * @param string $metaType
    * @param string $metaId
-   * @param array $meta
+   * @param array $rule list of rules (associative arrays or objects)
    * @param array $policy
    *
    * @return $this
@@ -312,26 +316,12 @@ class Molecule extends MoleculeStructure {
   public function createRule (
     string $metaType,
     string $metaId,
-    array $meta,
+    array $rule,
     array $policy = []
   ): Molecule {
 
-    foreach ( [
-      'conditions',
-      'callback',
-      'rule'
-    ] as $key ) {
-      if ( !array_key_exists( $key, $meta ) ) {
-        throw new MetaMissingException( 'No or not defined "' . $key . '" in meta' );
-      }
-
-      if ( is_array( $meta[ $key ] ) ) {
-        $meta[ $key ] = json_encode( $meta[ $key ], JSON_UNESCAPED_SLASHES );
-      }
-    }
-
-    // Create & fill atom meta object
-    $atomMeta = new AtomMeta( $meta );
+    // Rule meta exactly as JS JSON.stringify()s its Rule objects, then the policy
+    $atomMeta = new AtomMeta( [ 'rule' => Rule::toJson( $rule ) ] );
     $atomMeta->addPolicy( $policy );
 
     // Create rule isotope atom

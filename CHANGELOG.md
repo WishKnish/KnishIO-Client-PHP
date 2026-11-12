@@ -23,6 +23,23 @@ not substantiate a detail, the entry says so instead of guessing.
   `KNISHIO_KCORE=require` and `KNISHIO_KCORE=off` phpunit runs both run it, so the native and pure
   backends are each held to the same bytes. A missing fixture fails the test.
 
+### Fixed
+
+- `CheckMolecule` verifies as JS `CheckMolecule` does. V, B and F values are read as numbers
+  (`Atom::getValue()` now returns `float` and throws `TransferMalformedException` for a non-numeric
+  value) and conservation is an exact zero sum: an unbalanced fractional transfer such as
+  `[-0.5, +0.9]` was truncated to `0 + 0` and accepted. New `isotopeP` (USER token, `peerHost`) and
+  `isotopeA` (USER token, `metaType`, `metaId`, `action`) checks; `isotopeM` validates `readPolicy`
+  and `writePolicy` (each named key must exist in the meta and list only bundle hashes, `all` or
+  `self`; new `PolicyInvalidException`). A 2 V + 1 F fusion molecule now takes the general V rules
+  instead of the 2-atom transfer rule, which rejected it as unbalanced.
+- R-isotope rules use the JS form: the `rule` meta is a JSON list of
+  `{condition: [{key, value, comparison}], callback: [{action, …}]}`, validated as JS
+  `Rule.toObject()` does (new `Libraries\Rule`, `RuleArgumentException`). `Molecule::createRule()`
+  and `KnishIOClient::createRule()` take that list as `$rule` and store it as JS serializes it;
+  the old `conditions`/`callback`/`rule` meta keys are no longer accepted. This changes the signed
+  bytes of R atoms built by `createRule()`.
+
 ### Security
 
 - `HttpClient` verifies the server's TLS certificate by default (Guzzle `verify` was `false`). The stored

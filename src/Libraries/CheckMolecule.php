@@ -62,6 +62,7 @@ use WishKnish\KnishIO\Client\Exception\MoleculeHashMismatchException;
 use WishKnish\KnishIO\Client\Exception\MoleculeHashMissingException;
 use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMalformedException;
 use WishKnish\KnishIO\Client\Exception\MoleculeSignatureMismatchException;
+use WishKnish\KnishIO\Client\Exception\PolicyInvalidException;
 use WishKnish\KnishIO\Client\Exception\TokenTypeException;
 use WishKnish\KnishIO\Client\Exception\TransferBalanceException;
 use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
@@ -117,6 +118,8 @@ class CheckMolecule {
     $this->continuId();
     $this->isotopeM();
     $this->isotopeR();
+    $this->isotopeP();
+    $this->isotopeA();
     $this->isotopeC();
     $this->isotopeF();
     $this->isotopeVB( $fromWallet );
@@ -172,48 +175,71 @@ class CheckMolecule {
         }
       }
 
-      if ( array_key_exists( 'rule', $metas ) ) {
+      if ( array_key_exists( 'rule', $metas ) && $metas[ 'rule' ] !== null && $metas[ 'rule' ] !== '' ) {
 
-        foreach ( [
-          'callback',
-          'conditions',
-          'rule',
-        ] as $key ) {
-          if ( !array_key_exists( $key, $metas ) ) {
-            throw new MetaMissingException( 'Missing \'' . $key . '\' field in meta.' );
-          }
+        // JS CheckMolecule.isotopeR(): a JSON array of rules, each one valid for Rule.toObject()
+        $rules = json_decode( $metas[ 'rule' ], false, 512, JSON_THROW_ON_ERROR );
+
+        if ( !is_array( $rules ) ) {
+          throw new MetaMissingException( 'Check::isotopeR() - Incorrect rule format!' );
         }
 
-        $conditions = json_decode( $metas[ 'conditions' ], true, 512, JSON_THROW_ON_ERROR );
-
-        if ( $conditions === null ) {
-          throw new MetaMissingException( 'Invalid format for conditions.' );
+        foreach ( $rules as $rule ) {
+          Rule::normalize( $rule );
         }
 
-        if ( is_array( $conditions ) ) {
-          foreach ( $conditions as $condition ) {
-            $keys = array_keys( $condition );
-
-            if ( count( array_intersect( $keys, [
-                'key',
-                'value',
-                'comparison',
-              ] ) ) < 3 && count( array_intersect( $keys, [ 'managedBy', ] ) ) < 1 ) {
-              throw new MetaMissingException( 'Missing field in conditions.' );
-            }
-          }
+        if ( count( $rules ) < 1 ) {
+          throw new MetaMissingException( 'Check::isotopeR() - No rules!' );
         }
+      }
+    }
+  }
 
-        if ( !in_array( strtolower( $metas[ 'callback' ] ), [
-          'reject',
-          'unseat',
-        ], true ) ) {
-          $callbacks = json_decode( $metas[ 'callback' ], true, 512, JSON_THROW_ON_ERROR );
+  /**
+   * Check isotope P (peering): USER token and a peerHost meta (JS CheckMolecule.isotopeP())
+   */
+  public function isotopeP (): void {
 
-          if ( $callbacks === null ) {
-            throw new MetaMissingException( 'Invalid format for callback.' );
-          }
-        }
+    /** @var Atom $atom */
+    foreach ( $this->molecule->getIsotopes( 'P' ) as $atom ) {
+
+      if ( $atom->token !== 'USER' ) {
+        throw new TokenTypeException( 'Check::isotopeP() - "' . $atom->token . '" is not a valid Token slug for "' . $atom->isotope . '" isotope Atoms!' );
+      }
+
+      $metas = $atom->aggregatedMeta();
+
+      if ( ( $metas[ 'peerHost' ] ?? null ) === null || $metas[ 'peerHost' ] === '' ) {
+        throw new MetaMissingException( 'Check::isotopeP() - Required meta field "peerHost" is missing!' );
+      }
+    }
+  }
+
+  /**
+   * Check isotope A (append request): USER token, metaType, metaId and an action meta
+   * (JS CheckMolecule.isotopeA())
+   */
+  public function isotopeA (): void {
+
+    /** @var Atom $atom */
+    foreach ( $this->molecule->getIsotopes( 'A' ) as $atom ) {
+
+      if ( $atom->token !== 'USER' ) {
+        throw new TokenTypeException( 'Check::isotopeA() - "' . $atom->token . '" is not a valid Token slug for "' . $atom->isotope . '" isotope Atoms!' );
+      }
+
+      if ( $atom->metaType === null || $atom->metaType === '' ) {
+        throw new MetaMissingException( 'Check::isotopeA() - Required field "metaType" is missing!' );
+      }
+
+      if ( $atom->metaId === null || $atom->metaId === '' ) {
+        throw new MetaMissingException( 'Check::isotopeA() - Required field "metaId" is missing!' );
+      }
+
+      $metas = $atom->aggregatedMeta();
+
+      if ( ( $metas[ 'action' ] ?? null ) === null || $metas[ 'action' ] === '' ) {
+        throw new MetaMissingException( 'Check::isotopeA() - Required meta field "action" is missing!' );
       }
     }
   }
@@ -341,6 +367,46 @@ class CheckMolecule {
       if ( $atom->token !== 'USER' ) {
         throw new TokenTypeException( 'Invalid token name for ' . $atom->isotope . ' isotope' );
       }
+
+      // Read/write policies name meta keys of this atom and list bundle hashes, "all" or "self"
+      // (JS CheckMolecule.isotopeM())
+      $metas = $atom->aggregatedMeta();
+
+      foreach ( [ 'readPolicy', 'writePolicy' ] as $key ) {
+        $policy = $metas[ $key ] ?? null;
+
+        if ( $policy === null || $policy === '' ) {
+          continue;
+        }
+
+        $policy = json_decode( $policy, true, 512, JSON_THROW_ON_ERROR );
+
+        if ( !is_array( $policy ) ) {
+          continue;
+        }
+
+        foreach ( $policy as $policyName => $policyValue ) {
+          $policyName = (string) $policyName;
+
+          if ( in_array( $policyName, [ 'readPolicy', 'writePolicy' ], true ) ) {
+            continue;
+          }
+
+          if ( !array_key_exists( $policyName, $metas ) ) {
+            throw new PolicyInvalidException( $policyName . ' is missing from the meta.' );
+          }
+
+          if ( !is_array( $policyValue ) ) {
+            throw new PolicyInvalidException( $policyName . ' policy is not a list.' );
+          }
+
+          foreach ( $policyValue as $value ) {
+            if ( !( is_string( $value ) && Crypto::isBundleHash( $value ) ) && !in_array( $value, [ 'all', 'self' ], true ) ) {
+              throw new PolicyInvalidException( ( is_scalar( $value ) ? (string) $value : json_encode( $value ) ) . ' does not correspond to the format of the policy.' );
+            }
+          }
+        }
+      }
     }
   }
 
@@ -374,12 +440,12 @@ class CheckMolecule {
 
     $vAtoms = $this->molecule->getIsotopes( 'V' );
     if ( $vAtoms ) {
-      $sum = 0;
+      $sum = 0.0;
       /** @var Atom $atom */
       foreach ( array_merge( $vAtoms, $fAtoms ) as $atom ) {
         $sum += $atom->getValue();
       }
-      if ( $sum !== 0 ) {
+      if ( $sum !== 0.0 ) {
         throw new TransferUnbalancedException( 'Check::isotopeF() - V+F atom values do not balance to zero!' );
       }
     }
@@ -426,8 +492,12 @@ class CheckMolecule {
     /** @var Atom $firstAtom */
     $firstAtom = $atoms[ 0 ];
 
+    // Fusion: the V atoms alone are short by the F atom's value; isotopeF() checks V+F conservation.
+    $hasFusion = count( $this->molecule->getIsotopes( 'F' ) ) > 0;
+
     // A 2-atom V molecule: same token, a non-negative credit, and the two values sum to zero.
-    if ( count( $atoms ) === 2 ) {
+    // Fusion molecules (2 V + 1 F) take the general rules below, as in JS CheckMolecule.isotopeV().
+    if ( !$hasFusion && $firstAtom->isotope === 'V' && count( $atoms ) === 2 ) {
 
       /** @var Atom $endAtom */
       $endAtom = end( $atoms );
@@ -441,7 +511,7 @@ class CheckMolecule {
       }
 
       // Conservation (JS CheckMolecule.isotopeV): the two values must sum to zero.
-      if ( $firstAtom->getValue() + $endAtom->getValue() !== 0 ) {
+      if ( $firstAtom->getValue() + $endAtom->getValue() !== 0.0 ) {
         throw new TransferUnbalancedException();
       }
 
@@ -449,8 +519,8 @@ class CheckMolecule {
     }
 
     // Looping through each V-isotope atom
-    $sum = 0;
-    $value = 0;
+    $sum = 0.0;
+    $value = 0.0;
 
     // Check sender atom
     if ( $firstAtom->getValue() >= 0 ) {
@@ -460,7 +530,7 @@ class CheckMolecule {
     /** @var Atom $vAtom */
     foreach ( $atoms as $index => $vAtom ) {
 
-      // Making sure we're in integer land
+      // V values are numbers, as JS Number() reads them
       $value = $vAtom->getValue();
 
       // Making sure all V atoms of the same token
@@ -488,11 +558,8 @@ class CheckMolecule {
       $sum += $value;
     }
 
-    // Fusion: the V atoms alone are short by the F atom's value; isotopeF() checks V+F conservation.
-    $hasFusion = count( $this->molecule->getIsotopes( 'F' ) ) > 0;
-
     // All atoms must sum to zero for a balanced transaction
-    if ( !$hasFusion && $sum !== 0 ) {
+    if ( !$hasFusion && $sum !== 0.0 ) {
       throw new TransferUnbalancedException();
     }
 
@@ -513,7 +580,7 @@ class CheckMolecule {
 
     }
     // No senderWallet, but have a remainder?
-    else if ( $value !== 0 ) {
+    else if ( $value !== 0.0 ) {
       throw new TransferWalletException();
     }
   }

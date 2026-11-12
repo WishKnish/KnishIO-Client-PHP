@@ -54,6 +54,7 @@ use JsonException;
 use ReflectionException;
 use WishKnish\KnishIO\Client\Exception\CryptoException;
 use WishKnish\KnishIO\Client\Exception\MoleculeAtomsMissingException;
+use WishKnish\KnishIO\Client\Exception\TransferMalformedException;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Libraries\Strings;
 use WishKnish\KnishIO\Client\Traits\Json;
@@ -409,10 +410,18 @@ class Atom implements \JsonSerializable {
   }
 
   /**
-   * @return int
+   * The value as a number, as JS Number() reads it (null is 0); a non-numeric value is malformed.
+   *
+   * @return float
    */
-  public function getValue (): int {
-    return $this->value * 1;
+  public function getValue (): float {
+    if ( $this->value === null ) {
+      return 0.0;
+    }
+    if ( !is_numeric( $this->value ) ) {
+      throw new TransferMalformedException( 'Atom value "' . $this->value . '" is not a number.' );
+    }
+    return (float) $this->value;
   }
 
 
