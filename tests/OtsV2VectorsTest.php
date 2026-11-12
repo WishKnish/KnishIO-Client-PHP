@@ -24,8 +24,8 @@ use WishKnish\KnishIO\Client\Wallet;
  * identities of v2 wallets, and molecule verdicts against the shared vectors; plus a v2 sign/verify
  * round trip that needs no shared file.
  *
- * The shared vectors live in the monorepo (../shared-test-results/ots-v2-vectors.json). A standalone
- * checkout skips the vector test once and still runs the round trip.
+ * The shared vectors are vendored from the monorepo master into tests/fixtures/ots-v2-vectors.json
+ * (scripts/sync-cross-sdk-fixtures.sh); a missing or unparsable file fails the test.
  */
 class OtsV2VectorsTest extends TestCase {
 
@@ -37,7 +37,7 @@ class OtsV2VectorsTest extends TestCase {
   ];
 
   private static function vectorsPath (): string {
-    return dirname( __DIR__, 2 ) . '/shared-test-results/ots-v2-vectors.json';
+    return __DIR__ . '/fixtures/ots-v2-vectors.json';
   }
 
   private static function address ( string $key ): string {
@@ -55,11 +55,7 @@ class OtsV2VectorsTest extends TestCase {
   }
 
   public function testSharedOtsV2Vectors (): void {
-    $path = self::vectorsPath();
-    if ( !is_file( $path ) ) {
-      $this->markTestSkipped( 'ots-v2-vectors.json not found (standalone checkout)' );
-    }
-    $vectors = json_decode( file_get_contents( $path ), true, 512, JSON_THROW_ON_ERROR )[ 'vectors' ];
+    $vectors = json_decode( file_get_contents( self::vectorsPath() ), true, 512, JSON_THROW_ON_ERROR )[ 'vectors' ];
 
     // Key derivation and address
     foreach ( $vectors[ 'key_derivation' ][ 'tests' ] as $vector ) {
