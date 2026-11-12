@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/WishKnish/KnishIO-Client-PHP#readme",
   "dependencies": {
-    "@noble/post-quantum": "^0.5.2"
+    "@noble/post-quantum": "^0.7.1"
   }
 }
