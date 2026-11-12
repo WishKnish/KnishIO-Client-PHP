@@ -23,6 +23,8 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
@@ -45,6 +47,20 @@ updates:
       default-days: 7
     groups:
       composer:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "build"
+
+  # The npm tree behind the Node ML-KEM bridge (package.json / package-lock.json at the root).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
         patterns:
           - "*"
     commit-message:

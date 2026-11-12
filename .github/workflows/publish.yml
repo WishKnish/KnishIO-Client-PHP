@@ -40,7 +40,7 @@ on:
         type: string
 
 permissions:
-  contents: write   # create the GitHub Release; no registry auth needed
+  contents: read
 
 jobs:
   version-gate:
@@ -176,6 +176,8 @@ jobs:
     needs: [version-gate, gate, kcore-platforms, sbom]
     if: github.event_name == 'push'   # dispatch = dry run; never creates a Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # create the GitHub Release; no registry auth needed
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -219,7 +221,7 @@ jobs:
 
       # The source archive is auto-attached; the SBOM is attached explicitly.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3
         with:
           # `generate_release_notes` stays OFF, deliberately — do not restore it. The action
           # appends the WHOLE generated block (`<body>\n\n<notes>`), which would put the
