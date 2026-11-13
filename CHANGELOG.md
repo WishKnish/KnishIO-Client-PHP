@@ -14,6 +14,16 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.8.0] — 2026-11-12
+
+### Upgrade notes
+
+- `CheckMolecule` reads V, B and F values as numbers and R-isotope rules use the JS form (see
+  Fixed).
+- `Wallet::encryptMessage()`/`decryptMessage()` are the post-quantum ML-KEM + AES-256-GCM envelope
+  (see Security).
+- `HttpClient` verifies the server's TLS certificate by default (see Security).
+
 ### Added
 
 - `tests/KcoreParityVectorsTest.php`: 16 full signed molecules (metadata, value transfer, token
@@ -600,7 +610,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.7.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.8.0...HEAD
+[1.8.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.0
 [1.7.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.7.0
 [1.6.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.1
 [1.6.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.0
