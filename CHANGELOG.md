@@ -23,6 +23,12 @@ not substantiate a detail, the entry says so instead of guessing.
   `KNISHIO_KCORE=require` and `KNISHIO_KCORE=off` phpunit runs both run it, so the native and pure
   backends are each held to the same bytes. A missing fixture fails the test.
 
+### Changed
+
+- The bundled libkcore (`kcore/<target>/`) is KnishIO-Crypto-Core 0.2.1 (was 0.2.0;
+  `scripts/kcore-pins.json`), which zeroes ML-KEM secrets, WOTS+ chain preimages and Keccak state on
+  the stack before each call returns. Outputs and the ABI are unchanged.
+
 ### Fixed
 
 - `CheckMolecule` verifies as JS `CheckMolecule` does. V, B and F values are read as numbers

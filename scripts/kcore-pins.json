@@ -1,34 +1,34 @@
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "url": "https://github.com/WishKnish/KnishIO-Crypto-Core/releases/download/{version}/knishio-crypto-core-{version}-{target}.tar.gz",
   "targets": {
     "linux-x64-gnu": {
-      "sha256": "137a7adb73df0a1fe84656cf02d8e6513a6dec0a548ed9adc7c220dac71e4b05",
-      "member": "lib/libkcore.so.0.2.0",
+      "sha256": "0cab0482b62db7d1d755472daefbed7399d305d3f04056ac1abb62964d4c435e",
+      "member": "lib/libkcore.so.0.2.1",
       "name": "libkcore.so"
     },
     "linux-arm64-gnu": {
-      "sha256": "b93d46a9b37596379e41007c663787c3c07da2757e5249a209b766ff71d3a057",
-      "member": "lib/libkcore.so.0.2.0",
+      "sha256": "dbf2d0d0b6bc5f8d8ac171587fc5e5080b8d6b7e6e6d240092af98778566a08b",
+      "member": "lib/libkcore.so.0.2.1",
       "name": "libkcore.so"
     },
     "linux-x64-musl": {
-      "sha256": "a6a7cf27e9055b55812cb7d770d775db1523ba146fd2747d449db442f0f580fb",
-      "member": "lib/libkcore.so.0.2.0",
+      "sha256": "ea0b795ed66922b83e678e034f83781d50e72453c324e8d7e46d8bcffbf6a7ab",
+      "member": "lib/libkcore.so.0.2.1",
       "name": "libkcore.so"
     },
     "linux-arm64-musl": {
-      "sha256": "0fc3dae8472602e757f3495aca1241d6609bd046a6a71ef2d6f498f248f9f1b6",
-      "member": "lib/libkcore.so.0.2.0",
+      "sha256": "bc7d660cef266c50fb2cf73c5a1ed172f1a52b66a708b9e0edc75b97c0d6145d",
+      "member": "lib/libkcore.so.0.2.1",
       "name": "libkcore.so"
     },
     "darwin-universal": {
-      "sha256": "a482d979d48c1dfb8ce3d8528795e217a3e304f8c5eeed363097067d67746329",
-      "member": "lib/libkcore.0.2.0.dylib",
+      "sha256": "bfd7e0972c2b2b4367abfff6518d2bf09c1f8ed8d5b4a8eb83e1e15094f19170",
+      "member": "lib/libkcore.0.2.1.dylib",
       "name": "libkcore.dylib"
     },
     "windows-x64": {
-      "sha256": "409f819b50135b6bf1db8064e94be8402cdf29592f29bf8e4a2ab343963f9daf",
+      "sha256": "5efe7a334e700959a7725e4abd8447ecfd5f6c6ce0a9896d5b07f0289c2ee7e0",
       "member": "bin/kcore.dll",
       "name": "kcore.dll"
     }

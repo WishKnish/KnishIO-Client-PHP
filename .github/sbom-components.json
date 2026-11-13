@@ -21,7 +21,7 @@
       "externalReferences": [{"type": "vcs", "url": "https://github.com/pq-code-package/mlkem-native"}],
       "properties": [
         {"name": "knishio:commit", "value": "0ba906cb14b1c241476134d7403a811b382ca498"},
-        {"name": "knishio:via", "value": "KnishIO-Crypto-Core 0.2.0"}
+        {"name": "knishio:via", "value": "KnishIO-Crypto-Core 0.2.1"}
       ]
     },
     {
