@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "type": "library",
+      "group": "WishKnish",
+      "name": "KnishIO-Crypto-Core",
+      "licenses": [{"license": {"id": "GPL-3.0-or-later"}}],
+      "externalReferences": [{"type": "vcs", "url": "https://github.com/WishKnish/KnishIO-Crypto-Core"}],
+      "properties": [
+        {"name": "knishio:pins", "value": "scripts/kcore-pins.json"},
+        {"name": "knishio:linkage", "value": "shared library bundled under kcore/<target>/ in the Composer package"}
+      ]
+    },
+    {
+      "type": "library",
+      "group": "pq-code-package",
+      "name": "mlkem-native",
+      "version": "1.2.0",
+      "licenses": [{"expression": "Apache-2.0 OR ISC OR MIT"}],
+      "purl": "pkg:github/pq-code-package/mlkem-native@v1.2.0",
+      "externalReferences": [{"type": "vcs", "url": "https://github.com/pq-code-package/mlkem-native"}],
+      "properties": [
+        {"name": "knishio:commit", "value": "0ba906cb14b1c241476134d7403a811b382ca498"},
+        {"name": "knishio:via", "value": "KnishIO-Crypto-Core 0.2.0"}
+      ]
+    },
+    {
+      "type": "library",
+      "group": "desktopd",
+      "name": "php-sha3-streamable",
+      "licenses": [{"license": {"id": "LGPL-3.0-or-later"}}],
+      "externalReferences": [{"type": "vcs", "url": "https://github.com/evias/PHP-SHA3-Streamable"}],
+      "properties": [
+        {"name": "knishio:commit", "value": "b099bb81050c71eef7f42d46d287086a4949b861"},
+        {"name": "knishio:vendored-path", "value": "src/Libraries/Crypto/SHA3/Sponge.php"},
+        {"name": "knishio:origin", "value": "adapted source; see the file header"}
+      ]
+    }
+  ]
+}

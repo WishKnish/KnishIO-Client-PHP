@@ -138,3 +138,5 @@ jobs:
           scan-args: |-
             -L
             ${{ env.SBOM_FILE }}
+            -L
+            osv-scanner:${{ env.OSV_COMMITS_FILE }}

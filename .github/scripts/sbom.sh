@@ -14,5 +14,8 @@ rm -rf "$OUT"; mkdir -p "$OUT/gen"
 [ -f composer.lock ] || { echo "SBOM FAIL composer.lock missing — resolve first" >&2; exit 1; }
 composer CycloneDX:make-sbom --spec-version=1.5 --output-format=JSON --omit=dev --output-reproducible --output-file="$OUT/gen/composer.cdx.json"
 npm sbom --sbom-format cyclonedx --sbom-type library --omit dev --package-lock-only > "$OUT/gen/npm-bridge.cdx.json"
+# The components file lists what no generator sees: the bundled libkcore (checked against
+# scripts/kcore-pins.json), the mlkem-native it is built from, and the vendored SHA-3 sponge.
 python3 .github/scripts/sbom.py --name knishio-client-php --version "$VERSION" --type library \
-  --base "$OUT/gen/composer.cdx.json" --base "$OUT/gen/npm-bridge.cdx.json" --out "$OUT"
+  --base "$OUT/gen/composer.cdx.json" --base "$OUT/gen/npm-bridge.cdx.json" \
+  --components .github/sbom-components.json --out "$OUT"
