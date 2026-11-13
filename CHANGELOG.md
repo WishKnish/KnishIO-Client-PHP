@@ -33,6 +33,10 @@ not substantiate a detail, the entry says so instead of guessing.
   and `writePolicy` (each named key must exist in the meta and list only bundle hashes, `all` or
   `self`; new `PolicyInvalidException`). A 2 V + 1 F fusion molecule now takes the general V rules
   instead of the 2-atom transfer rule, which rejected it as unbalanced.
+- `CheckMolecule::isotopeVB()` without a sender wallet no longer throws `TransferWalletException`
+  when the last V atom is non-zero. That atom is a transfer's remainder, so ordinary balanced
+  transfers checked without a wallet were rejected; the validator does not apply the rule, and the
+  JS SDK has dropped it too. Conservation is still enforced.
 - R-isotope rules use the JS form: the `rule` meta is a JSON list of
   `{condition: [{key, value, comparison}], callback: [{action, …}]}`, validated as JS
   `Rule.toObject()` does (new `Libraries\Rule`, `RuleArgumentException`). `Molecule::createRule()`

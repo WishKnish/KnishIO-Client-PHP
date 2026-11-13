@@ -43,4 +43,31 @@ class CheckMoleculeIsotopeVTest extends TestCase {
     ( new CheckMolecule( $this->signedTwoAtomTransfer( '-1000', '1000' ) ) )->isotopeVB();
     $this->addToAssertionCount( 1 );
   }
+
+  private function signedThreeAtomTransfer ( string $debit, string $credit, string $remainder ): Molecule {
+    $secret = Crypto::generateSecret( 'isotope-v-three-atom-test', 2048 );
+    $source = new Wallet( $secret, 'TEST', str_repeat( 'aa', 32 ) );
+    $recipient = new Wallet( Crypto::generateSecret( 'isotope-v-three-atom-recipient', 2048 ), 'TEST', str_repeat( 'bb', 32 ) );
+    $remainderWallet = new Wallet( $secret, 'TEST', str_repeat( 'cc', 32 ) );
+    $molecule = new Molecule( $secret, $source );
+    $molecule->addAtom( Atom::create( 'V', $source, $debit ) );
+    $molecule->addAtom( Atom::create( 'V', $recipient, $credit, 'walletBundle', $recipient->bundle ) );
+    $molecule->addAtom( Atom::create( 'V', $remainderWallet, $remainder, 'walletBundle', $remainderWallet->bundle ) );
+    $molecule->sign();
+    return $molecule;
+  }
+
+  /**
+   * Without a sender wallet only conservation applies: the validator and served-molecule checks
+   * verify transfers this way, and a transfer's last V atom is its (non-zero) remainder.
+   */
+  public function testBalancedTransferWithARemainderPassesWithoutASenderWallet (): void {
+    ( new CheckMolecule( $this->signedThreeAtomTransfer( '-10', '4', '6' ) ) )->isotopeVB();
+    $this->addToAssertionCount( 1 );
+  }
+
+  public function testUnbalancedTransferWithARemainderIsRejectedWithoutASenderWallet (): void {
+    $this->expectException( TransferUnbalancedException::class );
+    ( new CheckMolecule( $this->signedThreeAtomTransfer( '-10', '4', '5' ) ) )->isotopeVB();
+  }
 }

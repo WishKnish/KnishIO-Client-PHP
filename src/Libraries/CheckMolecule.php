@@ -70,7 +70,6 @@ use WishKnish\KnishIO\Client\Exception\TransferMismatchedException;
 use WishKnish\KnishIO\Client\Exception\TransferRemainderException;
 use WishKnish\KnishIO\Client\Exception\TransferToSelfException;
 use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
-use WishKnish\KnishIO\Client\Exception\TransferWalletException;
 use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\MoleculeStructure;
@@ -579,10 +578,9 @@ class CheckMolecule {
       }
 
     }
-    // No senderWallet, but have a remainder?
-    else if ( $value !== 0.0 ) {
-      throw new TransferWalletException();
-    }
+    // Without a sender wallet only the conservation check above applies: the validator and
+    // served-molecule checks verify transfers this way, and a transfer's last V atom is its
+    // remainder, which is normally non-zero.
   }
 
   /**
