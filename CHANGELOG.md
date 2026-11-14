@@ -14,6 +14,15 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.8.1] — 2026-11-13
+
+### Upgrade notes
+
+- Signed bytes change for a wallet whose `tradeRates` is a map (no longer signed, as in JS) and for
+  `{key, value}` metas with non-string values (now strings, as in JS); float meta values are written
+  in JS's shortest round-trip form, e.g. `0.30000000000000004` instead of `0.3` (see Fixed).
+- `CheckMolecule` accepts three-atom transfers whose values are all zero, as JS does (see Fixed).
+
 ### Fixed
 
 - `QueryMetaType`, `QueryMeta`, `QueryWalletBundle`, `QueryMoleculeList` and `QueryAtom` spelled
@@ -640,7 +649,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.8.0...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.8.1...HEAD
+[1.8.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.1
 [1.8.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.0
 [1.7.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.7.0
 [1.6.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.6.1
