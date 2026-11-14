@@ -58,7 +58,7 @@ use WishKnish\KnishIO\Client\Response\ResponseMetaType;
  */
 class QueryMetaType extends Query {
   // Query
-  protected static string $defaultQuery = 'query( $metaType: String, $metaTypes: [ String! ], $metaId: String, $metaIds: [ String! ], $key: String, $keys: [ String! ], $value: String, $values: [ String! ], $filter: [ MetaFilter! ], $count: String, $countBy: String, $queryArgs: QueryArgs, $latest: Boolean, $cellSlug: String) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, cellSlug: $cellSlug )
+  protected static string $defaultQuery = 'query( $metaType: String, $metaTypes: [String!], $metaId: String, $metaIds: [String!], $key: String, $keys: [String!], $value: String, $values: [String!], $filter: [MetaFilter!], $count: String, $countBy: String, $queryArgs: QueryArgs, $latest: Boolean, $cellSlug: String) { MetaType( metaType: $metaType, metaTypes: $metaTypes, metaId: $metaId, metaIds: $metaIds, key: $key, keys: $keys, value: $value, values: $values, filter: $filter, count: $count, countBy: $countBy, queryArgs: $queryArgs, cellSlug: $cellSlug )
 		@fields
 	}';
 

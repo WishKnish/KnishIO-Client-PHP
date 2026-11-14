@@ -3,7 +3,9 @@
 namespace WishKnish\KnishIO\Client\Tests;
 
 use PHPUnit\Framework\TestCase;
+use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\Molecule;
+use WishKnish\KnishIO\Client\Wallet;
 
 /**
  * Molecule::fromJSON() with and without createdAt on the molecule and its atoms.
@@ -45,5 +47,21 @@ class MoleculeFromJsonTest extends TestCase {
 
     $this->assertSame( '1792008157000', $molecule->createdAt );
     $this->assertSame( '1792008157110', $molecule->atoms[ 0 ]->createdAt );
+  }
+
+  // The molecule's version is kept, as JS Molecule.fromJSON does, so atoms added later carry it
+
+  public function testMoleculeVersionReachesAddedAtoms (): void {
+    foreach ( [ '4' => '4', '7' => null ] as $version => $expected ) {
+      $molecule = Molecule::fromJSON( json_encode( [
+        'molecularHash' => str_repeat( '0', 64 ),
+        'version' => (string) $version,
+        'atoms' => [ self::atom( 0, null ) ],
+      ], JSON_THROW_ON_ERROR ) );
+      $wallet = new Wallet( str_repeat( 'f', 2048 ), 'USER', str_repeat( 'cc', 32 ) );
+      $molecule->addAtom( Atom::create( 'M', $wallet, null, 'walletBundle', $wallet->bundle ) );
+
+      $this->assertSame( $expected, $molecule->atoms[ 1 ]->version, "version $version" );
+    }
   }
 }

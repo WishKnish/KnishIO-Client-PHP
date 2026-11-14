@@ -73,6 +73,7 @@ use WishKnish\KnishIO\Client\Exception\TransferUnbalancedException;
 use WishKnish\KnishIO\Client\Exception\WalletBatchException;
 use WishKnish\KnishIO\Client\Libraries\Crypto\Shake256;
 use WishKnish\KnishIO\Client\MoleculeStructure;
+use WishKnish\KnishIO\Client\Meta;
 use WishKnish\KnishIO\Client\Wallet;
 
 /**
@@ -521,11 +522,6 @@ class CheckMolecule {
     $sum = 0.0;
     $value = 0.0;
 
-    // Check sender atom
-    if ( $firstAtom->getValue() >= 0 ) {
-      throw new TransferMalformedException( 'Sender can\'t send negative value or zero.' );
-    }
-
     /** @var Atom $vAtom */
     foreach ( $atoms as $index => $vAtom ) {
 
@@ -847,10 +843,7 @@ class CheckMolecule {
       return (string) $value;
     }
     if ( is_float( $value ) ) {
-      if ( is_finite( $value ) && floor( $value ) === $value && abs( $value ) < 1e21 ) {
-        return $value == 0 ? '0' : sprintf( '%.0f', $value );
-      }
-      return str_replace( '.0e', 'e', json_encode( $value, JSON_THROW_ON_ERROR ) );
+      return Meta::jsFloatString( $value );
     }
     return json_encode( $value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
   }

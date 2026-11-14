@@ -11,6 +11,7 @@ namespace WishKnish\KnishIO\Client\Tests;
 
 use WishKnish\KnishIO\Client\Atom;
 use WishKnish\KnishIO\Client\AtomMeta;
+use WishKnish\KnishIO\Client\KnishIOClient;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Wallet;
@@ -72,6 +73,19 @@ class SignedBytesJsParityTest extends TestCase {
     $this->assertNull( $molecule->atoms[ 0 ]->version );
   }
 
+  // A client's server SDK version reaches its molecules, as JS KnishIOClient.createMolecule passes it
+
+  public function testClientServerSdkVersionReachesItsMolecules (): void {
+    foreach ( [ 4 => '4', 3 => null ] as $serverSdkVersion => $expected ) {
+      $client = new KnishIOClient( 'https://localhost', serverSdkVersion: $serverSdkVersion );
+      $client->setSecret( self::secret() );
+      $source = self::wallet( 'USER', 'cc' );
+      $molecule = $client->createMolecule( sourceWallet: $source );
+      $molecule->addAtom( Atom::create( 'M', $source, null, 'walletBundle', $source->bundle, new AtomMeta( [ 'k' => 'v' ] ) ) );
+      $this->assertSame( $expected, $molecule->atoms[ 0 ]->version, "serverSdkVersion $serverSdkVersion" );
+    }
+  }
+
   // Policy JSON
 
   public function testEmptyPolicyHashesLikeJs (): void {
@@ -110,5 +124,59 @@ class SignedBytesJsParityTest extends TestCase {
     $this->assertSame( '[{"key":"on","value":"true"},{"key":"off","value":"false"},{"key":"n","value":"5"},{"key":"f","value":"1.5"}]',
       json_encode( $atom->meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR ) );
     $this->assertSame( '03cb67043bbd960gb814419c2f5211778e1ga1d75521bc8cd06d077bge3agfc1', self::single( $atom ) );
+  }
+
+  // Pre-structured {key, value} metas are stringified as JS Meta.normalizeMeta does
+
+  public function testKeyValueMetaListHashesLikeJs (): void {
+    $user = self::wallet( 'USER', 'cc' );
+    $atom = Atom::create( 'M', $user, null, 'walletBundle', $user->bundle, new AtomMeta( [
+      [ 'key' => 'on', 'value' => true ],
+      [ 'key' => 'off', 'value' => false ],
+      [ 'key' => 'n', 'value' => 5 ],
+      [ 'key' => 'f', 'value' => 1.5 ],
+      [ 'key' => 'nil', 'value' => null ],
+    ] ) );
+
+    $this->assertSame( '[{"key":"on","value":"true"},{"key":"off","value":"false"},{"key":"n","value":"5"},{"key":"f","value":"1.5"},{"key":"nil","value":null}]',
+      json_encode( $atom->meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR ) );
+    $this->assertSame( '03cb67043bbd960gb814419c2f5211778e1ga1d75521bc8cd06d077bge3agfc1', self::single( $atom ) );
+  }
+
+  // Floats are written as JS String() writes them, including integral floats above 2^53
+
+  public function testFloatMetaValuesHashLikeJs (): void {
+    $user = self::wallet( 'USER', 'cc' );
+    $atom = Atom::create( 'M', $user, null, 'walletBundle', $user->bundle, new AtomMeta( [
+      [ 'key' => 'a', 'value' => 0.1 + 0.2 ],
+      [ 'key' => 'b', 'value' => 123456789012345680000.0 ],
+      [ 'key' => 'c', 'value' => 1e21 ],
+      [ 'key' => 'd', 'value' => -0.0 ],
+      [ 'key' => 'e', 'value' => 1e-7 ],
+    ] ) );
+
+    $this->assertSame( '[{"key":"a","value":"0.30000000000000004"},{"key":"b","value":"123456789012345680000"},{"key":"c","value":"1e+21"},{"key":"d","value":"0"},{"key":"e","value":"1e-7"}]',
+      json_encode( $atom->meta, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR ) );
+    $this->assertSame( '014e5b9ee56dc286f6cf822040a8ac8794e032ee4g814ac1230256138153a1c7', self::single( $atom ) );
+  }
+
+  // Wallet trade rates: JS hashes them only when they are a list (a map has no .length)
+
+  public function testWalletTradeRatesMapIsNotHashedLikeJs (): void {
+    $wallet = self::wallet( 'TEST', 'aa' );
+    $wallet->tradeRates = [ 'OTHER' => 0.5 ];
+    $atom = Atom::create( 'B', $wallet, '100', 'walletBundle', $wallet->bundle );
+
+    $this->assertSame( [], $atom->meta );
+    $this->assertSame( '01bb26cf3a554f12b2044gd4eaee92ae87ag8ac33gcebc7d9a3e118df5c498e5', self::single( $atom ) );
+  }
+
+  public function testWalletTradeRatesListHashesLikeJs (): void {
+    $wallet = self::wallet( 'TEST', 'aa' );
+    $wallet->tradeRates = [ [ 'tokenSlug' => 'OTHER', 'amount' => 0.5 ] ];
+    $atom = Atom::create( 'B', $wallet, '100', 'walletBundle', $wallet->bundle );
+
+    $this->assertSame( [ [ 'key' => 'tradeRates', 'value' => '[{"tokenSlug":"OTHER","amount":0.5}]' ] ], $atom->meta );
+    $this->assertSame( '00gf751g18220gfda39690d5f3741d7f8b6fec883f2e3a708db3ccfa0c65e2g8', self::single( $atom ) );
   }
 }

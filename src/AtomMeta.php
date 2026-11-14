@@ -100,7 +100,8 @@ class AtomMeta {
     if ( $wallet->tokenUnits ) {
       $walletMeta[ 'tokenUnits' ] = TokenUnit::encodeList( $wallet->tokenUnits );
     }
-    if ( $wallet->tradeRates ) {
+    // JS hashes trade rates only when they are a list: its { slug: amount } map has no .length
+    if ( $wallet->tradeRates && array_is_list( $wallet->tradeRates ) ) {
       $walletMeta[ 'tradeRates' ] = json_encode( $wallet->tradeRates, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
     }
 

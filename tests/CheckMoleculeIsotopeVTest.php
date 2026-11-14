@@ -70,4 +70,16 @@ class CheckMoleculeIsotopeVTest extends TestCase {
     $this->expectException( TransferUnbalancedException::class );
     ( new CheckMolecule( $this->signedThreeAtomTransfer( '-10', '4', '5' ) ) )->isotopeVB();
   }
+
+  // JS CheckMolecule.isotopeV has no sender-sign check for 3+ atoms: only conservation applies
+
+  public function testZeroValueThreeAtomTransferPasses (): void {
+    ( new CheckMolecule( $this->signedThreeAtomTransfer( '0', '0', '0' ) ) )->isotopeVB();
+    $this->addToAssertionCount( 1 );
+  }
+
+  public function testPositiveSenderThreeAtomTransferIsUnbalanced (): void {
+    $this->expectException( TransferUnbalancedException::class );
+    ( new CheckMolecule( $this->signedThreeAtomTransfer( '10', '0', '0' ) ) )->isotopeVB();
+  }
 }

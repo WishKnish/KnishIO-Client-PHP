@@ -487,7 +487,7 @@ class KnishIOClient {
     // identity's ContinuID head to v2
     $this->remainderWallet = $remainderWallet ?: Wallet::create( $secret, 'USER', $sourceWallet->batchId, $sourceWallet->characters, $this->getMlKemParameterSet(), max( $sourceWallet->otsVersion, $this->getOtsVersion() ) );
 
-    $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, mlKemParameterSet: $this->getMlKemParameterSet(), minOtsVersion: $this->getOtsVersion() );
+    $molecule = new Molecule( $secret, $sourceWallet, $this->remainderWallet, $this->cellSlug, version: (string) $this->getServerSdkVersion(), mlKemParameterSet: $this->getMlKemParameterSet(), minOtsVersion: $this->getOtsVersion() );
     if ( $this->bundle ) {
       $molecule->bundle = $this->bundle;
     }

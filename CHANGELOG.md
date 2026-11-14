@@ -14,6 +14,36 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Fixed
+
+- `QueryMetaType`, `QueryMeta`, `QueryWalletBundle`, `QueryMoleculeList` and `QueryAtom` spelled
+  GraphQL list types with spaces inside the brackets (`[ String! ]`). The Rust validator's parser
+  rejects that ("expected type_") although GraphQL allows it, so these queries failed against it.
+  They are now spelled `[String!]`.
+- `KnishIOClient::createMolecule()` passes the client's server SDK version to the `Molecule`, as JS
+  does. A client created with `serverSdkVersion: 4` built molecules without a version, so their atoms
+  hashed the legacy atom list instead of the Version 4 view. The default (3) is unchanged.
+- `Molecule::fromJSON()` keeps the molecule's `version` (a version the SDK knows), as JS does, so
+  atoms added to a deserialized Version 4 molecule carry version `4`. It was dropped.
+- `AtomMeta::setAtomWallet()` adds the wallet's `tradeRates` meta only when `tradeRates` is a list,
+  as JS does (its `{ slug: amount }` map has no `length`). A map such as `['OTHER' => 0.5]`, as
+  `depositBufferToken()` callers passed, was JSON-encoded into the signed meta, so signed bytes
+  differed from every other SDK; they change for such wallets. The README's `depositBufferToken()`
+  example now passes the list form `[['tokenSlug' => …, 'amount' => …]]`.
+- `CheckMolecule::isotopeVB()` no longer rejects a 3+ atom V transfer whose first atom is zero or
+  positive with `TransferMalformedException`. JS applies no such check: a zero-value transfer
+  `[0, 0, 0]` verifies, and `[10, 0, 0]` is rejected by conservation with
+  `TransferUnbalancedException`.
+- `Meta::normalize()` stringifies the values of pre-structured `{key, value}` entries as it already
+  did for `key => value` maps, and as JS `Meta.normalizeMeta` does: booleans become
+  `"true"`/`"false"`, numbers their JS decimal form, arrays and objects compact JSON; `null` stays
+  `null` and their keys become strings. Such entries kept PHP booleans and numbers, which hashed
+  `true` as `"1"`, changed the Version 4 view and sent non-string values to the GraphQL
+  `MetaItemInput.value: String` field. Float values in `key => value` maps now take the shortest
+  round-trip form (PHP's `(string)` cast used 14 significant digits), and integral floats above 2^53
+  are written as JS writes them (`123456789012345680000`, not the exact binary value); the served
+  metas `CheckMolecule` verifies use the same rule. Signed bytes change for such metas.
+
 ## [1.8.0] — 2026-11-12
 
 ### Upgrade notes

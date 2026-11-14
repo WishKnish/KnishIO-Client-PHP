@@ -71,7 +71,7 @@ class QueryAtom extends Query {
     $metaTypes: [String!],
     $metaIds: [String!],
     $indexes: [String!],
-    $filter: [ MetaFilter! ],
+    $filter: [MetaFilter!],
     $latest: Boolean,
     $queryArgs: QueryArgs,
   ) {

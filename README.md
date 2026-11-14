@@ -276,7 +276,7 @@ This document will explain both ways.
       tokenSlug: 'CRZY',
       amount: 100,
       tradeRates: [
-          'OTHER_TOKEN' => 0.5
+          [ 'tokenSlug' => 'OTHER_TOKEN', 'amount' => 0.5 ]
       ]
   );
 

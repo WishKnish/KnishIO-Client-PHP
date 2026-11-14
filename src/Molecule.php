@@ -1200,7 +1200,8 @@ class Molecule extends MoleculeStructure {
         secret: '',  // Empty string for security (PHP requires non-null)
         sourceWallet: null,
         remainderWallet: null,
-        cellSlug: $data['cellSlug'] ?? null
+        cellSlug: $data['cellSlug'] ?? null,
+        version: isset($data['version']) && $data['version'] !== '' ? (string) $data['version'] : null
       );
 
       // Populate core properties

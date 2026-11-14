@@ -59,7 +59,7 @@ use WishKnish\KnishIO\Client\Response\ResponseWalletBundle;
 class QueryWalletBundle extends Query {
 
   // Query
-  protected static string $defaultQuery = 'query( $bundleHashes: [ String! ] ) { WalletBundle( bundleHashes: $bundleHashes )
+  protected static string $defaultQuery = 'query( $bundleHashes: [String!] ) { WalletBundle( bundleHashes: $bundleHashes )
 	 	@fields
 	}';
 
