@@ -62,8 +62,12 @@ class QueryMetaType extends Query {
 		@fields
 	}';
 
-  // Fields
+  // Fields: the JS SDK's QueryMetaType selection
   protected array $fields = [ 'metaType',
+    'instanceCount' => [
+      'key',
+      'value',
+    ],
     'instances' => [
       'metaType',
       'metaId',
@@ -71,52 +75,15 @@ class QueryMetaType extends Query {
       'metas(latest:$latest)' => [
         'molecularHash',
         'position',
-        'metaType',
-        'metaId',
         'key',
         'value',
         'createdAt',
       ],
-      'atoms' => [
-        'molecularHash',
-        'position',
-        'isotope',
-        'walletAddress',
-        'tokenSlug',
-        'batchId',
-        'value',
-        'index',
-        'metaType',
-        'metaId',
-        'otsFragment',
-        'createdAt',
-      ],
-      'molecules' => [
-        'molecularHash',
-        'cellSlug',
-        'bundleHash',
-        'status',
-        'height',
-        'createdAt',
-        'receivedAt',
-        'processedAt',
-        'broadcastedAt',
-      ],
-    ],
-    'metas' => [
-      'molecularHash',
-      'position',
-      'metaType',
-      'metaId',
-      'key',
-      'value',
-      'createdAt',
     ],
     'paginatorInfo' => [
       'currentPage',
       'total'
     ],
-    'createdAt',
   ];
 
   /**

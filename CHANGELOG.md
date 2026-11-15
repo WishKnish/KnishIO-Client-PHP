@@ -14,6 +14,15 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+### Fixed
+
+- `QueryMetaType` selects by default what JS `QueryMetaType` selects (`metaType`, `instanceCount`,
+  `instances` with `metas(latest:$latest)`, `paginatorInfo`). It asked for fields the validator's
+  `MetaType` type does not have (`instances.atoms`, `instances.molecules`, top-level `metas`,
+  `createdAt`), so a query with the default field set failed against it.
+- `Molecule::toJSON()` keeps the molecule's `version` when the SDK knows it, as JS `toJSON` does; it
+  was always dropped, so a molecule rebuilt from that JSON lost its Version 4 atom hashing.
+
 ## [1.8.1] — 2026-11-13
 
 ### Upgrade notes

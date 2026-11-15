@@ -55,6 +55,7 @@ use WishKnish\KnishIO\Client\Molecule;
 use WishKnish\KnishIO\Client\Libraries\Crypto;
 use WishKnish\KnishIO\Client\Query\QueryBalance;
 use WishKnish\KnishIO\Client\Query\QueryAtom;
+use WishKnish\KnishIO\Client\Query\QueryMetaType;
 use WishKnish\KnishIO\Client\Query\QueryBatchHistory;
 use WishKnish\KnishIO\Client\Query\QueryPolicy;
 use WishKnish\KnishIO\Client\Mutation\MutationCreateToken;
@@ -218,6 +219,18 @@ class KnishIOClientTest extends TestCase {
     $query = $this->client->createQuery(QueryBalance::class);
     
     $this->assertInstanceOf(QueryBalance::class, $query);
+  }
+
+  /**
+   * QueryMetaType's default selection is the JS SDK's (pinned from the JS query text)
+   */
+  public function testQueryMetaTypeDefaultFieldsMatchJs(): void {
+    $query = $this->client->createQuery(QueryMetaType::class);
+
+    $this->assertSame(
+      '{metaType, instanceCount {key, value}, instances {metaType, metaId, createdAt, metas(latest:$latest) {molecularHash, position, key, value, createdAt}}, paginatorInfo {currentPage, total}}',
+      $query->compiledFields($query->fields())
+    );
   }
 
   /**

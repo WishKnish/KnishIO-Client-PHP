@@ -64,4 +64,23 @@ class MoleculeFromJsonTest extends TestCase {
       $this->assertSame( $expected, $molecule->atoms[ 1 ]->version, "version $version" );
     }
   }
+
+  // toJSON keeps a version the SDK knows, as JS toJSON does; an unknown one is dropped
+
+  public function testToJsonKeepsKnownVersion (): void {
+    foreach ( [ '4' => '4', '7' => null ] as $version => $expected ) {
+      $molecule = Molecule::fromJSON( json_encode( [
+        'molecularHash' => str_repeat( '0', 64 ),
+        'version' => (string) $version,
+        'atoms' => [ self::atom( 0, null ) ],
+      ], JSON_THROW_ON_ERROR ) );
+      $data = json_decode( $molecule->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+
+      if ( $expected === null ) {
+        $this->assertArrayNotHasKey( 'version', $data, "version $version" );
+      } else {
+        $this->assertSame( $expected, $data[ 'version' ], "version $version" );
+      }
+    }
+  }
 }

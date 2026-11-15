@@ -1119,7 +1119,12 @@ class Molecule extends MoleculeStructure {
       $name = $property->getName();
       $data[$name] = $property->getValue($this);
     }
-    
+
+    // A hash version the SDK knows travels with the validation context, as in JS toJSON
+    if ( $this->version !== null ) {
+      $data['version'] = $this->version;
+    }
+
     // Explicitly add wallet data for cross-SDK validation (private properties)
     if ($this->sourceWallet) {
       $data['sourceWallet'] = [
@@ -1140,7 +1145,7 @@ class Molecule extends MoleculeStructure {
     }
     
     // Remove PHP-specific fields and sensitive data for compatibility
-    $excludeFields = ['secret', 'cellSlugOrigin', 'version', 'counterparty', 'local'];
+    $excludeFields = ['secret', 'cellSlugOrigin', 'counterparty', 'local'];
     foreach ($excludeFields as $field) {
       unset($data[$field]);
     }
