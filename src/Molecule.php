@@ -84,6 +84,9 @@ class Molecule extends MoleculeStructure {
   /** Lowest OTS version of the wallets this molecule creates for its signer; see successorOtsVersion() */
   private int $minOtsVersion = 1;
 
+  /** The cell slug the molecule was created with (JS cellSlugOrigin) */
+  private ?string $cellSlugOrigin = null;
+
 
   /**
    * @param string $secret
@@ -106,6 +109,7 @@ class Molecule extends MoleculeStructure {
     int $minOtsVersion = 1
   ) {
     parent::__construct( $cellSlug );
+    $this->cellSlugOrigin = $cellSlug;
     $this->mlKemParameterSet = $mlKemParameterSet ?? ($sourceWallet ? $sourceWallet->mlKemParameterSet : 1024);
     $this->minOtsVersion = Wallet::checkedOtsVersion( $minOtsVersion );
 
@@ -1120,6 +1124,9 @@ class Molecule extends MoleculeStructure {
       $data[$name] = $property->getValue($this);
     }
 
+    // The cell slug the molecule was created with travels with the validation context, as in JS toJSON
+    $data['cellSlugOrigin'] = $this->cellSlugOrigin;
+
     // A hash version the SDK knows travels with the validation context, as in JS toJSON
     if ( $this->version !== null ) {
       $data['version'] = $this->version;
@@ -1145,7 +1152,7 @@ class Molecule extends MoleculeStructure {
     }
     
     // Remove PHP-specific fields and sensitive data for compatibility
-    $excludeFields = ['secret', 'cellSlugOrigin', 'counterparty', 'local'];
+    $excludeFields = ['secret', 'counterparty', 'local'];
     foreach ($excludeFields as $field) {
       unset($data[$field]);
     }
@@ -1217,6 +1224,7 @@ class Molecule extends MoleculeStructure {
         $molecule->createdAt = (string) $data['createdAt'];
       }
       $molecule->bundle = $data['bundle'] ?? null;
+      $molecule->cellSlugOrigin = $data['cellSlugOrigin'] ?? null;
 
       // Reconstruct atoms array with proper Atom instances
       if (isset($data['atoms']) && is_array($data['atoms'])) {

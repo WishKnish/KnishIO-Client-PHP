@@ -539,18 +539,10 @@ class PatentVectorValidationTest extends TestCase {
       '0123456789abcdefg'
     );
 
-    if ( $base17Result === 0 || $base17Result === false ) {
-      // charsetBaseConvert returns 0 for zero-value input
-      if ( $expectedBase17 === str_repeat( '0', 64 ) ) {
-        // For all-zero input, pad to 64 zeros
-        $base17Result = str_pad( '0', 64, '0', STR_PAD_LEFT );
-      } else {
-        $this->fail( "Base17 conversion returned unexpected zero/false for vector: $name" );
-      }
-    }
+    $this->assertIsString( $base17Result, "Base17 conversion returned a non-string for vector: $name" );
 
     // Pad to 64 characters (matching Atom::hashAtoms behavior)
-    $base17Padded = str_pad( ( string ) $base17Result, 64, '0', STR_PAD_LEFT );
+    $base17Padded = str_pad( $base17Result, 64, '0', STR_PAD_LEFT );
 
     $this->assertEquals(
       $expectedBase17,
@@ -564,6 +556,14 @@ class PatentVectorValidationTest extends TestCase {
       0,
       "Base17 normalized sum must be zero for vector: $name"
     );
+  }
+
+  // A zero or empty value converts to the string '0', as JS charsetBaseConvert's `res || '0'` does
+
+  public function testBase17ZeroValueIsStringZero (): void {
+    $this->assertSame( '0', Strings::charsetBaseConvert( '', 16, 17, '0123456789abcdef', '0123456789abcdefg' ) );
+    $this->assertSame( '0', Strings::charsetBaseConvert( str_repeat( '0', 64 ), 16, 17, '0123456789abcdef', '0123456789abcdefg' ) );
+    $this->assertFalse( Strings::charsetBaseConvert( 'ff', 16, 99, '0123456789abcdef', '0123456789abcdefg' ) );
   }
 
   public static function base17Provider (): array {
@@ -884,11 +884,8 @@ class PatentVectorValidationTest extends TestCase {
         '0123456789abcdefg'
       );
 
-      if ( $base17Result === 0 || $base17Result === false ) {
-        $base17Padded = str_pad( '0', 64, '0', STR_PAD_LEFT );
-      } else {
-        $base17Padded = str_pad( ( string ) $base17Result, 64, '0', STR_PAD_LEFT );
-      }
+      $this->assertIsString( $base17Result );
+      $base17Padded = str_pad( $base17Result, 64, '0', STR_PAD_LEFT );
 
       // Set up a MoleculeStructure to use its normalizedHash
       $molStruct = new MoleculeStructure();

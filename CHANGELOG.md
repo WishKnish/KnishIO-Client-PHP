@@ -22,6 +22,12 @@ not substantiate a detail, the entry says so instead of guessing.
   `createdAt`), so a query with the default field set failed against it.
 - `Molecule::toJSON()` keeps the molecule's `version` when the SDK knows it, as JS `toJSON` does; it
   was always dropped, so a molecule rebuilt from that JSON lost its Version 4 atom hashing.
+- `Molecule` keeps the cell slug it was created with as `cellSlugOrigin`, as JS does: `toJSON()`
+  emits it directly before `version` (it was always dropped) and `fromJSON()` reads it back. PHP
+  writes `null` when the input had none, where JS omits the key.
+- `Strings::charsetBaseConvert()` returns the string `'0'` for a zero or empty value, as JS does; it
+  returned int `0`, so `Atom::hashAtoms()` in base17 gave `null` for an all-zero digest instead of
+  64 `'0'` characters. Its return type is now `bool|string`.
 
 ## [1.8.1] — 2026-11-13
 

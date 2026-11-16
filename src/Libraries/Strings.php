@@ -111,9 +111,9 @@ class Strings {
    * @param string|null $srcSymbolTable
    * @param string|null $destSymbolTable
    *
-   * @return bool|int|string
+   * @return bool|string false when a base exceeds its symbol table, otherwise the converted string ('0' for a zero or empty value, as in JS)
    */
-  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, ?string $srcSymbolTable = null, ?string $destSymbolTable = null ): bool|int|string {
+  public static function charsetBaseConvert ( string $src, int $fromBase, int $toBase, ?string $srcSymbolTable = null, ?string $destSymbolTable = null ): bool|string {
     // The reasoning behind capital first is because it comes first in a ASCII/Unicode character map 96 symbols support up to base 96
     $baseSymbols = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~`!@#$%^&*()-_=+[{]}\\|;:\'",<.>/?¿¡';
 
@@ -142,8 +142,9 @@ class Strings {
         ->add( new BigInteger( array_search( $src[ $i ], $srcSymbolList, true ) ) );
     }
 
+    // A zero or empty value is '0', as JS charsetBaseConvert's `res || '0'`
     if ( $value->cmp( $bigIntegerZero ) <= 0 ) {
-      return 0;
+      return '0';
     }
 
     // Then covert to any base

@@ -83,4 +83,28 @@ class MoleculeFromJsonTest extends TestCase {
       }
     }
   }
+
+  // toJSON carries cellSlugOrigin before version, as JS toJSON's validation context does; fromJSON reads it back
+
+  public function testCellSlugOriginRoundTrips (): void {
+    $molecule = new Molecule( secret: str_repeat( 'f', 2048 ), cellSlug: 'origin-cell' );
+    $data = json_decode( $molecule->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+    $this->assertArrayHasKey( 'cellSlugOrigin', $data );
+    $this->assertSame( 'origin-cell', $data[ 'cellSlugOrigin' ] );
+
+    $read = Molecule::fromJSON( json_encode( [
+      'molecularHash' => str_repeat( '0', 64 ),
+      'cellSlug' => 'current-cell',
+      'cellSlugOrigin' => 'origin-cell',
+      'version' => '4',
+      'atoms' => [ self::atom( 0, null ) ],
+    ], JSON_THROW_ON_ERROR ) );
+    $data = json_decode( $read->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+    $keys = array_keys( $data );
+    $this->assertSame( 'current-cell', $data[ 'cellSlug' ] );
+    $this->assertArrayHasKey( 'cellSlugOrigin', $data );
+    $this->assertSame( 'origin-cell', $data[ 'cellSlugOrigin' ] );
+    $this->assertSame( '4', $data[ 'version' ] );
+    $this->assertSame( array_search( 'cellSlugOrigin', $keys, true ) + 1, array_search( 'version', $keys, true ) );
+  }
 }
