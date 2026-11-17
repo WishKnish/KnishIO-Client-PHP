@@ -14,6 +14,17 @@ not substantiate a detail, the entry says so instead of guessing.
 
 ## [Unreleased]
 
+## [1.8.2] — 2026-11-17
+
+### Upgrade notes
+
+- Token units read from a reply sign their `metas` in JS key order and keep nested `{}` and
+  `{"0":…}` as objects, which changes signed bytes for such units (see Fixed).
+- `Molecule::toJSON()` omits `cellSlugOrigin` for a molecule read from JSON without it and keeps a
+  known `version` (see Fixed).
+- `Strings::charsetBaseConvert()` returns the string `'0'` for zero; its return type is
+  `bool|string` (see Fixed).
+
 ### Fixed
 
 - `QueryMetaType` selects by default what JS `QueryMetaType` selects (`metaType`, `instanceCount`,
@@ -677,7 +688,8 @@ parity with the JavaScript reference and the rest of the 0.8.0 SDK line
 
 See the git tag history (`0.6.4`, `0.4.0`, `0.2.0`, `0.1.x`) on GitHub/Packagist.
 
-[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.8.1...HEAD
+[Unreleased]: https://github.com/WishKnish/KnishIO-Client-PHP/compare/1.8.2...HEAD
+[1.8.2]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.2
 [1.8.1]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.1
 [1.8.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.8.0
 [1.7.0]: https://github.com/WishKnish/KnishIO-Client-PHP/releases/tag/1.7.0
