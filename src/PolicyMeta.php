@@ -50,6 +50,7 @@ License: https://github.com/WishKnish/KnishIO-Client-PHP/blob/master/LICENSE
 namespace WishKnish\KnishIO\Client;
 
 use JsonException;
+use WishKnish\KnishIO\Client\Libraries\JsJson;
 
 /**
  *
@@ -130,36 +131,8 @@ class PolicyMeta {
    * @throws JsonException
    */
   public function toJson(): string {
-    return json_encode( static::jsObject( array_map( static fn( $value ) => is_array( $value ) ? static::jsObject( $value ) : $value, $this->get() ) ),
+    return json_encode( JsJson::object( array_map( static fn( $value ) => is_array( $value ) ? JsJson::object( $value ) : $value, $this->get() ) ),
       JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR );
-  }
-
-  /**
-   * A PHP array as the JS object with the same entries: array-index keys (0 … 2^32-2) first in
-   * ascending order, then the other keys in insertion order.
-   *
-   * @param array $entries
-   *
-   * @return \stdClass
-   */
-  private static function jsObject ( array $entries ): \stdClass {
-    $indexes = [];
-    $names = [];
-    foreach ( $entries as $key => $value ) {
-      if ( is_int( $key ) && $key >= 0 && $key < 4294967295 ) {
-        $indexes[ $key ] = $value;
-      }
-      else {
-        $names[ (string) $key ] = $value;
-      }
-    }
-    ksort( $indexes );
-
-    $object = new \stdClass();
-    foreach ( $indexes + $names as $key => $value ) {
-      $object->{(string) $key} = $value;
-    }
-    return $object;
   }
 
 }

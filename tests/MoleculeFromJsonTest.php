@@ -107,4 +107,29 @@ class MoleculeFromJsonTest extends TestCase {
     $this->assertSame( '4', $data[ 'version' ] );
     $this->assertSame( array_search( 'cellSlugOrigin', $keys, true ) + 1, array_search( 'version', $keys, true ) );
   }
+  // JS toJSON omits cellSlugOrigin only for a molecule read from JSON without it (undefined);
+  // a constructed molecule and an explicit null both write the key with null
+
+  public function testCellSlugOriginKeyFollowsJs (): void {
+    $read = Molecule::fromJSON( json_encode( [
+      'molecularHash' => str_repeat( '0', 64 ),
+      'atoms' => [ self::atom( 0, null ) ],
+    ], JSON_THROW_ON_ERROR ) );
+    $data = json_decode( $read->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+    $this->assertArrayNotHasKey( 'cellSlugOrigin', $data );
+
+    $built = new Molecule( secret: str_repeat( 'f', 2048 ) );
+    $data = json_decode( $built->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+    $this->assertArrayHasKey( 'cellSlugOrigin', $data );
+    $this->assertNull( $data[ 'cellSlugOrigin' ] );
+
+    $read = Molecule::fromJSON( json_encode( [
+      'molecularHash' => str_repeat( '0', 64 ),
+      'cellSlugOrigin' => null,
+      'atoms' => [ self::atom( 0, null ) ],
+    ], JSON_THROW_ON_ERROR ) );
+    $data = json_decode( $read->toJSON(), true, 512, JSON_THROW_ON_ERROR );
+    $this->assertArrayHasKey( 'cellSlugOrigin', $data );
+    $this->assertNull( $data[ 'cellSlugOrigin' ] );
+  }
 }

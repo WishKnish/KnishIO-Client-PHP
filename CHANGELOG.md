@@ -23,8 +23,21 @@ not substantiate a detail, the entry says so instead of guessing.
 - `Molecule::toJSON()` keeps the molecule's `version` when the SDK knows it, as JS `toJSON` does; it
   was always dropped, so a molecule rebuilt from that JSON lost its Version 4 atom hashing.
 - `Molecule` keeps the cell slug it was created with as `cellSlugOrigin`, as JS does: `toJSON()`
-  emits it directly before `version` (it was always dropped) and `fromJSON()` reads it back. PHP
-  writes `null` when the input had none, where JS omits the key.
+  emits it directly before `version` (it was always dropped) and `fromJSON()` reads it back.
+- `Molecule::toJSON()` omits `cellSlugOrigin` for a molecule read by `fromJSON()` from input
+  without the key, as JS does; it wrote `null`. A constructed molecule and an explicit `null` still
+  write the key, `null` included, as JS does.
+- Token units read from a balance or wallet reply sign their `metas` as JS does: keys that are
+  array indexes come first in ascending order, then the others in document order, at every depth;
+  empty objects and objects keyed `"0"` stay objects (they became lists); `metas` served as a
+  JSON list stay a list. Invalid `metas` JSON still throws `JsonException`. Metas without such
+  keys sign unchanged. Number text is still PHP's (`1.0` stays `1.0`; JS writes `1`).
+- `TokenUnit::createFromDB()` reads back what `toData()` writes (metas as an object; it threw
+  `TokenUnitFormatException`), and `toGraphQLResponse()` writes `metas` as JS
+  `JSON.stringify(metas)` does: JS key order, `{}` for empty metas and objects keyed `"0"` kept as
+  objects (it wrote `[]` and lists).
+- The JS object-order helper behind `PolicyMeta::toJson()` is now `Libraries\JsJson`
+  (`object()`, recursive `value()`); policy output is unchanged.
 - `Strings::charsetBaseConvert()` returns the string `'0'` for a zero or empty value, as JS does; it
   returned int `0`, so `Atom::hashAtoms()` in base17 gave `null` for an all-zero digest instead of
   64 `'0'` characters. Its return type is now `bool|string`.

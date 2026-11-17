@@ -4,6 +4,7 @@ namespace WishKnish\KnishIO\Client;
 
 use JetBrains\PhpStorm\Pure;
 use JsonException;
+use WishKnish\KnishIO\Client\Libraries\JsJson;
 use WishKnish\KnishIO\Client\Exception\TokenUnitFormatException;
 
 /**
@@ -92,14 +93,18 @@ class TokenUnit {
    * @throws JsonException
    */
   public static function createFromGraphQL ( array $data ): self {
-    $metas = array_get( $data, 'metas', [] );
-    if ( $metas ) {
-      $metas = json_decode( $metas, true, 512, JSON_THROW_ON_ERROR );
+    // The validator serves `metas` as a JSON string (or null); parse it as JS does: objects keep their
+    // keys (PHP arrays would turn {} and {"0":…} into lists), a list stays a list, anything falsy is {}
+    $metas = array_get( $data, 'metas' );
+    $metasIsList = false;
+    if ( is_string( $metas ) && $metas !== '' ) {
+      $metas = json_decode( $metas, false, 512, JSON_THROW_ON_ERROR );
+      $metasIsList = is_array( $metas );
     }
-    // The validator returns `metas` as null (or a JSON string / absent) for id-only genesis units;
-    // array_get returns null for a present-but-null key, so normalize any non-array to [] before
-    // create() (which requires an array). Otherwise queryBalance throws on every stackable wallet.
-    if ( !is_array( $metas ) ) {
+    if ( $metas instanceof \stdClass ) {
+      $metas = get_object_vars( $metas );
+    }
+    elseif ( !is_array( $metas ) ) {
       $metas = [];
     }
 
@@ -110,7 +115,9 @@ class TokenUnit {
     }
 
     // Create a new token unit
-    return static::create( $tokenUnitId, array_get( $data, 'name' ), $metas );
+    $tokenUnit = static::create( $tokenUnitId, array_get( $data, 'name' ), $metas );
+    $tokenUnit->metasIsList = $metasIsList;
+    return $tokenUnit;
   }
 
   /**
@@ -131,9 +138,13 @@ class TokenUnit {
       throw new TokenUnitFormatException();
     }
 
-    // Standard token unit format
-    return static::create( $tokenUnitId, array_get( $data, 1 ), array_get( $data, 2, [] ) );
+    // Standard token unit format; toData() writes metas as an object (stdClass), which reads back as its entries
+    $metas = array_get( $data, 2, [] );
+    return static::create( $tokenUnitId, array_get( $data, 1 ), $metas instanceof \stdClass ? get_object_vars( $metas ) : $metas );
   }
+
+  /** Served metas that were a JSON list, which JS signs as a list */
+  private bool $metasIsList = false;
 
   /**
    * TokenUnit constructor.
@@ -161,8 +172,9 @@ class TokenUnit {
   }
 
   /**
-   * The unit's [id, name, metas] triple. Empty metas are an object, so the triple encodes as
-   * `["id","name",{}]`, the form JS `JSON.stringify` produces (PHP would otherwise emit `[]`).
+   * The unit's [id, name, metas] triple as JS `JSON.stringify` writes it: metas are an object (`{}`
+   * when empty) with integer-like keys first in ascending order at every depth, unless they were
+   * served as a list.
    *
    * @return array
    */
@@ -170,7 +182,7 @@ class TokenUnit {
     return [
       $this->id,
       $this->name,
-      $this->metas ?: new \stdClass(),
+      $this->metasIsList ? JsJson::value( $this->metas ) : JsJson::object( array_map( JsJson::value( ... ), $this->metas ) ),
     ];
   }
 
@@ -195,10 +207,11 @@ class TokenUnit {
    * @throws JsonException
    */
   public function toGraphQLResponse (): array {
+    // JS: metas is JSON.stringify(this.metas), so the object keeps JS key order and stays an object
     return [
       'id' => $this->id,
       'name' => $this->name,
-      'metas' => json_encode( $this->metas, JSON_THROW_ON_ERROR ),
+      'metas' => json_encode( $this->toData()[ 2 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR ),
     ];
   }
 

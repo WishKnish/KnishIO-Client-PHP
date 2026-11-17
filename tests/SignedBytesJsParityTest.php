@@ -179,4 +179,38 @@ class SignedBytesJsParityTest extends TestCase {
     $this->assertSame( [ [ 'key' => 'tradeRates', 'value' => '[{"tokenSlug":"OTHER","amount":0.5}]' ] ], $atom->meta );
     $this->assertSame( '00gf751g18220gfda39690d5f3741d7f8b6fec883f2e3a708db3ccfa0c65e2g8', self::single( $atom ) );
   }
+  // Served unit metas (a JSON string, keys in bytewise order) sign as JS JSON.stringify writes the
+  // parsed object: integer-like keys first ascending, then the others in document order, at every
+  // depth; empty objects and {"0":…} stay objects; a top-level list stays a list
+
+  public function testServedTokenUnitMetasEncodeLikeJs (): void {
+    $encode = static fn( mixed $metas, string $name = 'Unit 1' ): string => \WishKnish\KnishIO\Client\TokenUnit::encodeList( [
+      \WishKnish\KnishIO\Client\TokenUnit::createFromGraphQL( [ 'id' => 'u1', 'name' => $name, 'metas' => $metas ] ),
+    ] );
+    $this->assertSame( '[["u1","Unit 1",{"10":1,"a":2,"x":{"2":0,"b":1,"e":{}},"01":3,"z":{"0":"a"}}]]',
+      $encode( '{"a":2,"10":1,"x":{"b":1,"2":0,"e":{}},"01":3,"z":{"0":"a"}}' ) );
+    $this->assertSame( '[["u1","Unit 1",{"0":"a","1":"b"}]]', $encode( '{"1":"b","0":"a"}' ) );
+    $this->assertSame( '[["u1","Unit 1",[1,2]]]', $encode( '[1,2]' ) );
+    foreach ( [ '', 'null', null ] as $metas ) {
+      $this->assertSame( '[["u1","u1",{}]]', $encode( $metas, 'u1' ), var_export( $metas, true ) );
+    }
+    $this->expectException( \JsonException::class );
+    $encode( '{bad' );
+  }
+
+  // JS TokenUnit.createFromDB(unit.toData()) and createFromGraphQL(unit.toGraphQLResponse()) give
+  // back the same unit; toGraphQLResponse's metas is JSON.stringify(metas)
+  public function testServedTokenUnitMetasRoundTripLikeJs (): void {
+    $cases = [
+      '{"a":2,"10":1,"x":{"b":1,"2":0,"e":{}},"01":3,"z":{"0":"a"}}' => '{"10":1,"a":2,"x":{"2":0,"b":1,"e":{}},"01":3,"z":{"0":"a"}}',
+      '{"1":"b","0":"a"}' => '{"0":"a","1":"b"}',
+    ];
+    foreach ( $cases as $served => $js ) {
+      $unit = \WishKnish\KnishIO\Client\TokenUnit::createFromGraphQL( [ 'id' => 'u1', 'name' => 'Unit 1', 'metas' => $served ] );
+      $signed = \WishKnish\KnishIO\Client\TokenUnit::encodeList( [ $unit ] );
+      $this->assertSame( $signed, \WishKnish\KnishIO\Client\TokenUnit::encodeList( [ \WishKnish\KnishIO\Client\TokenUnit::createFromDB( $unit->toData() ) ] ), $served );
+      $this->assertSame( $js, $unit->toGraphQLResponse()[ 'metas' ], $served );
+      $this->assertSame( $signed, \WishKnish\KnishIO\Client\TokenUnit::encodeList( [ \WishKnish\KnishIO\Client\TokenUnit::createFromGraphQL( $unit->toGraphQLResponse() ) ] ), $served );
+    }
+  }
 }

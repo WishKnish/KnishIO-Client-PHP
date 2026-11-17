@@ -87,6 +87,9 @@ class Molecule extends MoleculeStructure {
   /** The cell slug the molecule was created with (JS cellSlugOrigin) */
   private ?string $cellSlugOrigin = null;
 
+  /** False for a molecule read from JSON without cellSlugOrigin, which JS toJSON then omits (undefined) */
+  private bool $hasCellSlugOrigin = true;
+
 
   /**
    * @param string $secret
@@ -1125,7 +1128,9 @@ class Molecule extends MoleculeStructure {
     }
 
     // The cell slug the molecule was created with travels with the validation context, as in JS toJSON
-    $data['cellSlugOrigin'] = $this->cellSlugOrigin;
+    if ( $this->hasCellSlugOrigin ) {
+      $data['cellSlugOrigin'] = $this->cellSlugOrigin;
+    }
 
     // A hash version the SDK knows travels with the validation context, as in JS toJSON
     if ( $this->version !== null ) {
@@ -1224,6 +1229,7 @@ class Molecule extends MoleculeStructure {
         $molecule->createdAt = (string) $data['createdAt'];
       }
       $molecule->bundle = $data['bundle'] ?? null;
+      $molecule->hasCellSlugOrigin = array_key_exists('cellSlugOrigin', $data);
       $molecule->cellSlugOrigin = $data['cellSlugOrigin'] ?? null;
 
       // Reconstruct atoms array with proper Atom instances
